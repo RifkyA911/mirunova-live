@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="50%" stop-color="#0d0f17" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+
+    <!-- Neon Accents -->
+    <linearGradient id="cyanViolet" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+
+    <radialGradient id="glowCyan" cx="20%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="glowViolet" cx="80%" cy="70%" r="60%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Mesh Grid Pattern -->
+    <pattern id="meshGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#27272a" stroke-width="0.75" stroke-opacity="0.6" />
+      <circle cx="0" cy="0" r="1.5" fill="#06b6d4" fill-opacity="0.3" />
+    </pattern>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="420" fill="url(#bgGrad)" />
+  <rect width="1200" height="420" fill="url(#glowCyan)" />
+  <rect width="1200" height="420" fill="url(#glowViolet)" />
+  <rect width="1200" height="420" fill="url(#meshGrid)" />
+
+  <!-- Outer Border -->
+  <rect x="1" y="1" width="1198" height="418" rx="16" fill="none" stroke="#27272a" stroke-width="2" />
+
+  <!-- Right Decorative Tracking Wireframe Graphic -->
+  <g transform="translate(860, 210)" stroke="#06b6d4" stroke-opacity="0.3" stroke-width="1.2" fill="none">
+    <!-- Concentric Target Circles -->
+    <circle r="140" stroke="#8b5cf6" stroke-opacity="0.15" stroke-dasharray="4 6" />
+    <circle r="100" stroke="#06b6d4" stroke-opacity="0.25" />
+    <circle r="60" stroke="#06b6d4" stroke-opacity="0.4" />
+    <circle r="6" fill="#06b6d4" />
+
+    <!-- Stylized Face Mesh Points & Lines -->
+    <polygon points="0,-70 -35,-30 35,-30" stroke="#06b6d4" stroke-opacity="0.5" fill="rgba(6,182,212,0.03)" />
+    <polygon points="-35,-30 0,20 35,-30" stroke="#06b6d4" stroke-opacity="0.5" fill="rgba(6,182,212,0.03)" />
+    <polygon points="0,20 -25,60 25,60" stroke="#8b5cf6" stroke-opacity="0.5" fill="rgba(139,92,246,0.03)" />
+
+    <!-- Crosshair ticks -->
+    <line x1="-150" y1="0" x2="-110" y2="0" stroke="#06b6d4" stroke-opacity="0.6" stroke-width="1.5" />
+    <line x1="110" y1="0" x2="150" y2="0" stroke="#06b6d4" stroke-opacity="0.6" stroke-width="1.5" />
+    <line x1="0" y1="-150" x2="0" y2="-110" stroke="#06b6d4" stroke-opacity="0.6" stroke-width="1.5" />
+    <line x1="0" y1="110" x2="0" y2="150" stroke="#06b6d4" stroke-opacity="0.6" stroke-width="1.5" />
+
+    <!-- Landmark Coordinates Node Indicators -->
+    <circle cx="-35" cy="-30" r="3" fill="#ec4899" />
+    <circle cx="35" cy="-30" r="3" fill="#ec4899" />
+    <circle cx="0" cy="-70" r="3" fill="#06b6d4" />
+    <circle cx="0" cy="20" r="3" fill="#06b6d4" />
+    <circle cx="-25" cy="60" r="3" fill="#8b5cf6" />
+    <circle cx="25" cy="60" r="3" fill="#8b5cf6" />
+  </g>
+
+  <!-- Left Content Branding -->
+  <g transform="translate(80, 100)">
+    <!-- Pill Status Tag -->
+    <rect x="0" y="0" width="170" height="28" rx="14" fill="#18181b" stroke="#3f3f46" stroke-width="1" />
+    <circle cx="14" cy="14" r="4" fill="#10b981" />
+    <text x="26" y="18" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" letter-spacing="1">100% CLIENT-SIDE</text>
+
+    <!-- Main Title -->
+    <text x="0" y="85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" letter-spacing="-1" fill="#fafafa">
+      MIRUNOVA <tspan fill="url(#cyanViolet)">LIVE</tspan>
+    </text>
+
+    <!-- Subtitle / Tagline -->
+    <text x="0" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="400" fill="#a1a1aa">
+      Next-Gen Web Live2D &amp; Real-time Vision Tracker powered by Bun &amp; SvelteKit.
+    </text>
+
+    <!-- Description Details -->
+    <text x="0" y="152" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="400" fill="#71717a">
+      Zero cost • On-device MediaPipe Vision • Rigging Inspector • OBS Studio Transparent Pass-through
+    </text>
+
+    <!-- Feature Badges -->
+    <g transform="translate(0, 190)">
+      <!-- Badge 1: Svelte 5 -->
+      <rect x="0" y="0" width="105" height="30" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+      <text x="12" y="19" fill="#ff3e00" font-family="sans-serif" font-size="11" font-weight="700">⚡ SVELTE 5</text>
+
+      <!-- Badge 2: Bun -->
+      <rect x="115" y="0" width="90" height="30" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+      <text x="127" y="19" fill="#fbf0df" font-family="sans-serif" font-size="11" font-weight="700">🍞 BUN 1.3</text>
+
+      <!-- Badge 3: MediaPipe -->
+      <rect x="215" y="0" width="135" height="30" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+      <text x="227" y="19" fill="#06b6d4" font-family="sans-serif" font-size="11" font-weight="700">👁️ MEDIAPIPE AI</text>
+
+      <!-- Badge 4: Live2D -->
+      <rect x="360" y="0" width="130" height="30" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+      <text x="372" y="19" fill="#8b5cf6" font-family="sans-serif" font-size="11" font-weight="700">🎭 CUBISM 3/4</text>
+
+      <!-- Badge 5: Zero Cost -->
+      <rect x="500" y="0" width="110" height="30" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+      <text x="512" y="19" fill="#10b981" font-family="sans-serif" font-size="11" font-weight="700">💎 100% FREE</text>
+    </g>
+  </g>
+</svg>

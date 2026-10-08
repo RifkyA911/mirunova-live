@@ -1,0 +1,54 @@
+export interface Live2DParameterDef {
+	id: string;
+	label: string;
+	min: number;
+	max: number;
+	defaultValue: number;
+	group: 'head' | 'eyes' | 'mouth' | 'body' | 'hands' | 'custom';
+}
+
+export interface TrackingResults {
+	yaw: number;           // Head Yaw (-30 to 30)
+	pitch: number;         // Head Pitch (-30 to 30)
+	roll: number;          // Head Roll (-30 to 30)
+	eyeBlinkL: number;     // 0 to 1
+	eyeBlinkR: number;     // 0 to 1
+	eyeBallX: number;      // -1 to 1
+	eyeBallY: number;      // -1 to 1
+	browL: number;         // -1 to 1
+	browR: number;         // -1 to 1
+	mouthOpen: number;     // 0 to 1
+	mouthForm: number;     // -1 to 1 (frown to smile)
+	cheekPuff: number;     // 0 to 1
+	bodyAngleX: number;    // -10 to 10
+	bodyAngleY: number;    // -10 to 10
+	bodyAngleZ: number;    // -10 to 10
+	armLA: number;         // Hand/Arm Left gesture/pos (0 to 30)
+	armRA: number;         // Hand/Arm Right gesture/pos (0 to 30)
+	handLDetected: boolean;
+	handRDetected: boolean;
+}
+
+export type BackgroundStyle =
+	| 'transparent'
+	| 'solid'
+	| 'mesh'
+	| 'dots'
+	| 'grid'
+	| 'cosmic'
+	| 'gradient'
+	| 'custom-image'
+	| 'chroma';
+
+export type ScreenEffect = 'none' | 'vignette' | 'scanlines' | 'crt' | 'blur';
+export type UITheme = 'cyber-dark' | 'midnight' | 'monochrome' | 'synthwave';
+export type PoseLoopMode = 'none' | 'idle-breath' | 'gentle-sway' | 'head-nod';
+export type RiggingMode = 'live' | 'manual';
+
+export interface Live2DModelItem {
+	id: string;
+	name: string;
+	url: string;
+	description: string;
+	version: 'Cubism 3/4' | 'Cubism 2';
+}
