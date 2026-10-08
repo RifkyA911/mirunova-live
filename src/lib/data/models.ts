@@ -1,5 +1,13 @@
 import type { Live2DModelItem } from '#lib/types/tracking';
 
+export interface Model3DItem {
+	id: string;
+	name: string;
+	type: 'procedural' | 'glb';
+	url?: string;
+	description: string;
+}
+
 export const MODEL_CATALOG: Live2DModelItem[] = [
 	{
 		id: 'haru',
@@ -42,5 +50,21 @@ export const MODEL_CATALOG: Live2DModelItem[] = [
 		url: 'https://cdn.jsdelivr.net/gh/Eikanya/Live2d-model/%E5%B0%91%E5%A5%B3%E5%89%8D%E7%BA%BF%20girls%20frontline/live2dnew/rice/rice.model3.json',
 		description: 'Cute chibi cat avatar suitable for casual streams.',
 		version: 'Cubism 3/4'
+	}
+];
+
+export const MODEL_3D_CATALOG: Model3DItem[] = [
+	{
+		id: 'mochi-cat',
+		name: 'Mochi The Cat (3D Rigged)',
+		type: 'procedural',
+		description: 'Stylized 3D Anime Cat with responsive ears, eyes, blinking, mouth sync, and swaying tail.'
+	},
+	{
+		id: 'fox',
+		name: 'Fox 3D (GLB)',
+		type: 'glb',
+		url: '/models/3d/fox.glb',
+		description: 'Low-poly animated 3D Fox model with skeletal bone tracking.'
 	}
 ];

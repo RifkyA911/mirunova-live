@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CanvasStage from '#lib/components/CanvasStage.svelte';
+	import ThreeCanvasStage from '#lib/components/ThreeCanvasStage.svelte';
 	import CameraPip from '#lib/components/CameraPip.svelte';
 	import ControlDock from '#lib/components/ControlDock.svelte';
 	import RiggingPreviewPanel from '#lib/components/RiggingPreviewPanel.svelte';
@@ -24,8 +25,12 @@
 			: 'theme-cyber'
 	}"
 >
-	<!-- 1. WebGL Live2D Canvas Stage -->
-	<CanvasStage />
+	<!-- 1. WebGL Live2D Stage or 3D Three.js Stage -->
+	{#if rigging.avatarEngine === '3d'}
+		<ThreeCanvasStage />
+	{:else}
+		<CanvasStage />
+	{/if}
 
 	<!-- 2. Header Brand Watermark (Subtle & Non-intrusive) -->
 	<header class="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">

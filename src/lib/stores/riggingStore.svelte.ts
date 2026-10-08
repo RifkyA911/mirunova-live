@@ -52,6 +52,11 @@ export class RiggingStore {
 	screenEffect = $state<ScreenEffect>('none');
 	customBgUrl = $state<string | null>(null);
 
+	// Avatar Engine: Live2D vs 3D
+	avatarEngine = $state<'live2d' | '3d'>('live2d');
+	selected3DModelId = $state<string>('mochi-cat');
+	customGlbUrl = $state<string | null>(null);
+
 	// Active Model Details
 	selectedModelId = $state<string>('haru');
 	modelName = $state<string>('Haru Greeter');
