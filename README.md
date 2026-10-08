@@ -45,15 +45,19 @@
 * **Screen Overlays:** Vignette, Retro Scanlines, CRT Bloom, and Subtle Blur.
 * **UI Themes:** Cyber Dark, Midnight Navy, Synthwave Sunset, and Minimal Monochrome.
 
-### 🎭 4. Model Catalog & Motion Looping
-* Built-in support for multiple sample models:
+### 🎭 4. Model Catalog (2D Live2D & 3D Three.js)
+* **2D Live2D Models:**
   * **Haru Greeter** (Cubism 3/4)
   * **Hiyori Momose** (Cubism 3/4)
   * **Mao Pro** (Cubism 3/4)
   * **Shizuku** (Cubism 2)
-  * **Wanko & Rice** (Mascots)
-  * **Custom URL / File Loader:** Load any `.model3.json` model directly.
-* **Pose Looping Engine:** Configurable continuous loops: Breathing cycle (`idle-breath`), gentle side-to-side sway (`gentle-sway`), and head nodding (`head-nod`) with adjustable speed multipliers.
+  * **Wanko & Rice** (Cute Mascots)
+  * **Custom Live2D Loader:** Load external `.model3.json` URLs.
+* **3D Avatar Engine (Three.js):**
+  * **Mochi The Cat (3D Rigged):** Full procedural 3D stylized anime cat with reactive rotation, ear twitches, eye blinks, mouth sync, paw gestures, and swaying tail.
+  * **Fox 3D (GLB):** Skeletal animated low-poly 3D animal model.
+  * **Custom 3D Uploader:** Load any external `.glb` or `.gltf` model straight from Blender.
+* **Pose Looping Engine:** Configurable loops: Breathing cycle (`idle-breath`), gentle side-to-side sway (`gentle-sway`), and head nodding (`head-nod`) with adjustable speed multipliers.
 * **Built-in Motion Triggering:** Execute animations defined within the model with a single click.
 
 ### 🌐 5. Internationalization (i18n)
