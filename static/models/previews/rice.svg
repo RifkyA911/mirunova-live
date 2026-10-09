@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-rice" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a044e"/>
+      <stop offset="50%" stop-color="#a21caf"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-rice)"/>
+  <!-- Cat Ears -->
+  <polygon points="34,44 26,18 52,32" fill="#fdf2f8"/>
+  <polygon points="36,40 30,22 48,32" fill="#f472b6"/>
+  <polygon points="86,44 94,18 68,32" fill="#fdf2f8"/>
+  <polygon points="84,40 90,22 72,32" fill="#f472b6"/>
+  <!-- Hair & Face -->
+  <ellipse cx="60" cy="65" rx="30" ry="28" fill="#fef3c7"/>
+  <!-- Eyes -->
+  <ellipse cx="46" cy="62" rx="5.5" ry="7.5" fill="#86198f"/>
+  <circle cx="48" cy="59" r="2.8" fill="#ffffff"/>
+  <circle cx="44" cy="65" r="1.4" fill="#ffffff"/>
+  <ellipse cx="74" cy="62" rx="5.5" ry="7.5" fill="#86198f"/>
+  <circle cx="76" cy="59" r="2.8" fill="#ffffff"/>
+  <circle cx="72" cy="65" r="1.4" fill="#ffffff"/>
+  <!-- Cat mouth :3 -->
+  <path d="M52 74 Q56 78 60 74 Q64 78 68 74" stroke="#c026d3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="40" cy="70" r="5" fill="#f472b6" opacity="0.85"/>
+  <circle cx="80" cy="70" r="5" fill="#f472b6" opacity="0.85"/>
+  <!-- Chibi Bangs -->
+  <path d="M30 48 C36 32 84 32 90 48 C82 42 70 56 60 48 C50 56 38 42 30 48 Z" fill="#fdf2f8"/>
+</svg>

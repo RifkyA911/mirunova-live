@@ -11,13 +11,16 @@
 		threeStage.init(containerEl);
 		loadActive3DModel();
 
+		// Pre-allocated parameter buffer to prevent GC pauses (Anti-slop rule)
+		const activeParamsBuffer: Record<string, number> = {};
+
 		// Realtime render loop driving 3D model with vision tracking values
 		const loop = () => {
-			const activeParams: Record<string, number> = {};
-			for (const p of rigging.parameters) {
-				activeParams[p.id] = rigging.getActiveValue(p.id);
+			for (let i = 0; i < rigging.parameters.length; i++) {
+				const id = rigging.parameters[i].id;
+				activeParamsBuffer[id] = rigging.getActiveValue(id);
 			}
-			threeStage.updateParameters(activeParams);
+			threeStage.updateParameters(activeParamsBuffer);
 			animFrameId = requestAnimationFrame(loop);
 		};
 		loop();

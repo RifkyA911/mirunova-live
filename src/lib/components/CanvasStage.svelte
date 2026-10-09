@@ -94,7 +94,25 @@
 		}
 	}
 
+	// Reactively reset avatar scale and position when triggered
+	let lastResetTransformSignal = 0;
+	$effect(() => {
+		const signal = rigging.resetTransformSignal;
+		if (signal > 0 && signal !== lastResetTransformSignal && app && currentModel) {
+			lastResetTransformSignal = signal;
+			const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+			const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+			const modelW = currentModel.width || 800;
+			const modelH = currentModel.height || 1000;
+			modelScale = Math.min(rendererWidth / modelW, rendererHeight / modelH) * 0.75;
+			currentModel.scale.set(modelScale);
+			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 50 };
+			currentModel.position.set(modelPosition.x, modelPosition.y);
+		}
+	});
+
 	let avatarTickerFn: any = null;
+	const avatarParamsBuffer: Record<string, number> = {};
 
 	async function loadModel(url: string, Live2DModelClass?: any) {
 		if (!app) return;
@@ -133,9 +151,9 @@
 
 				avatarTickerFn = () => {
 					if (currentModel !== avatar) return;
-					const params: Record<string, number> = {};
 					const now = performance.now();
-					for (const param of rigging.parameters) {
+					for (let i = 0; i < rigging.parameters.length; i++) {
+						const param = rigging.parameters[i];
 						let val = rigging.getActiveValue(param.id);
 
 						if (rigging.poseLoopMode !== 'none') {
@@ -148,9 +166,9 @@
 								val += Math.sin(now * 0.004 * speed) * 4.5;
 							}
 						}
-						params[param.id] = val;
+						avatarParamsBuffer[param.id] = val;
 					}
-					avatar.updateParameters(params);
+					avatar.updateParameters(avatarParamsBuffer);
 				};
 				app.ticker.add(avatarTickerFn);
 

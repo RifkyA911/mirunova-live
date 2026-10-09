@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-wanko" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="50%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-wanko)"/>
+  <!-- Droopy Dog Ears -->
+  <path d="M30 40 C16 48 14 78 26 84 C32 80 36 60 38 48 Z" fill="#92400e"/>
+  <path d="M90 40 C104 48 106 78 94 84 C88 80 84 60 82 48 Z" fill="#92400e"/>
+  <!-- Puppy Face -->
+  <circle cx="60" cy="65" r="28" fill="#fef3c7"/>
+  <!-- Brown Eye patch -->
+  <circle cx="48" cy="60" r="10" fill="#fde68a"/>
+  <!-- Eyes -->
+  <circle cx="48" cy="60" r="5" fill="#451a03"/>
+  <circle cx="50" cy="58" r="2" fill="#ffffff"/>
+  <circle cx="72" cy="60" r="5" fill="#451a03"/>
+  <circle cx="74" cy="58" r="2" fill="#ffffff"/>
+  <!-- Doggy Nose & Tongue -->
+  <ellipse cx="60" cy="69" rx="4" ry="3" fill="#1c1917"/>
+  <path d="M55 74 Q60 78 65 74" stroke="#78350f" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M58 75 C58 81 62 81 62 75 Z" fill="#f43f5e"/>
+  <!-- Blush -->
+  <circle cx="40" cy="68" r="4" fill="#fda4af" opacity="0.8"/>
+  <circle cx="80" cy="68" r="4" fill="#fda4af" opacity="0.8"/>
+</svg>

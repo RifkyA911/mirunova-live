@@ -126,8 +126,19 @@ Open **`http://localhost:5173/`** in your browser.
 
 | Hotkey | Action | Description |
 | :--- | :--- | :--- |
-| **`O`** | Toggle OBS Mode | Switch between studio controls and clean streamer view |
+| **`H`** | Toggle Menu Dock | Sembunyikan / Tampilkan panel dock bawah |
+| **`Space`** | Toggle Webcam Tracking | Mulai atau hentikan vision tracking webcam |
 | **`C`** | Calibrate Head Pose | Reset head yaw, pitch, and roll to neutral center |
+| **`M`** | Open Models Catalog | Buka katalog avatar 2D Live2D & 3D Cats |
+| **`T`** | Open Themes & Backgrounds | Buka menu kustomisasi tema, grid mesh & latar |
+| **`R`** | Toggle Rigging Panel | Buka / tutup drawer inspeksi parameter rigging |
+| **`S`** | Screenshot Avatar | Tangkap avatar langsung dan unduh file PNG |
+| **`O`** | Toggle OBS Screen Mode | Switch between studio controls and clean streamer view |
+| **`,` / `F2`** | Open Settings | Buka menu spesifikasi sistem & benchmark |
+| **`?` / `F1`** | Shortcut Guide Cheatsheet | Tampilkan panduan lengkap seluruh tombol shortcut |
+| **`P`** | Toggle PIP Camera | Sembunyikan / tampilkan preview webcam PIP |
+| **`B`** | Toggle Eye Blink Sync | Sinkronisasi kedipan mata kiri dan kanan |
+| **`1` – `4`** | Switch UI Themes | Ganti tema cepat (Cyber, Midnight, Synth, Mono) |
 | **`Escape`** | Close Modals / Exit OBS | Dismiss open modals, drawers, or exit OBS view |
 
 ---

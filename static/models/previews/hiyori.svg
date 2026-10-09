@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-hiyori" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="60%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-hiyori)"/>
+  <!-- Twin tails left and right -->
+  <path d="M22 45 C10 65 14 95 24 105 C26 90 28 65 34 50 Z" fill="#92400e"/>
+  <path d="M98 45 C110 65 106 95 96 105 C94 90 92 65 86 50 Z" fill="#92400e"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="62" rx="27" ry="29" fill="#fef3c7"/>
+  <!-- Eyes -->
+  <ellipse cx="48" cy="58" rx="5" ry="6.5" fill="#451a03"/>
+  <circle cx="49.5" cy="56" r="2.5" fill="#ffffff"/>
+  <ellipse cx="72" cy="58" rx="5" ry="6.5" fill="#451a03"/>
+  <circle cx="73.5" cy="56" r="2.5" fill="#ffffff"/>
+  <!-- Eyebrows -->
+  <path d="M43 49 Q48 46 53 49" stroke="#78350f" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M67 49 Q72 46 77 49" stroke="#78350f" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Open cheerful mouth -->
+  <path d="M53 72 Q60 81 67 72 Z" fill="#dc2626"/>
+  <!-- Cheeks -->
+  <circle cx="43" cy="67" r="4.5" fill="#fca5a5" opacity="0.85"/>
+  <circle cx="77" cy="67" r="4.5" fill="#fca5a5" opacity="0.85"/>
+  <!-- Front Hair Bangs -->
+  <path d="M30 46 C38 28 82 28 90 46 C80 39 70 52 60 45 C50 52 40 39 30 46 Z" fill="#b45309"/>
+</svg>

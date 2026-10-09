@@ -51,6 +51,9 @@ export class RiggingStore {
 	isModelModalOpen = $state<boolean>(false);
 	isObsModalOpen = $state<boolean>(false);
 	isSettingsModalOpen = $state<boolean>(false);
+	isShortcutModalOpen = $state<boolean>(false);
+	isDockHidden = $state<boolean>(false);
+	resetTransformSignal = $state<number>(0);
 	isCameraActive = $state<boolean>(false);
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
@@ -204,10 +207,25 @@ export class RiggingStore {
 			this.isModelModalOpen = false;
 			this.isObsModalOpen = false;
 			this.isSettingsModalOpen = false;
+			this.isShortcutModalOpen = false;
 		} else if (!next && this.isObsMode) {
 			this.backgroundStyle = this.previousBgStyle;
 		}
 		this.isObsMode = next;
+	}
+
+	toggleDock(hide?: boolean) {
+		this.isDockHidden = hide !== undefined ? hide : !this.isDockHidden;
+		this.showToast(this.isDockHidden ? 'Menu Dock disembunyikan (Tekan H untuk menampilkan)' : 'Menu Dock ditampilkan');
+	}
+
+	toggleShortcutModal(open?: boolean) {
+		this.isShortcutModalOpen = open !== undefined ? open : !this.isShortcutModalOpen;
+	}
+
+	resetAvatarTransform() {
+		this.resetTransformSignal = performance.now();
+		this.showToast('Posisi & skala avatar di-reset ke tengah');
 	}
 
 	setManualValue(id: string, value: number) {

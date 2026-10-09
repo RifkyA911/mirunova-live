@@ -17,9 +17,20 @@ export class FaceTracker {
 	private lastVideoTime = -1;
 	private isRunning = false;
 
-	// Performance Tracking
+	// Performance Tracking & Reusable State Buffers (Zero Allocation Mandate)
 	private frameCount = 0;
 	private lastFpsCalcTime = performance.now();
+	private blendshapesMap = new Map<string, number>();
+	private handDataBuffer = {
+		leftDetected: false,
+		rightDetected: false,
+		armLA: 0,
+		armRA: 0,
+		gestureL: 'none' as 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none',
+		gestureR: 'none' as 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none',
+		isHighFiveL: false,
+		isHighFiveR: false
+	};
 
 	async initialize(): Promise<void> {
 		if (this.landmarker && this.handLandmarker) return;
@@ -291,16 +302,15 @@ export class FaceTracker {
 				const faceResults = this.landmarker.detectForVideo(vid, startTime);
 
 				// 2. Hand Landmark Tracking with Gesture & High-Five Recognition
-				let handData: {
-					leftDetected: boolean;
-					rightDetected: boolean;
-					armLA: number;
-					armRA: number;
-					gestureL?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
-					gestureR?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
-					isHighFiveL?: boolean;
-					isHighFiveR?: boolean;
-				} = { leftDetected: false, rightDetected: false, armLA: 0, armRA: 0 };
+				const handData = this.handDataBuffer;
+				handData.leftDetected = false;
+				handData.rightDetected = false;
+				handData.armLA = 0;
+				handData.armRA = 0;
+				handData.gestureL = 'none';
+				handData.gestureR = 'none';
+				handData.isHighFiveL = false;
+				handData.isHighFiveR = false;
 				let handsList: Array<Array<{ x: number; y: number; z: number }>> = [];
 
 				if (this.handLandmarker && rigging.enableHandTracking) {
@@ -385,11 +395,11 @@ export class FaceTracker {
 					rigging.isFaceDetected = true;
 					const landmarks = faceResults.faceLandmarks[0];
 
-					// Build blendshapes lookup map
-					const blendshapesMap = new Map<string, number>();
+					// Build blendshapes lookup map (reuse Map to prevent GC pressure)
+					this.blendshapesMap.clear();
 					if (faceResults.faceBlendshapes && faceResults.faceBlendshapes.length > 0) {
 						for (const cat of faceResults.faceBlendshapes[0].categories) {
-							blendshapesMap.set(cat.categoryName, cat.score);
+							this.blendshapesMap.set(cat.categoryName, cat.score);
 						}
 					}
 
@@ -404,7 +414,7 @@ export class FaceTracker {
 					// Capture raw uncalibrated pose for precise calibration snapshot
 					const rawPose = solveFaceLandmarks(
 						landmarks,
-						blendshapesMap,
+						this.blendshapesMap,
 						{ yaw: 0, pitch: 0, roll: 0 },
 						matrix,
 						{ sensitivity: 1.0, deadzone: 0 }
@@ -416,7 +426,7 @@ export class FaceTracker {
 					// Solve parameters with high-precision matrix, mouth expressions, and hand data
 					const solved = solveFaceLandmarks(
 						landmarks,
-						blendshapesMap,
+						this.blendshapesMap,
 						{
 							yaw: rigging.calibrationYaw,
 							pitch: rigging.calibrationPitch,
@@ -457,13 +467,13 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamEyeLSmile', solved.eyeSmileL ?? 0);
 					rigging.setLiveValue('ParamEyeRSmile', solved.eyeSmileR ?? 0);
 
-					// Draw wireframe overlay if enabled
-					if (this.canvasOverlay && rigging.showLandmarksMesh) {
+					// Draw wireframe overlay only if PIP is visible and mesh is enabled (Anti-slop CPU saving)
+					if (this.canvasOverlay && rigging.showCameraPip && rigging.showLandmarksMesh) {
 						this.drawLandmarksOverlay(landmarks, handsList);
 					}
 				} else {
 					rigging.isFaceDetected = false;
-					if (this.canvasOverlay) {
+					if (this.canvasOverlay && rigging.showCameraPip) {
 						if (handsList.length > 0 && rigging.showLandmarksMesh) {
 							this.drawLandmarksOverlay([], handsList);
 						} else {

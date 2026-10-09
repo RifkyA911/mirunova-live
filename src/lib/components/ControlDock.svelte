@@ -14,7 +14,10 @@
 		Tv,
 		Hand,
 		Settings,
-		Aperture
+		Aperture,
+		Keyboard,
+		ChevronDown,
+		ChevronUp
 	} from 'lucide-svelte';
 
 	let isLangMenuOpen = $state<boolean>(false);
@@ -42,11 +45,23 @@
 	}
 </script>
 
-<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 select-none">
-	<nav
-		aria-label="Main Dock Controls"
-		class="flex items-center gap-2 px-3.5 py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl"
-	>
+{#if rigging.isDockHidden}
+	<!-- Collapsed Floating Pill to Restore Menu Dock -->
+	<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center select-none animate-in fade-in slide-in-from-bottom-2 duration-150">
+		<button
+			onclick={() => rigging.toggleDock(false)}
+			class="flex items-center gap-2 px-3.5 py-1.5 bg-zinc-950/85 hover:bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 rounded-full text-zinc-300 hover:text-cyan-300 text-xs shadow-2xl backdrop-blur-md transition-all active:scale-95 group"
+		>
+			<ChevronUp class="w-3.5 h-3.5 text-cyan-400 group-hover:-translate-y-0.5 transition-transform" />
+			<span class="font-medium text-[11px] tracking-wide">Tampilkan Menu <span class="font-mono text-[10px] text-zinc-500">[H]</span></span>
+		</button>
+	</div>
+{:else}
+	<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 select-none animate-in fade-in slide-in-from-bottom-3 duration-200">
+		<nav
+			aria-label="Main Dock Controls"
+			class="flex items-center gap-2 px-3.5 py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl"
+		>
 		<!-- 1. Camera Toggle (Icon Only + Hover Tooltip) -->
 		<div class="group relative flex items-center justify-center">
 			<button
@@ -299,5 +314,43 @@
 				</div>
 			{/if}
 		</div>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+
+		<!-- 12. Keyboard Shortcuts Guide Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					rigging.toggleShortcutModal();
+					isLangMenuOpen = false;
+				}}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label="Panduan Shortcut"
+			>
+				<Keyboard class="w-5 h-5 text-zinc-300" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				Panduan Shortcut [?]
+			</div>
+		</div>
+
+		<!-- 13. Sembunyikan Panel Dock Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => rigging.toggleDock(true)}
+				class="p-2.5 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label="Sembunyikan Dock"
+			>
+				<ChevronDown class="w-5 h-5" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				Sembunyikan Panel [H]
+			</div>
+		</div>
 	</nav>
 </div>
+{/if}

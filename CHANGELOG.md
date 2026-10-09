@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0] - 2026-10-10
+
+### Added
+- **Hideable Menu Dock Panel:**
+  - One-click collapse button on the Control Dock and global keyboard shortcut **`H`** to hide/show the dock.
+  - Floating translucent pill button at the bottom center allowing quick restoration.
+- **Comprehensive Keyboard Shortcuts Guide Modal:**
+  - Dedicated interactive cheat sheet modal (`?` or `F1`, and dock Keyboard icon) detailing all studio shortcuts:
+    - Vision Tracking (`Space`, `C`, `P`, `B`)
+    - Studio Navigation (`H`, `M`, `T`, `R`, `,`, `?`, `Esc`)
+    - Live Streaming & Presets (`O`, `S`, `1`–`4`)
+- **2X Wider Models & Motions Catalog (`max-w-5xl`):**
+  - Expanded modal layout to double width with a responsive 3-column avatar card grid.
+  - Added dedicated visual preview illustrations & SVGs for every 2D Live2D and 3D avatar.
+  - Feature tags (`Hand Sync`, `Lip Sync`, `Cubism 4`, `Parallax`, `3D WebGL`, etc.) and engine badges.
+  - One-click **Reset Posisi Avatar** button to recenter avatar and reset scale.
+  - In-modal Pose Looping Studio and built-in motion trigger playback.
+
+### Optimized
+- **Memory & Rendering Loop Performance (Anti-Slop Zero Allocation):**
+  - Eliminated garbage collection pauses by reusing pre-allocated parameter state buffers (`activeParamsBuffer`, `avatarParamsBuffer`, `handDataBuffer`, and `blendshapesMap.clear()`).
+  - Skipped 2D landmark mesh drawing when Camera PIP is hidden or minimized, freeing CPU cycles for the main render loop.
+  - Upgraded test suite with 33 passing unit tests verifying visual preview assets and tags.
+
+---
+
 ## [0.6.0] - 2026-10-10
 
 ### Added

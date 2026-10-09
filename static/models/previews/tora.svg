@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-tora" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c2d12"/>
+      <stop offset="50%" stop-color="#c2410c"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-tora)"/>
+  <!-- Pointy Cat Ears -->
+  <polygon points="34,44 26,18 52,32" fill="#ea580c"/>
+  <polygon points="36,40 30,24 48,32" fill="#fbcfe8"/>
+  <polygon points="86,44 94,18 68,32" fill="#ea580c"/>
+  <polygon points="84,40 90,24 72,32" fill="#fbcfe8"/>
+  <!-- Cat Head (Ginger/Orange) -->
+  <ellipse cx="60" cy="62" rx="30" ry="26" fill="#f97316"/>
+  <!-- Forehead Tabby Stripes -->
+  <path d="M50 42 L60 50 L70 42" stroke="#9a3412" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M53 46 L60 53 L67 46" stroke="#9a3412" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Amber Cat Eyes -->
+  <ellipse cx="46" cy="58" rx="6" ry="8" fill="#d97706"/>
+  <circle cx="48" cy="55" r="3" fill="#ffffff"/>
+  <circle cx="44" cy="61" r="1.5" fill="#ffffff"/>
+  <ellipse cx="74" cy="58" rx="6" ry="8" fill="#d97706"/>
+  <circle cx="76" cy="55" r="3" fill="#ffffff"/>
+  <circle cx="72" cy="61" r="1.5" fill="#ffffff"/>
+  <!-- Pink Nose -->
+  <polygon points="60,67 57,64 63,64" fill="#fb7185"/>
+  <!-- Cat Mouth :3 -->
+  <path d="M53 71 Q57 74 60 71 Q63 74 67 71" stroke="#7c2d12" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Whiskers -->
+  <line x1="36" y1="67" x2="22" y2="65" stroke="#fed7aa" stroke-width="1.8"/>
+  <line x1="36" y1="71" x2="22" y2="73" stroke="#fed7aa" stroke-width="1.8"/>
+  <line x1="84" y1="67" x2="98" y2="65" stroke="#fed7aa" stroke-width="1.8"/>
+  <line x1="84" y1="71" x2="98" y2="73" stroke="#fed7aa" stroke-width="1.8"/>
+  <!-- Blue Collar & Bell -->
+  <path d="M42 86 Q60 92 78 86" stroke="#0284c7" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <circle cx="60" cy="91" r="5" fill="#eab308"/>
+  <circle cx="60" cy="91" r="1" fill="#713f12"/>
+</svg>

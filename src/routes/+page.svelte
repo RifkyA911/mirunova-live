@@ -9,6 +9,7 @@
 	import ModelCatalogModal from '#lib/components/ModelCatalogModal.svelte';
 	import ObsModal from '#lib/components/ObsModal.svelte';
 	import SettingsModal from '#lib/components/SettingsModal.svelte';
+	import ShortcutGuideModal from '#lib/components/ShortcutGuideModal.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { i18n } from '#lib/i18n/index.svelte';
@@ -62,10 +63,54 @@
 				if (rigging.isModelModalOpen) rigging.isModelModalOpen = false;
 				if (rigging.isObsModalOpen) rigging.isObsModalOpen = false;
 				if (rigging.isSettingsModalOpen) rigging.isSettingsModalOpen = false;
-			} else if (e.key === 'o' || e.key === 'O') {
-				rigging.toggleObsMode();
+				if (rigging.isShortcutModalOpen) rigging.isShortcutModalOpen = false;
+			} else if (e.key === ' ' || e.code === 'Space') {
+				e.preventDefault();
+				if (rigging.isCameraActive) tracker.stopCamera();
+				else tracker.startCamera().catch(() => {});
+			} else if (e.key === 'h' || e.key === 'H') {
+				rigging.toggleDock();
+			} else if (e.key === 'm' || e.key === 'M') {
+				rigging.isModelModalOpen = !rigging.isModelModalOpen;
+				rigging.isThemeModalOpen = false;
+				rigging.isSettingsModalOpen = false;
+			} else if (e.key === 't' || e.key === 'T') {
+				rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
+				rigging.isModelModalOpen = false;
+				rigging.isSettingsModalOpen = false;
+			} else if (e.key === 'r' || e.key === 'R') {
+				rigging.isDrawerOpen = !rigging.isDrawerOpen;
+			} else if (e.key === 's' || e.key === 'S') {
+				rigging.triggerScreenshot();
 			} else if (e.key === 'c' || e.key === 'C') {
 				tracker.calibrate();
+			} else if (e.key === 'o' || e.key === 'O') {
+				rigging.toggleObsMode();
+			} else if (e.key === ',' || e.key === 'F2') {
+				e.preventDefault();
+				rigging.isSettingsModalOpen = !rigging.isSettingsModalOpen;
+				rigging.isModelModalOpen = false;
+				rigging.isThemeModalOpen = false;
+			} else if (e.key === '?' || e.key === 'F1') {
+				e.preventDefault();
+				rigging.toggleShortcutModal();
+			} else if (e.key === 'p' || e.key === 'P') {
+				rigging.showCameraPip = !rigging.showCameraPip;
+			} else if (e.key === 'b' || e.key === 'B') {
+				rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked;
+				rigging.showToast(`Sinkronisasi mata: ${rigging.eyeBlinkLinked ? 'Aktif' : 'Nonaktif'}`);
+			} else if (e.key === '1') {
+				rigging.uiTheme = 'cyber-dark';
+				rigging.showToast('Tema: Cyber Dark');
+			} else if (e.key === '2') {
+				rigging.uiTheme = 'midnight';
+				rigging.showToast('Tema: Midnight Blue');
+			} else if (e.key === '3') {
+				rigging.uiTheme = 'synthwave';
+				rigging.showToast('Tema: Synthwave');
+			} else if (e.key === '4') {
+				rigging.uiTheme = 'monochrome';
+				rigging.showToast('Tema: Monochrome');
 			}
 		};
 
@@ -239,6 +284,9 @@
 
 		<!-- System Hardware, Settings & Storage Modal -->
 		<SettingsModal />
+
+		<!-- Comprehensive Keyboard Shortcuts Guide Modal -->
+		<ShortcutGuideModal />
 	{/if}
 
 	<!-- Floating Toast Notification -->

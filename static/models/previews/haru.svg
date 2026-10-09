@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-haru" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#312e81"/>
+      <stop offset="50%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#db2777"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-haru)"/>
+  <!-- Hair back -->
+  <path d="M28 45 C22 80 28 110 38 115 L82 115 C92 110 98 80 92 45 Z" fill="#3730a3"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="62" rx="27" ry="29" fill="#fef3c7"/>
+  <!-- Eyes -->
+  <ellipse cx="48" cy="58" rx="5" ry="7" fill="#1e1b4b"/>
+  <circle cx="50" cy="56" r="2.5" fill="#ffffff"/>
+  <ellipse cx="72" cy="58" rx="5" ry="7" fill="#1e1b4b"/>
+  <circle cx="74" cy="56" r="2.5" fill="#ffffff"/>
+  <!-- Smile -->
+  <path d="M54 74 Q60 80 66 74" stroke="#e11d48" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="43" cy="68" r="4.5" fill="#fda4af" opacity="0.8"/>
+  <circle cx="77" cy="68" r="4.5" fill="#fda4af" opacity="0.8"/>
+  <!-- Front Bangs -->
+  <path d="M30 46 C36 28 84 28 90 46 C80 40 68 54 60 46 C52 54 40 40 30 46 Z" fill="#6366f1"/>
+  <!-- Flower ribbon clip -->
+  <circle cx="82" cy="38" r="6" fill="#f43f5e"/>
+  <circle cx="82" cy="38" r="2.5" fill="#fef08a"/>
+</svg>

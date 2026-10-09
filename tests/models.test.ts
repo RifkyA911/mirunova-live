@@ -41,6 +41,18 @@ describe('Model Catalog Validation', () => {
 		for (const cat of MODEL_3D_CATALOG) {
 			expect(cat.type).toBe('procedural');
 			expect(cat.variant).toBeDefined();
+			expect(cat.avatarUrl).toBeTruthy();
+			expect(cat.tags).toBeDefined();
+			expect(cat.tags?.length).toBeGreaterThan(0);
+		}
+	});
+
+	it('should provide preview visual assets for all 2D catalog models', () => {
+		for (const model of MODEL_CATALOG) {
+			expect(model.avatarUrl).toBeTruthy();
+			expect(typeof model.avatarUrl).toBe('string');
+			expect(model.tags).toBeDefined();
+			expect(model.tags?.length).toBeGreaterThan(0);
 		}
 	});
 });

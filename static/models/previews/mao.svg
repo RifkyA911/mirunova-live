@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-mao" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-mao)"/>
+  <!-- Hair back -->
+  <path d="M26 42 C20 75 25 110 38 115 L82 115 C95 110 100 75 94 42 Z" fill="#0f172a"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="62" rx="27" ry="29" fill="#fef3c7"/>
+  <!-- Eyes -->
+  <ellipse cx="48" cy="58" rx="4.8" ry="6.5" fill="#0369a1"/>
+  <circle cx="49.5" cy="56" r="2.2" fill="#ffffff"/>
+  <ellipse cx="72" cy="58" rx="4.8" ry="6.5" fill="#0369a1"/>
+  <circle cx="73.5" cy="56" r="2.2" fill="#ffffff"/>
+  <!-- Smile -->
+  <path d="M54 74 Q60 78 66 74" stroke="#e11d48" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="43" cy="67" r="4" fill="#fda4af" opacity="0.8"/>
+  <circle cx="77" cy="67" r="4" fill="#fda4af" opacity="0.8"/>
+  <!-- Bangs -->
+  <path d="M28 44 C36 28 84 28 92 44 C82 39 72 52 60 45 C48 52 38 39 28 44 Z" fill="#1e293b"/>
+  <!-- Sailor scarf tie -->
+  <polygon points="60,86 54,108 66,108" fill="#0284c7"/>
+</svg>
