@@ -20,7 +20,9 @@
 		Folder,
 		RotateCcw,
 		Minimize2,
-		Maximize2
+		Maximize2,
+		Pin,
+		PinOff
 	} from 'lucide-svelte';
 
 	let activeFilter = $state<'all' | 'head' | 'eyes' | 'mouth' | 'body' | 'hands' | 'custom'>('all');
@@ -123,20 +125,26 @@
 </script>
 
 {#if rigging.isDrawerOpen}
-	<!-- Backdrop overlay to close drawer on outside click -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		onclick={() => (rigging.isDrawerOpen = false)}
-		class="fixed inset-0 bg-black/50 backdrop-blur-xs z-30 transition-opacity animate-in fade-in duration-150"
-	></div>
+	<!-- Backdrop overlay to close drawer on outside click (ONLY in drawer overlay mode) -->
+	{#if rigging.riggingViewMode === 'drawer'}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			onclick={() => (rigging.isDrawerOpen = false)}
+			class="fixed inset-0 bg-black/50 backdrop-blur-xs z-30 transition-opacity animate-in fade-in duration-150"
+		></div>
+	{/if}
 
-	<!-- Slide-in Rigging Preview Drawer -->
+	<!-- Container: Stay Mode (Docked full-height) vs Windowed Card vs Drawer -->
 	<aside
-		class="fixed top-0 right-0 h-full w-[410px] max-w-[92vw] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-800/80 shadow-2xl flex flex-col z-40 transition-all text-zinc-100 select-none animate-in slide-in-from-right duration-200"
+		class="{
+			rigging.riggingViewMode === 'windowed'
+				? 'fixed top-14 right-6 w-[430px] max-w-[94vw] max-h-[82vh] bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800/90 rounded-2xl shadow-2xl flex flex-col z-40 text-zinc-100 select-none animate-in zoom-in-95 duration-200'
+				: 'fixed top-0 right-0 h-full w-[410px] max-w-[92vw] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-800/80 shadow-2xl flex flex-col z-40 transition-all text-zinc-100 select-none animate-in slide-in-from-right duration-200'
+		}"
 	>
-		<!-- Drawer Header -->
-		<div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
+		<!-- Header with Pin/Stay and Windowed Mode Switchers -->
+		<div class="p-3.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
 			<div class="flex items-center gap-2.5">
 				<div class="p-2 bg-violet-500/10 border border-violet-500/30 rounded-lg text-violet-400">
 					<Sliders class="w-4 h-4" />
@@ -145,18 +153,66 @@
 					<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2">
 						{i18n.t('rigging_title')}
 					</h2>
-					<p class="text-xs text-zinc-400">
-						{rigging.parameters.length} {i18n.t('detected_params')} • Accordion Cards
+					<p class="text-[11px] text-zinc-400">
+						{rigging.parameters.length} {i18n.t('detected_params')} • {rigging.riggingViewMode === 'windowed' ? i18n.t('rigging_windowed') : rigging.riggingViewMode === 'stay' ? i18n.t('rigging_stay') : i18n.t('rigging_drawer')}
 					</p>
 				</div>
 			</div>
-			<button
-				onclick={() => (rigging.isDrawerOpen = false)}
-				class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors"
-				aria-label="Close"
-			>
-				<X class="w-4 h-4" />
-			</button>
+
+			<div class="flex items-center gap-1.5">
+				<!-- Stay / Pin Toggle Button -->
+				<button
+					onclick={() => {
+						rigging.riggingViewMode = rigging.riggingViewMode === 'stay' ? 'drawer' : 'stay';
+						rigging.isRiggingPinned = rigging.riggingViewMode === 'stay';
+						rigging.persist();
+						rigging.showToast(rigging.riggingViewMode === 'stay' ? '✓ Mode Stay Aktif (Panel terkunci)' : 'Mode Drawer Aktif');
+					}}
+					class="p-1.5 rounded-lg transition-colors {
+						rigging.riggingViewMode === 'stay'
+							? 'bg-violet-500/20 text-violet-300 border border-violet-500/40'
+							: 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+					}"
+					title={i18n.t('pin_tooltip')}
+					aria-label="Toggle Stay Mode"
+				>
+					{#if rigging.riggingViewMode === 'stay'}
+						<Pin class="w-3.5 h-3.5 fill-current" />
+					{:else}
+						<PinOff class="w-3.5 h-3.5" />
+					{/if}
+				</button>
+
+				<!-- Windowed / Dock Toggle Button -->
+				<button
+					onclick={() => {
+						rigging.riggingViewMode = rigging.riggingViewMode === 'windowed' ? 'stay' : 'windowed';
+						rigging.persist();
+					}}
+					class="p-1.5 rounded-lg transition-colors {
+						rigging.riggingViewMode === 'windowed'
+							? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+							: 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+					}"
+					title={i18n.t('window_tooltip')}
+					aria-label="Toggle Windowed Mode"
+				>
+					{#if rigging.riggingViewMode === 'windowed'}
+						<Minimize2 class="w-3.5 h-3.5" />
+					{:else}
+						<Maximize2 class="w-3.5 h-3.5" />
+					{/if}
+				</button>
+
+				<!-- Close Button -->
+				<button
+					onclick={() => (rigging.isDrawerOpen = false)}
+					class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors ml-1"
+					aria-label="Close"
+				>
+					<X class="w-4 h-4" />
+				</button>
+			</div>
 		</div>
 
 		<!-- Mode Switcher: Live Tracking vs Manual Rigging Override -->

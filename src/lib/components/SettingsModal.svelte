@@ -1,31 +1,35 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
-	import { i18n } from '#lib/i18n/index.svelte';
+	import { tracker } from '#lib/core/tracker';
+	import { i18n, type Locale } from '#lib/i18n/index.svelte';
 	import { detectHardwareBenchmark, type HardwareReport } from '#lib/core/hardware';
 	import { clearPreferences, exportConfigJson, importConfigJson } from '#lib/core/storage';
-	import type { UITheme, BackgroundStyle, ScreenEffect } from '#lib/types/tracking';
+	import type { UITheme, RiggingViewMode } from '#lib/types/tracking';
 	import {
 		Settings,
 		X,
 		Cpu,
 		Palette,
-		Mic,
+		SlidersHorizontal,
 		Database,
 		Check,
 		Download,
 		Upload,
 		RotateCcw,
 		Sparkles,
-		ShieldCheck,
-		Crosshair,
-		Info,
-		Layers
+		Camera,
+		Languages,
+		Activity,
+		Video
 	} from 'lucide-svelte';
 
-	let activeTab = $state<'perf' | 'appearance' | 'voice' | 'storage'>('perf');
-	let hardware = $state<HardwareReport>(detectHardwareBenchmark(60));
-	let importedJson = $state<string>('');
+	let activeTab = $state<'perf' | 'tracking' | 'appearance' | 'storage'>('perf');
+	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
+	let storageUsageBytes = $state<number>(0);
+
+	// Reactive live hardware report directly updated by tracking FPS
+	let hardware = $derived<HardwareReport>(detectHardwareBenchmark(rigging.fps || 60));
 
 	const themes: Array<{ id: UITheme; label: string; desc: string; color: string }> = [
 		{ id: 'cyber-dark', label: 'Cyber Dark', desc: 'Futuristic cyan & violet accents with deep zinc background', color: 'bg-cyan-500' },
@@ -34,8 +38,25 @@
 		{ id: 'monochrome', label: 'Monochrome Minimal', desc: 'Clean, distraction-free neutral slate & silver', color: 'bg-zinc-400' }
 	];
 
+	const languages: Array<{ code: Locale; label: string }> = [
+		{ code: 'id', label: 'Bahasa Indonesia' },
+		{ code: 'en', label: 'English' },
+		{ code: 'ja', label: '日本語' }
+	];
+
+	async function refreshDevices() {
+		try {
+			availableCameras = await tracker.getAvailableVideoDevices();
+		} catch {
+			availableCameras = [];
+		}
+		if (typeof window !== 'undefined' && window.localStorage) {
+			storageUsageBytes = new Blob([JSON.stringify(window.localStorage)]).size;
+		}
+	}
+
 	onMount(() => {
-		hardware = detectHardwareBenchmark(rigging.fps || 60);
+		refreshDevices();
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape' && rigging.isSettingsModalOpen) {
@@ -59,13 +80,17 @@
 			screenEffect: rigging.screenEffect,
 			trackingSensitivity: rigging.trackingSensitivity,
 			smoothingAmount: rigging.smoothingAmount,
+			jitterReduction: rigging.jitterReduction,
 			eyeBlinkLinked: rigging.eyeBlinkLinked,
 			deadzoneThreshold: rigging.deadzoneThreshold,
+			holdPoseOnLoss: rigging.holdPoseOnLoss,
 			enableHandTracking: rigging.enableHandTracking,
 			poseLoopMode: rigging.poseLoopMode,
-			calibrationYaw: rigging.calibrationYaw,
-			calibrationPitch: rigging.calibrationPitch,
-			calibrationRoll: rigging.calibrationRoll
+			isRiggingPinned: rigging.isRiggingPinned,
+			riggingViewMode: rigging.riggingViewMode,
+			cameraDeviceId: rigging.cameraDeviceId,
+			cameraResolution: rigging.cameraResolution,
+			currentLocale: i18n.currentLocale
 		});
 
 		const blob = new Blob([json], { type: 'application/json' });
@@ -91,9 +116,15 @@
 				if (parsed.uiTheme) rigging.uiTheme = parsed.uiTheme as any;
 				if (parsed.trackingSensitivity) rigging.trackingSensitivity = parsed.trackingSensitivity;
 				if (parsed.smoothingAmount) rigging.smoothingAmount = parsed.smoothingAmount;
+				if (parsed.jitterReduction !== undefined) rigging.jitterReduction = parsed.jitterReduction;
 				if (parsed.deadzoneThreshold) rigging.deadzoneThreshold = parsed.deadzoneThreshold;
 				if (parsed.backgroundStyle) rigging.backgroundStyle = parsed.backgroundStyle as any;
 				if (parsed.backgroundColor) rigging.backgroundColor = parsed.backgroundColor;
+				if (parsed.isRiggingPinned !== undefined) rigging.isRiggingPinned = parsed.isRiggingPinned;
+				if (parsed.riggingViewMode) rigging.riggingViewMode = parsed.riggingViewMode;
+				if (parsed.cameraDeviceId !== undefined) rigging.cameraDeviceId = parsed.cameraDeviceId;
+				if (parsed.cameraResolution) rigging.cameraResolution = parsed.cameraResolution as any;
+				if (parsed.currentLocale) i18n.setLocale(parsed.currentLocale as any);
 				rigging.persist();
 				rigging.showToast('✓ Konfigurasi berhasil dipulihkan!');
 			} else {
@@ -104,20 +135,39 @@
 	}
 
 	function handleResetDefaults() {
-		if (confirm('Reset semua preferensi ke pengaturan awal default?')) {
+		if (confirm(i18n.t('reset_confirm'))) {
 			clearPreferences();
 			rigging.trackingSensitivity = 1.0;
-			rigging.smoothingAmount = 0.35;
+			rigging.smoothingAmount = 0.45;
+			rigging.jitterReduction = 0.5;
 			rigging.deadzoneThreshold = 0.3;
 			rigging.eyeBlinkLinked = false;
+			rigging.holdPoseOnLoss = true;
 			rigging.enableHandTracking = true;
 			rigging.uiTheme = 'cyber-dark';
 			rigging.backgroundStyle = 'solid';
 			rigging.backgroundColor = '#09090b';
 			rigging.screenEffect = 'none';
+			rigging.isRiggingPinned = true;
+			rigging.riggingViewMode = 'stay';
+			rigging.cameraDeviceId = '';
+			rigging.cameraResolution = '720p';
 			rigging.resetCalibration();
 			rigging.persist();
 			rigging.showToast('Pengaturan telah di-reset ke default.');
+		}
+	}
+
+	async function handleCameraChange() {
+		rigging.persist();
+		if (rigging.isCameraActive) {
+			tracker.stopCamera();
+			try {
+				await tracker.startCamera();
+				rigging.showToast('✓ Kamera berhasil dialihkan');
+			} catch (err: any) {
+				alert(err?.message || 'Gagal beralih kamera');
+			}
 		}
 	}
 </script>
@@ -143,11 +193,11 @@
 					</div>
 					<div>
 						<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2">
-							Pengaturan & Spesifikasi Sistem
+							{i18n.t('settings_title')}
 							<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono">PRO</span>
 						</h2>
 						<p class="text-xs text-zinc-400">
-							Konfigurasi hardware, benchmark performa, tema UI, voice changer & penyimpanan
+							{i18n.t('settings_subtitle')}
 						</p>
 					</div>
 				</div>
@@ -171,7 +221,22 @@
 					}"
 				>
 					<Cpu class="w-3.5 h-3.5" />
-					<span>Hardware & Performa</span>
+					<span>{i18n.t('tab_perf')}</span>
+				</button>
+
+				<button
+					onclick={() => {
+						activeTab = 'tracking';
+						refreshDevices();
+					}}
+					class="flex items-center gap-1.5 py-2 px-3 border-b-2 text-xs font-medium transition-all {
+						activeTab === 'tracking'
+							? 'border-violet-500 text-violet-300 font-semibold'
+							: 'border-transparent text-zinc-400 hover:text-zinc-200'
+					}"
+				>
+					<SlidersHorizontal class="w-3.5 h-3.5" />
+					<span>{i18n.t('tab_tracking')}</span>
 				</button>
 
 				<button
@@ -183,19 +248,7 @@
 					}"
 				>
 					<Palette class="w-3.5 h-3.5" />
-					<span>Tema & Tampilan</span>
-				</button>
-
-				<button
-					onclick={() => (activeTab = 'voice')}
-					class="flex items-center gap-1.5 py-2 px-3 border-b-2 text-xs font-medium transition-all {
-						activeTab === 'voice'
-							? 'border-emerald-500 text-emerald-300 font-semibold'
-							: 'border-transparent text-zinc-400 hover:text-zinc-200'
-					}"
-				>
-					<Mic class="w-3.5 h-3.5" />
-					<span>Voice Changer</span>
+					<span>{i18n.t('tab_appearance')}</span>
 				</button>
 
 				<button
@@ -207,7 +260,7 @@
 					}"
 				>
 					<Database class="w-3.5 h-3.5" />
-					<span>Penyimpanan & Backup</span>
+					<span>{i18n.t('tab_storage')}</span>
 				</button>
 			</div>
 
@@ -215,11 +268,10 @@
 			<div class="p-5 overflow-y-auto space-y-5 text-xs">
 				<!-- TAB 1: Hardware & Performa -->
 				{#if activeTab === 'perf'}
-					<!-- Benchmark Bar: Merah to Hijau -->
 					<div class="p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-3">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2">
-								<span class="font-semibold text-zinc-200 text-xs">Tingkatan Kelancaran Sistem:</span>
+								<span class="font-semibold text-zinc-200 text-xs">{i18n.t('system_smoothness')}</span>
 								<span
 									class="px-2 py-0.5 rounded text-[11px] font-bold"
 									style="color: {hardware.tierColor}; background: {hardware.tierColor}18; border: 1px solid {hardware.tierColor}40;"
@@ -239,21 +291,29 @@
 						</div>
 
 						<div class="flex justify-between text-[10px] text-zinc-500 font-medium">
-							<span class="text-rose-400">Tidak Lancar (&lt; 25 FPS)</span>
-							<span class="text-amber-400">Cukup (30 FPS)</span>
-							<span class="text-emerald-400">Lancar (60 FPS)</span>
-							<span class="text-cyan-400 font-bold">Ultra 60+ FPS</span>
+							<span class="text-rose-400">{i18n.t('tier_slow')}</span>
+							<span class="text-amber-400">{i18n.t('tier_fair')}</span>
+							<span class="text-emerald-400">{i18n.t('tier_smooth')}</span>
+							<span class="text-cyan-400 font-bold">{i18n.t('tier_ultra')}</span>
 						</div>
 
-						<!-- Hardware details -->
-						<div class="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800 text-[11px]">
-							<div class="flex flex-col">
-								<span class="text-zinc-500">GPU Renderer Terdeteksi:</span>
-								<span class="font-mono text-zinc-200 truncate">{hardware.gpuRenderer}</span>
+						<!-- Real Hardware Telemetry Grid -->
+						<div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-zinc-800 text-[11px]">
+							<div class="flex flex-col p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+								<span class="text-zinc-500 text-[10px]">{i18n.t('gpu_detected')}</span>
+								<span class="font-mono text-zinc-200 truncate mt-0.5">{hardware.gpuRenderer}</span>
 							</div>
-							<div class="flex flex-col">
-								<span class="text-zinc-500">CPU Thread Concurrency:</span>
-								<span class="font-mono text-zinc-200">{hardware.cpuCores} Threads Aktif</span>
+							<div class="flex flex-col p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+								<span class="text-zinc-500 text-[10px]">{i18n.t('cpu_threads')}</span>
+								<span class="font-mono text-zinc-200 mt-0.5">{hardware.cpuCores} Threads Aktif</span>
+							</div>
+							<div class="flex flex-col p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+								<span class="text-zinc-500 text-[10px]">{i18n.t('fps')} Live:</span>
+								<span class="font-mono text-emerald-400 mt-0.5 font-bold">{rigging.fps || 0} FPS</span>
+							</div>
+							<div class="flex flex-col p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+								<span class="text-zinc-500 text-[10px]">{i18n.t('latency')} Tracking:</span>
+								<span class="font-mono text-cyan-400 mt-0.5 font-bold">{rigging.latencyMs || 0} ms</span>
 							</div>
 						</div>
 
@@ -261,21 +321,23 @@
 						<div class="p-3 bg-cyan-950/30 border border-cyan-800/40 rounded-lg flex items-start gap-2.5">
 							<Sparkles class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
 							<div class="space-y-1">
-								<span class="font-semibold text-cyan-300">Apakah NVIDIA RTX Makin Smooth?</span>
+								<span class="font-semibold text-cyan-300">{i18n.t('rtx_title')}</span>
 								<p class="text-[11px] text-zinc-300 leading-relaxed">
-									<strong>Ya, sangat signifikan!</strong> GPU NVIDIA RTX memiliki Tensor Cores & akselerasi WebGL FP16 paralel yang memproses pelacakan wajah & tangan Google MediaPipe secara real-time dengan latensi &lt; 10ms. VSync 60-144 FPS berjalan terkunci tanpa frame drop saat streaming di OBS.
+									{i18n.t('rtx_desc')}
 								</p>
 							</div>
 						</div>
 					</div>
 
-					<!-- Tuners -->
-					<div class="space-y-3">
-						<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-							Pengaturan Sensitivitas & Tracking
-						</h3>
+				<!-- TAB 2: Tracking & Kestabilan (Anti-Flicker & Camera Hardware) -->
+				{:else if activeTab === 'tracking'}
+					<div class="space-y-4">
+						<div class="p-3 bg-zinc-900/40 border border-zinc-800 rounded-xl space-y-3.5">
+							<h3 class="text-[11px] font-semibold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+								<SlidersHorizontal class="w-3.5 h-3.5" />
+								<span>{i18n.t('tracking_settings_title')}</span>
+							</h3>
 
-						<div class="p-3 bg-zinc-900/40 border border-zinc-800 rounded-xl space-y-3">
 							<!-- Sensitivity -->
 							<div>
 								<div class="flex justify-between text-xs mb-1">
@@ -285,7 +347,7 @@
 								<input
 									type="range"
 									min="0.5"
-									max="2.0"
+									max="2.5"
 									step="0.05"
 									bind:value={rigging.trackingSensitivity}
 									oninput={() => rigging.persist()}
@@ -297,16 +359,33 @@
 							<div>
 								<div class="flex justify-between text-xs mb-1">
 									<span class="text-zinc-300">{i18n.t('smoothing')}</span>
-									<span class="font-mono text-cyan-400">{rigging.smoothingAmount.toFixed(2)}</span>
+									<span class="font-mono text-violet-400">{(rigging.smoothingAmount * 100).toFixed(0)}%</span>
 								</div>
 								<input
 									type="range"
-									min="0.1"
-									max="0.7"
+									min="0.0"
+									max="1.0"
 									step="0.05"
 									bind:value={rigging.smoothingAmount}
 									oninput={() => rigging.persist()}
-									class="w-full accent-cyan-400 cursor-pointer"
+									class="w-full accent-violet-400 cursor-pointer"
+								/>
+							</div>
+
+							<!-- Jitter Suppression (Anti-Flicker) -->
+							<div>
+								<div class="flex justify-between text-xs mb-1">
+									<span class="text-zinc-300">{i18n.t('jitter_filter')}</span>
+									<span class="font-mono text-emerald-400">{(rigging.jitterReduction * 100).toFixed(0)}%</span>
+								</div>
+								<input
+									type="range"
+									min="0.0"
+									max="1.0"
+									step="0.05"
+									bind:value={rigging.jitterReduction}
+									oninput={() => rigging.persist()}
+									class="w-full accent-emerald-400 cursor-pointer"
 								/>
 							</div>
 
@@ -314,7 +393,7 @@
 							<div>
 								<div class="flex justify-between text-xs mb-1">
 									<span class="text-zinc-300">{i18n.t('deadzone')}</span>
-									<span class="font-mono text-cyan-400">{rigging.deadzoneThreshold.toFixed(1)}°</span>
+									<span class="font-mono text-amber-400">{rigging.deadzoneThreshold.toFixed(1)}°</span>
 								</div>
 								<input
 									type="range"
@@ -323,37 +402,87 @@
 									step="0.1"
 									bind:value={rigging.deadzoneThreshold}
 									oninput={() => rigging.persist()}
-									class="w-full accent-cyan-400 cursor-pointer"
+									class="w-full accent-amber-400 cursor-pointer"
 								/>
 							</div>
 
 							<!-- Toggles -->
-							<div class="pt-2 border-t border-zinc-800 flex items-center justify-between">
-								<span class="text-zinc-300">Sinkronkan Kedipan Kedua Mata</span>
-								<input
-									type="checkbox"
-									bind:checked={rigging.eyeBlinkLinked}
-									onchange={() => rigging.persist()}
-									class="w-4 h-4 accent-cyan-400 rounded cursor-pointer"
-								/>
+							<div class="pt-2 border-t border-zinc-800 space-y-2.5">
+								<div class="flex items-center justify-between">
+									<span class="text-zinc-300">{i18n.t('blink_sync')}</span>
+									<input
+										type="checkbox"
+										bind:checked={rigging.eyeBlinkLinked}
+										onchange={() => rigging.persist()}
+										class="w-4 h-4 accent-cyan-400 rounded cursor-pointer"
+									/>
+								</div>
+								<div class="flex items-center justify-between">
+									<span class="text-zinc-300">{i18n.t('hold_pose_loss')}</span>
+									<input
+										type="checkbox"
+										bind:checked={rigging.holdPoseOnLoss}
+										onchange={() => rigging.persist()}
+										class="w-4 h-4 accent-violet-400 rounded cursor-pointer"
+									/>
+								</div>
+								<div class="flex items-center justify-between">
+									<span class="text-zinc-300">{i18n.t('hands_toggle')}</span>
+									<input
+										type="checkbox"
+										bind:checked={rigging.enableHandTracking}
+										onchange={() => rigging.persist()}
+										class="w-4 h-4 accent-emerald-400 rounded cursor-pointer"
+									/>
+								</div>
 							</div>
-							<div class="flex items-center justify-between">
-								<span class="text-zinc-300">Pelacakan Tangan & High-Five</span>
-								<input
-									type="checkbox"
-									bind:checked={rigging.enableHandTracking}
-									onchange={() => rigging.persist()}
-									class="w-4 h-4 accent-cyan-400 rounded cursor-pointer"
-								/>
+						</div>
+
+						<!-- Camera Hardware Device Selection -->
+						<div class="p-3 bg-zinc-900/40 border border-zinc-800 rounded-xl space-y-3">
+							<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+								<Camera class="w-3.5 h-3.5 text-cyan-400" />
+								<span>{i18n.t('camera_device')}</span>
+							</h3>
+
+							<div class="grid grid-cols-2 gap-2">
+								<div>
+									<label for="webcam-device-select" class="block text-[11px] text-zinc-400 mb-1">Webcam:</label>
+									<select
+										id="webcam-device-select"
+										bind:value={rigging.cameraDeviceId}
+										onchange={handleCameraChange}
+										class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500"
+									>
+										<option value="">Default System Camera</option>
+										{#each availableCameras as cam}
+											<option value={cam.deviceId}>{cam.label}</option>
+										{/each}
+									</select>
+								</div>
+
+								<div>
+									<label for="camera-res-select" class="block text-[11px] text-zinc-400 mb-1">{i18n.t('camera_resolution')}:</label>
+									<select
+										id="camera-res-select"
+										bind:value={rigging.cameraResolution}
+										onchange={handleCameraChange}
+										class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500"
+									>
+										<option value="1080p">1080p Full HD (60 FPS)</option>
+										<option value="720p">720p HD (Optimal / 60 FPS)</option>
+										<option value="480p">480p Performance (30 FPS)</option>
+									</select>
+								</div>
 							</div>
 						</div>
 					</div>
 
-				<!-- TAB 2: Tema & Tampilan -->
+				<!-- TAB 3: Tema & Tampilan -->
 				{:else if activeTab === 'appearance'}
 					<div class="space-y-4">
 						<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-							Pilihan UI Theme Toggler
+							{i18n.t('theme_selector_title')}
 						</h3>
 						<div class="grid grid-cols-2 gap-2.5">
 							{#each themes as t}
@@ -381,43 +510,80 @@
 								</button>
 							{/each}
 						</div>
-					</div>
 
-				<!-- TAB 3: Voice Changer -->
-				{:else if activeTab === 'voice'}
-					<div class="space-y-4">
-						<div class="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-2.5">
-							<div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
-								<Mic class="w-4 h-4" />
-								<span>Solusi & Rekomendasi Voice Changer (100% Gratis)</span>
+						<!-- Rigging Inspector Layout Mode Preference -->
+						<div class="pt-3 border-t border-zinc-800 space-y-2">
+							<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+								Rigging Inspector Layout
+							</h3>
+							<div class="grid grid-cols-3 gap-2">
+								<button
+									onclick={() => {
+										rigging.riggingViewMode = 'stay';
+										rigging.isRiggingPinned = true;
+										rigging.persist();
+									}}
+									class="p-2.5 rounded-xl border text-center transition-all {
+										rigging.riggingViewMode === 'stay'
+											? 'bg-violet-500/10 border-violet-500 text-violet-300 font-semibold'
+											: 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									{i18n.t('rigging_stay')}
+								</button>
+								<button
+									onclick={() => {
+										rigging.riggingViewMode = 'windowed';
+										rigging.isRiggingPinned = true;
+										rigging.persist();
+									}}
+									class="p-2.5 rounded-xl border text-center transition-all {
+										rigging.riggingViewMode === 'windowed'
+											? 'bg-cyan-500/10 border-cyan-500 text-cyan-300 font-semibold'
+											: 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									{i18n.t('rigging_windowed')}
+								</button>
+								<button
+									onclick={() => {
+										rigging.riggingViewMode = 'drawer';
+										rigging.isRiggingPinned = false;
+										rigging.persist();
+									}}
+									class="p-2.5 rounded-xl border text-center transition-all {
+										rigging.riggingViewMode === 'drawer'
+											? 'bg-pink-500/10 border-pink-500 text-pink-300 font-semibold'
+											: 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									{i18n.t('rigging_drawer')}
+								</button>
 							</div>
-							<p class="text-zinc-300 leading-relaxed text-xs">
-								Untuk streaming VTuber dengan suara anime atau karakter wanita/pria, ada 2 metode terbaik yang 100% gratis dan berjalan di komputer Anda:
-							</p>
+						</div>
 
-							<div class="space-y-2 pt-2">
-								<div class="p-3 bg-zinc-950 border border-zinc-800 rounded-lg space-y-1">
-									<div class="flex items-center justify-between">
-										<span class="font-bold text-zinc-100">1. W-Okada Realtime AI Voice Changer (Rekomendasi Utama)</span>
-										<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">AI RVC</span>
-									</div>
-									<p class="text-zinc-400 text-[11px] leading-relaxed">
-										Aplikasi open-source (GitHub) gratis yang menggunakan model AI RVC (Retrieval-based Voice Conversion). Sangat optimal di GPU <strong>NVIDIA RTX</strong> dengan latensi di bawah 150ms. Suara terdengar sangat natural seperti pengisi suara asli.
-									</p>
-									<p class="text-zinc-500 text-[10px]">
-										Cukup pasang <em>VB-Audio Virtual Cable</em> (gratis) untuk menyambungkan mikrofon hasil AI langsung ke OBS Studio dan Discord.
-									</p>
-								</div>
-
-								<div class="p-3 bg-zinc-950 border border-zinc-800 rounded-lg space-y-1">
-									<div class="flex items-center justify-between">
-										<span class="font-bold text-zinc-100">2. Browser Web Audio Formant & Pitch Shifter</span>
-										<span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">Web Audio</span>
-									</div>
-									<p class="text-zinc-400 text-[11px] leading-relaxed">
-										Modulasi pitch dan formant vokal langsung di browser menggunakan Web Audio API + SoundTouch Wasm. Bebas instalasi software tambahan, latensi 0ms.
-									</p>
-								</div>
+						<!-- Language Selector -->
+						<div class="pt-3 border-t border-zinc-800 space-y-2">
+							<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+								<Languages class="w-3.5 h-3.5 text-cyan-400" />
+								<span>{i18n.t('language')}</span>
+							</h3>
+							<div class="grid grid-cols-3 gap-2">
+								{#each languages as lang}
+									<button
+										onclick={() => {
+											i18n.setLocale(lang.code);
+											rigging.persist();
+										}}
+										class="p-2.5 rounded-xl border text-center transition-all {
+											i18n.currentLocale === lang.code
+												? 'bg-cyan-500/10 border-cyan-500 text-cyan-300 font-semibold'
+												: 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+										}"
+									>
+										{lang.label}
+									</button>
+								{/each}
 							</div>
 						</div>
 					</div>
@@ -426,12 +592,15 @@
 				{:else if activeTab === 'storage'}
 					<div class="space-y-4">
 						<div class="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-2">
-							<div class="flex items-center gap-2 font-semibold text-zinc-200">
-								<Database class="w-4 h-4 text-amber-400" />
-								<span>Penyimpanan Otomatis (Auto-Save LocalStorage)</span>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-2 font-semibold text-zinc-200">
+									<Database class="w-4 h-4 text-amber-400" />
+									<span>{i18n.t('auto_save_title')}</span>
+								</div>
+								<span class="font-mono text-[10px] text-zinc-500">{storageUsageBytes} bytes used</span>
 							</div>
 							<p class="text-zinc-400 text-xs leading-relaxed">
-								Semua konfigurasi model yang dipilih, warna latar, sensitivitas, kalibrasi kepala, hingga posisi rigging otomatis tersimpan di peramban (localStorage). Saat halaman di-reload, semua konfigurasi tetap utuh tanpa reset.
+								{i18n.t('auto_save_desc')}
 							</p>
 						</div>
 
@@ -442,7 +611,7 @@
 								class="flex items-center justify-center gap-2 p-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-200 font-medium transition-all active:scale-95"
 							>
 								<Download class="w-4 h-4 text-cyan-400" />
-								<span>Export Konfigurasi JSON</span>
+								<span>{i18n.t('export_config')}</span>
 							</button>
 
 							<!-- Import -->
@@ -450,7 +619,7 @@
 								class="flex items-center justify-center gap-2 p-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-200 font-medium transition-all active:scale-95 cursor-pointer"
 							>
 								<Upload class="w-4 h-4 text-pink-400" />
-								<span>Import Konfigurasi JSON</span>
+								<span>{i18n.t('import_config')}</span>
 								<input type="file" accept=".json" onchange={handleImportFile} class="hidden" />
 							</label>
 						</div>
@@ -462,7 +631,7 @@
 								class="w-full flex items-center justify-center gap-2 p-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded-xl transition-colors font-medium active:scale-95 text-xs"
 							>
 								<RotateCcw class="w-3.5 h-3.5" />
-								<span>Reset Semua Konfigurasi ke Pengaturan Awal</span>
+								<span>{i18n.t('reset_defaults')}</span>
 							</button>
 						</div>
 					</div>
@@ -471,12 +640,12 @@
 
 			<!-- Footer -->
 			<div class="p-3.5 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-between text-xs text-zinc-400">
-				<span class="text-[11px] font-mono">MiruNova Live v0.6.0 • Free & Client-Side</span>
+				<span class="text-[11px] font-mono">MiruNova Live v0.8.0 • 100% Free & Client-Side</span>
 				<button
 					onclick={() => (rigging.isSettingsModalOpen = false)}
 					class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg font-medium transition-colors"
 				>
-					Selesai
+					{i18n.t('done')}
 				</button>
 			</div>
 		</div>

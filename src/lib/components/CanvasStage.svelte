@@ -129,60 +129,6 @@
 				currentModel = null;
 			}
 
-			const is2DAvatar = url.includes('momose_aria') || url.endsWith('.jpg') || url.endsWith('.png') || url.endsWith('.webp');
-
-			if (is2DAvatar) {
-				const PIXI = (window as any).PIXI || (await import('pixi.js'));
-				const { ReactiveAvatar2D } = await import('#lib/core/avatar2d');
-				const avatar = await ReactiveAvatar2D.create(PIXI, url);
-				currentModel = avatar;
-
-				const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
-				const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
-
-				const scale = Math.min(rendererWidth / avatar.width, rendererHeight / avatar.height) * 0.85;
-				modelScale = scale;
-				avatar.scale.set(scale);
-
-				modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 50 };
-				avatar.position.set(modelPosition.x, modelPosition.y);
-
-				app.stage.addChild(avatar.container);
-
-				avatarTickerFn = () => {
-					if (currentModel !== avatar) return;
-					const now = performance.now();
-					for (let i = 0; i < rigging.parameters.length; i++) {
-						const param = rigging.parameters[i];
-						let val = rigging.getActiveValue(param.id);
-
-						if (rigging.poseLoopMode !== 'none') {
-							const speed = rigging.poseLoopSpeed;
-							if (param.id === 'ParamBreath') {
-								val = (Math.sin(now * 0.003 * speed) + 1) / 2;
-							} else if (param.id === 'ParamBodyAngleZ' && rigging.poseLoopMode === 'gentle-sway') {
-								val += Math.sin(now * 0.0018 * speed) * 3.5;
-							} else if (param.id === 'ParamAngleY' && rigging.poseLoopMode === 'head-nod') {
-								val += Math.sin(now * 0.004 * speed) * 4.5;
-							}
-						}
-						avatarParamsBuffer[param.id] = val;
-					}
-					avatar.updateParameters(avatarParamsBuffer);
-				};
-				app.ticker.add(avatarTickerFn);
-
-				rigging.parameters = DEFAULT_PARAMETERS;
-				for (const p of DEFAULT_PARAMETERS) {
-					if (!(p.id in rigging.liveValues)) {
-						rigging.setLiveValue(p.id, p.defaultValue);
-						rigging.setManualValue(p.id, p.defaultValue);
-					}
-				}
-				rigging.availableMotions = ['HighFive', 'Wave', 'Blink', 'Smile', 'Frown'];
-				return;
-			}
-
 			const Live2D = Live2DModelClass || (await import('pixi-live2d-display/cubism4')).Live2DModel;
 			const model = await Live2D.from(url, {
 				autoInteract: false
@@ -294,12 +240,14 @@
 	}
 
 	function handleMouseDown(e: MouseEvent) {
+		if (rigging.isGuiLocked) return;
 		if (e.button !== 0 && e.button !== 1) return;
 		isDragging = true;
 		dragStart = { x: e.clientX - modelPosition.x, y: e.clientY - modelPosition.y };
 	}
 
 	function handleMouseMove(e: MouseEvent) {
+		if (rigging.isGuiLocked) return;
 		if (!isDragging || !currentModel) return;
 		modelPosition = {
 			x: e.clientX - dragStart.x,
@@ -313,6 +261,7 @@
 	}
 
 	function handleWheel(e: WheelEvent) {
+		if (rigging.isGuiLocked) return;
 		if (!currentModel) return;
 		e.preventDefault();
 		const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
@@ -321,6 +270,10 @@
 	}
 
 	function handleDoubleClick() {
+		if (rigging.isGuiLocked) {
+			rigging.toggleGuiLock(false);
+			return;
+		}
 		if (!currentModel || !app) return;
 		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
 		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);

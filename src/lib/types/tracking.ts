@@ -53,18 +53,17 @@ export type BackgroundStyle =
 	| 'gradient'
 	| 'custom-image'
 	| 'chroma';
-
 export type ScreenEffect = 'none' | 'vignette' | 'scanlines' | 'crt' | 'blur';
 export type UITheme = 'cyber-dark' | 'midnight' | 'monochrome' | 'synthwave';
 export type PoseLoopMode = 'none' | 'idle-breath' | 'gentle-sway' | 'head-nod';
 export type RiggingMode = 'live' | 'manual';
+export type RiggingViewMode = 'stay' | 'windowed' | 'drawer';
 
 export interface Live2DModelItem {
 	id: string;
 	name: string;
 	url: string;
 	description: string;
-	version: 'Cubism 3/4' | 'Cubism 2' | '2D Reactive';
-	modelType?: 'live2d' | 'avatar2d';
+	version: 'Cubism 3/4' | 'Cubism 2';
 	avatarUrl?: string;
 }

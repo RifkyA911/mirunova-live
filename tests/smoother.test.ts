@@ -45,4 +45,36 @@ describe('ParameterSmoother', () => {
 		// Must close quickly (at least 70% in first step)
 		expect(closedStep).toBeLessThan(0.35);
 	});
+
+	it('heavily attenuates micro-jitter noise below jitter threshold', () => {
+		const smoother = new ParameterSmoother(0.35, 0.8);
+		smoother.smooth('ParamAngleX', 0); // start at 0
+
+		// Subtle sensor noise of 0.15 degrees (below 0.35 degree threshold)
+		const jitterStep = smoother.smooth('ParamAngleX', 0.15, 'angle');
+		// Should move by only a tiny fraction (heavily suppressed)
+		expect(jitterStep).toBeLessThan(0.04);
+	});
+
+	it('supports smooth decay towards neutral pose on face tracking loss', () => {
+		const smoother = new ParameterSmoother(0.35);
+		smoother.smooth('ParamAngleX', 25.0);
+
+		const d1 = smoother.decayTowards('ParamAngleX', 0, 0.1);
+		expect(d1).toBeLessThan(25.0);
+		expect(d1).toBeGreaterThan(20.0);
+
+		const d2 = smoother.decayTowards('ParamAngleX', 0, 0.1);
+		expect(d2).toBeLessThan(d1);
+	});
+
+	it('maps higher smoothing amount to lower alpha for stable output', () => {
+		const smootherResponsive = new ParameterSmoother();
+		smootherResponsive.setSmoothingConfig(0.0, 0.2); // snappy
+
+		const smootherUltra = new ParameterSmoother();
+		smootherUltra.setSmoothingConfig(1.0, 0.9); // ultra smooth
+
+		expect(smootherUltra.getAlpha()).toBeLessThan(smootherResponsive.getAlpha());
+	});
 });

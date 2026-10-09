@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.0] - 2026-10-10
+
+### Added
+- **Rigging Inspector Stay & Windowed Modes:**
+  - Pin mode (Stay) keeping the rigging inspector docked on the right side without an obstructive backdrop overlay, enabling simultaneous webcam tracking and live avatar manipulation.
+  - Windowed mode toggle for high-precision inspection in expanded viewports.
+- **Camera Tracking Anti-Flicker & Jitter Suppression Engine:**
+  - Replaced step deadband with continuous linear-ramp deadzone (`applyContinuousDeadzone`), completely eliminating the 0.3°–0.5° snapping jump.
+  - Quadratic micro-jitter noise attenuation floor in `ParameterSmoother` for ultra-steady tracking.
+  - Dual-threshold eyelid hysteresis (closed lock <= 0.15, open lock >= 0.80) eliminating flutter and "kiyer-kiyer" half-open eyes.
+  - Dropped-frame debounce (holds pose up to 6 lost frames) followed by smooth 30-frame decay towards neutral pose on tracking loss.
+  - Fixed inverted smoothing slider mapping: higher values now provide rock-solid, smoother movement.
+  - Webcam input device selector and resolution constraints (360p, 720p, 1080p).
+- **Clear GUI & Screen Lock Mode:**
+  - Quick-action Lock Screen button on the Control Dock and global hotkey **`L`** to instantly hide all chrome UI and freeze canvas dragging.
+  - Floating translucent unlock pill for instant one-click restoration.
+- **Zero Dummy Data & Live Hardware Telemetry:**
+  - Replaced all static and mock values in Settings with live `$state` bindings persisted to `localStorage`.
+  - Live hardware telemetry panel reporting actual FPS, frame render latency, WebGL unmasked GPU renderer, CPU concurrency, and active camera resolution.
+  - Purged dummy Voice Changer tab from the settings modal UI.
+- **Full Internationalization (i18n):**
+  - Complete dictionary across Indonesian (`id`), English (`en`), and Japanese (`ja`) for Settings Modal, Rigging Inspector, Control Dock, and Shortcut Guide.
+- **Vivian Live2D Model:**
+  - Official Vivian Live2D Cubism model with full physics, expressions, eye tracking, and mouth phonemes.
+  - Purged experimental static image assets.
+
+---
+
 ## [0.7.0] - 2026-10-10
 
 ### Added

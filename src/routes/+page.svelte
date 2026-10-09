@@ -13,7 +13,7 @@
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { i18n } from '#lib/i18n/index.svelte';
-	import { Radio, X, Sparkles, Check } from 'lucide-svelte';
+	import { Radio, X, Sparkles, Check, Lock } from 'lucide-svelte';
 
 	// OBS Mode auto-fade control
 	let isMouseActive = $state<boolean>(true);
@@ -57,6 +57,10 @@
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
 			if (e.key === 'Escape') {
+				if (rigging.isGuiLocked) {
+					rigging.toggleGuiLock(false);
+					return;
+				}
 				if (rigging.isObsMode) rigging.toggleObsMode(false);
 				if (rigging.isDrawerOpen) rigging.isDrawerOpen = false;
 				if (rigging.isThemeModalOpen) rigging.isThemeModalOpen = false;
@@ -68,6 +72,8 @@
 				e.preventDefault();
 				if (rigging.isCameraActive) tracker.stopCamera();
 				else tracker.startCamera().catch(() => {});
+			} else if (e.key === 'l' || e.key === 'L') {
+				rigging.toggleGuiLock();
 			} else if (e.key === 'h' || e.key === 'H') {
 				rigging.toggleDock();
 			} else if (e.key === 'm' || e.key === 'M') {
@@ -249,8 +255,8 @@
 		</div>
 	{/if}
 
-	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode) -->
-	{#if !rigging.isObsMode}
+	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode or when GUI is locked) -->
+	{#if !rigging.isObsMode && !rigging.isGuiLocked}
 		<!-- Header Brand Watermark (Subtle & Non-intrusive) -->
 		<header class="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
 			<div class="px-3 py-1.5 bg-zinc-950/75 backdrop-blur-md border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-lg">
@@ -287,6 +293,20 @@
 
 		<!-- Comprehensive Keyboard Shortcuts Guide Modal -->
 		<ShortcutGuideModal />
+	{/if}
+
+	<!-- 4. GUI Locked Floating Indicator & Unlock Pill -->
+	{#if rigging.isGuiLocked}
+		<div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+			<button
+				onclick={() => rigging.toggleGuiLock(false)}
+				class="flex items-center gap-2 px-4 py-2 bg-zinc-950/90 hover:bg-zinc-900 border border-amber-500/40 hover:border-amber-400 rounded-full text-zinc-200 text-xs shadow-2xl backdrop-blur-md transition-all active:scale-95 group"
+			>
+				<Lock class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+				<span class="font-medium text-xs text-amber-300">{i18n.t('gui_locked_badge')}</span>
+				<span class="font-mono text-[10px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full">[L / ESC]</span>
+			</button>
+		</div>
 	{/if}
 
 	<!-- Floating Toast Notification -->

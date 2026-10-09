@@ -4,9 +4,11 @@ import type {
 	ScreenEffect,
 	UITheme,
 	PoseLoopMode,
-	RiggingMode
+	RiggingMode,
+	RiggingViewMode
 } from '#lib/types/tracking';
 import { MODEL_CATALOG } from '#lib/data/models';
+import { i18n, type Locale } from '#lib/i18n/index.svelte';
 
 export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	// Head Rotation
@@ -70,11 +72,22 @@ export class RiggingStore {
 	isCalibrating = $state<boolean>(false);
 	private toastTimer: any = null;
 
-	// Tracking Quality & Versatility Tuners
-	trackingSensitivity = $state<number>(1.0); // 0.5 to 2.0
-	smoothingAmount = $state<number>(0.35);     // 0.1 snappy to 0.7 super smooth
+	// Screen Locking & Layout Modes
+	isGuiLocked = $state<boolean>(false);
+	isRiggingPinned = $state<boolean>(true);
+	riggingViewMode = $state<RiggingViewMode>('stay');
+
+	// Tracking Quality & Anti-Flicker Stability Tuners
+	trackingSensitivity = $state<number>(1.0); // 0.5 to 2.5
+	smoothingAmount = $state<number>(0.45);     // 0.0 snappy to 1.0 ultra smooth
+	jitterReduction = $state<number>(0.5);     // 0.0 to 1.0 jitter suppression filter
+	deadzoneThreshold = $state<number>(0.3);    // 0 to 1.5 degrees continuous deadband
 	eyeBlinkLinked = $state<boolean>(false);    // sync both eyes
-	deadzoneThreshold = $state<number>(0.3);    // 0 to 1.5 degrees
+	holdPoseOnLoss = $state<boolean>(true);     // hold pose on 1-frame drop & smooth decay
+
+	// Camera Hardware Preferences
+	cameraDeviceId = $state<string>('');
+	cameraResolution = $state<'1080p' | '720p' | '480p'>('720p');
 
 	// Theme & Background System
 	uiTheme = $state<UITheme>('cyber-dark');
@@ -89,9 +102,9 @@ export class RiggingStore {
 	customGlbUrl = $state<string | null>(null);
 
 	// Active Model Details
-	selectedModelId = $state<string>('haru');
-	modelName = $state<string>('Haru Greeter');
-	modelUrl = $state<string>(MODEL_CATALOG[0].url);
+	selectedModelId = $state<string>('vivian');
+	modelName = $state<string>('薇薇安 (Vivian)');
+	modelUrl = $state<string>('/models/vivian/薇薇安.model3.json');
 	isLoadingModel = $state<boolean>(false);
 	availableMotions = $state<string[]>([]);
 	triggerMotionSignal = $state<{ name: string; timestamp: number } | null>(null);
@@ -156,8 +169,10 @@ export class RiggingStore {
 			customBgUrl: this.customBgUrl,
 			trackingSensitivity: this.trackingSensitivity,
 			smoothingAmount: this.smoothingAmount,
-			eyeBlinkLinked: this.eyeBlinkLinked,
+			jitterReduction: this.jitterReduction,
 			deadzoneThreshold: this.deadzoneThreshold,
+			eyeBlinkLinked: this.eyeBlinkLinked,
+			holdPoseOnLoss: this.holdPoseOnLoss,
 			enableHandTracking: this.enableHandTracking,
 			showCameraPip: this.showCameraPip,
 			showLandmarksMesh: this.showLandmarksMesh,
@@ -165,7 +180,12 @@ export class RiggingStore {
 			poseLoopSpeed: this.poseLoopSpeed,
 			calibrationYaw: this.calibrationYaw,
 			calibrationPitch: this.calibrationPitch,
-			calibrationRoll: this.calibrationRoll
+			calibrationRoll: this.calibrationRoll,
+			isRiggingPinned: this.isRiggingPinned,
+			riggingViewMode: this.riggingViewMode,
+			cameraDeviceId: this.cameraDeviceId,
+			cameraResolution: this.cameraResolution,
+			currentLocale: i18n.currentLocale
 		});
 	}
 
@@ -185,8 +205,10 @@ export class RiggingStore {
 		if (saved.customBgUrl !== undefined) this.customBgUrl = saved.customBgUrl;
 		if (saved.trackingSensitivity !== undefined) this.trackingSensitivity = saved.trackingSensitivity;
 		if (saved.smoothingAmount !== undefined) this.smoothingAmount = saved.smoothingAmount;
-		if (saved.eyeBlinkLinked !== undefined) this.eyeBlinkLinked = saved.eyeBlinkLinked;
+		if (saved.jitterReduction !== undefined) this.jitterReduction = saved.jitterReduction;
 		if (saved.deadzoneThreshold !== undefined) this.deadzoneThreshold = saved.deadzoneThreshold;
+		if (saved.eyeBlinkLinked !== undefined) this.eyeBlinkLinked = saved.eyeBlinkLinked;
+		if (saved.holdPoseOnLoss !== undefined) this.holdPoseOnLoss = saved.holdPoseOnLoss;
 		if (saved.enableHandTracking !== undefined) this.enableHandTracking = saved.enableHandTracking;
 		if (saved.showCameraPip !== undefined) this.showCameraPip = saved.showCameraPip;
 		if (saved.showLandmarksMesh !== undefined) this.showLandmarksMesh = saved.showLandmarksMesh;
@@ -195,6 +217,26 @@ export class RiggingStore {
 		if (saved.calibrationYaw !== undefined) this.calibrationYaw = saved.calibrationYaw;
 		if (saved.calibrationPitch !== undefined) this.calibrationPitch = saved.calibrationPitch;
 		if (saved.calibrationRoll !== undefined) this.calibrationRoll = saved.calibrationRoll;
+		if (saved.isRiggingPinned !== undefined) this.isRiggingPinned = saved.isRiggingPinned;
+		if (saved.riggingViewMode) this.riggingViewMode = saved.riggingViewMode;
+		if (saved.cameraDeviceId !== undefined) this.cameraDeviceId = saved.cameraDeviceId;
+		if (saved.cameraResolution) this.cameraResolution = saved.cameraResolution as any;
+		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
+	}
+
+	toggleGuiLock(locked?: boolean) {
+		this.isGuiLocked = locked !== undefined ? locked : !this.isGuiLocked;
+		if (this.isGuiLocked) {
+			this.isDrawerOpen = false;
+			this.isThemeModalOpen = false;
+			this.isModelModalOpen = false;
+			this.isObsModalOpen = false;
+			this.isSettingsModalOpen = false;
+			this.isShortcutModalOpen = false;
+			this.showToast(i18n.t('gui_locked_toast'));
+		} else {
+			this.showToast(i18n.t('gui_unlocked_toast'));
+		}
 	}
 
 	toggleObsMode(enable?: boolean) {

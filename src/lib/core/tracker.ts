@@ -20,6 +20,7 @@ export class FaceTracker {
 	// Performance Tracking & Reusable State Buffers (Zero Allocation Mandate)
 	private frameCount = 0;
 	private lastFpsCalcTime = performance.now();
+	private consecutiveLostFrames = 0;
 	private blendshapesMap = new Map<string, number>();
 	private handDataBuffer = {
 		leftDetected: false,
@@ -172,25 +173,49 @@ export class FaceTracker {
 			);
 		}
 
+		const targetWidth = rigging.cameraResolution === '1080p' ? 1920 : rigging.cameraResolution === '480p' ? 640 : 1280;
+		const targetHeight = rigging.cameraResolution === '1080p' ? 1080 : rigging.cameraResolution === '480p' ? 480 : 720;
+		const targetFps = rigging.cameraResolution === '480p' ? 30 : 60;
+
+		const videoConstraints: MediaTrackConstraints = {
+			width: { ideal: targetWidth },
+			height: { ideal: targetHeight },
+			frameRate: { ideal: targetFps },
+			facingMode: 'user'
+		};
+
+		if (rigging.cameraDeviceId) {
+			videoConstraints.deviceId = { ideal: rigging.cameraDeviceId };
+		}
+
 		try {
 			this.stream = await navigator.mediaDevices.getUserMedia({
-				video: {
-					width: { ideal: 640 },
-					height: { ideal: 480 },
-					facingMode: 'user',
-					frameRate: { ideal: 30 }
-				},
+				video: videoConstraints,
 				audio: false
 			});
 		} catch (err: any) {
-			if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-				throw new Error('Izin kamera ditolak. Buka izin situs (klik ikon gembok di URL bar browser) lalu izinkan akses Kamera.');
-			} else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-				throw new Error('Perangkat kamera (webcam) tidak terdeteksi pada sistem Anda.');
-			} else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-				throw new Error('Kamera sedang digunakan oleh aplikasi lain (seperti OBS, Zoom, Discord, atau tab lain). Tutup aplikasi tersebut dan coba lagi.');
+			// Fallback to basic default user video if custom constraints failed
+			if (rigging.cameraDeviceId) {
+				try {
+					this.stream = await navigator.mediaDevices.getUserMedia({
+						video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+						audio: false
+					});
+				} catch (fallbackErr: any) {
+					err = fallbackErr;
+				}
 			}
-			throw new Error(`Gagal membuka kamera: ${err.message || err.name}`);
+
+			if (!this.stream) {
+				if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+					throw new Error('Izin kamera ditolak. Buka izin situs (klik ikon gembok di URL bar browser) lalu izinkan akses Kamera.');
+				} else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+					throw new Error('Perangkat kamera (webcam) tidak terdeteksi pada sistem Anda.');
+				} else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+					throw new Error('Kamera sedang digunakan oleh aplikasi lain (seperti OBS, Zoom, Discord, atau tab lain). Tutup aplikasi tersebut dan coba lagi.');
+				}
+				throw new Error(`Gagal membuka kamera: ${err.message || err.name}`);
+			}
 		}
 
 		const trackerVid = this.getOrCreateTrackingVideo();
@@ -286,6 +311,33 @@ export class FaceTracker {
 		rigging.calibrateCenter(this.lastRawYaw, this.lastRawPitch, this.lastRawRoll);
 		rigging.showToast('✓ Kalibrasi Berhasil! Posisi netral kepala Anda telah disimpan.');
 		return true;
+	}
+
+	async getAvailableVideoDevices(): Promise<Array<{ deviceId: string; label: string }>> {
+		if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) return [];
+		try {
+			const devices = await navigator.mediaDevices.enumerateDevices();
+			return devices
+				.filter((d) => d.kind === 'videoinput')
+				.map((d, idx) => ({
+					deviceId: d.deviceId,
+					label: d.label || `Camera ${idx + 1}`
+				}));
+		} catch {
+			return [];
+		}
+	}
+
+	getVideoResolution(): { width: number; height: number; frameRate: number } | null {
+		if (!this.stream) return null;
+		const track = this.stream.getVideoTracks()[0];
+		if (!track) return null;
+		const settings = track.getSettings();
+		return {
+			width: settings.width || 0,
+			height: settings.height || 0,
+			frameRate: Math.round(settings.frameRate || 30)
+		};
 	}
 
 	private processLoop = () => {
@@ -393,6 +445,7 @@ export class FaceTracker {
 
 				if (faceResults.faceLandmarks && faceResults.faceLandmarks.length > 0) {
 					rigging.isFaceDetected = true;
+					this.consecutiveLostFrames = 0;
 					const landmarks = faceResults.faceLandmarks[0];
 
 					// Build blendshapes lookup map (reuse Map to prevent GC pressure)
@@ -408,8 +461,8 @@ export class FaceTracker {
 						? faceResults.facialTransformationMatrixes[0]
 						: null;
 
-					// Sync smoother alpha
-					globalSmoother.setAlpha(rigging.smoothingAmount);
+					// Sync smoother configuration with real user slider values
+					globalSmoother.setSmoothingConfig(rigging.smoothingAmount, rigging.jitterReduction);
 
 					// Capture raw uncalibrated pose for precise calibration snapshot
 					const rawPose = solveFaceLandmarks(
@@ -473,6 +526,28 @@ export class FaceTracker {
 					}
 				} else {
 					rigging.isFaceDetected = false;
+					this.consecutiveLostFrames++;
+
+					if (rigging.holdPoseOnLoss) {
+						// Anti-snap decay: if lost for > 6 frames (~100ms), gently return to neutral pose
+						if (this.consecutiveLostFrames > 6) {
+							const decay = 0.06;
+							rigging.setLiveValue('ParamAngleX', globalSmoother.decayTowards('ParamAngleX', 0, decay));
+							rigging.setLiveValue('ParamAngleY', globalSmoother.decayTowards('ParamAngleY', 0, decay));
+							rigging.setLiveValue('ParamAngleZ', globalSmoother.decayTowards('ParamAngleZ', 0, decay));
+							rigging.setLiveValue('ParamEyeBallX', globalSmoother.decayTowards('ParamEyeBallX', 0, decay));
+							rigging.setLiveValue('ParamEyeBallY', globalSmoother.decayTowards('ParamEyeBallY', 0, decay));
+							rigging.setLiveValue('ParamEyeLOpen', globalSmoother.decayTowards('ParamEyeLOpen', 1.0, decay));
+							rigging.setLiveValue('ParamEyeROpen', globalSmoother.decayTowards('ParamEyeROpen', 1.0, decay));
+							rigging.setLiveValue('ParamMouthOpenY', globalSmoother.decayTowards('ParamMouthOpenY', 0, decay));
+							rigging.setLiveValue('ParamMouthForm', globalSmoother.decayTowards('ParamMouthForm', 0, decay));
+							rigging.setLiveValue('ParamMouthX', globalSmoother.decayTowards('ParamMouthX', 0, decay));
+							rigging.setLiveValue('ParamBodyAngleX', globalSmoother.decayTowards('ParamBodyAngleX', 0, decay));
+							rigging.setLiveValue('ParamBodyAngleY', globalSmoother.decayTowards('ParamBodyAngleY', 0, decay));
+							rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.decayTowards('ParamBodyAngleZ', 0, decay));
+						}
+					}
+
 					if (this.canvasOverlay && rigging.showCameraPip) {
 						if (handsList.length > 0 && rigging.showLandmarksMesh) {
 							this.drawLandmarksOverlay([], handsList);

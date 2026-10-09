@@ -9,20 +9,20 @@ describe('Model Catalog Validation', () => {
 		for (const model of live2dModels) {
 			expect(model.id).toBeTruthy();
 			expect(model.name).toBeTruthy();
-			expect(model.url).toMatch(/^https:\/\/.+\.model3\.json$/);
+			expect(model.url).toMatch(/\.model3\.json$/);
 			expect(model.version).toBe('Cubism 3/4');
 		}
 
-		// Momose Aria avatar verification
-		const aria = MODEL_CATALOG.find((m) => m.id === 'momose_aria');
-		expect(aria).toBeDefined();
-		expect(aria?.name).toContain('Momose Aria');
-		expect(aria?.modelType).toBe('avatar2d');
+		// Vivian model verification
+		const vivian = MODEL_CATALOG.find((m) => m.id === 'vivian');
+		expect(vivian).toBeDefined();
+		expect(vivian?.name).toContain('薇薇安');
+		expect(vivian?.url).toBe('/models/vivian/薇薇安.model3.json');
 	});
 
 	it('should not contain blocked or dead CDN repositories', () => {
-		const live2dModels = MODEL_CATALOG.filter((m) => m.modelType !== 'avatar2d');
-		for (const model of live2dModels) {
+		const cdnModels = MODEL_CATALOG.filter((m) => m.url.startsWith('https://'));
+		for (const model of cdnModels) {
 			// Ensure no blocked Eikanya links
 			expect(model.url).not.toContain('Eikanya/Live2d-model');
 			// Ensure official CubismWebSamples is used

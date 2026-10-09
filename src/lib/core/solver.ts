@@ -79,17 +79,26 @@ export function solveFaceLandmarks(
 		rawRoll = Math.atan2(dY, dX) * (180 / Math.PI) * sensitivity;
 	}
 
-	// Apply Calibration & Deadzone Filter (eliminates idle breathing trembles)
+	// Apply Calibration & Continuous Deadzone Filter (eliminates idle trembles & removes step jump pops)
 	let diffYaw = rawYaw - offsets.yaw;
-	if (Math.abs(diffYaw) < deadzone) diffYaw = 0;
+	if (deadzone > 0) {
+		const absY = Math.abs(diffYaw);
+		diffYaw = absY <= deadzone ? 0 : Math.sign(diffYaw) * (absY - deadzone);
+	}
 	const yaw = Math.max(-30, Math.min(30, diffYaw));
 
 	let diffPitch = rawPitch - offsets.pitch;
-	if (Math.abs(diffPitch) < deadzone) diffPitch = 0;
+	if (deadzone > 0) {
+		const absP = Math.abs(diffPitch);
+		diffPitch = absP <= deadzone ? 0 : Math.sign(diffPitch) * (absP - deadzone);
+	}
 	const pitch = Math.max(-30, Math.min(30, diffPitch));
 
 	let diffRoll = rawRoll - offsets.roll;
-	if (Math.abs(diffRoll) < deadzone) diffRoll = 0;
+	if (deadzone > 0) {
+		const absR = Math.abs(diffRoll);
+		diffRoll = absR <= deadzone ? 0 : Math.sign(diffRoll) * (absR - deadzone);
+	}
 	const roll = Math.max(-30, Math.min(30, diffRoll));
 
 	// 2. Eyes: Non-linear Eyelid Curve (Organic smoothstep response)
@@ -107,9 +116,12 @@ export function solveFaceLandmarks(
 	let eyeBlinkL = 1 - smoothStep(0.28, 0.70, blinkL);
 	let eyeBlinkR = 1 - smoothStep(0.28, 0.70, blinkR);
 
-	// Solid open eyes lock: snap to 1.0 when >= 0.82 to eliminate trembling/sleepy eye flutter ("kiyer-kiyer")
-	if (eyeBlinkL >= 0.82) eyeBlinkL = 1.0;
-	if (eyeBlinkR >= 0.82) eyeBlinkR = 1.0;
+	// Solid open eyes lock: snap to 1.0 when >= 0.80 to eliminate trembling/sleepy eye flutter ("kiyer-kiyer")
+	if (eyeBlinkL >= 0.80) eyeBlinkL = 1.0;
+	if (eyeBlinkR >= 0.80) eyeBlinkR = 1.0;
+	// Clean closed eye lock: snap to 0.0 when <= 0.15
+	if (eyeBlinkL <= 0.15) eyeBlinkL = 0.0;
+	if (eyeBlinkR <= 0.15) eyeBlinkR = 0.0;
 
 	// Smiling eye blendshapes (^.^)
 	const squintL = blendshapesMap.get('eyeSquintLeft') ?? 0;

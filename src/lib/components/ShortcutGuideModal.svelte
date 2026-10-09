@@ -34,12 +34,13 @@
 		{ key: 'H', description: 'Sembunyikan / Tampilkan Menu Dock Bawah', category: 'navigation' },
 		{ key: 'M', description: 'Buka / Tutup Katalog Model & Motions', category: 'navigation' },
 		{ key: 'T', description: 'Buka / Tutup Kustomisasi Tema & Background', category: 'navigation' },
-		{ key: 'R', description: 'Buka / Tutup Drawer Rigging Preview', category: 'navigation' },
-		{ key: ',', description: 'Buka Menu Pengaturan & Hardware Benchmark', category: 'navigation' },
-		{ key: '?', description: 'Buka Panduan Shortcut Keyboard Ini', category: 'navigation' },
-		{ key: 'Esc', description: 'Tutup Semua Modal / Keluar Mode OBS', category: 'navigation' },
+		{ key: 'R', description: 'Buka / Tutup Inspector Rigging Preview', category: 'navigation' },
+		{ key: 'F2 / ,', description: 'Buka Menu Pengaturan & Hardware Benchmark', category: 'navigation' },
+		{ key: 'F1 / ?', description: 'Buka Panduan Shortcut Keyboard Ini', category: 'navigation' },
+		{ key: 'Esc', description: 'Tutup Semua Modal / Keluar Mode OBS / Buka Kunci', category: 'navigation' },
 
 		// Streaming & Themes
+		{ key: 'L', description: 'Kunci Layar & Mode Bersih (Clear GUI / Lock)', category: 'streaming' },
 		{ key: 'O', description: 'Toggle Mode Bersih Layar OBS Streamer', category: 'streaming' },
 		{ key: 'S', description: 'Ambil Screenshot Avatar & Download PNG', category: 'streaming' },
 		{ key: '1 - 4', description: 'Pilih Cepat Tema (Cyber, Midnight, Synth, Mono)', category: 'streaming' }

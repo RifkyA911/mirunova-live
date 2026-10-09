@@ -13,14 +13,13 @@ export interface Model3DItem {
 
 export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 	{
-		id: 'momose_aria',
-		name: 'Momose Aria (百瀬アリア)',
-		url: '/models/momose_aria/momose_aria.jpg',
-		description: '2D Reactive illustration with head parallax, natural eye blink, speech sync & high-five hands.',
-		version: '2D Reactive',
-		modelType: 'avatar2d',
-		avatarUrl: '/models/momose_aria/chara_icon_02.jpg',
-		tags: ['2D Reactive', 'High-Five', 'Parallax', 'Lip Sync']
+		id: 'vivian',
+		name: '薇薇安 (Vivian)',
+		url: '/models/vivian/薇薇安.model3.json',
+		description: 'Model Live2D Cubism 4 beresolusi tinggi (4096px) dengan fisika rambut gaun halus, parasol, dan 6 ekspresi.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/vivian.svg',
+		tags: ['Cubism 4', 'High-Res 4K', 'Expressions', 'Physics', 'Parasol']
 	},
 	{
 		id: 'haru',

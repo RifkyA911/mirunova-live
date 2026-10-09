@@ -30,6 +30,12 @@ export interface SavedUserConfig {
 	calibrationPitch?: number;
 	calibrationRoll?: number;
 	currentLocale?: string;
+	isRiggingPinned?: boolean;
+	riggingViewMode?: 'stay' | 'windowed' | 'drawer';
+	jitterReduction?: number;
+	holdPoseOnLoss?: boolean;
+	cameraDeviceId?: string;
+	cameraResolution?: string;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

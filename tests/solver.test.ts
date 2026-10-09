@@ -161,4 +161,18 @@ describe('solveFaceLandmarks', () => {
 		const res = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 });
 		expect(res.mouthForm).toBeLessThan(-0.3); // reliably detects :(
 	});
+
+	it('applies continuous deadzone without step pop discontinuity', () => {
+		const landmarks = createMockLandmarks({
+			1: { x: 0.505, y: 0.5, z: 0 } // rawYaw is 1.125 degrees
+		});
+
+		// Inside deadzone (deadzone = 1.5 > 1.125)
+		const inside = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 }, null, { deadzone: 1.5 });
+		expect(inside.yaw).toBe(0);
+
+		// Continuous subtraction outside deadzone (deadzone = 1.0 -> 1.125 - 1.0 = 0.125)
+		const outside = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 }, null, { deadzone: 1.0 });
+		expect(outside.yaw).toBeCloseTo(0.125, 2);
+	});
 });

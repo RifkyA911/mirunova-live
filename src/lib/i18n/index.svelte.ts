@@ -5,7 +5,7 @@ export const translations = {
 		app_title: 'MiruNova Live — Web Live2D & Face Tracker',
 		mvp_badge: 'PRO',
 		start_tracking: 'Start Tracking',
-		stop_tracking: 'Stop Tracking',
+		stop_tracking: 'Stop Camera',
 		calibrate: 'Calibrate',
 		calibrating: 'Calibrating...',
 		rigging_preview: 'Rigging Preview',
@@ -23,6 +23,7 @@ export const translations = {
 		maximize: 'Maximize',
 		enable_cam: 'Enable Camera',
 		cam_instructions: 'Click the camera button to begin face tracking.',
+
 		// OBS Screen Mode
 		obs_mode: 'OBS Screen Mode',
 		obs_setup: 'OBS Stream Setup',
@@ -38,12 +39,16 @@ export const translations = {
 		obs_step_2: 'Set URL to your MiruNova Live address (with ?obs=true parameter).',
 		obs_step_3: 'Set Width: 1920, Height: 1080, and check "Shutdown source when not visible".',
 		obs_step_4: 'Transparent background is active automatically — zero green-screen halo artifacts!',
-		// Quality & Sensitivity
+
+		// Quality, Sensitivity & Stability
 		tracking_quality: 'Tracking Quality & Sensitivity',
 		sensitivity: 'Motion Sensitivity',
 		smoothing: 'Adaptive Smoothing Filter',
 		blink_sync: 'Synchronized Eye Blink',
 		deadzone: 'Idle Jitter Deadzone',
+		jitter_filter: 'Jitter Suppression (Anti-Flicker)',
+		hold_pose_loss: 'Smooth Decay on Face Loss',
+
 		// Backgrounds & Effects
 		bg_mode: 'Background Style',
 		bg_color: 'Color & Hex',
@@ -56,7 +61,8 @@ export const translations = {
 		effect_scanlines: 'Retro Scanlines',
 		effect_crt: 'CRT Glow',
 		effect_blur: 'Subtle Blur',
-		// Rigging
+
+		// Rigging Preview & Inspector
 		rigging_title: 'Rigging Preview & Inspector',
 		detected_params: 'detected parameters',
 		live_tracking_mode: 'Live Tracking',
@@ -80,6 +86,12 @@ export const translations = {
 		filter_custom: 'Custom',
 		search_params: 'Search parameters...',
 		no_params_found: 'No parameters match the filter.',
+		rigging_stay: 'Stay Mode (Docked)',
+		rigging_windowed: 'Windowed Card',
+		rigging_drawer: 'Slide Drawer',
+		pin_tooltip: 'Stay Mode: Pins inspector so canvas clicks do not close it',
+		window_tooltip: 'Toggle between Floating Window and Full-height Dock',
+
 		// Models & Motions
 		select_model: 'Select Live2D Model',
 		motion_list: 'Trigger Motions',
@@ -89,7 +101,51 @@ export const translations = {
 		loop_nod: 'Head Nodding Loop',
 		loop_none: 'Disabled',
 		loading_model: 'LOADING LIVE2D MODEL...',
-		load_custom_url: 'Load Custom Model URL'
+		load_custom_url: 'Load Custom Model URL',
+
+		// Settings Modal & Hardware
+		settings_title: 'Settings & System Diagnostics',
+		settings_subtitle: 'Real hardware metrics, tracking tuning, UI theme & data backup',
+		tab_perf: 'Hardware & Performance',
+		tab_tracking: 'Tracking & Stability',
+		tab_appearance: 'Theme & Stage',
+		tab_storage: 'Storage & Backup',
+		tracking_settings_title: 'Motion Sensitivity & Anti-Flicker Filter',
+		theme_selector_title: 'UI Theme Preset',
+		system_smoothness: 'System Smoothness Tier:',
+		tier_slow: 'Stuttering (< 25 FPS)',
+		tier_fair: 'Fair (30 FPS)',
+		tier_smooth: 'Smooth (60 FPS)',
+		tier_ultra: 'Ultra 60+ FPS',
+		gpu_detected: 'Detected GPU Renderer:',
+		cpu_threads: 'CPU Concurrency Cores:',
+		camera_stream_res: 'Active Camera Stream:',
+		rtx_title: 'Does NVIDIA RTX Make Tracking Smoother?',
+		rtx_desc: 'Yes, significantly! NVIDIA RTX GPUs utilize Tensor Cores & WebGL FP16 acceleration to process Google MediaPipe face & hand landmarking in under 10ms with rock-solid 60+ FPS in OBS Studio.',
+		camera_device: 'Camera Device Selection',
+		camera_resolution: 'Camera Resolution',
+		auto_save_title: 'Automatic Local Storage Persistence',
+		auto_save_desc: 'All selections, background styling, sensitivity, offsets, and rigging states are auto-saved to browser localStorage. Reloading preserves everything.',
+		export_config: 'Export Config JSON',
+		import_config: 'Import Config JSON',
+		reset_defaults: 'Reset All Settings to Defaults',
+		reset_confirm: 'Reset all preferences to initial defaults?',
+		done: 'Done',
+		language: 'Language',
+
+		// GUI Lock & Clear Screen
+		clear_gui_btn: 'Clear GUI / Lock Screen',
+		gui_locked_badge: 'Screen Locked',
+		gui_locked_toast: '✓ GUI Locked & Clean Stage Active [L / ESC]',
+		gui_unlocked_toast: '✓ GUI Restored & Unlocked',
+
+		// Screenshot
+		screenshot_btn: 'Screenshot & Download PNG',
+		screenshot_success: '✓ Avatar screenshot saved successfully!',
+
+		// Shortcuts
+		shortcuts_title: 'Keyboard Shortcuts Cheatsheet',
+		shortcuts_subtitle: 'Full hotkey navigation for quick live streaming control'
 	},
 	id: {
 		app_title: 'MiruNova Live — Web Live2D & Face Tracker',
@@ -113,6 +169,7 @@ export const translations = {
 		maximize: 'Perbesar',
 		enable_cam: 'Aktifkan Kamera',
 		cam_instructions: 'Klik tombol kamera untuk mengaktifkan pelacak wajah.',
+
 		// OBS Screen Mode
 		obs_mode: 'Mode Layar OBS',
 		obs_setup: 'Pengaturan Stream OBS',
@@ -128,12 +185,16 @@ export const translations = {
 		obs_step_2: 'Masukkan URL MiruNova Live Anda (dengan parameter ?obs=true).',
 		obs_step_3: 'Atur Width: 1920, Height: 1080, dan centang "Shutdown source when not visible".',
 		obs_step_4: 'Latar transparan langsung aktif otomatis tanpa perlu filter Chroma Key manual!',
-		// Quality & Sensitivity
+
+		// Quality, Sensitivity & Stability
 		tracking_quality: 'Kualitas & Sensitivitas Tracking',
 		sensitivity: 'Sensitivitas Gerak Kepala',
 		smoothing: 'Filter Kehalusan Adaptif',
 		blink_sync: 'Kedipan Mata Sinkron',
 		deadzone: 'Deadzone Getaran Diam',
+		jitter_filter: 'Filter Redam Getar (Anti-Flicker)',
+		hold_pose_loss: 'Kembalikan Perlahan Saat Wajah Hilang',
+
 		// Backgrounds & Effects
 		bg_mode: 'Gaya Background',
 		bg_color: 'Warna & Hex',
@@ -146,7 +207,8 @@ export const translations = {
 		effect_scanlines: 'Retro Scanlines',
 		effect_crt: 'CRT Glow',
 		effect_blur: 'Blur Halus',
-		// Rigging
+
+		// Rigging Preview & Inspector
 		rigging_title: 'Rigging Preview & Inspector',
 		detected_params: 'parameter terdeteksi',
 		live_tracking_mode: 'Live Tracking',
@@ -170,6 +232,12 @@ export const translations = {
 		filter_custom: 'Kustom',
 		search_params: 'Cari parameter...',
 		no_params_found: 'Tidak ada parameter yang sesuai dengan filter.',
+		rigging_stay: 'Mode Stay (Dock Samping)',
+		rigging_windowed: 'Jendela Melayang',
+		rigging_drawer: 'Drawer Geser',
+		pin_tooltip: 'Mode Stay: Panel tetap tampil tanpa menutup layar saat klik luar',
+		window_tooltip: 'Ganti antara Jendela Melayang dan Panel Penuh',
+
 		// Models & Motions
 		select_model: 'Pilih Model Live2D',
 		motion_list: 'Jalankan Animasi',
@@ -179,7 +247,51 @@ export const translations = {
 		loop_nod: 'Loop Mengangguk',
 		loop_none: 'Nonaktif',
 		loading_model: 'MEMUAT MODEL LIVE2D...',
-		load_custom_url: 'Muat URL Model Kustom'
+		load_custom_url: 'Muat URL Model Kustom',
+
+		// Settings Modal & Hardware
+		settings_title: 'Pengaturan & Spesifikasi Sistem',
+		settings_subtitle: 'Metrik hardware real-time, tuning tracking, tema UI & backup konfigurasi',
+		tab_perf: 'Hardware & Performa',
+		tab_tracking: 'Tracking & Kestabilan',
+		tab_appearance: 'Tema & Tampilan',
+		tab_storage: 'Penyimpanan & Backup',
+		tracking_settings_title: 'Pengaturan Sensitivitas & Filter Anti-Flicker',
+		theme_selector_title: 'Pilihan Tema UI',
+		system_smoothness: 'Tingkatan Kelancaran Sistem:',
+		tier_slow: 'Tidak Lancar (< 25 FPS)',
+		tier_fair: 'Cukup (30 FPS)',
+		tier_smooth: 'Lancar (60 FPS)',
+		tier_ultra: 'Sangat Lancar / Ultra 60+ FPS',
+		gpu_detected: 'GPU Renderer Terdeteksi:',
+		cpu_threads: 'Thread CPU Aktif:',
+		camera_stream_res: 'Resolusi Kamera Aktif:',
+		rtx_title: 'Apakah NVIDIA RTX Makin Smooth?',
+		rtx_desc: 'Ya, sangat signifikan! GPU NVIDIA RTX memiliki Tensor Cores & akselerasi WebGL FP16 paralel yang memproses pelacakan wajah & tangan Google MediaPipe secara real-time dengan latensi < 10ms. VSync 60-144 FPS berjalan terkunci tanpa frame drop saat streaming di OBS.',
+		camera_device: 'Pilih Perangkat Webcam',
+		camera_resolution: 'Resolusi Kamera',
+		auto_save_title: 'Penyimpanan Otomatis (LocalStorage)',
+		auto_save_desc: 'Semua konfigurasi model yang dipilih, warna latar, sensitivitas, kalibrasi kepala, hingga posisi rigging otomatis tersimpan di peramban (localStorage). Saat halaman di-reload, semua konfigurasi tetap utuh.',
+		export_config: 'Export Konfigurasi JSON',
+		import_config: 'Import Konfigurasi JSON',
+		reset_defaults: 'Reset Semua Konfigurasi ke Pengaturan Awal',
+		reset_confirm: 'Reset semua preferensi ke pengaturan awal default?',
+		done: 'Selesai',
+		language: 'Bahasa',
+
+		// GUI Lock & Clear Screen
+		clear_gui_btn: 'Kunci Layar / Clear GUI',
+		gui_locked_badge: 'Layar Terkunci',
+		gui_locked_toast: '✓ GUI Dikunci & Mode Bersih Aktif [L / ESC]',
+		gui_unlocked_toast: '✓ GUI Dibuka Kembali',
+
+		// Screenshot
+		screenshot_btn: 'Screenshot & Unduh Avatar PNG',
+		screenshot_success: '✓ Foto avatar berhasil diunduh!',
+
+		// Shortcuts
+		shortcuts_title: 'Panduan Pintasan Tombol (Keyboard Shortcuts)',
+		shortcuts_subtitle: 'Navigasi cepat tanpa mouse saat sedang live streaming'
 	},
 	ja: {
 		app_title: 'MiruNova Live — Web Live2D & 顔トラッカー',
@@ -203,6 +315,7 @@ export const translations = {
 		maximize: '最大化',
 		enable_cam: 'カメラ有効化',
 		cam_instructions: 'カメラボタンを押してトラッキングを開始してください。',
+
 		// OBS Screen Mode
 		obs_mode: 'OBS画面モード',
 		obs_setup: 'OBS配信設定',
@@ -218,12 +331,16 @@ export const translations = {
 		obs_step_2: 'URL に MiruNova Live のURL（?obs=true付き）を入力します。',
 		obs_step_3: '幅: 1920、高さ: 1080、非表示時にシャットダウンにチェックを入れます。',
 		obs_step_4: '背景は自動的に完全透過されるため、クロマキーフィルターは不要です！',
-		// Quality & Sensitivity
+
+		// Quality, Sensitivity & Stability
 		tracking_quality: 'トラッキング精度と感度',
 		sensitivity: '頭部モーション感度',
 		smoothing: '適応型スムージング',
 		blink_sync: '両目同期まばたき',
 		deadzone: 'アイドル時デッドゾーン',
+		jitter_filter: '手ぶれ抑制フィルター (Anti-Flicker)',
+		hold_pose_loss: '顔見失い時の緩やかな復帰',
+
 		// Backgrounds & Effects
 		bg_mode: '背景スタイル',
 		bg_color: 'カラー＆Hex',
@@ -236,7 +353,8 @@ export const translations = {
 		effect_scanlines: '走査線',
 		effect_crt: 'CRT発光',
 		effect_blur: 'ブラー',
-		// Rigging
+
+		// Rigging Preview & Inspector
 		rigging_title: 'リギングインスペクター',
 		detected_params: '検出されたパラメーター',
 		live_tracking_mode: 'ライブトラッキング',
@@ -260,6 +378,12 @@ export const translations = {
 		filter_custom: 'カスタム',
 		search_params: 'パラメーター検索...',
 		no_params_found: '該当するパラメーターがありません。',
+		rigging_stay: '固定ドックモード',
+		rigging_windowed: 'フローティングウィンドウ',
+		rigging_drawer: 'スライドドロワー',
+		pin_tooltip: '固定モード：外側クリックで閉じない',
+		window_tooltip: 'ウィンドウ/ドック表示切替',
+
 		// Models & Motions
 		select_model: 'Live2Dモデル選択',
 		motion_list: 'モーション再生',
@@ -269,19 +393,63 @@ export const translations = {
 		loop_nod: 'うなずきループ',
 		loop_none: '無効',
 		loading_model: 'LIVE2Dモデル読込中...',
-		load_custom_url: 'カスタムURL読込'
+		load_custom_url: 'カスタムURL読込',
+
+		// Settings Modal & Hardware
+		settings_title: '設定とシステム仕様',
+		settings_subtitle: 'リアルタイムハードウェア情報・安定性調整・テーマ設定・データバックアップ',
+		tab_perf: 'ハードウェアと性能',
+		tab_tracking: 'トラッキングと安定性',
+		tab_appearance: 'テーマとステージ',
+		tab_storage: 'データ管理',
+		tracking_settings_title: '感度と手ぶれ補正設定',
+		theme_selector_title: 'UIテーマ選択',
+		system_smoothness: '動作の快適さ区分:',
+		tier_slow: '不安定 (< 25 FPS)',
+		tier_fair: '普通 (30 FPS)',
+		tier_smooth: '快適 (60 FPS)',
+		tier_ultra: '超快適 60+ FPS',
+		gpu_detected: '検出されたGPUレンダラー:',
+		cpu_threads: 'アクティブCPUスレッド:',
+		camera_stream_res: 'カメラ解像度:',
+		rtx_title: 'NVIDIA RTXでさらに快適になる？',
+		rtx_desc: 'はい、劇的に向上します！NVIDIA RTX GPUはTensorコアとFP16並列処理により、Google MediaPipeを遅延10ms未満で処理し、配信中もフレーム落ちのない滑らかな動作を実現します。',
+		camera_device: 'カメラデバイス選択',
+		camera_resolution: 'カメラ解像度',
+		auto_save_title: 'LocalStorage 自動保存',
+		auto_save_desc: 'モデル選択、背景、感度、キャリブレーション、リギング設定はブラウザに自動保存されます。再読込してもすべて保持されます。',
+		export_config: '設定JSONエクスポート',
+		import_config: '設定JSONインポート',
+		reset_defaults: 'すべての設定を初期状態にリセット',
+		reset_confirm: 'すべての設定を初期状態にリセットしますか？',
+		done: '完了',
+		language: '言語',
+
+		// GUI Lock & Clear Screen
+		clear_gui_btn: '画面ロック / GUI非表示',
+		gui_locked_badge: '画面ロック中',
+		gui_locked_toast: '✓ 画面ロック＆クリーン表示中 [L / ESC]',
+		gui_unlocked_toast: '✓ ロック解除完了',
+
+		// Screenshot
+		screenshot_btn: 'アバタースクリーンショット (PNG)',
+		screenshot_success: '✓ スクリーンショットを保存しました！',
+
+		// Shortcuts
+		shortcuts_title: 'キーボードショートカット一覧',
+		shortcuts_subtitle: '配信中に素早く操作できるホットキー一覧'
 	}
 };
 
 export class I18nStore {
-	currentLocale = $state<Locale>('en');
+	currentLocale = $state<Locale>('id');
 
 	setLocale(locale: Locale) {
 		this.currentLocale = locale;
 	}
 
 	t(key: keyof typeof translations.en): string {
-		const dict = translations[this.currentLocale] || translations.en;
+		const dict = translations[this.currentLocale] || translations.id;
 		return (dict as any)[key] || translations.en[key] || key;
 	}
 }
