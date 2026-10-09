@@ -26,6 +26,7 @@ export const translations = {
 		// OBS Screen Mode
 		obs_mode: 'OBS Screen Mode',
 		obs_setup: 'OBS Stream Setup',
+		obs_desc: 'Stream your avatar seamlessly in OBS Studio with zero lag & alpha transparency.',
 		exit_obs: 'Exit OBS Mode (ESC)',
 		obs_live: 'OBS Live Mode Active',
 		copy_obs_url: 'Copy OBS Browser Source URL',
@@ -115,6 +116,7 @@ export const translations = {
 		// OBS Screen Mode
 		obs_mode: 'Mode Layar OBS',
 		obs_setup: 'Pengaturan Stream OBS',
+		obs_desc: 'Streaming avatar Anda di OBS Studio dengan latensi minimal & latar transparan.',
 		exit_obs: 'Keluar Mode OBS (ESC)',
 		obs_live: 'Mode OBS Aktif',
 		copy_obs_url: 'Salin URL OBS Browser Source',
@@ -204,6 +206,7 @@ export const translations = {
 		// OBS Screen Mode
 		obs_mode: 'OBS画面モード',
 		obs_setup: 'OBS配信設定',
+		obs_desc: 'OBS Studioで透過背景アバターを低遅延で直接配信できます。',
 		exit_obs: 'OBSモード終了 (ESC)',
 		obs_live: 'OBSライブモード稼働中',
 		copy_obs_url: 'OBSブラウザソースURLをコピー',

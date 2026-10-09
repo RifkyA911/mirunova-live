@@ -1,10 +1,11 @@
-import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
+import { FilesetResolver, FaceLandmarker, HandLandmarker } from '@mediapipe/tasks-vision';
 import { solveFaceLandmarks } from './solver';
 import { globalSmoother } from './smoother';
 import { rigging } from '#lib/stores/riggingStore.svelte';
 
 export class FaceTracker {
 	private landmarker: FaceLandmarker | null = null;
+	private handLandmarker: HandLandmarker | null = null;
 	private trackingVideo: HTMLVideoElement | null = null;
 	private previewVideo: HTMLVideoElement | null = null;
 	private canvasOverlay: HTMLCanvasElement | null = null;
@@ -18,41 +19,75 @@ export class FaceTracker {
 	private lastFpsCalcTime = performance.now();
 
 	async initialize(): Promise<void> {
-		if (this.landmarker) return;
+		if (this.landmarker && this.handLandmarker) return;
 
 		// Load MediaPipe WebAssembly vision bundle from public CDN (100% free Apache-2.0)
 		const vision = await FilesetResolver.forVisionTasks(
 			'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
 		);
 
-		try {
-			// Try GPU delegate first for hardware-accelerated tracking
-			this.landmarker = await FaceLandmarker.createFromOptions(vision, {
-				baseOptions: {
-					modelAssetPath:
-						'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-					delegate: 'GPU'
-				},
-				runningMode: 'VIDEO',
-				numFaces: 1,
-				outputFaceBlendshapes: true,
-				outputFacialTransformationMatrixes: true
-			});
-			console.log('[FaceTracker] Initialized with GPU delegate');
-		} catch (gpuErr) {
-			console.warn('[FaceTracker] GPU delegate failed, falling back to CPU:', gpuErr);
-			this.landmarker = await FaceLandmarker.createFromOptions(vision, {
-				baseOptions: {
-					modelAssetPath:
-						'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-					delegate: 'CPU'
-				},
-				runningMode: 'VIDEO',
-				numFaces: 1,
-				outputFaceBlendshapes: true,
-				outputFacialTransformationMatrixes: true
-			});
-			console.log('[FaceTracker] Initialized with CPU delegate');
+		// 1. Initialize FaceLandmarker
+		if (!this.landmarker) {
+			try {
+				this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+					baseOptions: {
+						modelAssetPath:
+							'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+						delegate: 'GPU'
+					},
+					runningMode: 'VIDEO',
+					numFaces: 1,
+					outputFaceBlendshapes: true,
+					outputFacialTransformationMatrixes: true
+				});
+				console.log('[FaceTracker] FaceLandmarker initialized with GPU');
+			} catch (gpuErr) {
+				console.warn('[FaceTracker] Face GPU failed, falling back to CPU:', gpuErr);
+				this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+					baseOptions: {
+						modelAssetPath:
+							'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+						delegate: 'CPU'
+					},
+					runningMode: 'VIDEO',
+					numFaces: 1,
+					outputFaceBlendshapes: true,
+					outputFacialTransformationMatrixes: true
+				});
+				console.log('[FaceTracker] FaceLandmarker initialized with CPU');
+			}
+		}
+
+		// 2. Initialize HandLandmarker for Hand/Arm Gestures
+		if (!this.handLandmarker) {
+			try {
+				this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
+					baseOptions: {
+						modelAssetPath:
+							'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+						delegate: 'GPU'
+					},
+					runningMode: 'VIDEO',
+					numHands: 2
+				});
+				console.log('[HandTracker] HandLandmarker initialized with GPU');
+			} catch (gpuHandErr) {
+				console.warn('[HandTracker] Hand GPU failed, falling back to CPU:', gpuHandErr);
+				try {
+					this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
+						baseOptions: {
+							modelAssetPath:
+								'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+							delegate: 'CPU'
+						},
+						runningMode: 'VIDEO',
+						numHands: 2
+					});
+					console.log('[HandTracker] HandLandmarker initialized with CPU');
+				} catch (cpuHandErr) {
+					console.warn('[HandTracker] HandLandmarker could not be initialized:', cpuHandErr);
+				}
+			}
 		}
 	}
 
@@ -178,9 +213,6 @@ export class FaceTracker {
 		this.processLoop();
 	}
 
-	/**
-	 * Allows attaching a preview video/canvas dynamically (e.g. when PIP is opened/unminimized)
-	 */
 	setPreviewElements(previewVideoEl?: HTMLVideoElement | null, canvasEl?: HTMLCanvasElement | null) {
 		this.previewVideo = previewVideoEl || null;
 		if (previewVideoEl && this.stream) {
@@ -203,6 +235,8 @@ export class FaceTracker {
 		this.isRunning = false;
 		rigging.isCameraActive = false;
 		rigging.isFaceDetected = false;
+		rigging.isHandLDetected = false;
+		rigging.isHandRDetected = false;
 
 		if (this.animationFrameId !== null) {
 			cancelAnimationFrame(this.animationFrameId);
@@ -240,29 +274,71 @@ export class FaceTracker {
 			this.lastVideoTime = vid.currentTime;
 
 			try {
-				const results = this.landmarker.detectForVideo(vid, startTime);
+				// 1. Face Landmark Tracking
+				const faceResults = this.landmarker.detectForVideo(vid, startTime);
 
-				if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+				// 2. Hand Landmark Tracking
+				let handData = { leftDetected: false, rightDetected: false, armLA: 0, armRA: 0 };
+				let handsList: Array<Array<{ x: number; y: number; z: number }>> = [];
+
+				if (this.handLandmarker && rigging.enableHandTracking) {
+					try {
+						const handResults = this.handLandmarker.detectForVideo(vid, startTime);
+						if (handResults.landmarks && handResults.landmarks.length > 0) {
+							handsList = handResults.landmarks;
+							for (let i = 0; i < handResults.landmarks.length; i++) {
+								const handPts = handResults.landmarks[i];
+								const label = handResults.handedness?.[i]?.[0]?.categoryName || (i === 0 ? 'Right' : 'Left');
+
+								// Compute arm lift based on wrist & middle finger tip elevation
+								const wrist = handPts[0];
+								const middleTip = handPts[12];
+								const handY = Math.min(wrist.y, middleTip.y);
+
+								// Webcam coordinates: 0 is top, 1 is bottom. Raising hand means y is small (< 0.7)
+								const elevation = Math.max(0, Math.min(1, (0.75 - handY) / 0.5));
+								const armAngle = elevation * 30;
+
+								if (label === 'Right') {
+									handData.rightDetected = true;
+									handData.armRA = armAngle;
+									rigging.isHandRDetected = true;
+								} else {
+									handData.leftDetected = true;
+									handData.armLA = armAngle;
+									rigging.isHandLDetected = true;
+								}
+							}
+						} else {
+							rigging.isHandLDetected = false;
+							rigging.isHandRDetected = false;
+						}
+					} catch {
+						// Hand detection frame error ignored
+					}
+				}
+
+				if (faceResults.faceLandmarks && faceResults.faceLandmarks.length > 0) {
 					rigging.isFaceDetected = true;
-					const landmarks = results.faceLandmarks[0];
+					const landmarks = faceResults.faceLandmarks[0];
 
 					// Build blendshapes lookup map
 					const blendshapesMap = new Map<string, number>();
-					if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
-						for (const cat of results.faceBlendshapes[0].categories) {
+					if (faceResults.faceBlendshapes && faceResults.faceBlendshapes.length > 0) {
+						for (const cat of faceResults.faceBlendshapes[0].categories) {
 							blendshapesMap.set(cat.categoryName, cat.score);
 						}
 					}
 
 					// Extract facial transformation matrix if available
-					const matrix = results.facialTransformationMatrixes && results.facialTransformationMatrixes.length > 0
-						? results.facialTransformationMatrixes[0]
+					const matrix = faceResults.facialTransformationMatrixes && faceResults.facialTransformationMatrixes.length > 0
+						? faceResults.facialTransformationMatrixes[0]
 						: null;
 
 					// Sync smoother alpha
 					globalSmoother.setAlpha(rigging.smoothingAmount);
 
-					// Solve parameters with high-precision matrix and config
+					// Solve parameters with high-precision matrix, mouth expressions, and hand data
 					const solved = solveFaceLandmarks(
 						landmarks,
 						blendshapesMap,
@@ -276,7 +352,8 @@ export class FaceTracker {
 							sensitivity: rigging.trackingSensitivity,
 							deadzone: rigging.deadzoneThreshold,
 							eyeBlinkLinked: rigging.eyeBlinkLinked
-						}
+						},
+						handData
 					);
 
 					// Apply profile-specific adaptive smoothing & store to rigging store
@@ -291,6 +368,7 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', solved.browR, 'generic'));
 					rigging.setLiveValue('ParamMouthOpenY', globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen, 'mouth'));
 					rigging.setLiveValue('ParamMouthForm', globalSmoother.smooth('ParamMouthForm', solved.mouthForm, 'mouth'));
+					rigging.setLiveValue('ParamMouthX', globalSmoother.smooth('ParamMouthX', solved.mouthX, 'mouth'));
 					rigging.setLiveValue('ParamCheek', globalSmoother.smooth('ParamCheek', solved.cheekPuff, 'generic'));
 					rigging.setLiveValue('ParamBodyAngleX', globalSmoother.smooth('ParamBodyAngleX', solved.bodyAngleX, 'angle'));
 					rigging.setLiveValue('ParamBodyAngleY', globalSmoother.smooth('ParamBodyAngleY', solved.bodyAngleY, 'angle'));
@@ -300,13 +378,17 @@ export class FaceTracker {
 
 					// Draw wireframe overlay if enabled
 					if (this.canvasOverlay && rigging.showLandmarksMesh) {
-						this.drawLandmarksOverlay(landmarks);
+						this.drawLandmarksOverlay(landmarks, handsList);
 					}
 				} else {
 					rigging.isFaceDetected = false;
 					if (this.canvasOverlay) {
-						const ctx = this.canvasOverlay.getContext('2d');
-						ctx?.clearRect(0, 0, this.canvasOverlay.width, this.canvasOverlay.height);
+						if (handsList.length > 0 && rigging.showLandmarksMesh) {
+							this.drawLandmarksOverlay([], handsList);
+						} else {
+							const ctx = this.canvasOverlay.getContext('2d');
+							ctx?.clearRect(0, 0, this.canvasOverlay.width, this.canvasOverlay.height);
+						}
 					}
 				}
 			} catch (err) {
@@ -328,7 +410,10 @@ export class FaceTracker {
 		this.animationFrameId = requestAnimationFrame(this.processLoop);
 	};
 
-	private drawLandmarksOverlay(landmarks: Array<{ x: number; y: number; z: number }>): void {
+	private drawLandmarksOverlay(
+		faceLandmarks: Array<{ x: number; y: number; z: number }>,
+		handsList: Array<Array<{ x: number; y: number; z: number }>>
+	): void {
 		if (!this.canvasOverlay) return;
 		const ctx = this.canvasOverlay.getContext('2d');
 		if (!ctx) return;
@@ -337,18 +422,54 @@ export class FaceTracker {
 		const height = this.canvasOverlay.height;
 
 		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = '#06b6d4'; // Cyan neon accent
-		ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
-		ctx.lineWidth = 1;
 
-		// Draw key landmarks points (every 3rd landmark to optimize performance)
-		for (let i = 0; i < landmarks.length; i += 3) {
-			const pt = landmarks[i];
-			const x = pt.x * width;
-			const y = pt.y * height;
-			ctx.beginPath();
-			ctx.arc(x, y, 1.2, 0, 2 * Math.PI);
-			ctx.fill();
+		// 1. Draw Face Landmarks (Cyan)
+		if (faceLandmarks.length > 0) {
+			ctx.fillStyle = '#06b6d4';
+			for (let i = 0; i < faceLandmarks.length; i += 3) {
+				const pt = faceLandmarks[i];
+				const x = pt.x * width;
+				const y = pt.y * height;
+				ctx.beginPath();
+				ctx.arc(x, y, 1.2, 0, 2 * Math.PI);
+				ctx.fill();
+			}
+		}
+
+		// 2. Draw Hand Landmarks & Skeleton Bones (Emerald Green)
+		if (handsList.length > 0) {
+			ctx.fillStyle = '#10b981';
+			ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
+			ctx.lineWidth = 1.5;
+
+			const fingerChains = [
+				[0, 1, 2, 3, 4],
+				[0, 5, 6, 7, 8],
+				[0, 9, 10, 11, 12],
+				[0, 13, 14, 15, 16],
+				[0, 17, 18, 19, 20]
+			];
+
+			for (const hand of handsList) {
+				for (const pt of hand) {
+					const x = pt.x * width;
+					const y = pt.y * height;
+					ctx.beginPath();
+					ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
+					ctx.fill();
+				}
+
+				for (const chain of fingerChains) {
+					ctx.beginPath();
+					for (let i = 0; i < chain.length; i++) {
+						const pt = hand[chain[i]];
+						if (!pt) continue;
+						if (i === 0) ctx.moveTo(pt.x * width, pt.y * height);
+						else ctx.lineTo(pt.x * width, pt.y * height);
+					}
+					ctx.stroke();
+				}
+			}
 		}
 	}
 }

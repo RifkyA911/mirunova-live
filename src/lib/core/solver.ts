@@ -1,4 +1,5 @@
 import type { TrackingResults, TrackingConfig } from '#lib/types/tracking';
+import type { Matrix } from '@mediapipe/tasks-vision';
 
 function smoothStep(edge0: number, edge1: number, x: number): number {
 	const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
@@ -9,7 +10,7 @@ export function solveFaceLandmarks(
 	landmarks: Array<{ x: number; y: number; z: number }>,
 	blendshapesMap: Map<string, number>,
 	offsets: { yaw: number; pitch: number; roll: number },
-	matrix?: Float32Array | number[] | null,
+	matrix?: Float32Array | number[] | Matrix | { data: number[] } | null,
 	config?: Partial<TrackingConfig>,
 	handData?: { leftDetected: boolean; rightDetected: boolean; armLA: number; armRA: number }
 ): TrackingResults {
@@ -21,13 +22,18 @@ export function solveFaceLandmarks(
 	let rawPitch = 0;
 	let rawRoll = 0;
 
+	// Extract raw array if Matrix object from MediaPipe
+	const mData = (matrix && 'data' in matrix && Array.isArray((matrix as any).data))
+		? (matrix as any).data
+		: (matrix as Float32Array | number[] | null);
+
 	// 1. High-Precision 6-DoF Head Pose: Try 4x4 Transformation Matrix first
-	if (matrix && matrix.length >= 16) {
-		const m10 = matrix[1];
-		const m11 = matrix[5];
-		const m02 = matrix[8];
-		const m12 = matrix[9];
-		const m22 = matrix[10];
+	if (mData && mData.length >= 16) {
+		const m10 = mData[1];
+		const m11 = mData[5];
+		const m02 = mData[8];
+		const m12 = mData[9];
+		const m22 = mData[10];
 		const radToDeg = 180 / Math.PI;
 
 		// Extract Euler angles (Pitch, Yaw, Roll)
@@ -117,11 +123,12 @@ export function solveFaceLandmarks(
 	const browL = Math.max(-1, Math.min(1, browInnerUp * 0.6 + browOuterUpL * 0.4 - browDownL * 1.2));
 	const browR = Math.max(-1, Math.min(1, browInnerUp * 0.6 + browOuterUpR * 0.4 - browDownR * 1.2));
 
-	// 4. Mouth & Cheeks
+	// 4. Enhanced Mouth Expressions & Cheeks
 	const jawOpen = blendshapesMap.get('jawOpen') ?? 0;
 	const mouthClose = blendshapesMap.get('mouthClose') ?? 0;
 	const mouthPucker = blendshapesMap.get('mouthPucker') ?? 0;
-	const mouthOpen = Math.max(0, Math.min(1, jawOpen * 1.6 - mouthClose * 0.6));
+	const mouthFunnel = blendshapesMap.get('mouthFunnel') ?? 0;
+	const mouthOpen = Math.max(0, Math.min(1, jawOpen * 1.5 + mouthFunnel * 0.5 - mouthClose * 0.7));
 
 	const smileL = blendshapesMap.get('mouthSmileLeft') ?? 0;
 	const smileR = blendshapesMap.get('mouthSmileRight') ?? 0;
@@ -129,9 +136,16 @@ export function solveFaceLandmarks(
 	const frownR = blendshapesMap.get('mouthFrownRight') ?? 0;
 	const smile = (smileL + smileR) / 2;
 	const frown = (frownL + frownR) / 2;
-	const mouthForm = Math.max(-1, Math.min(1, smile * 1.3 - frown * 1.0 - mouthPucker * 0.3));
+	const mouthForm = Math.max(-1, Math.min(1, smile * 1.4 - frown * 1.1 - mouthPucker * 0.4));
 
-	const cheekPuff = Math.max(0, Math.min(1, (blendshapesMap.get('cheekPuff') ?? 0) * 1.5));
+	// Mouth & Jaw horizontal shift (chewing, smirking, talking sideways)
+	const jawLeft = blendshapesMap.get('jawLeft') ?? 0;
+	const jawRight = blendshapesMap.get('jawRight') ?? 0;
+	const mouthLeft = blendshapesMap.get('mouthLeft') ?? 0;
+	const mouthRight = blendshapesMap.get('mouthRight') ?? 0;
+	const mouthX = Math.max(-1, Math.min(1, ((jawRight + mouthRight) - (jawLeft + mouthLeft)) * 1.6));
+
+	const cheekPuff = Math.max(0, Math.min(1, (blendshapesMap.get('cheekPuff') ?? 0) * 1.8));
 
 	// 5. Body reactive kinematics
 	const bodyAngleX = yaw * 0.35;
@@ -154,6 +168,7 @@ export function solveFaceLandmarks(
 		browR,
 		mouthOpen,
 		mouthForm,
+		mouthX,
 		cheekPuff,
 		bodyAngleX,
 		bodyAngleY,

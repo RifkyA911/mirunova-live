@@ -336,6 +336,8 @@ export class ThreeStage {
 		const eyeBallY = params['ParamEyeBallY'] ?? 0;
 
 		const mouthOpen = params['ParamMouthOpenY'] ?? 0;
+		const mouthX = params['ParamMouthX'] ?? 0;
+		const mouthForm = params['ParamMouthForm'] ?? 0;
 		const armLA = params['ParamArmLA'] ?? 0;
 		const armRA = params['ParamArmRA'] ?? 0;
 
@@ -366,9 +368,11 @@ export class ThreeStage {
 			this.eyeRNode.position.y = 0.05 + eyeBallY * 0.03;
 		}
 
-		// Apply Mouth Opening
+		// Apply Mouth Opening & Expression
 		if (this.mouthNode) {
-			this.mouthNode.scale.y = 1 + mouthOpen * 3.5;
+			this.mouthNode.scale.y = Math.max(0.2, 1 + mouthOpen * 3.5);
+			this.mouthNode.scale.x = Math.max(0.5, 1 + mouthForm * 0.35);
+			this.mouthNode.position.x = mouthX * 0.05;
 			this.mouthNode.position.y = -0.14 - mouthOpen * 0.06;
 		}
 

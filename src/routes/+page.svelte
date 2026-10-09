@@ -145,6 +145,7 @@
 		<div
 			role="toolbar"
 			aria-label="OBS Mode Controls"
+			tabindex="0"
 			onmouseenter={() => (isPillHovered = true)}
 			onmouseleave={() => (isPillHovered = false)}
 			class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3 py-1.5 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-full shadow-2xl transition-opacity duration-300 {

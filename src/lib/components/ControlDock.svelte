@@ -10,9 +10,9 @@
 		Palette,
 		Layers,
 		Languages,
-		Sparkles,
 		Radio,
-		Tv
+		Tv,
+		Hand
 	} from 'lucide-svelte';
 
 	let isLangMenuOpen = $state<boolean>(false);
@@ -47,69 +47,116 @@
 <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 select-none">
 	<nav
 		aria-label="Main Dock Controls"
-		class="flex items-center gap-1.5 p-2 bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 rounded-2xl shadow-2xl"
+		class="flex items-center gap-2 px-3.5 py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl"
 	>
-		<!-- Camera Toggle -->
-		<button
-			onclick={toggleCamera}
-			class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all {
-				rigging.isCameraActive
-					? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
-					: 'bg-cyan-500 text-zinc-950 font-semibold hover:bg-cyan-400 shadow-md shadow-cyan-500/20'
-			}"
-			title={rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
-		>
-			{#if rigging.isCameraActive}
-				<CameraOff class="w-4 h-4" />
-				<span>{i18n.t('stop_tracking')}</span>
-			{:else}
-				<Camera class="w-4 h-4" />
-				<span>{i18n.t('start_tracking')}</span>
-			{/if}
-		</button>
+		<!-- 1. Camera Toggle (Icon Only + Hover Tooltip) -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={toggleCamera}
+				class="p-2.5 rounded-xl transition-all duration-150 {
+					rigging.isCameraActive
+						? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 shadow-md shadow-rose-500/10'
+						: 'bg-cyan-500 text-zinc-950 hover:bg-cyan-400 shadow-md shadow-cyan-500/25 active:scale-95'
+				}"
+				aria-label={rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
+			>
+				{#if rigging.isCameraActive}
+					<CameraOff class="w-5 h-5" />
+				{:else}
+					<Camera class="w-5 h-5" />
+				{/if}
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
+			</div>
+		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 
-		<!-- Calibrate Center -->
-		<button
-			onclick={handleCalibrate}
-			disabled={!rigging.isCameraActive}
-			class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/60 disabled:opacity-40 disabled:hover:bg-transparent"
-			title="Calibrate neutral head pose"
-		>
-			<Crosshair class="w-4 h-4 text-cyan-400" />
-			<span>{i18n.t('calibrate')}</span>
-		</button>
+		<!-- 2. Calibrate Center Pose -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={handleCalibrate}
+				disabled={!rigging.isCameraActive}
+				class="p-2.5 rounded-xl transition-all text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400 active:scale-95"
+				aria-label={i18n.t('calibrate')}
+			>
+				<Crosshair class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('calibrate')}
+			</div>
+		</div>
 
-		<!-- Rigging Preview & Inspector Drawer Toggle Button -->
-		<button
-			onclick={() => (rigging.isDrawerOpen = !rigging.isDrawerOpen)}
-			class="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all {
-				rigging.isDrawerOpen
-					? 'bg-violet-500 text-white shadow-md shadow-violet-500/25'
-					: 'text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/60'
-			}"
-			title="Open Rigging Preview Panel"
-		>
-			<Sliders class="w-4 h-4 {rigging.isDrawerOpen ? 'text-white' : 'text-violet-400'}" />
-			<span>{i18n.t('rigging_preview')}</span>
-			{#if rigging.riggingMode === 'manual'}
-				<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-0.5" title="Manual Mode Active"></span>
-			{/if}
-		</button>
+		<!-- 3. Hand Tracking Toggle -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => (rigging.enableHandTracking = !rigging.enableHandTracking)}
+				class="p-2.5 rounded-xl transition-all {
+					rigging.enableHandTracking
+						? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 shadow-sm'
+						: 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
+				} active:scale-95"
+				aria-label={i18n.t('hands_toggle')}
+			>
+				<Hand class="w-5 h-5" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('hands_toggle')} ({rigging.enableHandTracking ? 'Active' : 'Off'})
+			</div>
+		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 
-		<!-- OBS Screen Mode Button Group -->
-		<div class="flex items-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 overflow-hidden shadow-sm">
+		<!-- 4. Rigging Preview & Inspector Drawer Toggle Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => (rigging.isDrawerOpen = !rigging.isDrawerOpen)}
+				class="relative p-2.5 rounded-xl transition-all {
+					rigging.isDrawerOpen
+						? 'bg-violet-500 text-white shadow-md shadow-violet-500/25'
+						: 'text-zinc-400 hover:text-violet-300 hover:bg-zinc-800/60'
+				} active:scale-95"
+				aria-label={i18n.t('rigging_preview')}
+			>
+				<Sliders class="w-5 h-5 {rigging.isDrawerOpen ? 'text-white' : 'text-violet-400'}" />
+				{#if rigging.riggingMode === 'manual'}
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+				{/if}
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('rigging_preview')}
+			</div>
+		</div>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+
+		<!-- 5. OBS Screen Mode Button -->
+		<div class="group relative flex items-center justify-center">
 			<button
 				onclick={() => rigging.toggleObsMode(true)}
-				class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors"
-				title="Enter OBS Screen Mode (Clean Transparent Stage)"
+				class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 hover:border-emerald-500/50 transition-all active:scale-95 shadow-sm"
+				aria-label={i18n.t('obs_mode')}
 			>
-				<Radio class="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-				<span>{i18n.t('obs_mode')}</span>
+				<Radio class="w-5 h-5 animate-pulse" />
 			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('obs_mode')} (Clean Transparent Stage)
+			</div>
+		</div>
+
+		<!-- 6. OBS Stream Setup (URL & Guide) -->
+		<div class="group relative flex items-center justify-center">
 			<button
 				onclick={() => {
 					rigging.isObsModalOpen = true;
@@ -117,76 +164,100 @@
 					rigging.isModelModalOpen = false;
 					rigging.isDrawerOpen = false;
 				}}
-				class="px-2 py-2 text-emerald-400 hover:bg-emerald-500/20 border-l border-emerald-500/20 transition-colors"
-				title="OBS Setup Guide & URL Generator"
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label={i18n.t('obs_setup')}
 			>
-				<Tv class="w-3.5 h-3.5" />
+				<Tv class="w-5 h-5 text-emerald-400" />
 			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('obs_setup')} & URL Generator
+			</div>
 		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 
-		<!-- Themes & Background Manager Modal Button -->
-		<button
-			onclick={() => {
-				rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
-				rigging.isModelModalOpen = false;
-				isLangMenuOpen = false;
-			}}
-			class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
-			title={i18n.t('themes_bg')}
-		>
-			<Palette class="w-4 h-4 text-cyan-400" />
-			<span class="hidden sm:inline">{i18n.t('themes_bg')}</span>
-		</button>
+		<!-- 7. Themes & Background Manager Modal Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					isLangMenuOpen = false;
+				}}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label={i18n.t('themes_bg')}
+			>
+				<Palette class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('themes_bg')}
+			</div>
+		</div>
 
-		<!-- Model Catalog & Motions Modal Button -->
-		<button
-			onclick={() => {
-				rigging.isModelModalOpen = !rigging.isModelModalOpen;
-				rigging.isThemeModalOpen = false;
-				isLangMenuOpen = false;
-			}}
-			class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
-			title={i18n.t('models')}
-		>
-			<Layers class="w-4 h-4 text-pink-400" />
-			<span class="hidden sm:inline">{i18n.t('models')}</span>
-		</button>
+		<!-- 8. Model Catalog & Motions Modal Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					rigging.isModelModalOpen = !rigging.isModelModalOpen;
+					rigging.isThemeModalOpen = false;
+					rigging.isObsModalOpen = false;
+					isLangMenuOpen = false;
+				}}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label={i18n.t('models')}
+			>
+				<Layers class="w-5 h-5 text-pink-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('models')}
+			</div>
+		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 
-		<!-- Language Switcher Dropdown -->
-		<div class="relative">
+		<!-- 9. Language Switcher Dropdown -->
+		<div class="group relative flex items-center justify-center">
 			<button
-				onclick={() => {
-					isLangMenuOpen = !isLangMenuOpen;
-					rigging.isThemeModalOpen = false;
-					rigging.isModelModalOpen = false;
-				}}
-				class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
-				title="Change Language / Bahasa / 言語"
+				onclick={() => (isLangMenuOpen = !isLangMenuOpen)}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label="Language"
 			>
-				<Languages class="w-4 h-4" />
+				<Languages class="w-5 h-5" />
 			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				Language: {i18n.currentLocale.toUpperCase()}
+			</div>
 
+			<!-- Language Dropdown Menu -->
 			{#if isLangMenuOpen}
 				<div
-					class="absolute bottom-12 right-0 w-36 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5 shadow-2xl flex flex-col gap-1 text-xs text-zinc-200 z-50 animate-in fade-in zoom-in-95 duration-150"
+					class="absolute bottom-12 right-0 w-36 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-2xl p-1 z-40 space-y-0.5 animate-in fade-in slide-in-from-bottom-2 duration-150"
 				>
-					<span class="px-2 py-1 text-[10px] uppercase font-bold text-zinc-500">Language</span>
 					{#each languages as lang}
 						<button
 							onclick={() => {
 								i18n.setLocale(lang.code);
 								isLangMenuOpen = false;
 							}}
-							class="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors text-left {
-								i18n.current === lang.code ? 'text-cyan-400 font-semibold' : 'text-zinc-300'
+							class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between {
+								i18n.currentLocale === lang.code
+									? 'bg-cyan-500/20 text-cyan-300 font-semibold'
+									: 'text-zinc-300 hover:bg-zinc-800'
 							}"
 						>
 							<span>{lang.label}</span>
-							<span class="text-[10px] uppercase text-zinc-500 font-mono">{lang.code}</span>
+							{#if i18n.currentLocale === lang.code}
+								<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+							{/if}
 						</button>
 					{/each}
 				</div>

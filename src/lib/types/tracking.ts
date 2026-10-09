@@ -19,6 +19,7 @@ export interface TrackingResults {
 	browR: number;         // -1 to 1
 	mouthOpen: number;     // 0 to 1
 	mouthForm: number;     // -1 to 1 (frown to smile)
+	mouthX: number;        // -1 to 1 (mouth/jaw horizontal skew)
 	cheekPuff: number;     // 0 to 1
 	bodyAngleX: number;    // -10 to 10
 	bodyAngleY: number;    // -10 to 10
@@ -27,6 +28,8 @@ export interface TrackingResults {
 	armRA: number;         // Hand/Arm Right gesture/pos (0 to 30)
 	handLDetected: boolean;
 	handRDetected: boolean;
+	handLGesture?: 'wave' | 'open' | 'fist' | 'point' | 'none';
+	handRGesture?: 'wave' | 'open' | 'fist' | 'point' | 'none';
 }
 
 export interface TrackingConfig {

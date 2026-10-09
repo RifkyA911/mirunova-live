@@ -23,6 +23,7 @@ export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	// Mouth & Cheeks
 	{ id: 'ParamMouthOpenY', label: 'Mouth Open (Bicara)', min: 0, max: 1, defaultValue: 0, group: 'mouth' },
 	{ id: 'ParamMouthForm', label: 'Mouth Form (Senyum/Bibir)', min: -1, max: 1, defaultValue: 0, group: 'mouth' },
+	{ id: 'ParamMouthX', label: 'Mouth X (Geser Mulut)', min: -1, max: 1, defaultValue: 0, group: 'mouth' },
 	{ id: 'ParamCheek', label: 'Cheek Puff / Blush (Pipi)', min: 0, max: 1, defaultValue: 0, group: 'mouth' },
 	// Body & Breathing
 	{ id: 'ParamBodyAngleX', label: 'Body Angle X (Putar Badan)', min: -10, max: 10, defaultValue: 0, group: 'body' },
@@ -87,6 +88,8 @@ export class RiggingStore {
 	isFaceDetected = $state<boolean>(false);
 	isHandLDetected = $state<boolean>(false);
 	isHandRDetected = $state<boolean>(false);
+	handLGesture = $state<string>('none');
+	handRGesture = $state<string>('none');
 
 	// Calibration offsets
 	calibrationYaw = $state<number>(0);

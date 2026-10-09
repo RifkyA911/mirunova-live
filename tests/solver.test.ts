@@ -94,4 +94,44 @@ describe('solveFaceLandmarks', () => {
 		expect(resLinked.eyeBlinkL).toBeLessThan(0.2);
 		expect(resLinked.eyeBlinkR).toBeLessThan(0.2);
 	});
+
+	it('computes mouthForm and mouthX for smiling, frowning, and jaw skew', () => {
+		const landmarks = createMockLandmarks();
+		const smileBlendshapes = new Map<string, number>([
+			['mouthSmileLeft', 0.8],
+			['mouthSmileRight', 0.8],
+			['jawRight', 0.6],
+			['cheekPuff', 0.5]
+		]);
+
+		const resSmile = solveFaceLandmarks(landmarks, smileBlendshapes, { yaw: 0, pitch: 0, roll: 0 });
+		expect(resSmile.mouthForm).toBeGreaterThan(0.5); // smiling
+		expect(resSmile.mouthX).toBeGreaterThan(0.4);    // jaw right shift
+		expect(resSmile.cheekPuff).toBeGreaterThan(0.6); // cheek puffed
+
+		const frownBlendshapes = new Map<string, number>([
+			['mouthFrownLeft', 0.7],
+			['mouthFrownRight', 0.7],
+			['jawLeft', 0.6]
+		]);
+
+		const resFrown = solveFaceLandmarks(landmarks, frownBlendshapes, { yaw: 0, pitch: 0, roll: 0 });
+		expect(resFrown.mouthForm).toBeLessThan(-0.3); // frowning
+		expect(resFrown.mouthX).toBeLessThan(-0.4);    // jaw left shift
+	});
+
+	it('maps hand tracking elevation to arm angles', () => {
+		const landmarks = createMockLandmarks();
+		const res = solveFaceLandmarks(
+			landmarks,
+			new Map(),
+			{ yaw: 0, pitch: 0, roll: 0 },
+			null,
+			undefined,
+			{ armLA: 25.5, armRA: 18.2 }
+		);
+
+		expect(res.armLA).toBe(25.5);
+		expect(res.armRA).toBe(18.2);
+	});
 });
