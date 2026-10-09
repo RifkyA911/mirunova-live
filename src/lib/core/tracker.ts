@@ -5,9 +5,10 @@ import { rigging } from '#lib/stores/riggingStore.svelte';
 
 export class FaceTracker {
 	private landmarker: FaceLandmarker | null = null;
-	private videoElement: HTMLVideoElement | null = null;
+	private trackingVideo: HTMLVideoElement | null = null;
+	private previewVideo: HTMLVideoElement | null = null;
 	private canvasOverlay: HTMLCanvasElement | null = null;
-	private stream: MediaStream | null = null;
+	public stream: MediaStream | null = null;
 	private animationFrameId: number | null = null;
 	private lastVideoTime = -1;
 	private isRunning = false;
@@ -24,32 +25,97 @@ export class FaceTracker {
 			'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
 		);
 
-		this.landmarker = await FaceLandmarker.createFromOptions(vision, {
-			baseOptions: {
-				modelAssetPath:
-					'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-				delegate: 'GPU'
-			},
-			runningMode: 'VIDEO',
-			numFaces: 1,
-			outputFaceBlendshapes: true,
-			outputFacialTransformationMatrixes: true
-		});
+		try {
+			// Try GPU delegate first for hardware-accelerated tracking
+			this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+				baseOptions: {
+					modelAssetPath:
+						'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+					delegate: 'GPU'
+				},
+				runningMode: 'VIDEO',
+				numFaces: 1,
+				outputFaceBlendshapes: true,
+				outputFacialTransformationMatrixes: true
+			});
+			console.log('[FaceTracker] Initialized with GPU delegate');
+		} catch (gpuErr) {
+			console.warn('[FaceTracker] GPU delegate failed, falling back to CPU:', gpuErr);
+			this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+				baseOptions: {
+					modelAssetPath:
+						'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+					delegate: 'CPU'
+				},
+				runningMode: 'VIDEO',
+				numFaces: 1,
+				outputFaceBlendshapes: true,
+				outputFacialTransformationMatrixes: true
+			});
+			console.log('[FaceTracker] Initialized with CPU delegate');
+		}
+	}
+
+	/**
+	 * Ensures a persistent offscreen video element exists for reliable tracking,
+	 * independent of UI state or whether PIP is minimized.
+	 */
+	private getOrCreateTrackingVideo(): HTMLVideoElement {
+		if (this.trackingVideo && document.body.contains(this.trackingVideo)) {
+			return this.trackingVideo;
+		}
+
+		let video = document.getElementById('mirunova-internal-tracker-video') as HTMLVideoElement | null;
+		if (!video) {
+			video = document.createElement('video');
+			video.id = 'mirunova-internal-tracker-video';
+			video.autoplay = true;
+			video.playsInline = true;
+			video.muted = true;
+			// Kept in DOM with minimal size so browser renders frames reliably
+			video.style.position = 'fixed';
+			video.style.bottom = '0';
+			video.style.right = '0';
+			video.style.width = '1px';
+			video.style.height = '1px';
+			video.style.opacity = '0.01';
+			video.style.pointerEvents = 'none';
+			video.style.zIndex = '-9999';
+			document.body.appendChild(video);
+		}
+		this.trackingVideo = video;
+		return video;
 	}
 
 	async startCamera(
-		videoEl: HTMLVideoElement,
-		canvasEl?: HTMLCanvasElement
+		previewVideoEl?: HTMLVideoElement | null,
+		canvasEl?: HTMLCanvasElement | null
 	): Promise<void> {
-		this.videoElement = videoEl;
-		this.canvasOverlay = canvasEl || null;
+		this.previewVideo = previewVideoEl || null;
+
+		// Only store canvasOverlay if it supports 2D context (avoid passing WebGL stage canvas)
+		if (canvasEl) {
+			try {
+				const ctx = canvasEl.getContext('2d');
+				if (ctx) {
+					this.canvasOverlay = canvasEl;
+				}
+			} catch {
+				this.canvasOverlay = null;
+			}
+		} else {
+			this.canvasOverlay = null;
+		}
 
 		if (!this.landmarker) {
 			await this.initialize();
 		}
 
 		if (!navigator?.mediaDevices?.getUserMedia) {
-			const isIp = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+			const isIp =
+				typeof window !== 'undefined' &&
+				window.location.hostname !== 'localhost' &&
+				window.location.hostname !== '127.0.0.1';
 			throw new Error(
 				isIp
 					? `Akses webcam diblokir browser pada alamat IP (${window.location.hostname}). Browser mewajibkan HTTPS atau 'http://localhost:5173'.`
@@ -78,18 +144,59 @@ export class FaceTracker {
 			throw new Error(`Gagal membuka kamera: ${err.message || err.name}`);
 		}
 
-		this.videoElement.srcObject = this.stream;
+		const trackerVid = this.getOrCreateTrackingVideo();
+		trackerVid.srcObject = this.stream;
+
+		if (this.previewVideo) {
+			this.previewVideo.srcObject = this.stream;
+			this.previewVideo.play().catch(() => {});
+		}
+
+		// Await video playback ready with a timeout safeguard
 		await new Promise<void>((resolve) => {
-			if (!this.videoElement) return resolve();
-			this.videoElement.onloadedmetadata = () => {
-				this.videoElement?.play();
-				resolve();
+			let done = false;
+			const onReady = () => {
+				if (!done) {
+					done = true;
+					trackerVid.play().catch(() => {});
+					resolve();
+				}
 			};
+
+			if (trackerVid.readyState >= 2) {
+				onReady();
+			} else {
+				trackerVid.onloadedmetadata = onReady;
+				trackerVid.oncanplay = onReady;
+				setTimeout(onReady, 2500); // 2.5s fallback timeout
+			}
 		});
 
 		this.isRunning = true;
 		rigging.isCameraActive = true;
+		this.lastVideoTime = -1;
 		this.processLoop();
+	}
+
+	/**
+	 * Allows attaching a preview video/canvas dynamically (e.g. when PIP is opened/unminimized)
+	 */
+	setPreviewElements(previewVideoEl?: HTMLVideoElement | null, canvasEl?: HTMLCanvasElement | null) {
+		this.previewVideo = previewVideoEl || null;
+		if (previewVideoEl && this.stream) {
+			previewVideoEl.srcObject = this.stream;
+			previewVideoEl.play().catch(() => {});
+		}
+		if (canvasEl) {
+			try {
+				const ctx = canvasEl.getContext('2d');
+				if (ctx) this.canvasOverlay = canvasEl;
+			} catch {
+				this.canvasOverlay = null;
+			}
+		} else {
+			this.canvasOverlay = null;
+		}
 	}
 
 	stopCamera(): void {
@@ -107,74 +214,85 @@ export class FaceTracker {
 			this.stream = null;
 		}
 
-		if (this.videoElement) {
-			this.videoElement.srcObject = null;
+		if (this.trackingVideo) {
+			this.trackingVideo.srcObject = null;
+		}
+
+		if (this.previewVideo) {
+			this.previewVideo.srcObject = null;
+			this.previewVideo = null;
 		}
 
 		if (this.canvasOverlay) {
 			const ctx = this.canvasOverlay.getContext('2d');
 			ctx?.clearRect(0, 0, this.canvasOverlay.width, this.canvasOverlay.height);
+			this.canvasOverlay = null;
 		}
 	}
 
 	private processLoop = () => {
-		if (!this.isRunning || !this.videoElement || !this.landmarker) return;
+		if (!this.isRunning || !this.trackingVideo || !this.landmarker) return;
 
 		const startTime = performance.now();
+		const vid = this.trackingVideo;
 
-		if (this.videoElement.currentTime !== this.lastVideoTime) {
-			this.lastVideoTime = this.videoElement.currentTime;
+		if (vid.currentTime !== this.lastVideoTime && vid.readyState >= 2) {
+			this.lastVideoTime = vid.currentTime;
 
-			const results = this.landmarker.detectForVideo(this.videoElement, startTime);
+			try {
+				const results = this.landmarker.detectForVideo(vid, startTime);
 
-			if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-				rigging.isFaceDetected = true;
-				const landmarks = results.faceLandmarks[0];
+				if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+					rigging.isFaceDetected = true;
+					const landmarks = results.faceLandmarks[0];
 
-				// Build blendshapes lookup map
-				const blendshapesMap = new Map<string, number>();
-				if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
-					for (const cat of results.faceBlendshapes[0].categories) {
-						blendshapesMap.set(cat.categoryName, cat.score);
+					// Build blendshapes lookup map
+					const blendshapesMap = new Map<string, number>();
+					if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+						for (const cat of results.faceBlendshapes[0].categories) {
+							blendshapesMap.set(cat.categoryName, cat.score);
+						}
+					}
+
+					// Solve parameters
+					const solved = solveFaceLandmarks(landmarks, blendshapesMap, {
+						yaw: rigging.calibrationYaw,
+						pitch: rigging.calibrationPitch,
+						roll: rigging.calibrationRoll
+					});
+
+					// Apply smoothing & store to rigging store
+					rigging.setLiveValue('ParamAngleX', globalSmoother.smooth('ParamAngleX', solved.yaw));
+					rigging.setLiveValue('ParamAngleY', globalSmoother.smooth('ParamAngleY', solved.pitch));
+					rigging.setLiveValue('ParamAngleZ', globalSmoother.smooth('ParamAngleZ', solved.roll));
+					rigging.setLiveValue('ParamEyeLOpen', globalSmoother.smooth('ParamEyeLOpen', solved.eyeBlinkL));
+					rigging.setLiveValue('ParamEyeROpen', globalSmoother.smooth('ParamEyeROpen', solved.eyeBlinkR));
+					rigging.setLiveValue('ParamEyeBallX', globalSmoother.smooth('ParamEyeBallX', solved.eyeBallX));
+					rigging.setLiveValue('ParamEyeBallY', globalSmoother.smooth('ParamEyeBallY', solved.eyeBallY));
+					rigging.setLiveValue('ParamBrowLY', globalSmoother.smooth('ParamBrowLY', solved.browL));
+					rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', solved.browR));
+					rigging.setLiveValue('ParamMouthOpenY', globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen));
+					rigging.setLiveValue('ParamMouthForm', globalSmoother.smooth('ParamMouthForm', solved.mouthForm));
+					rigging.setLiveValue('ParamCheek', globalSmoother.smooth('ParamCheek', solved.cheekPuff));
+					rigging.setLiveValue('ParamBodyAngleX', globalSmoother.smooth('ParamBodyAngleX', solved.bodyAngleX));
+					rigging.setLiveValue('ParamBodyAngleY', globalSmoother.smooth('ParamBodyAngleY', solved.bodyAngleY));
+					rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.smooth('ParamBodyAngleZ', solved.bodyAngleZ));
+					rigging.setLiveValue('ParamArmLA', globalSmoother.smooth('ParamArmLA', solved.armLA));
+					rigging.setLiveValue('ParamArmRA', globalSmoother.smooth('ParamArmRA', solved.armRA));
+
+					// Draw wireframe overlay if enabled
+					if (this.canvasOverlay && rigging.showLandmarksMesh) {
+						this.drawLandmarksOverlay(landmarks);
+					}
+				} else {
+					rigging.isFaceDetected = false;
+					if (this.canvasOverlay) {
+						const ctx = this.canvasOverlay.getContext('2d');
+						ctx?.clearRect(0, 0, this.canvasOverlay.width, this.canvasOverlay.height);
 					}
 				}
-
-				// Solve parameters
-				const solved = solveFaceLandmarks(landmarks, blendshapesMap, {
-					yaw: rigging.calibrationYaw,
-					pitch: rigging.calibrationPitch,
-					roll: rigging.calibrationRoll
-				});
-
-				// Apply smoothing & store to rigging store
-				rigging.setLiveValue('ParamAngleX', globalSmoother.smooth('ParamAngleX', solved.yaw));
-				rigging.setLiveValue('ParamAngleY', globalSmoother.smooth('ParamAngleY', solved.pitch));
-				rigging.setLiveValue('ParamAngleZ', globalSmoother.smooth('ParamAngleZ', solved.roll));
-				rigging.setLiveValue('ParamEyeLOpen', globalSmoother.smooth('ParamEyeLOpen', solved.eyeBlinkL));
-				rigging.setLiveValue('ParamEyeROpen', globalSmoother.smooth('ParamEyeROpen', solved.eyeBlinkR));
-				rigging.setLiveValue('ParamEyeBallX', globalSmoother.smooth('ParamEyeBallX', solved.eyeBallX));
-				rigging.setLiveValue('ParamEyeBallY', globalSmoother.smooth('ParamEyeBallY', solved.eyeBallY));
-				rigging.setLiveValue('ParamBrowLY', globalSmoother.smooth('ParamBrowLY', solved.browL));
-				rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', solved.browR));
-				rigging.setLiveValue('ParamMouthOpenY', globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen));
-				rigging.setLiveValue('ParamMouthForm', globalSmoother.smooth('ParamMouthForm', solved.mouthForm));
-				rigging.setLiveValue('ParamCheek', globalSmoother.smooth('ParamCheek', solved.cheekPuff));
-				rigging.setLiveValue('ParamBodyAngleX', globalSmoother.smooth('ParamBodyAngleX', solved.bodyAngleX));
-				rigging.setLiveValue('ParamBodyAngleY', globalSmoother.smooth('ParamBodyAngleY', solved.bodyAngleY));
-				rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.smooth('ParamBodyAngleZ', solved.bodyAngleZ));
-				rigging.setLiveValue('ParamArmLA', globalSmoother.smooth('ParamArmLA', solved.armLA));
-				rigging.setLiveValue('ParamArmRA', globalSmoother.smooth('ParamArmRA', solved.armRA));
-
-				// Draw wireframe overlay if enabled
-				if (this.canvasOverlay && rigging.showLandmarksMesh) {
-					this.drawLandmarksOverlay(landmarks);
-				}
-			} else {
-				rigging.isFaceDetected = false;
-				if (this.canvasOverlay) {
-					const ctx = this.canvasOverlay.getContext('2d');
-					ctx?.clearRect(0, 0, this.canvasOverlay.width, this.canvasOverlay.height);
-				}
+			} catch (err) {
+				console.warn('[FaceTracker] Detection error:', err);
 			}
 
 			// Performance calculation (FPS & Latency)

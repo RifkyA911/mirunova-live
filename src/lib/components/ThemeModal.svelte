@@ -33,7 +33,7 @@
 	const bgStyles: Array<{ id: BackgroundStyle; label: string; desc: string }> = [
 		{ id: 'transparent', label: 'Transparent', desc: 'OBS Browser Source overlay' },
 		{ id: 'solid', label: 'Solid Color', desc: 'Clean background using active color' },
-		{ id: 'mesh', label: 'Tech Mesh', desc: 'Futuristic radial dot matrix' },
+		{ id: 'mesh', label: 'Cyber Mesh (Kotak-Kotak)', desc: 'High-contrast square wireframe mesh grid' },
 		{ id: 'grid', label: 'Tech Grid', desc: 'Cyberpunk graph paper wireframe' },
 		{ id: 'dots', label: 'Polka Dots', desc: 'Anime style patterned dots' },
 		{ id: 'cosmic', label: 'Cosmic Animated', desc: 'Slow drifting deep-space nebula' },

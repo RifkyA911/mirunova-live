@@ -37,35 +37,6 @@
 
 			currentModelUrl = rigging.modelUrl;
 			await loadModel(rigging.modelUrl, Live2DModel);
-
-			// Ticker loop: Update Live2D parameters & Pose Looping on every animation frame
-			app.ticker.add(() => {
-				if (!currentModel?.internalModel?.coreModel) return;
-				const core = currentModel.internalModel.coreModel;
-				const now = performance.now();
-
-				for (const param of rigging.parameters) {
-					let val = rigging.getActiveValue(param.id);
-
-					// Apply Pose Looping if active
-					if (rigging.poseLoopMode !== 'none') {
-						const speed = rigging.poseLoopSpeed;
-						if (param.id === 'ParamBreath') {
-							val = (Math.sin(now * 0.003 * speed) + 1) / 2;
-						} else if (param.id === 'ParamBodyAngleZ' && rigging.poseLoopMode === 'gentle-sway') {
-							val += Math.sin(now * 0.0018 * speed) * 3.5;
-						} else if (param.id === 'ParamAngleY' && rigging.poseLoopMode === 'head-nod') {
-							val += Math.sin(now * 0.004 * speed) * 4.5;
-						}
-					}
-
-					try {
-						core.setParameterValueById(param.id, val);
-					} catch {
-						// Parameter not present in model
-					}
-				}
-			});
 		} catch (err) {
 			console.error('Failed to initialize Live2D stage:', err);
 		} finally {
@@ -124,9 +95,41 @@
 
 			app.stage.addChild(model);
 
+			// Hook parameters into beforeModelUpdate event for 100% reliable tracking
+			if (model.internalModel) {
+				model.internalModel.on('beforeModelUpdate', () => {
+					const core = model.internalModel?.coreModel;
+					if (!core) return;
+					const now = performance.now();
+
+					for (const param of rigging.parameters) {
+						let val = rigging.getActiveValue(param.id);
+
+						// Apply Pose Looping if active
+						if (rigging.poseLoopMode !== 'none') {
+							const speed = rigging.poseLoopSpeed;
+							if (param.id === 'ParamBreath') {
+								val = (Math.sin(now * 0.003 * speed) + 1) / 2;
+							} else if (param.id === 'ParamBodyAngleZ' && rigging.poseLoopMode === 'gentle-sway') {
+								val += Math.sin(now * 0.0018 * speed) * 3.5;
+							} else if (param.id === 'ParamAngleY' && rigging.poseLoopMode === 'head-nod') {
+								val += Math.sin(now * 0.004 * speed) * 4.5;
+							}
+						}
+
+						try {
+							core.setParameterValueById(param.id, val);
+						} catch {
+							// Parameter not present in model
+						}
+					}
+				});
+			}
+
 			inspectModelParameters(model);
-		} catch (err) {
+		} catch (err: any) {
 			console.error('Failed to load Live2D model:', err);
+			alert(`Gagal memuat model Live2D: ${err?.message || err}. Silakan pilih model lain.`);
 		} finally {
 			rigging.isLoadingModel = false;
 		}
@@ -225,25 +228,9 @@
 			app = null;
 		}
 	});
-
-	// Computed dynamic background CSS style
-	let dynamicBgStyle = $derived.by(() => {
-		const style = rigging.backgroundStyle;
-		const color = rigging.backgroundColor || '#09090b';
-
-		if (style === 'transparent') return 'background: transparent;';
-		if (style === 'chroma') return 'background-color: #00ff00;';
-		if (style === 'solid') return `background-color: ${color};`;
-		if (style === 'gradient') return `background: linear-gradient(135deg, ${color} 0%, #111827 100%);`;
-		if (style === 'mesh') return `background-color: ${color}; background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px); background-size: 24px 24px;`;
-		if (style === 'dots') return `background-color: ${color}; background-image: radial-gradient(rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 32px 32px;`;
-		if (style === 'grid') return `background-color: ${color}; background-image: linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 32px 32px;`;
-		if (style === 'custom-image' && rigging.customBgUrl) return `background-image: url('${rigging.customBgUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
-		return `background-color: ${color};`;
-	});
 </script>
 
-<!-- Stage Container with Background & Effect Support -->
+<!-- Stage Container (Transparent canvas over shared background) -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
@@ -251,10 +238,7 @@
 	aria-label="Live2D Stage Canvas"
 	tabindex="0"
 	bind:this={containerEl}
-	class="absolute inset-0 w-full h-full overflow-hidden select-none cursor-grab active:cursor-grabbing {
-		rigging.backgroundStyle === 'cosmic' ? 'cosmic-backdrop' : ''
-	}"
-	style={dynamicBgStyle}
+	class="absolute inset-0 w-full h-full overflow-hidden select-none cursor-grab active:cursor-grabbing z-0"
 	onmousedown={handleMouseDown}
 	onmousemove={handleMouseMove}
 	onmouseup={handleMouseUp}
@@ -262,18 +246,7 @@
 	onwheel={handleWheel}
 	ondblclick={handleDoubleClick}
 >
-	<!-- Screen Effect Overlays -->
-	{#if rigging.screenEffect === 'vignette'}
-		<div class="absolute inset-0 pointer-events-none shadow-[inset_0_0_140px_rgba(0,0,0,0.85)] z-10"></div>
-	{:else if rigging.screenEffect === 'scanlines'}
-		<div class="absolute inset-0 pointer-events-none scanlines-overlay z-10"></div>
-	{:else if rigging.screenEffect === 'crt'}
-		<div class="absolute inset-0 pointer-events-none crt-glow-overlay z-10 shadow-[inset_0_0_100px_rgba(6,182,212,0.15)]"></div>
-	{:else if rigging.screenEffect === 'blur'}
-		<div class="absolute inset-0 pointer-events-none backdrop-blur-[2px] z-10"></div>
-	{/if}
-
-	<!-- Model Loading Indicator -->
+	<!-- Model Loading Spinner -->
 	{#if rigging.isLoadingModel}
 		<div class="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-20 pointer-events-none">
 			<div class="flex flex-col items-center gap-3">

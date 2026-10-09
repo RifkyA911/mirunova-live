@@ -8,6 +8,26 @@
 	import ModelCatalogModal from '#lib/components/ModelCatalogModal.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
+
+	// Computed dynamic background style (supports mesh kotak2, cosmic, chroma, solid, etc.)
+	let dynamicBgStyle = $derived.by(() => {
+		const style = rigging.backgroundStyle;
+		const color = rigging.backgroundColor || '#09090b';
+
+		if (style === 'transparent') return 'background: transparent;';
+		if (style === 'chroma') return 'background-color: #00ff00;';
+		if (style === 'solid') return `background-color: ${color};`;
+		if (style === 'gradient') return `background: linear-gradient(135deg, ${color} 0%, #111827 100%);`;
+		if (style === 'mesh')
+			return `background-color: ${color}; background-image: linear-gradient(to right, rgba(255,255,255,0.18) 1.5px, transparent 1.5px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1.5px, transparent 1.5px), linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 64px 64px, 64px 64px, 16px 16px, 16px 16px;`;
+		if (style === 'dots')
+			return `background-color: ${color}; background-image: radial-gradient(rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 32px 32px;`;
+		if (style === 'grid')
+			return `background-color: ${color}; background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px); background-size: 32px 32px;`;
+		if (style === 'custom-image' && rigging.customBgUrl)
+			return `background-image: url('${rigging.customBgUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
+		return `background-color: ${color};`;
+	});
 </script>
 
 <svelte:head>
@@ -25,6 +45,25 @@
 			: 'theme-cyber'
 	}"
 >
+	<!-- Dynamic Background Layer (Active across Live2D & 3D stages) -->
+	<div
+		class="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 {
+			rigging.backgroundStyle === 'cosmic' ? 'cosmic-backdrop' : ''
+		}"
+		style={dynamicBgStyle}
+	></div>
+
+	<!-- Screen Effect Overlays -->
+	{#if rigging.screenEffect === 'vignette'}
+		<div class="absolute inset-0 pointer-events-none shadow-[inset_0_0_140px_rgba(0,0,0,0.85)] z-10"></div>
+	{:else if rigging.screenEffect === 'scanlines'}
+		<div class="absolute inset-0 pointer-events-none scanlines-overlay z-10"></div>
+	{:else if rigging.screenEffect === 'crt'}
+		<div class="absolute inset-0 pointer-events-none crt-glow-overlay z-10 shadow-[inset_0_0_100px_rgba(6,182,212,0.15)]"></div>
+	{:else if rigging.screenEffect === 'blur'}
+		<div class="absolute inset-0 pointer-events-none backdrop-blur-[2px] z-10"></div>
+	{/if}
+
 	<!-- 1. WebGL Live2D Stage or 3D Three.js Stage -->
 	{#if rigging.avatarEngine === '3d'}
 		<ThreeCanvasStage />
@@ -40,7 +79,7 @@
 				MIRUNOVA <span class="text-cyan-400 font-extrabold">LIVE</span>
 			</span>
 			<span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
-				{rigging.modelName}
+				{rigging.avatarEngine === '3d' ? rigging.selected3DModelId : rigging.modelName}
 			</span>
 		</div>
 	</header>

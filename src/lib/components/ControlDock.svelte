@@ -25,14 +25,10 @@
 		if (rigging.isCameraActive) {
 			tracker.stopCamera();
 		} else {
-			const video = document.querySelector('video') as HTMLVideoElement;
-			const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-			if (video) {
-				try {
-					await tracker.startCamera(video, canvas);
-				} catch (e: any) {
-					alert(e?.message || 'Error activating camera');
-				}
+			try {
+				await tracker.startCamera();
+			} catch (e: any) {
+				alert(e?.message || 'Error activating camera');
 			}
 		}
 	}

@@ -108,7 +108,7 @@
 					}"
 				>
 					<Box class="w-3.5 h-3.5" />
-					<span>3D Models & Cat ({MODEL_3D_CATALOG.length + 1})</span>
+					<span>3D Models & Cats ({MODEL_3D_CATALOG.length})</span>
 				</button>
 			</div>
 

@@ -3,16 +3,23 @@
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { i18n } from '#lib/i18n/index.svelte';
-	import { Camera, CameraOff, Eye, EyeOff, Minimize2, Maximize2, Hand } from 'lucide-svelte';
+	import { Camera, CameraOff, Eye, EyeOff, Minimize2, Maximize2 } from 'lucide-svelte';
 
 	let videoElement = $state<HTMLVideoElement>();
 	let canvasElement = $state<HTMLCanvasElement>();
 	let isMinimized = $state<boolean>(false);
 
+	$effect(() => {
+		// When camera active state changes, sync preview element with tracker
+		if (rigging.isCameraActive && videoElement) {
+			tracker.setPreviewElements(videoElement, canvasElement);
+		}
+	});
+
 	async function toggleCamera() {
 		if (rigging.isCameraActive) {
 			tracker.stopCamera();
-		} else if (videoElement) {
+		} else {
 			try {
 				await tracker.startCamera(videoElement, canvasElement);
 			} catch (err) {
@@ -90,7 +97,7 @@
 					autoplay
 					playsinline
 					muted
-					class="w-full h-full object-cover -scale-x-100 {rigging.isCameraActive ? 'block' : 'hidden'}"
+					class="w-full h-full object-cover -scale-x-100"
 				></video>
 
 				<canvas
@@ -101,12 +108,12 @@
 				></canvas>
 
 				{#if !rigging.isCameraActive}
-					<div class="flex flex-col items-center gap-2 text-zinc-500 p-4 text-center">
+					<div class="absolute inset-0 bg-zinc-950/90 flex flex-col items-center justify-center gap-2 text-zinc-500 p-4 text-center z-10">
 						<CameraOff class="w-6 h-6 stroke-1" />
 						<p class="text-[11px] leading-tight">{i18n.t('cam_instructions')}</p>
 						<button
 							onclick={toggleCamera}
-							class="mt-1 px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-semibold text-xs rounded-md shadow-sm transition-colors"
+							class="mt-1 px-3 py-1 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold text-xs rounded-md shadow-sm transition-colors"
 						>
 							{i18n.t('enable_cam')}
 						</button>

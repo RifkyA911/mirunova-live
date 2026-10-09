@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+export type CatVariant = 'mochi' | 'kuro' | 'tora';
+
 export class ThreeStage {
 	private scene: THREE.Scene;
 	private camera: THREE.PerspectiveCamera;
@@ -17,15 +19,18 @@ export class ThreeStage {
 	private pawLNode: THREE.Object3D | null = null;
 	private pawRNode: THREE.Object3D | null = null;
 	private tailNode: THREE.Object3D | null = null;
+	private earLNode: THREE.Object3D | null = null;
+	private earRNode: THREE.Object3D | null = null;
 
 	// External GLTF animations & mixer
 	private mixer: THREE.AnimationMixer | null = null;
 	private gltfBones: Map<string, THREE.Bone> = new Map();
+	private lastFrameTime = performance.now();
 
 	constructor() {
 		this.scene = new THREE.Scene();
 		this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-		this.camera.position.set(0, 0.5, 3.2);
+		this.camera.position.set(0, 0.35, 2.8);
 	}
 
 	init(container: HTMLElement) {
@@ -47,18 +52,18 @@ export class ThreeStage {
 		this.camera.updateProjectionMatrix();
 
 		// Studio Lights
-		const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+		const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
 		this.scene.add(ambientLight);
 
-		const mainLight = new THREE.DirectionalLight(0xffffff, 2.0);
+		const mainLight = new THREE.DirectionalLight(0xffffff, 2.2);
 		mainLight.position.set(2, 4, 3);
 		this.scene.add(mainLight);
 
-		const fillLight = new THREE.DirectionalLight(0x06b6d4, 1.0); // Cyan rim light
+		const fillLight = new THREE.DirectionalLight(0x06b6d4, 1.2); // Cyan rim light
 		fillLight.position.set(-3, 2, -1);
 		this.scene.add(fillLight);
 
-		const rimLight = new THREE.DirectionalLight(0xec4899, 0.8); // Pink rim light
+		const rimLight = new THREE.DirectionalLight(0xec4899, 1.0); // Pink rim light
 		rimLight.position.set(3, -1, -2);
 		this.scene.add(rimLight);
 
@@ -75,31 +80,57 @@ export class ThreeStage {
 		this.renderer.setSize(width, height);
 	};
 
-	// 1. Procedural Rigged 3D Cat Avatar ("Mochi The Cat")
-	loadProceduralCat() {
+	// 1. Procedural Rigged 3D Cat Avatar with multiple breed variants
+	loadProceduralCat(variant: CatVariant = 'mochi') {
 		this.clearCurrentModel();
 
 		const catGroup = new THREE.Group();
 		this.currentModelGroup = catGroup;
 
+		// Color configurations based on breed variant
+		let coatColor = 0xfdfcf7;
+		let innerEarColor = 0xf472b6;
+		let eyeColor = 0x1e3a8a;
+		let collarColor = 0xef4444;
+
+		if (variant === 'kuro') {
+			coatColor = 0x18181b;
+			innerEarColor = 0xa855f7;
+			eyeColor = 0x10b981; // Glowing emerald
+			collarColor = 0x8b5cf6;
+		} else if (variant === 'tora') {
+			coatColor = 0xf59e0b; // Warm ginger
+			innerEarColor = 0xfb923c;
+			eyeColor = 0xd97706; // Amber
+			collarColor = 0x06b6d4;
+		}
+
 		// Materials
 		const bodyMat = new THREE.MeshStandardMaterial({
-			color: 0xfdfcf7,
+			color: coatColor,
 			roughness: 0.35,
 			metalness: 0.05
+		});
+		const innerEarMat = new THREE.MeshStandardMaterial({
+			color: innerEarColor,
+			roughness: 0.5
+		});
+		const eyeMat = new THREE.MeshStandardMaterial({
+			color: eyeColor,
+			roughness: 0.15
 		});
 		const pinkMat = new THREE.MeshStandardMaterial({
 			color: 0xf472b6,
 			roughness: 0.5
 		});
-		const darkMat = new THREE.MeshStandardMaterial({
-			color: 0x18181b,
-			roughness: 0.2
+		const collarMat = new THREE.MeshStandardMaterial({
+			color: collarColor,
+			roughness: 0.4
 		});
 		const goldMat = new THREE.MeshStandardMaterial({
 			color: 0xfbbf24,
-			metalness: 0.8,
-			roughness: 0.2
+			metalness: 0.85,
+			roughness: 0.18
 		});
 
 		// --- Body ---
@@ -109,10 +140,10 @@ export class ThreeStage {
 		bodyMesh.position.y = -0.3;
 		catGroup.add(bodyMesh);
 
-		// Collar & Bell
+		// Collar & Golden Bell
 		const collarGeo = new THREE.TorusGeometry(0.38, 0.04, 16, 32);
 		collarGeo.rotateX(Math.PI / 2);
-		const collarMesh = new THREE.Mesh(collarGeo, pinkMat);
+		const collarMesh = new THREE.Mesh(collarGeo, collarMat);
 		collarMesh.position.y = 0.22;
 		catGroup.add(collarMesh);
 
@@ -142,7 +173,7 @@ export class ThreeStage {
 			earGroup.add(earOuter);
 
 			const earInnerGeo = new THREE.ConeGeometry(0.12, 0.28, 4);
-			const earInner = new THREE.Mesh(earInnerGeo, pinkMat);
+			const earInner = new THREE.Mesh(earInnerGeo, innerEarMat);
 			earInner.position.z = 0.04;
 			earInner.rotation.y = Math.PI / 4;
 			earGroup.add(earInner);
@@ -152,8 +183,10 @@ export class ThreeStage {
 			earGroup.rotation.x = -0.15;
 			return earGroup;
 		};
-		headNode.add(createEar(true));
-		headNode.add(createEar(false));
+		this.earLNode = createEar(true);
+		this.earRNode = createEar(false);
+		headNode.add(this.earLNode);
+		headNode.add(this.earRNode);
 
 		// Eyes (Rigged Left & Right)
 		const createEye = (isLeft: boolean) => {
@@ -161,7 +194,7 @@ export class ThreeStage {
 			// Eye socket / pupil
 			const pupilGeo = new THREE.SphereGeometry(0.09, 24, 24);
 			pupilGeo.scale(0.85, 1.25, 0.3);
-			const pupilMesh = new THREE.Mesh(pupilGeo, darkMat);
+			const pupilMesh = new THREE.Mesh(pupilGeo, eyeMat);
 			eyeGroup.add(pupilMesh);
 
 			// Eye Glint (Kawaii shine)
@@ -197,9 +230,10 @@ export class ThreeStage {
 		headNode.add(mouthMesh);
 
 		// Whiskers (3 on Left, 3 on Right)
-		const whiskerMat = new THREE.LineBasicMaterial({ color: 0x52525b, linewidth: 2 });
+		const whiskerColor = variant === 'kuro' ? 0x71717a : 0x52525b;
+		const whiskerMat = new THREE.LineBasicMaterial({ color: whiskerColor, linewidth: 2 });
 		[-1, 1].forEach((side) => {
-			[-0.05, 0, 0.05].forEach((offsetY, i) => {
+			[-0.05, 0, 0.05].forEach((offsetY) => {
 				const points = [
 					new THREE.Vector3(side * 0.18, -0.06 + offsetY, 0.46),
 					new THREE.Vector3(side * 0.5, -0.04 + offsetY * 1.5, 0.4)
@@ -312,6 +346,14 @@ export class ThreeStage {
 			this.headNode.rotation.z = -roll;
 		}
 
+		// Ear twitch physics on head movement
+		if (this.earLNode) {
+			this.earLNode.rotation.z = 0.35 + yaw * 0.2;
+		}
+		if (this.earRNode) {
+			this.earRNode.rotation.z = -0.35 + yaw * 0.2;
+		}
+
 		// Apply Eye Blinks & Gaze (Procedural Cat)
 		if (this.eyeLNode) {
 			this.eyeLNode.scale.y = Math.max(0.08, eyeBlinkL);
@@ -364,14 +406,17 @@ export class ThreeStage {
 		this.pawLNode = null;
 		this.pawRNode = null;
 		this.tailNode = null;
+		this.earLNode = null;
+		this.earRNode = null;
 		this.gltfBones.clear();
 	}
 
 	private startRenderLoop = () => {
-		const clock = new THREE.Clock();
-
 		const render = () => {
-			const delta = clock.getDelta();
+			const now = performance.now();
+			const delta = (now - this.lastFrameTime) / 1000;
+			this.lastFrameTime = now;
+
 			if (this.mixer) {
 				this.mixer.update(delta);
 			}
@@ -383,6 +428,7 @@ export class ThreeStage {
 			this.animationFrameId = requestAnimationFrame(render);
 		};
 
+		this.lastFrameTime = performance.now();
 		render();
 	};
 
@@ -395,7 +441,9 @@ export class ThreeStage {
 		this.clearCurrentModel();
 		if (this.renderer) {
 			this.renderer.dispose();
-			this.renderer.domElement.remove();
+			if (this.renderer.domElement.parentElement) {
+				this.renderer.domElement.parentElement.removeChild(this.renderer.domElement);
+			}
 			this.renderer = null;
 		}
 	}

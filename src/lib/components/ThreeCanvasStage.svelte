@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
-	import { threeStage } from '#lib/core/threeStage';
+	import { threeStage, type CatVariant } from '#lib/core/threeStage';
 
 	let containerEl = $state<HTMLDivElement>();
 	let animFrameId: number | null = null;
@@ -32,17 +32,24 @@
 
 	function loadActive3DModel() {
 		rigging.isLoadingModel = true;
-		if (rigging.selected3DModelId === 'mochi-cat') {
-			threeStage.loadProceduralCat();
+		const id = rigging.selected3DModelId;
+
+		if (id === 'mochi-cat') {
+			threeStage.loadProceduralCat('mochi');
 			rigging.isLoadingModel = false;
-		} else if (rigging.selected3DModelId === 'fox') {
-			threeStage.loadGLTF('/models/3d/fox.glb')
-				.catch(err => console.error('Failed to load fox.glb:', err))
-				.finally(() => (rigging.isLoadingModel = false));
+		} else if (id === 'kuro-cat') {
+			threeStage.loadProceduralCat('kuro');
+			rigging.isLoadingModel = false;
+		} else if (id === 'tora-cat') {
+			threeStage.loadProceduralCat('tora');
+			rigging.isLoadingModel = false;
 		} else if (rigging.customGlbUrl) {
 			threeStage.loadGLTF(rigging.customGlbUrl)
-				.catch(err => console.error('Failed to load custom GLB:', err))
+				.catch((err) => console.error('Failed to load custom GLB:', err))
 				.finally(() => (rigging.isLoadingModel = false));
+		} else {
+			threeStage.loadProceduralCat('mochi');
+			rigging.isLoadingModel = false;
 		}
 	}
 
