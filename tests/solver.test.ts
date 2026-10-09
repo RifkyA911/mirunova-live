@@ -120,7 +120,7 @@ describe('solveFaceLandmarks', () => {
 		expect(resFrown.mouthX).toBeLessThan(-0.4);    // jaw left shift
 	});
 
-	it('maps hand tracking elevation to arm angles', () => {
+	it('maps hand tracking elevation to arm angles and high-five gesture', () => {
 		const landmarks = createMockLandmarks();
 		const res = solveFaceLandmarks(
 			landmarks,
@@ -128,10 +128,37 @@ describe('solveFaceLandmarks', () => {
 			{ yaw: 0, pitch: 0, roll: 0 },
 			null,
 			undefined,
-			{ armLA: 25.5, armRA: 18.2 }
+			{ armLA: 28.0, armRA: 5.0, isHighFiveL: true, gestureL: 'high_five' }
 		);
 
-		expect(res.armLA).toBe(25.5);
-		expect(res.armRA).toBe(18.2);
+		expect(res.armLA).toBe(28.0);
+		expect(res.armRA).toBe(5.0);
+		expect(res.isHighFiveL).toBe(true);
+		expect(res.handLGesture).toBe('high_five');
+	});
+
+	it('maintains rock-solid open eyes (1.0) under subtle eyelid fluctuations', () => {
+		const landmarks = createMockLandmarks();
+		// Subtle eyelid score 0.20 (common in webcam video) should NOT cause half-closed eyes
+		const blendshapes = new Map<string, number>([
+			['eyeBlinkLeft', 0.20],
+			['eyeBlinkRight', 0.22]
+		]);
+
+		const res = solveFaceLandmarks(landmarks, blendshapes, { yaw: 0, pitch: 0, roll: 0 });
+		expect(res.eyeBlinkL).toBe(1.0);
+		expect(res.eyeBlinkR).toBe(1.0);
+	});
+
+	it('detects sad mouth :( via geometric corner droop even with weak blendshapes', () => {
+		// Landmarks with mouth corners (61, 291) lower than center upper lip (13)
+		const landmarks = createMockLandmarks({
+			13: { x: 0.5, y: 0.50, z: 0 },   // center upper lip
+			61: { x: 0.44, y: 0.53, z: 0 },  // left corner drooped (y larger = lower)
+			291: { x: 0.56, y: 0.53, z: 0 }  // right corner drooped
+		});
+
+		const res = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 });
+		expect(res.mouthForm).toBeLessThan(-0.3); // reliably detects :(
 	});
 });

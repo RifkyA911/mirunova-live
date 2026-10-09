@@ -30,7 +30,8 @@
 				backgroundAlpha: 0,
 				antialias: true,
 				resolution: window.devicePixelRatio || 1,
-				autoDensity: true
+				autoDensity: true,
+				preserveDrawingBuffer: true
 			});
 
 			containerEl.appendChild(app.view as HTMLCanvasElement);
@@ -65,14 +66,103 @@
 		}
 	});
 
+	let lastScreenshotSignal = 0;
+	$effect(() => {
+		const signal = rigging.screenshotSignal;
+		if (signal > 0 && signal !== lastScreenshotSignal) {
+			lastScreenshotSignal = signal;
+			takeScreenshot();
+		}
+	});
+
+	function takeScreenshot() {
+		if (!app) return;
+		try {
+			app.render();
+			const canvas = app.view as HTMLCanvasElement;
+			const dataUrl = canvas.toDataURL('image/png');
+			const link = document.createElement('a');
+			const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+			const cleanName = (rigging.modelName || 'avatar').toLowerCase().replace(/\s+/g, '-');
+			link.download = `mirunova-${cleanName}-${dateStr}.png`;
+			link.href = dataUrl;
+			link.click();
+			rigging.showToast(`Screenshot tersimpan: ${link.download}`);
+		} catch (e) {
+			console.error('Screenshot extraction error:', e);
+			rigging.showToast('Gagal mengambil screenshot');
+		}
+	}
+
+	let avatarTickerFn: any = null;
+
 	async function loadModel(url: string, Live2DModelClass?: any) {
 		if (!app) return;
 		try {
 			rigging.isLoadingModel = true;
+			if (avatarTickerFn && app.ticker) {
+				app.ticker.remove(avatarTickerFn);
+				avatarTickerFn = null;
+			}
 			if (currentModel) {
-				app.stage.removeChild(currentModel);
-				currentModel.destroy();
+				if (currentModel.destroy) currentModel.destroy();
+				if (currentModel.container) app.stage.removeChild(currentModel.container);
+				else app.stage.removeChild(currentModel);
 				currentModel = null;
+			}
+
+			const is2DAvatar = url.includes('momose_aria') || url.endsWith('.jpg') || url.endsWith('.png') || url.endsWith('.webp');
+
+			if (is2DAvatar) {
+				const PIXI = (window as any).PIXI || (await import('pixi.js'));
+				const { ReactiveAvatar2D } = await import('#lib/core/avatar2d');
+				const avatar = await ReactiveAvatar2D.create(PIXI, url);
+				currentModel = avatar;
+
+				const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+				const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+
+				const scale = Math.min(rendererWidth / avatar.width, rendererHeight / avatar.height) * 0.85;
+				modelScale = scale;
+				avatar.scale.set(scale);
+
+				modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 50 };
+				avatar.position.set(modelPosition.x, modelPosition.y);
+
+				app.stage.addChild(avatar.container);
+
+				avatarTickerFn = () => {
+					if (currentModel !== avatar) return;
+					const params: Record<string, number> = {};
+					const now = performance.now();
+					for (const param of rigging.parameters) {
+						let val = rigging.getActiveValue(param.id);
+
+						if (rigging.poseLoopMode !== 'none') {
+							const speed = rigging.poseLoopSpeed;
+							if (param.id === 'ParamBreath') {
+								val = (Math.sin(now * 0.003 * speed) + 1) / 2;
+							} else if (param.id === 'ParamBodyAngleZ' && rigging.poseLoopMode === 'gentle-sway') {
+								val += Math.sin(now * 0.0018 * speed) * 3.5;
+							} else if (param.id === 'ParamAngleY' && rigging.poseLoopMode === 'head-nod') {
+								val += Math.sin(now * 0.004 * speed) * 4.5;
+							}
+						}
+						params[param.id] = val;
+					}
+					avatar.updateParameters(params);
+				};
+				app.ticker.add(avatarTickerFn);
+
+				rigging.parameters = DEFAULT_PARAMETERS;
+				for (const p of DEFAULT_PARAMETERS) {
+					if (!(p.id in rigging.liveValues)) {
+						rigging.setLiveValue(p.id, p.defaultValue);
+						rigging.setManualValue(p.id, p.defaultValue);
+					}
+				}
+				rigging.availableMotions = ['HighFive', 'Wave', 'Blink', 'Smile', 'Frown'];
+				return;
 			}
 
 			const Live2D = Live2DModelClass || (await import('pixi-live2d-display/cubism4')).Live2DModel;
@@ -223,6 +313,14 @@
 	}
 
 	onDestroy(() => {
+		if (avatarTickerFn && app?.ticker) {
+			app.ticker.remove(avatarTickerFn);
+			avatarTickerFn = null;
+		}
+		if (currentModel?.destroy) {
+			currentModel.destroy();
+			currentModel = null;
+		}
 		if (app) {
 			app.destroy(true, { children: true, texture: true, baseTexture: true });
 			app = null;

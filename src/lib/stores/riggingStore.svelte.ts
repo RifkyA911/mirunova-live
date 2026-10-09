@@ -16,6 +16,8 @@ export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	// Eyes & Eyebrows
 	{ id: 'ParamEyeLOpen', label: 'Eye Left Open', min: 0, max: 1, defaultValue: 1, group: 'eyes' },
 	{ id: 'ParamEyeROpen', label: 'Eye Right Open', min: 0, max: 1, defaultValue: 1, group: 'eyes' },
+	{ id: 'ParamEyeLSmile', label: 'Eye Left Smile (^.^)', min: 0, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamEyeRSmile', label: 'Eye Right Smile (^.^)', min: 0, max: 1, defaultValue: 0, group: 'eyes' },
 	{ id: 'ParamEyeBallX', label: 'Eye Ball X (Pandangan X)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
 	{ id: 'ParamEyeBallY', label: 'Eye Ball Y (Pandangan Y)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
 	{ id: 'ParamBrowLY', label: 'Brow Left Y (Alis Kiri)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
@@ -32,8 +34,14 @@ export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	{ id: 'ParamBreath', label: 'Breathing (Nafas)', min: 0, max: 1, defaultValue: 0, group: 'body' },
 	// Arms & Hands
 	{ id: 'ParamArmLA', label: 'Arm Left Angle (Tangan Kiri)', min: -30, max: 30, defaultValue: 0, group: 'hands' },
-	{ id: 'ParamArmRA', label: 'Arm Right Angle (Tangan Kanan)', min: -30, max: 30, defaultValue: 0, group: 'hands' }
+	{ id: 'ParamArmRA', label: 'Arm Right Angle (Tangan Kanan)', min: -30, max: 30, defaultValue: 0, group: 'hands' },
+	{ id: 'ParamArmLB', label: 'Arm Left High-Five Pose', min: 0, max: 1, defaultValue: 0, group: 'hands' },
+	{ id: 'ParamArmRB', label: 'Arm Right High-Five Pose', min: 0, max: 1, defaultValue: 0, group: 'hands' },
+	{ id: 'ParamHandAngleL', label: 'Hand Left Angle (Lambaian Kiri)', min: -30, max: 30, defaultValue: 0, group: 'hands' },
+	{ id: 'ParamHandAngleR', label: 'Hand Right Angle (Lambaian Kanan)', min: -30, max: 30, defaultValue: 0, group: 'hands' }
 ];
+
+import { savePreferences, loadPreferences } from '#lib/core/storage';
 
 export class RiggingStore {
 	// Mode & UI State
@@ -42,6 +50,7 @@ export class RiggingStore {
 	isThemeModalOpen = $state<boolean>(false);
 	isModelModalOpen = $state<boolean>(false);
 	isObsModalOpen = $state<boolean>(false);
+	isSettingsModalOpen = $state<boolean>(false);
 	isCameraActive = $state<boolean>(false);
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
@@ -51,6 +60,12 @@ export class RiggingStore {
 	isObsMode = $state<boolean>(false);
 	obsBgType = $state<'transparent' | 'chroma'>('transparent');
 	previousBgStyle = $state<BackgroundStyle>('solid');
+
+	// Toast & Screenshot Notifications
+	toastMessage = $state<string | null>(null);
+	screenshotSignal = $state<number>(0);
+	isCalibrating = $state<boolean>(false);
+	private toastTimer: any = null;
 
 	// Tracking Quality & Versatility Tuners
 	trackingSensitivity = $state<number>(1.0); // 0.5 to 2.0
@@ -106,6 +121,77 @@ export class RiggingStore {
 			this.liveValues[p.id] = p.defaultValue;
 			this.manualValues[p.id] = p.defaultValue;
 		}
+		if (typeof window !== 'undefined') {
+			this.loadFromStorage();
+		}
+	}
+
+	showToast(msg: string) {
+		this.toastMessage = msg;
+		if (this.toastTimer) clearTimeout(this.toastTimer);
+		this.toastTimer = setTimeout(() => {
+			this.toastMessage = null;
+		}, 3000);
+	}
+
+	triggerScreenshot() {
+		this.screenshotSignal = performance.now();
+	}
+
+	persist() {
+		savePreferences({
+			modelUrl: this.modelUrl,
+			modelName: this.modelName,
+			selectedModelId: this.selectedModelId,
+			avatarEngine: this.avatarEngine,
+			selected3DModelId: this.selected3DModelId,
+			customGlbUrl: this.customGlbUrl,
+			uiTheme: this.uiTheme,
+			backgroundStyle: this.backgroundStyle,
+			backgroundColor: this.backgroundColor,
+			screenEffect: this.screenEffect,
+			customBgUrl: this.customBgUrl,
+			trackingSensitivity: this.trackingSensitivity,
+			smoothingAmount: this.smoothingAmount,
+			eyeBlinkLinked: this.eyeBlinkLinked,
+			deadzoneThreshold: this.deadzoneThreshold,
+			enableHandTracking: this.enableHandTracking,
+			showCameraPip: this.showCameraPip,
+			showLandmarksMesh: this.showLandmarksMesh,
+			poseLoopMode: this.poseLoopMode,
+			poseLoopSpeed: this.poseLoopSpeed,
+			calibrationYaw: this.calibrationYaw,
+			calibrationPitch: this.calibrationPitch,
+			calibrationRoll: this.calibrationRoll
+		});
+	}
+
+	loadFromStorage() {
+		const saved = loadPreferences();
+		if (!saved) return;
+		if (saved.modelUrl) this.modelUrl = saved.modelUrl;
+		if (saved.modelName) this.modelName = saved.modelName;
+		if (saved.selectedModelId) this.selectedModelId = saved.selectedModelId;
+		if (saved.avatarEngine) this.avatarEngine = saved.avatarEngine;
+		if (saved.selected3DModelId) this.selected3DModelId = saved.selected3DModelId;
+		if (saved.customGlbUrl !== undefined) this.customGlbUrl = saved.customGlbUrl;
+		if (saved.uiTheme) this.uiTheme = saved.uiTheme as any;
+		if (saved.backgroundStyle) this.backgroundStyle = saved.backgroundStyle as any;
+		if (saved.backgroundColor) this.backgroundColor = saved.backgroundColor;
+		if (saved.screenEffect) this.screenEffect = saved.screenEffect as any;
+		if (saved.customBgUrl !== undefined) this.customBgUrl = saved.customBgUrl;
+		if (saved.trackingSensitivity !== undefined) this.trackingSensitivity = saved.trackingSensitivity;
+		if (saved.smoothingAmount !== undefined) this.smoothingAmount = saved.smoothingAmount;
+		if (saved.eyeBlinkLinked !== undefined) this.eyeBlinkLinked = saved.eyeBlinkLinked;
+		if (saved.deadzoneThreshold !== undefined) this.deadzoneThreshold = saved.deadzoneThreshold;
+		if (saved.enableHandTracking !== undefined) this.enableHandTracking = saved.enableHandTracking;
+		if (saved.showCameraPip !== undefined) this.showCameraPip = saved.showCameraPip;
+		if (saved.showLandmarksMesh !== undefined) this.showLandmarksMesh = saved.showLandmarksMesh;
+		if (saved.poseLoopMode) this.poseLoopMode = saved.poseLoopMode as any;
+		if (saved.poseLoopSpeed !== undefined) this.poseLoopSpeed = saved.poseLoopSpeed;
+		if (saved.calibrationYaw !== undefined) this.calibrationYaw = saved.calibrationYaw;
+		if (saved.calibrationPitch !== undefined) this.calibrationPitch = saved.calibrationPitch;
+		if (saved.calibrationRoll !== undefined) this.calibrationRoll = saved.calibrationRoll;
 	}
 
 	toggleObsMode(enable?: boolean) {
@@ -117,6 +203,7 @@ export class RiggingStore {
 			this.isThemeModalOpen = false;
 			this.isModelModalOpen = false;
 			this.isObsModalOpen = false;
+			this.isSettingsModalOpen = false;
 		} else if (!next && this.isObsMode) {
 			this.backgroundStyle = this.previousBgStyle;
 		}
@@ -148,18 +235,21 @@ export class RiggingStore {
 		this.calibrationYaw = yaw;
 		this.calibrationPitch = pitch;
 		this.calibrationRoll = roll;
+		this.persist();
 	}
 
 	resetCalibration() {
 		this.calibrationYaw = 0;
 		this.calibrationPitch = 0;
 		this.calibrationRoll = 0;
+		this.persist();
 	}
 
 	setModel(id: string, name: string, url: string) {
 		this.selectedModelId = id;
 		this.modelName = name;
 		this.modelUrl = url;
+		this.persist();
 	}
 
 	playMotion(name: string) {

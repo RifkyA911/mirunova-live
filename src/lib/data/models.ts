@@ -11,6 +11,15 @@ export interface Model3DItem {
 
 export const MODEL_CATALOG: Live2DModelItem[] = [
 	{
+		id: 'momose_aria',
+		name: 'Momose Aria (百瀬アリア)',
+		url: '/models/momose_aria/momose_aria.jpg',
+		description: 'Generated 2D Reactive Avatar with Head Parallax, Eye Blinking, Mouth Speech Sync, and High-Five Hands.',
+		version: '2D Reactive',
+		modelType: 'avatar2d',
+		avatarUrl: '/models/momose_aria/momose_aria.jpg'
+	},
+	{
 		id: 'haru',
 		name: 'Haru Greeter',
 		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Haru/Haru.model3.json',

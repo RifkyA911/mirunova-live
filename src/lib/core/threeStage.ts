@@ -41,7 +41,8 @@ export class ThreeStage {
 		this.renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			alpha: true,
-			powerPreference: 'high-performance'
+			powerPreference: 'high-performance',
+			preserveDrawingBuffer: true
 		});
 		this.renderer.setSize(width, height);
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -371,19 +372,30 @@ export class ThreeStage {
 		// Apply Mouth Opening & Expression
 		if (this.mouthNode) {
 			this.mouthNode.scale.y = Math.max(0.2, 1 + mouthOpen * 3.5);
-			this.mouthNode.scale.x = Math.max(0.5, 1 + mouthForm * 0.35);
+			this.mouthNode.scale.x = Math.max(0.5, 1 + Math.abs(mouthForm) * 0.35);
 			this.mouthNode.position.x = mouthX * 0.05;
 			this.mouthNode.position.y = -0.14 - mouthOpen * 0.06;
+			// Invert torus rotation to curve downward for :( frown
+			this.mouthNode.rotation.z = mouthForm < -0.15 ? 0 : Math.PI;
 		}
 
-		// Apply Arm / Paw gestures
+		// Apply Arm / Paw gestures (Elevation & Interactive High-Five)
+		const isHighFiveL = armLA > 24 || (params['ParamArmLB'] ?? 0) > 0.5;
+		const isHighFiveR = armRA > 24 || (params['ParamArmRB'] ?? 0) > 0.5;
+
 		if (this.pawLNode) {
-			this.pawLNode.position.y = -0.3 + (armLA / 30) * 0.35;
-			this.pawLNode.rotation.z = (armLA / 30) * 0.6;
+			const lift = armLA / 30;
+			this.pawLNode.position.y = -0.3 + lift * 0.45;
+			this.pawLNode.position.z = 0.4 + (isHighFiveL ? 0.35 : lift * 0.15);
+			this.pawLNode.rotation.z = lift * 0.4;
+			this.pawLNode.rotation.x = isHighFiveL ? -1.1 : -lift * 0.5;
 		}
 		if (this.pawRNode) {
-			this.pawRNode.position.y = -0.3 + (armRA / 30) * 0.35;
-			this.pawRNode.rotation.z = -(armRA / 30) * 0.6;
+			const lift = armRA / 30;
+			this.pawRNode.position.y = -0.3 + lift * 0.45;
+			this.pawRNode.position.z = 0.4 + (isHighFiveR ? 0.35 : lift * 0.15);
+			this.pawRNode.rotation.z = -lift * 0.4;
+			this.pawRNode.rotation.x = isHighFiveR ? -1.1 : -lift * 0.5;
 		}
 
 		// Tail Wagging
@@ -435,6 +447,12 @@ export class ThreeStage {
 		this.lastFrameTime = performance.now();
 		render();
 	};
+
+	captureScreenshot(): string | null {
+		if (!this.renderer) return null;
+		this.renderer.render(this.scene, this.camera);
+		return this.renderer.domElement.toDataURL('image/png');
+	}
 
 	destroy() {
 		if (this.animationFrameId !== null) {

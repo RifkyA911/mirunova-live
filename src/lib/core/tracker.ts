@@ -11,6 +11,9 @@ export class FaceTracker {
 	private canvasOverlay: HTMLCanvasElement | null = null;
 	public stream: MediaStream | null = null;
 	private animationFrameId: number | null = null;
+	private lastRawYaw: number = 0;
+	private lastRawPitch: number = 0;
+	private lastRawRoll: number = 0;
 	private lastVideoTime = -1;
 	private isRunning = false;
 
@@ -264,6 +267,16 @@ export class FaceTracker {
 		}
 	}
 
+	calibrate(): boolean {
+		if (!this.isRunning || !rigging.isFaceDetected) {
+			rigging.showToast('Kamera belum aktif atau wajah belum terdeteksi.');
+			return false;
+		}
+		rigging.calibrateCenter(this.lastRawYaw, this.lastRawPitch, this.lastRawRoll);
+		rigging.showToast('✓ Kalibrasi Berhasil! Posisi netral kepala Anda telah disimpan.');
+		return true;
+	}
+
 	private processLoop = () => {
 		if (!this.isRunning || !this.trackingVideo || !this.landmarker) return;
 
@@ -277,8 +290,17 @@ export class FaceTracker {
 				// 1. Face Landmark Tracking
 				const faceResults = this.landmarker.detectForVideo(vid, startTime);
 
-				// 2. Hand Landmark Tracking
-				let handData = { leftDetected: false, rightDetected: false, armLA: 0, armRA: 0 };
+				// 2. Hand Landmark Tracking with Gesture & High-Five Recognition
+				let handData: {
+					leftDetected: boolean;
+					rightDetected: boolean;
+					armLA: number;
+					armRA: number;
+					gestureL?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
+					gestureR?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
+					isHighFiveL?: boolean;
+					isHighFiveR?: boolean;
+				} = { leftDetected: false, rightDetected: false, armLA: 0, armRA: 0 };
 				let handsList: Array<Array<{ x: number; y: number; z: number }>> = [];
 
 				if (this.handLandmarker && rigging.enableHandTracking) {
@@ -288,30 +310,71 @@ export class FaceTracker {
 							handsList = handResults.landmarks;
 							for (let i = 0; i < handResults.landmarks.length; i++) {
 								const handPts = handResults.landmarks[i];
-								const label = handResults.handedness?.[i]?.[0]?.categoryName || (i === 0 ? 'Right' : 'Left');
-
-								// Compute arm lift based on wrist & middle finger tip elevation
 								const wrist = handPts[0];
 								const middleTip = handPts[12];
 								const handY = Math.min(wrist.y, middleTip.y);
 
-								// Webcam coordinates: 0 is top, 1 is bottom. Raising hand means y is small (< 0.7)
-								const elevation = Math.max(0, Math.min(1, (0.75 - handY) / 0.5));
-								const armAngle = elevation * 30;
+								// Natural mirror mapping:
+								// In mirrored camera preview (scale-x-[-1]), wrist.x < 0.5 appears on user's right side (screen right).
+								// In Live2D, screen right is the model's anatomical LEFT arm (ParamArmLA).
+								// wrist.x >= 0.5 appears on screen left, which is model's RIGHT arm (ParamArmRA).
+								const isScreenRight = wrist.x < 0.5;
 
-								if (label === 'Right') {
-									handData.rightDetected = true;
-									handData.armRA = armAngle;
-									rigging.isHandRDetected = true;
-								} else {
+								// Elevation calculation: 0 = top of screen, 1 = bottom
+								const elevation = Math.max(0, Math.min(1, (0.75 - handY) / 0.5));
+								let armAngle = elevation * 30;
+
+								// Finger extension Euclidean distance checks
+								const dist = (p1: { x: number; y: number }, p2: { x: number; y: number }) =>
+									Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+								const isThumbOpen = dist(handPts[4], wrist) > dist(handPts[2], wrist) * 1.15;
+								const isIndexOpen = dist(handPts[8], wrist) > dist(handPts[6], wrist) * 1.15;
+								const isMiddleOpen = dist(handPts[12], wrist) > dist(handPts[10], wrist) * 1.15;
+								const isRingOpen = dist(handPts[16], wrist) > dist(handPts[14], wrist) * 1.15;
+								const isPinkyOpen = dist(handPts[20], wrist) > dist(handPts[18], wrist) * 1.15;
+
+								const openFingers = (isIndexOpen ? 1 : 0) + (isMiddleOpen ? 1 : 0) + (isRingOpen ? 1 : 0) + (isPinkyOpen ? 1 : 0) + (isThumbOpen ? 1 : 0);
+								const isOpenPalm = openFingers >= 4;
+								const isPeace = isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen;
+								const isFist = openFingers <= 1;
+
+								let gesture: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none' = 'none';
+								let isHighFive = false;
+
+								if (isOpenPalm && elevation > 0.35) {
+									gesture = 'high_five';
+									isHighFive = true;
+									armAngle = Math.max(armAngle, 28);
+								} else if (isOpenPalm) {
+									gesture = 'open';
+								} else if (isPeace) {
+									gesture = 'peace';
+								} else if (isFist) {
+									gesture = 'fist';
+								}
+
+								if (isScreenRight) {
 									handData.leftDetected = true;
 									handData.armLA = armAngle;
+									handData.gestureL = gesture;
+									handData.isHighFiveL = isHighFive;
 									rigging.isHandLDetected = true;
+									rigging.handLGesture = gesture;
+								} else {
+									handData.rightDetected = true;
+									handData.armRA = armAngle;
+									handData.gestureR = gesture;
+									handData.isHighFiveR = isHighFive;
+									rigging.isHandRDetected = true;
+									rigging.handRGesture = gesture;
 								}
 							}
 						} else {
 							rigging.isHandLDetected = false;
 							rigging.isHandRDetected = false;
+							rigging.handLGesture = 'none';
+							rigging.handRGesture = 'none';
 						}
 					} catch {
 						// Hand detection frame error ignored
@@ -337,6 +400,18 @@ export class FaceTracker {
 
 					// Sync smoother alpha
 					globalSmoother.setAlpha(rigging.smoothingAmount);
+
+					// Capture raw uncalibrated pose for precise calibration snapshot
+					const rawPose = solveFaceLandmarks(
+						landmarks,
+						blendshapesMap,
+						{ yaw: 0, pitch: 0, roll: 0 },
+						matrix,
+						{ sensitivity: 1.0, deadzone: 0 }
+					);
+					this.lastRawYaw = rawPose.yaw;
+					this.lastRawPitch = rawPose.pitch;
+					this.lastRawRoll = rawPose.roll;
 
 					// Solve parameters with high-precision matrix, mouth expressions, and hand data
 					const solved = solveFaceLandmarks(
@@ -375,6 +450,12 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.smooth('ParamBodyAngleZ', solved.bodyAngleZ, 'angle'));
 					rigging.setLiveValue('ParamArmLA', globalSmoother.smooth('ParamArmLA', solved.armLA, 'generic'));
 					rigging.setLiveValue('ParamArmRA', globalSmoother.smooth('ParamArmRA', solved.armRA, 'generic'));
+					rigging.setLiveValue('ParamArmLB', solved.isHighFiveL ? 1 : 0);
+					rigging.setLiveValue('ParamArmRB', solved.isHighFiveR ? 1 : 0);
+					rigging.setLiveValue('ParamHandAngleL', solved.isHighFiveL ? 15 : 0);
+					rigging.setLiveValue('ParamHandAngleR', solved.isHighFiveR ? 15 : 0);
+					rigging.setLiveValue('ParamEyeLSmile', solved.eyeSmileL ?? 0);
+					rigging.setLiveValue('ParamEyeRSmile', solved.eyeSmileR ?? 0);
 
 					// Draw wireframe overlay if enabled
 					if (this.canvasOverlay && rigging.showLandmarksMesh) {

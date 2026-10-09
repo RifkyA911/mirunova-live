@@ -35,8 +35,15 @@
 </script>
 
 {#if rigging.isObsModalOpen}
-	<!-- Backdrop Modal -->
-	<div class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
+	<!-- Backdrop Modal (Click outside to close) -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		onclick={(e) => {
+			if (e.target === e.currentTarget) rigging.isObsModalOpen = false;
+		}}
+		class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150"
+	>
 		<div
 			class="w-full max-w-lg bg-zinc-950/95 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-zinc-100"
 		>

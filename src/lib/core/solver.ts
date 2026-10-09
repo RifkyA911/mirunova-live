@@ -12,7 +12,16 @@ export function solveFaceLandmarks(
 	offsets: { yaw: number; pitch: number; roll: number },
 	matrix?: Float32Array | number[] | Matrix | { data: number[] } | null,
 	config?: Partial<TrackingConfig>,
-	handData?: { leftDetected: boolean; rightDetected: boolean; armLA: number; armRA: number }
+	handData?: {
+		leftDetected: boolean;
+		rightDetected: boolean;
+		armLA: number;
+		armRA: number;
+		gestureL?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
+		gestureR?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
+		isHighFiveL?: boolean;
+		isHighFiveR?: boolean;
+	}
 ): TrackingResults {
 	const sensitivity = config?.sensitivity ?? 1.0;
 	const deadzone = config?.deadzone ?? 0.3;
@@ -93,15 +102,20 @@ export function solveFaceLandmarks(
 		blinkR = combined;
 	}
 
-	// Eyelid response: < 0.18 is fully open (no micro-twitch), > 0.65 is fully closed
-	let eyeBlinkL = 1 - smoothStep(0.18, 0.65, blinkL);
-	let eyeBlinkR = 1 - smoothStep(0.18, 0.65, blinkR);
+	// Crisp eyelid response: baseline open eyes (0.0 to 0.25) remain 100% open
+	// Deliberate blink starts at 0.28 and reaches full closure at 0.70
+	let eyeBlinkL = 1 - smoothStep(0.28, 0.70, blinkL);
+	let eyeBlinkR = 1 - smoothStep(0.28, 0.70, blinkR);
 
-	// Squint integration for anime expression
+	// Solid open eyes lock: snap to 1.0 when >= 0.82 to eliminate trembling/sleepy eye flutter ("kiyer-kiyer")
+	if (eyeBlinkL >= 0.82) eyeBlinkL = 1.0;
+	if (eyeBlinkR >= 0.82) eyeBlinkR = 1.0;
+
+	// Smiling eye blendshapes (^.^)
 	const squintL = blendshapesMap.get('eyeSquintLeft') ?? 0;
 	const squintR = blendshapesMap.get('eyeSquintRight') ?? 0;
-	if (squintL > 0.3 && eyeBlinkL > 0.4) eyeBlinkL *= 1 - squintL * 0.35;
-	if (squintR > 0.3 && eyeBlinkR > 0.4) eyeBlinkR *= 1 - squintR * 0.35;
+	const eyeSmileL = Math.min(1.0, squintL * 1.5);
+	const eyeSmileR = Math.min(1.0, squintR * 1.5);
 
 	// Symmetrical Eye Gaze (-1 to 1) using both left and right eye blendshapes
 	const lookInL = blendshapesMap.get('eyeLookInLeft') ?? 0;
@@ -123,7 +137,7 @@ export function solveFaceLandmarks(
 	const browL = Math.max(-1, Math.min(1, browInnerUp * 0.6 + browOuterUpL * 0.4 - browDownL * 1.2));
 	const browR = Math.max(-1, Math.min(1, browInnerUp * 0.6 + browOuterUpR * 0.4 - browDownR * 1.2));
 
-	// 4. Enhanced Mouth Expressions & Cheeks
+	// 4. Enhanced Mouth Expressions & Cheeks with Geometric Curvature Analysis
 	const jawOpen = blendshapesMap.get('jawOpen') ?? 0;
 	const mouthClose = blendshapesMap.get('mouthClose') ?? 0;
 	const mouthPucker = blendshapesMap.get('mouthPucker') ?? 0;
@@ -134,9 +148,41 @@ export function solveFaceLandmarks(
 	const smileR = blendshapesMap.get('mouthSmileRight') ?? 0;
 	const frownL = blendshapesMap.get('mouthFrownLeft') ?? 0;
 	const frownR = blendshapesMap.get('mouthFrownRight') ?? 0;
-	const smile = (smileL + smileR) / 2;
-	const frown = (frownL + frownR) / 2;
-	const mouthForm = Math.max(-1, Math.min(1, smile * 1.4 - frown * 1.1 - mouthPucker * 0.4));
+	const shrugLower = blendshapesMap.get('mouthShrugLower') ?? 0;
+	const shrugUpper = blendshapesMap.get('mouthShrugUpper') ?? 0;
+	const mouthLowerDown = ((blendshapesMap.get('mouthLowerDownLeft') ?? 0) + (blendshapesMap.get('mouthLowerDownRight') ?? 0)) / 2;
+
+	const rawSmile = (smileL + smileR) / 2;
+	const rawFrown = (frownL + frownR) / 2;
+
+	// Geometric 3D corner curvature analysis for foolproof :( and :)
+	let geometricFrown = 0;
+	let geometricSmile = 0;
+	if (landmarks && landmarks[61] && landmarks[291] && landmarks[13]) {
+		const cornerAvgY = (landmarks[61].y + landmarks[291].y) / 2;
+		const centerLipY = landmarks[13].y;
+		const mouthWidth = Math.abs(landmarks[291].x - landmarks[61].x) || 0.08;
+		// Delta: corners are lower than center lip = FROWN :(
+		const delta = (cornerAvgY - centerLipY) / mouthWidth;
+		if (delta > 0.015) {
+			geometricFrown = Math.min(1.0, (delta - 0.015) * 5.0);
+		} else if (delta < -0.01) {
+			geometricSmile = Math.min(1.0, (-delta - 0.01) * 5.0);
+		}
+	}
+
+	const totalSmile = Math.max(rawSmile * 1.4, geometricSmile);
+	const totalFrown = Math.max(rawFrown * 2.5, geometricFrown, shrugLower * 1.4, mouthLowerDown * 1.2);
+
+	let mouthForm = 0;
+	if (totalSmile > 0.15 && totalSmile >= totalFrown) {
+		mouthForm = Math.min(1.0, totalSmile);
+	} else if (totalFrown > 0.12) {
+		mouthForm = -Math.min(1.0, totalFrown * 1.5);
+	}
+	if (mouthPucker > 0.3) {
+		mouthForm = Math.max(-1.0, mouthForm - mouthPucker * 0.4);
+	}
 
 	// Mouth & Jaw horizontal shift (chewing, smirking, talking sideways)
 	const jawLeft = blendshapesMap.get('jawLeft') ?? 0;
@@ -176,6 +222,12 @@ export function solveFaceLandmarks(
 		armLA,
 		armRA,
 		handLDetected: handData?.leftDetected ?? false,
-		handRDetected: handData?.rightDetected ?? false
+		handRDetected: handData?.rightDetected ?? false,
+		handLGesture: handData?.gestureL,
+		handRGesture: handData?.gestureR,
+		eyeSmileL,
+		eyeSmileR,
+		isHighFiveL: handData?.isHighFiveL,
+		isHighFiveR: handData?.isHighFiveR
 	};
 }

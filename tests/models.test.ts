@@ -3,18 +3,26 @@ import { MODEL_CATALOG, MODEL_3D_CATALOG } from '#lib/data/models';
 
 describe('Model Catalog Validation', () => {
 	it('should contain at least 5 verified Live2D models with Cubism 3/4 support', () => {
-		expect(MODEL_CATALOG.length).toBeGreaterThanOrEqual(5);
+		const live2dModels = MODEL_CATALOG.filter((m) => m.modelType !== 'avatar2d');
+		expect(live2dModels.length).toBeGreaterThanOrEqual(5);
 
-		for (const model of MODEL_CATALOG) {
+		for (const model of live2dModels) {
 			expect(model.id).toBeTruthy();
 			expect(model.name).toBeTruthy();
 			expect(model.url).toMatch(/^https:\/\/.+\.model3\.json$/);
 			expect(model.version).toBe('Cubism 3/4');
 		}
+
+		// Momose Aria avatar verification
+		const aria = MODEL_CATALOG.find((m) => m.id === 'momose_aria');
+		expect(aria).toBeDefined();
+		expect(aria?.name).toContain('Momose Aria');
+		expect(aria?.modelType).toBe('avatar2d');
 	});
 
 	it('should not contain blocked or dead CDN repositories', () => {
-		for (const model of MODEL_CATALOG) {
+		const live2dModels = MODEL_CATALOG.filter((m) => m.modelType !== 'avatar2d');
+		for (const model of live2dModels) {
 			// Ensure no blocked Eikanya links
 			expect(model.url).not.toContain('Eikanya/Live2d-model');
 			// Ensure official CubismWebSamples is used

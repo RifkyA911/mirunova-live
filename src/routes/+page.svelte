@@ -8,6 +8,7 @@
 	import ThemeModal from '#lib/components/ThemeModal.svelte';
 	import ModelCatalogModal from '#lib/components/ModelCatalogModal.svelte';
 	import ObsModal from '#lib/components/ObsModal.svelte';
+	import SettingsModal from '#lib/components/SettingsModal.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { i18n } from '#lib/i18n/index.svelte';
@@ -54,16 +55,17 @@
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-			if (e.key === 'Escape' && rigging.isObsMode) {
-				rigging.toggleObsMode(false);
+			if (e.key === 'Escape') {
+				if (rigging.isObsMode) rigging.toggleObsMode(false);
+				if (rigging.isDrawerOpen) rigging.isDrawerOpen = false;
+				if (rigging.isThemeModalOpen) rigging.isThemeModalOpen = false;
+				if (rigging.isModelModalOpen) rigging.isModelModalOpen = false;
+				if (rigging.isObsModalOpen) rigging.isObsModalOpen = false;
+				if (rigging.isSettingsModalOpen) rigging.isSettingsModalOpen = false;
 			} else if (e.key === 'o' || e.key === 'O') {
 				rigging.toggleObsMode();
 			} else if (e.key === 'c' || e.key === 'C') {
-				rigging.calibrateCenter(
-					rigging.liveValues['ParamAngleX'] || 0,
-					rigging.liveValues['ParamAngleY'] || 0,
-					rigging.liveValues['ParamAngleZ'] || 0
-				);
+				tracker.calibrate();
 			}
 		};
 
@@ -234,5 +236,18 @@
 
 		<!-- OBS Setup Modal -->
 		<ObsModal />
+
+		<!-- System Hardware, Settings & Storage Modal -->
+		<SettingsModal />
+	{/if}
+
+	<!-- Floating Toast Notification -->
+	{#if rigging.toastMessage}
+		<div
+			class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2.5 px-4 py-2 bg-zinc-950/90 text-zinc-100 border border-cyan-500/40 rounded-full shadow-2xl backdrop-blur-md pointer-events-none animate-in fade-in slide-in-from-top-2 duration-200"
+		>
+			<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+			<span class="text-xs font-semibold text-cyan-200 tracking-wide">{rigging.toastMessage}</span>
+		</div>
 	{/if}
 </main>

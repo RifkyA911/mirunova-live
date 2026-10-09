@@ -28,8 +28,12 @@ export interface TrackingResults {
 	armRA: number;         // Hand/Arm Right gesture/pos (0 to 30)
 	handLDetected: boolean;
 	handRDetected: boolean;
-	handLGesture?: 'wave' | 'open' | 'fist' | 'point' | 'none';
-	handRGesture?: 'wave' | 'open' | 'fist' | 'point' | 'none';
+	handLGesture?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
+	handRGesture?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
+	eyeSmileL?: number;    // 0 to 1
+	eyeSmileR?: number;    // 0 to 1
+	isHighFiveL?: boolean;
+	isHighFiveR?: boolean;
 }
 
 export interface TrackingConfig {
@@ -60,5 +64,7 @@ export interface Live2DModelItem {
 	name: string;
 	url: string;
 	description: string;
-	version: 'Cubism 3/4' | 'Cubism 2';
+	version: 'Cubism 3/4' | 'Cubism 2' | '2D Reactive';
+	modelType?: 'live2d' | 'avatar2d';
+	avatarUrl?: string;
 }

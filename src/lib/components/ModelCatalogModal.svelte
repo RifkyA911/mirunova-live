@@ -58,7 +58,15 @@
 </script>
 
 {#if rigging.isModelModalOpen}
-	<div class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
+	<!-- Backdrop Modal (Click outside to close) -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		onclick={(e) => {
+			if (e.target === e.currentTarget) rigging.isModelModalOpen = false;
+		}}
+		class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150"
+	>
 		<div
 			class="w-full max-w-xl bg-zinc-950/95 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden text-zinc-100"
 		>
@@ -124,19 +132,28 @@
 							{#each MODEL_CATALOG as model}
 								<button
 									onclick={() => handleSelect2DModel(model)}
-									class="flex flex-col p-3 rounded-xl border text-left transition-all {
+									class="flex gap-2.5 p-3 rounded-xl border text-left transition-all {
 										rigging.avatarEngine === 'live2d' && rigging.modelUrl === model.url
 											? 'bg-zinc-900 border-pink-500/80 text-white shadow-sm ring-1 ring-pink-500/30'
 											: 'bg-zinc-900/40 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
 									}"
 								>
-									<div class="flex items-center justify-between w-full mb-1">
-										<span class="font-semibold text-xs text-zinc-100">{model.name}</span>
-										<span class="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
-											{model.version}
-										</span>
+									{#if model.avatarUrl}
+										<img
+											src={model.avatarUrl}
+											alt={model.name}
+											class="w-10 h-10 rounded-lg object-cover border border-zinc-700/60 shrink-0 mt-0.5"
+										/>
+									{/if}
+									<div class="flex flex-col min-w-0 flex-1">
+										<div class="flex items-center justify-between w-full mb-1">
+											<span class="font-semibold text-xs text-zinc-100 truncate">{model.name}</span>
+											<span class="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono shrink-0 ml-1">
+												{model.version}
+											</span>
+										</div>
+										<span class="text-[10px] text-zinc-500 leading-snug line-clamp-2">{model.description}</span>
 									</div>
-									<span class="text-[10px] text-zinc-500 leading-snug">{model.description}</span>
 								</button>
 							{/each}
 						</div>

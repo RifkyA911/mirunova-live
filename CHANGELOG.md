@@ -1,0 +1,111 @@
+# Changelog
+
+All notable changes to the **MiruNova Live** project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [0.6.0] - 2026-10-10
+
+### Added
+- **Persistent Storage System (`localStorage`):**
+  - Settings, chosen models (Live2D & 3D), UI themes, background modes, custom hex colors, sensitivity, smoothing, deadzone, hand tracking, pose loops, and calibration offsets automatically persist across page reloads.
+  - JSON configuration export and import for seamless backup and cross-machine sharing.
+  - One-click factory reset restoring default configurations.
+- **Hardware Spec Detection & Benchmark Tier Bar:**
+  - Real-time GPU vendor and renderer detection via WebGL (`WEBGL_debug_renderer_info`).
+  - CPU core count detection (`navigator.hardwareConcurrency`).
+  - 0–100 benchmark scoring displayed on a dynamic gradient progress bar ranging from *Tidak Lancar* (Red) to *Sangat Lancar / Ultra* (Emerald Green).
+  - Dedicated hardware guide detailing why NVIDIA RTX GPUs (Tensor Cores + FP16 SIMD) accelerate MediaPipe vision inference to < 10ms with locked 60+ FPS.
+- **Voice Changer Integration Roadmap & Architecture:**
+  - Integration guide for **W-Okada AI RVC (Realtime Voice Conversion)** with RTX CUDA acceleration via VB-Cable virtual audio routing (100% free and open-source).
+  - In-browser Web Audio API pitch shifting and formant filtering roadmap.
+- **Foldable Accordion Rigging Preview Panel:**
+  - Re-architected inspector with 6 collapsible accordion cards: *Head Kinematics*, *Eyes & Eyebrows*, *Mouth & Phonemes*, *Body & Breathing*, *Hands & High-Five*, and *Discovered Parameters*.
+  - Global "Buka Semua" (Expand All) and "Tutup Semua" (Collapse All) toggles.
+  - Active numerical value badges and category indicators.
+- **Screenshot & Instant PNG Download:**
+  - Dedicated capture button on the Streamer Control Dock (`Aperture` icon) and Settings modal.
+  - Extracts full-resolution canvas snapshots with transparency support for thumbnails and stream graphics.
+  - Dual-engine compatibility across both Live2D Cubism and Three.js 3D avatars.
+- **Comprehensive Settings Modal:**
+  - Unified 4-tab control center: *Hardware & Performa*, *Tema & Tampilan*, *Voice Changer*, and *Penyimpanan & Backup*.
+  - Built-in UI theme toggler with real-time preview (Cyber Dark, Midnight Blue, Synthwave Sunset, Monochrome Minimal).
+- **Universal Modal Dismissal:**
+  - Clicking outer dark backdrops now cleanly dismisses all modals (`SettingsModal`, `ThemeModal`, `ModelCatalogModal`, `ObsModal`, and the `RiggingPreviewPanel` drawer).
+  - Global `Escape` keyboard shortcut closes any open modal or drawer instantly.
+- **Sleek Custom Scrollbar:**
+  - Replaced native Windows scrollbar with an ultra-thin 5px minimalist rounded scrollbar that matches active dark theme palettes.
+
+### Changed
+- **Head Pose Calibration Accuracy:**
+  - Fixed calibration calculation by sampling raw webcam posture baseline (`lastRawYaw`, `lastRawPitch`, `lastRawRoll`) instead of repeatedly compounding offset live values.
+  - Added visual floating toast notification on successful calibration.
+- **Streamer Control Dock UX:**
+  - Enlarged icon buttons with hover tooltips and streamlined aesthetic.
+  - Added quick-access buttons for Screenshot and Settings.
+
+---
+
+## [0.5.0] - 2026-10-09
+
+### Added
+- **Hand Tracking & High-Five Recognition:**
+  - Integrated MediaPipe HandLandmarker with 21 3D joint tracking.
+  - Mapped wrist and finger elevations to Live2D arm parameters (`ParamArmLA`, `ParamArmRA`).
+  - Real-time high-five gesture detection.
+- **Accurate Mouth & Sad Expression Detection:**
+  - Added mouth corner geometric curvature detection to reliably trigger sad frowns (`:(`) even with subtle camera angles.
+- **Momose Aria Reactive 2D Avatar:**
+  - Added reactive 2D illustration model support with real-time head rotation, breathing cycle, blinking, and emotion states.
+- **OBS Studio Screen Mode:**
+  - Dedicated distraction-free stream mode hiding all chrome UI.
+  - Auto-hiding control pill with quick Alpha/Green background toggle.
+  - Auto-detection for OBS browser source query params (`?obs=true&bg=chroma`).
+
+---
+
+## [0.4.0] - 2026-10-09
+
+### Added
+- **Three.js 3D Procedural Avatar Engine:**
+  - Full procedural rigged 3D stylized anime cats (*Mochi*, *Kuro*, *Tora*).
+  - Head rotation, ear twitching, eye blinking, mouth sync, paw waving, and tail sway driven by MediaPipe landmarks.
+  - Custom `.glb` model uploader.
+- **Square Mesh Background & Theme Studio:**
+  - Added high-contrast square wireframe mesh grid (`mesh`).
+  - Cosmic drifting nebula background (`cosmic`).
+  - Custom image/photo upload for stream backgrounds.
+
+---
+
+## [0.3.0] - 2026-10-09
+
+### Added
+- **Multi-Language Internationalization (i18n):**
+  - English, Bahasa Indonesia, and Japanese support.
+- **Expanded Live2D Model Catalog:**
+  - Integrated Haru Greeter, Hiyori Momose, Mao Pro, Shizuku, Wanko, and Rice models.
+- **Camera Picture-in-Picture & Landmark Wireframes:**
+  - Real-time canvas overlay rendering 478 face mesh points and 21 hand joints.
+
+---
+
+## [0.2.0] - 2026-10-09
+
+### Added
+- **Exponential Smoothing & Deadzone Filter:**
+  - Dynamic lerp parameter filter eliminating webcam micro-jitter.
+  - Configurable deadzone threshold for locked neutral posture.
+
+---
+
+## [0.1.0] - 2026-10-09
+
+### Initial Release
+- In-browser Live2D Cubism 3/4 runtime via Pixi.js v7.
+- Google MediaPipe FaceMesh vision tracker with WASM acceleration.
+- Live Rigging Preview and parameter inspection panel.
+- 100% Client-side, zero-cost, zero cloud API architecture.

@@ -12,7 +12,9 @@
 		Languages,
 		Radio,
 		Tv,
-		Hand
+		Hand,
+		Settings,
+		Aperture
 	} from 'lucide-svelte';
 
 	let isLangMenuOpen = $state<boolean>(false);
@@ -36,11 +38,7 @@
 	}
 
 	function handleCalibrate() {
-		rigging.calibrateCenter(
-			rigging.liveValues['ParamAngleX'] || 0,
-			rigging.liveValues['ParamAngleY'] || 0,
-			rigging.liveValues['ParamAngleZ'] || 0
-		);
+		tracker.calibrate();
 	}
 </script>
 
@@ -220,9 +218,47 @@
 			</div>
 		</div>
 
+		<!-- 9. Screenshot & Download Avatar -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => rigging.triggerScreenshot()}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label="Screenshot Avatar"
+			>
+				<Aperture class="w-5 h-5 text-amber-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				Screenshot & Download PNG
+			</div>
+		</div>
+
+		<!-- 10. Settings Modal Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					rigging.isSettingsModalOpen = !rigging.isSettingsModalOpen;
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					rigging.isDrawerOpen = false;
+				}}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors active:scale-95"
+				aria-label="Settings"
+			>
+				<Settings class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				Pengaturan & Hardware Benchmark
+			</div>
+		</div>
+
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 
-		<!-- 9. Language Switcher Dropdown -->
+		<!-- 11. Language Switcher Dropdown -->
 		<div class="group relative flex items-center justify-center">
 			<button
 				onclick={() => (isLangMenuOpen = !isLangMenuOpen)}

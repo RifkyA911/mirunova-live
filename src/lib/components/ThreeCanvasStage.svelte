@@ -30,6 +30,34 @@
 		}
 	});
 
+	let lastScreenshotSignal = 0;
+	$effect(() => {
+		const signal = rigging.screenshotSignal;
+		if (signal > 0 && signal !== lastScreenshotSignal) {
+			lastScreenshotSignal = signal;
+			takeScreenshot();
+		}
+	});
+
+	function takeScreenshot() {
+		try {
+			const dataUrl = threeStage.captureScreenshot();
+			if (dataUrl) {
+				const link = document.createElement('a');
+				const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+				link.download = `mirunova-3d-${rigging.selected3DModelId}-${dateStr}.png`;
+				link.href = dataUrl;
+				link.click();
+				rigging.showToast(`Screenshot 3D tersimpan: ${link.download}`);
+			} else {
+				rigging.showToast('Gagal mengambil screenshot 3D');
+			}
+		} catch (e) {
+			console.error('Screenshot error:', e);
+			rigging.showToast('Gagal mengambil screenshot 3D');
+		}
+	}
+
 	function loadActive3DModel() {
 		rigging.isLoadingModel = true;
 		const id = rigging.selected3DModelId;
