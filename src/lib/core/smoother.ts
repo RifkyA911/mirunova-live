@@ -1,24 +1,51 @@
+export type SmoothingProfile = 'angle' | 'blink' | 'mouth' | 'generic';
+
 export class ParameterSmoother {
 	private currentValues: Map<string, number> = new Map();
-	private alpha: number;
+	private baseAlpha: number;
 
-	constructor(alpha: number = 0.35) {
-		this.alpha = alpha;
+	constructor(baseAlpha: number = 0.35) {
+		this.baseAlpha = baseAlpha;
 	}
 
 	setAlpha(newAlpha: number) {
-		this.alpha = Math.max(0.01, Math.min(1.0, newAlpha));
+		this.baseAlpha = Math.max(0.05, Math.min(0.95, newAlpha));
 	}
 
-	smooth(id: string, targetValue: number): number {
+	getAlpha(): number {
+		return this.baseAlpha;
+	}
+
+	/**
+	 * Smooths a parameter value using an adaptive velocity-aware filter.
+	 * Fast movements are followed immediately with zero lag; subtle movements are heavily damped to eliminate noise.
+	 */
+	smooth(id: string, targetValue: number, profile: SmoothingProfile = 'generic'): number {
 		const prev = this.currentValues.get(id);
 		if (prev === undefined) {
 			this.currentValues.set(id, targetValue);
 			return targetValue;
 		}
 
-		// Linear Interpolation: prev + (target - prev) * alpha
-		const smoothed = prev + (targetValue - prev) * this.alpha;
+		const diff = Math.abs(targetValue - prev);
+
+		// Profile-specific velocity sensitivity scaling
+		let speedScale = 0.4;
+		if (profile === 'angle') speedScale = 5.0;      // 5 degrees rapid turn threshold
+		else if (profile === 'blink') speedScale = 0.25; // 0.25 blink state threshold
+		else if (profile === 'mouth') speedScale = 0.35; // 0.35 mouth opening threshold
+
+		// Non-linear adaptive alpha ramp
+		const normalizedSpeed = Math.min(1.0, diff / speedScale);
+		let alpha = this.baseAlpha + (1.0 - this.baseAlpha) * Math.pow(normalizedSpeed, 1.4);
+
+		// Blinking asymmetry: closing eyes should be ultra-responsive
+		if (profile === 'blink' && targetValue < prev) {
+			alpha = Math.max(alpha, 0.75);
+		}
+
+		// Calculate smoothed output
+		const smoothed = prev + (targetValue - prev) * alpha;
 		this.currentValues.set(id, smoothed);
 		return smoothed;
 	}
@@ -28,4 +55,4 @@ export class ParameterSmoother {
 	}
 }
 
-export const globalSmoother = new ParameterSmoother(0.4);
+export const globalSmoother = new ParameterSmoother(0.35);

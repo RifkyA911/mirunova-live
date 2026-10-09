@@ -10,7 +10,9 @@
 		Palette,
 		Layers,
 		Languages,
-		Sparkles
+		Sparkles,
+		Radio,
+		Tv
 	} from 'lucide-svelte';
 
 	let isLangMenuOpen = $state<boolean>(false);
@@ -95,6 +97,32 @@
 				<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-0.5" title="Manual Mode Active"></span>
 			{/if}
 		</button>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+
+		<!-- OBS Screen Mode Button Group -->
+		<div class="flex items-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 overflow-hidden shadow-sm">
+			<button
+				onclick={() => rigging.toggleObsMode(true)}
+				class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors"
+				title="Enter OBS Screen Mode (Clean Transparent Stage)"
+			>
+				<Radio class="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+				<span>{i18n.t('obs_mode')}</span>
+			</button>
+			<button
+				onclick={() => {
+					rigging.isObsModalOpen = true;
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isDrawerOpen = false;
+				}}
+				class="px-2 py-2 text-emerald-400 hover:bg-emerald-500/20 border-l border-emerald-500/20 transition-colors"
+				title="OBS Setup Guide & URL Generator"
+			>
+				<Tv class="w-3.5 h-3.5" />
+			</button>
+		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 

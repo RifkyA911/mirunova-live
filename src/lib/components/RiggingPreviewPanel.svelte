@@ -142,6 +142,82 @@
 			{/if}
 		</div>
 
+		<!-- Live Tracking Accuracy & Quality Tuning -->
+		{#if rigging.riggingMode === 'live'}
+			<div class="p-3 bg-zinc-900/60 border-b border-zinc-800 space-y-2.5">
+				<div class="flex items-center justify-between">
+					<span class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+						<Sparkles class="w-3.5 h-3.5 text-cyan-400" />
+						{i18n.t('tracking_quality')}
+					</span>
+					<span class="text-[10px] text-zinc-500 font-mono">Sens: {rigging.trackingSensitivity.toFixed(1)}x</span>
+				</div>
+
+				<!-- Sensitivity Slider -->
+				<div class="space-y-1">
+					<div class="flex items-center justify-between text-[11px] text-zinc-400">
+						<span>{i18n.t('sensitivity')}</span>
+						<span class="font-mono text-cyan-400">{rigging.trackingSensitivity.toFixed(1)}x</span>
+					</div>
+					<input
+						type="range"
+						min="0.5"
+						max="2.0"
+						step="0.1"
+						bind:value={rigging.trackingSensitivity}
+						class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+					/>
+				</div>
+
+				<!-- Smoothing Slider -->
+				<div class="space-y-1">
+					<div class="flex items-center justify-between text-[11px] text-zinc-400">
+						<span>{i18n.t('smoothing')}</span>
+						<span class="font-mono text-cyan-400">{(rigging.smoothingAmount * 100).toFixed(0)}%</span>
+					</div>
+					<input
+						type="range"
+						min="0.1"
+						max="0.7"
+						step="0.05"
+						bind:value={rigging.smoothingAmount}
+						class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+					/>
+				</div>
+
+				<!-- Deadzone Slider -->
+				<div class="space-y-1">
+					<div class="flex items-center justify-between text-[11px] text-zinc-400">
+						<span>{i18n.t('deadzone')}</span>
+						<span class="font-mono text-cyan-400">{rigging.deadzoneThreshold.toFixed(1)}°</span>
+					</div>
+					<input
+						type="range"
+						min="0"
+						max="1.5"
+						step="0.1"
+						bind:value={rigging.deadzoneThreshold}
+						class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+					/>
+				</div>
+
+				<!-- Synchronized Eye Blink Toggle -->
+				<div class="flex items-center justify-between pt-1">
+					<span class="text-[11px] text-zinc-400">{i18n.t('blink_sync')}</span>
+					<button
+						onclick={() => (rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked)}
+						class="px-2 py-0.5 rounded text-[11px] font-medium transition-colors {
+							rigging.eyeBlinkLinked
+								? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+								: 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+						}"
+					>
+						{rigging.eyeBlinkLinked ? 'Active' : 'Wink Mode'}
+					</button>
+				</div>
+			</div>
+		{/if}
+
 		<!-- Quick Presets -->
 		{#if rigging.riggingMode === 'manual'}
 			<div class="px-3 py-2 border-b border-zinc-800/80 bg-zinc-900/20 flex items-center gap-1.5 overflow-x-auto text-xs no-scrollbar">

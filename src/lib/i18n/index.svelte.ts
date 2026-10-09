@@ -23,6 +23,26 @@ export const translations = {
 		maximize: 'Maximize',
 		enable_cam: 'Enable Camera',
 		cam_instructions: 'Click the camera button to begin face tracking.',
+		// OBS Screen Mode
+		obs_mode: 'OBS Screen Mode',
+		obs_setup: 'OBS Stream Setup',
+		exit_obs: 'Exit OBS Mode (ESC)',
+		obs_live: 'OBS Live Mode Active',
+		copy_obs_url: 'Copy OBS Browser Source URL',
+		obs_copied: 'Copied to clipboard!',
+		obs_transparent_btn: 'Transparent Alpha',
+		obs_chroma_btn: 'Chroma Green (#00FF00)',
+		obs_instructions_title: 'Quick OBS Studio Setup Guide',
+		obs_step_1: 'In OBS Studio, add a new "Browser Source" in your Sources list.',
+		obs_step_2: 'Set URL to your MiruNova Live address (with ?obs=true parameter).',
+		obs_step_3: 'Set Width: 1920, Height: 1080, and check "Shutdown source when not visible".',
+		obs_step_4: 'Transparent background is active automatically — zero green-screen halo artifacts!',
+		// Quality & Sensitivity
+		tracking_quality: 'Tracking Quality & Sensitivity',
+		sensitivity: 'Motion Sensitivity',
+		smoothing: 'Adaptive Smoothing Filter',
+		blink_sync: 'Synchronized Eye Blink',
+		deadzone: 'Idle Jitter Deadzone',
 		// Backgrounds & Effects
 		bg_mode: 'Background Style',
 		bg_color: 'Color & Hex',
@@ -92,6 +112,26 @@ export const translations = {
 		maximize: 'Perbesar',
 		enable_cam: 'Aktifkan Kamera',
 		cam_instructions: 'Klik tombol kamera untuk mengaktifkan pelacak wajah.',
+		// OBS Screen Mode
+		obs_mode: 'Mode Layar OBS',
+		obs_setup: 'Pengaturan Stream OBS',
+		exit_obs: 'Keluar Mode OBS (ESC)',
+		obs_live: 'Mode OBS Aktif',
+		copy_obs_url: 'Salin URL OBS Browser Source',
+		obs_copied: 'Tersalin ke clipboard!',
+		obs_transparent_btn: 'Transparan Alpha',
+		obs_chroma_btn: 'Chroma Green (#00FF00)',
+		obs_instructions_title: 'Panduan Cepat Setup OBS Studio',
+		obs_step_1: 'Di OBS Studio, tambahkan "Browser Source" baru pada daftar Sources.',
+		obs_step_2: 'Masukkan URL MiruNova Live Anda (dengan parameter ?obs=true).',
+		obs_step_3: 'Atur Width: 1920, Height: 1080, dan centang "Shutdown source when not visible".',
+		obs_step_4: 'Latar transparan langsung aktif otomatis tanpa perlu filter Chroma Key manual!',
+		// Quality & Sensitivity
+		tracking_quality: 'Kualitas & Sensitivitas Tracking',
+		sensitivity: 'Sensitivitas Gerak Kepala',
+		smoothing: 'Filter Kehalusan Adaptif',
+		blink_sync: 'Kedipan Mata Sinkron',
+		deadzone: 'Deadzone Getaran Diam',
 		// Backgrounds & Effects
 		bg_mode: 'Gaya Background',
 		bg_color: 'Warna & Hex',
@@ -140,54 +180,74 @@ export const translations = {
 		load_custom_url: 'Muat URL Model Kustom'
 	},
 	ja: {
-		app_title: 'MiruNova Live — Web Live2D & フェイストラッカー',
+		app_title: 'MiruNova Live — Web Live2D & 顔トラッカー',
 		mvp_badge: 'PRO',
 		start_tracking: 'トラッキング開始',
 		stop_tracking: 'カメラ停止',
 		calibrate: 'キャリブレーション',
 		calibrating: '調整中...',
 		rigging_preview: 'リギングプレビュー',
-		themes_bg: 'テーマと背景',
+		themes_bg: 'テーマ＆背景',
 		models: 'モデルとモーション',
-		camera_off: 'カメラオフ',
+		camera_off: 'カメラOFF',
 		tracking_active: 'トラッキング中',
-		searching_face: '顔を検出中...',
-		face_detected: '顔認識完了',
+		searching_face: '顔を検索中...',
+		face_detected: '顔検出完了',
 		fps: 'FPS',
 		latency: '遅延',
 		mesh_toggle: 'メッシュ表示切替',
 		hands_toggle: 'ハンドトラッキング',
 		minimize: '最小化',
 		maximize: '最大化',
-		enable_cam: 'カメラを有効化',
+		enable_cam: 'カメラ有効化',
 		cam_instructions: 'カメラボタンを押してトラッキングを開始してください。',
+		// OBS Screen Mode
+		obs_mode: 'OBS画面モード',
+		obs_setup: 'OBS配信設定',
+		exit_obs: 'OBSモード終了 (ESC)',
+		obs_live: 'OBSライブモード稼働中',
+		copy_obs_url: 'OBSブラウザソースURLをコピー',
+		obs_copied: 'クリップボードにコピーしました！',
+		obs_transparent_btn: '透過アルファ背景',
+		obs_chroma_btn: 'クロマキー緑 (#00FF00)',
+		obs_instructions_title: 'OBS Studio 設定ガイド',
+		obs_step_1: 'OBS Studio で「ブラウザ」ソースを追加します。',
+		obs_step_2: 'URL に MiruNova Live のURL（?obs=true付き）を入力します。',
+		obs_step_3: '幅: 1920、高さ: 1080、非表示時にシャットダウンにチェックを入れます。',
+		obs_step_4: '背景は自動的に完全透過されるため、クロマキーフィルターは不要です！',
+		// Quality & Sensitivity
+		tracking_quality: 'トラッキング精度と感度',
+		sensitivity: '頭部モーション感度',
+		smoothing: '適応型スムージング',
+		blink_sync: '両目同期まばたき',
+		deadzone: 'アイドル時デッドゾーン',
 		// Backgrounds & Effects
 		bg_mode: '背景スタイル',
-		bg_color: 'カラー＆HEX',
+		bg_color: 'カラー＆Hex',
 		bg_effects: '画面エフェクト',
 		ui_theme: 'UIテーマ',
-		custom_hex: 'カスタムHEX',
-		upload_image: '画像をアップロード...',
+		custom_hex: 'カスタムHex',
+		upload_image: '画像アップロード...',
 		effect_none: 'なし',
-		effect_vignette: '周辺減光 (ビネット)',
-		effect_scanlines: 'スキャンライン',
+		effect_vignette: 'ビネット',
+		effect_scanlines: '走査線',
 		effect_crt: 'CRT発光',
-		effect_blur: 'ブラー (ぼかし)',
+		effect_blur: 'ブラー',
 		// Rigging
-		rigging_title: 'リギングプレビュー＆インスペクタ',
-		detected_params: '個のパラメータを検出',
+		rigging_title: 'リギングインスペクター',
+		detected_params: '検出されたパラメーター',
 		live_tracking_mode: 'ライブトラッキング',
-		manual_override_mode: '手動オーバーライド',
-		test_mode_desc: '手動テストモード (カメラ無効)',
-		live_mode_desc: '顔認識に合わせてリアルタイム連動中',
+		manual_override_mode: '手動テスト',
+		test_mode_desc: '手動リギングテスト (カメラ無効)',
+		live_mode_desc: 'カメラトラッキングに連動中',
 		presets: 'プリセット',
 		preset_blink: 'まばたき',
-		preset_mouth: '口を開く',
+		preset_mouth: '開口',
 		preset_smile: '笑顔',
-		preset_tilt: '首傾げ',
+		preset_tilt: '傾き',
 		preset_angry: '怒り',
 		preset_shock: '驚き',
-		reset: '全てリセット',
+		reset: 'すべてリセット',
 		filter_all: 'すべて',
 		filter_head: '頭部',
 		filter_eyes: '目',
@@ -195,30 +255,31 @@ export const translations = {
 		filter_body: '身体',
 		filter_hands: '手',
 		filter_custom: 'カスタム',
-		search_params: 'パラメータを検索...',
-		no_params_found: '該当するパラメータがありません。',
+		search_params: 'パラメーター検索...',
+		no_params_found: '該当するパラメーターがありません。',
 		// Models & Motions
 		select_model: 'Live2Dモデル選択',
 		motion_list: 'モーション再生',
 		pose_loop: 'ポーズループ',
 		loop_idle: '呼吸ループ',
-		loop_sway: 'ゆらゆら揺れループ',
+		loop_sway: 'ゆらぎループ',
 		loop_nod: 'うなずきループ',
 		loop_none: '無効',
-		loading_model: 'Live2Dモデル読み込み中...',
-		load_custom_url: 'カスタムURLから読み込み'
+		loading_model: 'LIVE2Dモデル読込中...',
+		load_custom_url: 'カスタムURL読込'
 	}
 };
 
 export class I18nStore {
-	current = $state<Locale>('en');
+	currentLocale = $state<Locale>('en');
 
 	setLocale(locale: Locale) {
-		this.current = locale;
+		this.currentLocale = locale;
 	}
 
-	t(key: keyof (typeof translations)['en']): string {
-		return translations[this.current]?.[key] || translations.en[key] || key;
+	t(key: keyof typeof translations.en): string {
+		const dict = translations[this.currentLocale] || translations.en;
+		return (dict as any)[key] || translations.en[key] || key;
 	}
 }
 

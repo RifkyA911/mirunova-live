@@ -29,6 +29,13 @@ export interface TrackingResults {
 	handRDetected: boolean;
 }
 
+export interface TrackingConfig {
+	sensitivity: number;       // 0.5 to 2.0 (default 1.0)
+	smoothing: number;         // 0.1 to 0.7 (default 0.35)
+	deadzone: number;          // 0 to 1.5 degrees (default 0.3)
+	eyeBlinkLinked: boolean;   // sync both eyes
+}
+
 export type BackgroundStyle =
 	| 'transparent'
 	| 'solid'

@@ -40,10 +40,22 @@ export class RiggingStore {
 	isDrawerOpen = $state<boolean>(false);
 	isThemeModalOpen = $state<boolean>(false);
 	isModelModalOpen = $state<boolean>(false);
+	isObsModalOpen = $state<boolean>(false);
 	isCameraActive = $state<boolean>(false);
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
 	enableHandTracking = $state<boolean>(true);
+
+	// OBS Screen Mode System
+	isObsMode = $state<boolean>(false);
+	obsBgType = $state<'transparent' | 'chroma'>('transparent');
+	previousBgStyle = $state<BackgroundStyle>('solid');
+
+	// Tracking Quality & Versatility Tuners
+	trackingSensitivity = $state<number>(1.0); // 0.5 to 2.0
+	smoothingAmount = $state<number>(0.35);     // 0.1 snappy to 0.7 super smooth
+	eyeBlinkLinked = $state<boolean>(false);    // sync both eyes
+	deadzoneThreshold = $state<number>(0.3);    // 0 to 1.5 degrees
 
 	// Theme & Background System
 	uiTheme = $state<UITheme>('cyber-dark');
@@ -91,6 +103,21 @@ export class RiggingStore {
 			this.liveValues[p.id] = p.defaultValue;
 			this.manualValues[p.id] = p.defaultValue;
 		}
+	}
+
+	toggleObsMode(enable?: boolean) {
+		const next = enable !== undefined ? enable : !this.isObsMode;
+		if (next && !this.isObsMode) {
+			this.previousBgStyle = this.backgroundStyle;
+			this.backgroundStyle = this.obsBgType;
+			this.isDrawerOpen = false;
+			this.isThemeModalOpen = false;
+			this.isModelModalOpen = false;
+			this.isObsModalOpen = false;
+		} else if (!next && this.isObsMode) {
+			this.backgroundStyle = this.previousBgStyle;
+		}
+		this.isObsMode = next;
 	}
 
 	setManualValue(id: string, value: number) {
