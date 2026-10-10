@@ -101,7 +101,12 @@ describe('Persistent Configuration Storage', () => {
 			riggingViewMode: 'stay',
 			jitterReduction: 0.75,
 			cameraResolution: '1080p',
-			cameraDeviceId: 'cam-device-123'
+			cameraDeviceId: 'cam-device-123',
+			invertPitch: true,
+			invertYaw: true,
+			framingMode: 'closeup',
+			isSquareFrameActive: true,
+			voiceFilter: 'pitch-high'
 		});
 
 		const loaded = loadPreferences();
@@ -110,5 +115,10 @@ describe('Persistent Configuration Storage', () => {
 		expect(loaded?.jitterReduction).toBe(0.75);
 		expect(loaded?.cameraResolution).toBe('1080p');
 		expect(loaded?.cameraDeviceId).toBe('cam-device-123');
+		expect(loaded?.invertPitch).toBe(true);
+		expect(loaded?.invertYaw).toBe(true);
+		expect(loaded?.framingMode).toBe('closeup');
+		expect(loaded?.isSquareFrameActive).toBe(true);
+		expect(loaded?.voiceFilter).toBe('pitch-high');
 	});
 });

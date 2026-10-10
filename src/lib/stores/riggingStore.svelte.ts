@@ -5,7 +5,9 @@ import type {
 	UITheme,
 	PoseLoopMode,
 	RiggingMode,
-	RiggingViewMode
+	RiggingViewMode,
+	AvatarFramingMode,
+	VoiceFilterType
 } from '#lib/types/tracking';
 import { MODEL_CATALOG } from '#lib/data/models';
 import { i18n, type Locale } from '#lib/i18n/index.svelte';
@@ -84,10 +86,34 @@ export class RiggingStore {
 	deadzoneThreshold = $state<number>(0.3);    // 0 to 1.5 degrees continuous deadband
 	eyeBlinkLinked = $state<boolean>(false);    // sync both eyes
 	holdPoseOnLoss = $state<boolean>(true);     // hold pose on 1-frame drop & smooth decay
+	invertPitch = $state<boolean>(false);       // Invert Y (menunduk / mendongak)
+	invertYaw = $state<boolean>(false);         // Invert X (kiri / kanan)
 
 	// Camera Hardware Preferences
 	cameraDeviceId = $state<string>('');
 	cameraResolution = $state<'1080p' | '720p' | '480p'>('720p');
+
+	// Avatar Framing & Parts Visibility System
+	framingMode = $state<AvatarFramingMode>('half'); // 'full' | 'half' | 'closeup'
+	isSquareFrameActive = $state<boolean>(false);     // Streamer square avatar box
+	squareFrameFade = $state<boolean>(true);         // Fade out overflow edges
+	squareFrameSize = $state<number>(620);           // Box size in px
+	hiddenPartIds = $state<Record<string, boolean>>({}); // Model part visibility overrides
+	availableParts = $state<Array<{ id: string; name: string; opacity: number }>>([]); // Discovered live parts
+
+	// Floating / Windowed Rigging Panel Geometry (Draggable & Resizable)
+	riggingWindowX = $state<number>(0);
+	riggingWindowY = $state<number>(72);
+	riggingWindowWidth = $state<number>(440);
+	riggingWindowHeight = $state<number>(580);
+
+	// Real Web Audio API Microphone & DSP State
+	isMicActive = $state<boolean>(false);
+	isMicMonitorActive = $state<boolean>(false);
+	audioDeviceId = $state<string>('');
+	micGain = $state<number>(1.0);
+	voiceFilter = $state<VoiceFilterType>('none');
+	micVolumeLevel = $state<number>(0); // 0.0 to 1.0 real VU meter level
 
 	// Theme & Background System
 	uiTheme = $state<UITheme>('cyber-dark');
@@ -185,6 +211,22 @@ export class RiggingStore {
 			riggingViewMode: this.riggingViewMode,
 			cameraDeviceId: this.cameraDeviceId,
 			cameraResolution: this.cameraResolution,
+			invertPitch: this.invertPitch,
+			invertYaw: this.invertYaw,
+			framingMode: this.framingMode,
+			isSquareFrameActive: this.isSquareFrameActive,
+			squareFrameFade: this.squareFrameFade,
+			squareFrameSize: this.squareFrameSize,
+			hiddenPartIds: this.hiddenPartIds,
+			riggingWindowX: this.riggingWindowX,
+			riggingWindowY: this.riggingWindowY,
+			riggingWindowWidth: this.riggingWindowWidth,
+			riggingWindowHeight: this.riggingWindowHeight,
+			isMicActive: this.isMicActive,
+			isMicMonitorActive: this.isMicMonitorActive,
+			audioDeviceId: this.audioDeviceId,
+			micGain: this.micGain,
+			voiceFilter: this.voiceFilter,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -192,12 +234,24 @@ export class RiggingStore {
 	loadFromStorage() {
 		const saved = loadPreferences();
 		if (!saved) return;
-		if (saved.modelUrl) this.modelUrl = saved.modelUrl;
-		if (saved.modelName) this.modelName = saved.modelName;
-		if (saved.selectedModelId) this.selectedModelId = saved.selectedModelId;
 		if (saved.avatarEngine) this.avatarEngine = saved.avatarEngine;
 		if (saved.selected3DModelId) this.selected3DModelId = saved.selected3DModelId;
 		if (saved.customGlbUrl !== undefined) this.customGlbUrl = saved.customGlbUrl;
+
+		// Safe model verification to prevent 404 from obsolete models like momose_aria
+		if (saved.selectedModelId) {
+			const found = MODEL_CATALOG.find((m) => m.id === saved.selectedModelId);
+			if (found) {
+				this.selectedModelId = found.id;
+				this.modelName = found.name;
+				this.modelUrl = found.url;
+			} else {
+				this.selectedModelId = MODEL_CATALOG[0]?.id || 'mihari';
+				this.modelName = MODEL_CATALOG[0]?.name || 'Mihari (绪山美波里)';
+				this.modelUrl = MODEL_CATALOG[0]?.url || '/models/mihari/Mihari_V1.model3.json';
+			}
+		}
+
 		if (saved.uiTheme) this.uiTheme = saved.uiTheme as any;
 		if (saved.backgroundStyle) this.backgroundStyle = saved.backgroundStyle as any;
 		if (saved.backgroundColor) this.backgroundColor = saved.backgroundColor;
@@ -209,6 +263,8 @@ export class RiggingStore {
 		if (saved.deadzoneThreshold !== undefined) this.deadzoneThreshold = saved.deadzoneThreshold;
 		if (saved.eyeBlinkLinked !== undefined) this.eyeBlinkLinked = saved.eyeBlinkLinked;
 		if (saved.holdPoseOnLoss !== undefined) this.holdPoseOnLoss = saved.holdPoseOnLoss;
+		if (saved.invertPitch !== undefined) this.invertPitch = saved.invertPitch;
+		if (saved.invertYaw !== undefined) this.invertYaw = saved.invertYaw;
 		if (saved.enableHandTracking !== undefined) this.enableHandTracking = saved.enableHandTracking;
 		if (saved.showCameraPip !== undefined) this.showCameraPip = saved.showCameraPip;
 		if (saved.showLandmarksMesh !== undefined) this.showLandmarksMesh = saved.showLandmarksMesh;
@@ -221,6 +277,20 @@ export class RiggingStore {
 		if (saved.riggingViewMode) this.riggingViewMode = saved.riggingViewMode;
 		if (saved.cameraDeviceId !== undefined) this.cameraDeviceId = saved.cameraDeviceId;
 		if (saved.cameraResolution) this.cameraResolution = saved.cameraResolution as any;
+		if (saved.framingMode) this.framingMode = saved.framingMode as any;
+		if (saved.isSquareFrameActive !== undefined) this.isSquareFrameActive = saved.isSquareFrameActive;
+		if (saved.squareFrameFade !== undefined) this.squareFrameFade = saved.squareFrameFade;
+		if (saved.squareFrameSize !== undefined) this.squareFrameSize = saved.squareFrameSize;
+		if (saved.hiddenPartIds) this.hiddenPartIds = saved.hiddenPartIds;
+		if (saved.riggingWindowX !== undefined) this.riggingWindowX = saved.riggingWindowX;
+		if (saved.riggingWindowY !== undefined) this.riggingWindowY = saved.riggingWindowY;
+		if (saved.riggingWindowWidth !== undefined) this.riggingWindowWidth = saved.riggingWindowWidth;
+		if (saved.riggingWindowHeight !== undefined) this.riggingWindowHeight = saved.riggingWindowHeight;
+		if (saved.isMicActive !== undefined) this.isMicActive = saved.isMicActive;
+		if (saved.isMicMonitorActive !== undefined) this.isMicMonitorActive = saved.isMicMonitorActive;
+		if (saved.audioDeviceId !== undefined) this.audioDeviceId = saved.audioDeviceId;
+		if (saved.micGain !== undefined) this.micGain = saved.micGain;
+		if (saved.voiceFilter) this.voiceFilter = saved.voiceFilter as any;
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 
@@ -309,6 +379,37 @@ export class RiggingStore {
 		this.selectedModelId = id;
 		this.modelName = name;
 		this.modelUrl = url;
+		this.persist();
+	}
+
+	setFramingMode(mode: AvatarFramingMode) {
+		this.framingMode = mode;
+		this.persist();
+	}
+
+	toggleSquareFrame(enable?: boolean) {
+		this.isSquareFrameActive = enable !== undefined ? enable : !this.isSquareFrameActive;
+		this.persist();
+	}
+
+	togglePartVisibility(partId: string) {
+		this.hiddenPartIds = {
+			...this.hiddenPartIds,
+			[partId]: !this.hiddenPartIds[partId]
+		};
+		this.persist();
+	}
+
+	setPartOpacity(partId: string, opacity: number) {
+		this.hiddenPartIds = {
+			...this.hiddenPartIds,
+			[partId]: opacity <= 0
+		};
+		this.persist();
+	}
+
+	setVoiceFilter(filter: VoiceFilterType) {
+		this.voiceFilter = filter;
 		this.persist();
 	}
 

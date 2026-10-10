@@ -58,10 +58,10 @@
 		</button>
 	</div>
 {:else}
-	<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 select-none animate-in fade-in slide-in-from-bottom-3 duration-200">
+	<div class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 select-none animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-[98vw]">
 		<nav
 			aria-label="Main Dock Controls"
-			class="flex items-center gap-2 px-3.5 py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl"
+			class="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl overflow-x-auto max-w-full"
 		>
 		<!-- 1. Camera Toggle (Icon Only + Hover Tooltip) -->
 		<div class="group relative flex items-center justify-center">

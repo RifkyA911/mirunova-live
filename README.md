@@ -41,51 +41,46 @@
 * **Factory Reset:** One-click reset to restore default factory preferences.
 
 ### 📊 3. Hardware Benchmark & Spec Tier
-* **GPU & CPU Detection:** Automatically identifies GPU renderer via WebGL (`WEBGL_debug_renderer_info`) and CPU core count.
+* **GPU & CPU Detection:** Automatically identifies GPU renderer via WebGL (`WEBGL_debug_renderer_info`) and CPU thread concurrency.
 * **Performance Rating Bar:** Calculates a dynamic 0–100 benchmark score displayed on a Red-to-Green gradient progress bar:
   * 🔴 **Tidak Lancar (< 35):** Software rendering / low-spec integrated GPU advice.
   * 🟡 **Cukup (35 – 59):** 30–45 FPS performance suitable for 720p streams.
   * 🟢 **Lancar (60 – 84):** Solid 60 FPS performance for 1080p stream capture.
-  * 🌟 **Sangat Lancar / Ultra (85 – 100):** Dedicated GPU / NVIDIA RTX hardware acceleration.
-* **NVIDIA RTX Hardware Acceleration:** Highlights how Tensor Cores and FP16 WASM acceleration lock 60+ FPS at < 10ms tracking latency.
+  * 🌟 **Sangat Lancar / Ultra (85 – 100):** Dedicated GPU hardware acceleration.
+* **Factual Hardware Reporting:** Explains browser WebGL rasterization versus CPU SIMD MediaPipe pipeline, with actionable instructions on routing browser processes to high-performance dedicated GPUs (NVIDIA/AMD) in Windows Settings.
 
-### 🛠️ 4. Foldable Accordion Rigging Inspector
-* **Categorized Accordion Cards:** Organized into 6 collapsible categories:
-  * 👤 **Head Kinematics** (Angle X, Y, Z)
-  * 👁️ **Eyes & Eyebrows** (Open, Smile, Form, Gaze)
+### 🛠️ 4. Foldable Accordion Rigging Inspector & Windowed Mode
+* **Categorized Accordion Cards:** Organized into 7 collapsible categories:
+  * 👤 **Head Kinematics** (Angle X, Y, Z, Invert Pitch/Yaw)
+  * 👁️ **Eyes & Eyebrows** (Open, Smile, Form, Gaze, Anti-Jitter)
   * 👄 **Mouth & Phonemes** (Open Y, Form, Skew X)
   * 🫀 **Body & Breathing** (Angle X, Y, Z, Breath)
   * ✋ **Hands & High-Five** (Hand Angles L & R)
+  * 📐 **Framing & Parts** (Full Body, Bust-Up, Close-Up, Individual Part Visibility & Opacity, Square Frame with Edge Fade)
   * 📁 **Discovered Parameters** (Dynamic Live2D Core Parameters)
-* **Collapse/Expand Controls:** Global "Tutup Semua" / "Buka Semua" buttons with live parameter value badges.
-* **Manual Override Test Mode:** Test mesh deformation without webcam using interactive range sliders.
-* **One-Click Expression Presets:** Test `Blink`, `Open Mouth`, `Smile`, `Head Tilt`, `Angry`, and `Shock` instantly.
+* **Docked & Windowed Layouts:** Toggle between docked "Stay" right-rail mode or freely draggable, resizable windowed floating mode.
 
-### 🎯 5. Accurate Calibration System
+### 🎯 5. Accurate Calibration & Invert Controls
 * **Raw Posture Baseline:** Captures raw uncalibrated webcam posture (`lastRawYaw`, `lastRawPitch`, `lastRawRoll`) and zeros the current head rotation.
-* **Interactive Hotkey:** Press **`C`** on keyboard or click the Crosshair icon in the dock to calibrate instantly.
-* **Toast Confirmation:** Visual confirmation toast confirms calibration status.
+* **Invert Pitch & Yaw:** Easily invert vertical look pitch (fixes inverted look up/down) and horizontal yaw.
+* **Quick Tracking Presets:** Instant calibration for Responsive (low-end 30fps webcams), Balanced (default), and Ultra Smooth (cinematic).
 
 ### 📸 6. Screenshot & Instant Download
-* **One-Click Capture:** Click the Aperture icon on the Control Dock to immediately capture the avatar canvas.
+* **One-Click Capture:** Click the Camera icon on the Control Dock to immediately capture the avatar canvas.
 * **Transparent PNG Support:** Retains alpha channel transparency for thumbnail creation, Discord emotes, and streaming assets.
 * **Dual Engine Support:** Works seamlessly across both Live2D Cubism and Three.js 3D stages.
 
-### 🎙️ 7. Voice Changer Roadmap & Guide
-* **W-Okada AI RVC (Recommended):** Realtime AI Voice Conversion using local NVIDIA RTX CUDA acceleration connected via VB-Cable virtual audio cable (100% free & open-source).
-* **Web Audio API Engine:** Client-side zero-install pitch shifting and biquad formant filtering roadmap.
+### 🎙️ 7. Web Audio DSP Engine & AI Voice Conversion Guide
+* **Real Browser Web Audio API:** Native microphone input device selector, volume gain slider, and real-time VU meter with local DSP voice filters (Natural, Anime Treble, Radio Broadcaster, Walkie-Talkie, Warm Podcast).
+* **Neural AI Voice Conversion (W-Okada RVC + VB-Cable):** Step-by-step setup guide for running W-Okada Realtime AI Voice Changer with local CUDA acceleration routed via VB-Cable virtual audio cable.
 
 ### 🎨 8. Theme & Background Studio
 * **Background Modes:** Transparent (OBS ready), Cyber Mesh (square grid), Solid Color, Tech Grid, Polka Dots, Cosmic Animated (drifting nebula), Deep Gradient, Chroma Green/Blue (#00FF00 / #0000FF), and Custom Photo Upload.
-* **Custom Hex Picker:** Choose any hex code or pick from high-contrast presets.
-* **Screen Overlays:** Vignette, Retro Scanlines, CRT Bloom, and Subtle Blur.
-* **UI Themes:** Cyber Dark, Midnight Navy, Synthwave Sunset, and Minimal Monochrome.
-* **Sleek Custom Scrollbar:** Ultra-thin 5px rounded scrollbar matching active theme styling.
-* **Click-Outside Dismissal:** All modals and the rigging drawer cleanly dismiss when clicking outside or pressing Escape.
+* **Square Frame with Organic Fade:** Streamer-ready 1:1 square frame box with smooth organic edge fading gradient mask.
+* **UI Themes:** Cyber Dark, Midnight Navy, Synthwave Sunset, and Minimal Monochrome with reactive autosave to `localStorage`.
 
 ### 🎭 9. Multi-Engine Model Catalog
-* **2D Live2D Models:** Haru Greeter, Hiyori Momose, Mao Pro, Shizuku, Wanko & Rice, and custom `.model3.json` loader.
-* **Reactive 2D Avatar:** Momose Aria reactive avatar with head tilt, breathing, blinking, and emotion states.
+* **2D Live2D Models:** Mihari (`Mihari_V1`), Vivian (`薇薇安`), Haru Greeter, Hiyori Momose, Mao, Shizuku, Wanko & Rice, and custom `.model3.json` local file loader.
 * **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
 
 ### 🎥 10. OBS Studio Integration

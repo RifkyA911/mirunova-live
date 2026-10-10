@@ -177,10 +177,24 @@
 							// Parameter not present in model
 						}
 					}
+
+					// Apply Part Opacity / Visibility overrides
+					if (rigging.hiddenPartIds) {
+						for (const [partId, isHidden] of Object.entries(rigging.hiddenPartIds)) {
+							try {
+								if (typeof (core as any).setPartOpacityById === 'function') {
+									(core as any).setPartOpacityById(partId, isHidden ? 0 : 1);
+								}
+							} catch {
+								// Ignored if part does not exist
+							}
+						}
+					}
 				});
 			}
 
 			inspectModelParameters(model);
+			applyFramingPreset();
 		} catch (err: any) {
 			console.error('Failed to load Live2D model:', err);
 			alert(`Gagal memuat model Live2D: ${err?.message || err}. Silakan pilih model lain.`);
@@ -223,6 +237,29 @@
 				rigging.parameters = discovered;
 			}
 
+			// Discover parts for Body Parts Inspector
+			try {
+				const partIds: string[] = (core as any)._partIds || [];
+				const parts: Array<{ id: string; name: string; opacity: number }> = [];
+				for (let i = 0; i < partIds.length; i++) {
+					const pid = partIds[i];
+					let op = 1.0;
+					try {
+						if (typeof (core as any).getPartOpacityById === 'function') {
+							op = (core as any).getPartOpacityById(pid);
+						} else if ((core as any)._partOpacities) {
+							op = (core as any)._partOpacities[i] ?? 1.0;
+						}
+					} catch {
+						op = 1.0;
+					}
+					parts.push({ id: pid, name: pid, opacity: op });
+				}
+				rigging.availableParts = parts;
+			} catch (pe) {
+				console.warn('Parts inspection skipped:', pe);
+			}
+
 			// Discover motions
 			try {
 				const defs = model.internalModel?.motionManager?.definitions;
@@ -238,6 +275,34 @@
 			console.warn('Parameter inspection skipped:', e);
 		}
 	}
+
+	function applyFramingPreset() {
+		if (!currentModel || !app) return;
+		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+		const baseScale = Math.min(rendererWidth / currentModel.width, rendererHeight / currentModel.height);
+
+		if (rigging.framingMode === 'full') {
+			modelScale = baseScale * 0.55;
+			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 130 };
+		} else if (rigging.framingMode === 'closeup') {
+			modelScale = baseScale * 1.35;
+			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 340 };
+		} else {
+			// 'half' (default)
+			modelScale = baseScale * 0.75;
+			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 60 };
+		}
+		currentModel.scale.set(modelScale);
+		currentModel.position.set(modelPosition.x, modelPosition.y);
+	}
+
+	$effect(() => {
+		const mode = rigging.framingMode;
+		if (mode && currentModel) {
+			applyFramingPreset();
+		}
+	});
 
 	function handleMouseDown(e: MouseEvent) {
 		if (rigging.isGuiLocked) return;

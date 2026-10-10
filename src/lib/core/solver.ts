@@ -26,6 +26,8 @@ export function solveFaceLandmarks(
 	const sensitivity = config?.sensitivity ?? 1.0;
 	const deadzone = config?.deadzone ?? 0.3;
 	const eyeBlinkLinked = config?.eyeBlinkLinked ?? false;
+	const invertPitch = config?.invertPitch ?? false;
+	const invertYaw = config?.invertYaw ?? false;
 
 	let rawYaw = 0;
 	let rawPitch = 0;
@@ -85,14 +87,16 @@ export function solveFaceLandmarks(
 		const absY = Math.abs(diffYaw);
 		diffYaw = absY <= deadzone ? 0 : Math.sign(diffYaw) * (absY - deadzone);
 	}
-	const yaw = Math.max(-30, Math.min(30, diffYaw));
+	let yaw = Math.max(-30, Math.min(30, diffYaw));
+	if (invertYaw) yaw = -yaw;
 
 	let diffPitch = rawPitch - offsets.pitch;
 	if (deadzone > 0) {
 		const absP = Math.abs(diffPitch);
 		diffPitch = absP <= deadzone ? 0 : Math.sign(diffPitch) * (absP - deadzone);
 	}
-	const pitch = Math.max(-30, Math.min(30, diffPitch));
+	let pitch = Math.max(-30, Math.min(30, diffPitch));
+	if (invertPitch) pitch = -pitch;
 
 	let diffRoll = rawRoll - offsets.roll;
 	if (deadzone > 0) {

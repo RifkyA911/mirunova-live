@@ -41,6 +41,8 @@ export interface TrackingConfig {
 	smoothing: number;         // 0.1 to 0.7 (default 0.35)
 	deadzone: number;          // 0 to 1.5 degrees (default 0.3)
 	eyeBlinkLinked: boolean;   // sync both eyes
+	invertPitch?: boolean;     // invert up/down head pitch (ndiluk / mendongak)
+	invertYaw?: boolean;       // invert left/right head yaw
 }
 
 export type BackgroundStyle =
@@ -58,6 +60,8 @@ export type UITheme = 'cyber-dark' | 'midnight' | 'monochrome' | 'synthwave';
 export type PoseLoopMode = 'none' | 'idle-breath' | 'gentle-sway' | 'head-nod';
 export type RiggingMode = 'live' | 'manual';
 export type RiggingViewMode = 'stay' | 'windowed' | 'drawer';
+export type AvatarFramingMode = 'full' | 'half' | 'closeup';
+export type VoiceFilterType = 'none' | 'pitch-high' | 'pitch-low' | 'radio' | 'warmth';
 
 export interface Live2DModelItem {
 	id: string;

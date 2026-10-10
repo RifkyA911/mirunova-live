@@ -175,4 +175,19 @@ describe('solveFaceLandmarks', () => {
 		const outside = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 }, null, { deadzone: 1.0 });
 		expect(outside.yaw).toBeCloseTo(0.125, 2);
 	});
+
+	it('supports inverted pitch and yaw for custom camera orientations', () => {
+		const landmarks = createMockLandmarks({
+			1: { x: 0.52, y: 0.45, z: 0 } // tilted and turned
+		});
+
+		const normal = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 });
+		const inverted = solveFaceLandmarks(landmarks, new Map(), { yaw: 0, pitch: 0, roll: 0 }, null, {
+			invertPitch: true,
+			invertYaw: true
+		});
+
+		expect(inverted.pitch).toBeCloseTo(-normal.pitch, 3);
+		expect(inverted.yaw).toBeCloseTo(-normal.yaw, 3);
+	});
 });

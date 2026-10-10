@@ -146,6 +146,32 @@
 			return `background-image: url('${rigging.customBgUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
 		return `background-color: ${color};`;
 	});
+
+	// Reactive Auto-Save Engine: Persist any preference change automatically
+	$effect(() => {
+		// Read reactive values to register dependencies
+		const _th = rigging.uiTheme;
+		const _bg = rigging.backgroundStyle;
+		const _clr = rigging.backgroundColor;
+		const _fx = rigging.screenEffect;
+		const _sens = rigging.trackingSensitivity;
+		const _sm = rigging.smoothingAmount;
+		const _jit = rigging.jitterReduction;
+		const _dz = rigging.deadzoneThreshold;
+		const _invP = rigging.invertPitch;
+		const _invY = rigging.invertYaw;
+		const _frm = rigging.framingMode;
+		const _sq = rigging.isSquareFrameActive;
+		const _sqF = rigging.squareFrameFade;
+		const _cam = rigging.cameraDeviceId;
+		const _res = rigging.cameraResolution;
+		const _pin = rigging.isRiggingPinned;
+		const _view = rigging.riggingViewMode;
+		const _parts = rigging.hiddenPartIds;
+		const _flt = rigging.voiceFilter;
+
+		rigging.persist();
+	});
 </script>
 
 <svelte:head>
@@ -186,11 +212,26 @@
 		{/if}
 	{/if}
 
-	<!-- 1. WebGL Live2D Stage or 3D Three.js Stage -->
-	{#if rigging.avatarEngine === '3d'}
-		<ThreeCanvasStage />
+	<!-- 1. WebGL Live2D Stage or 3D Three.js Stage (Supports optional Square Streamer Frame & Overflow Fade) -->
+	{#if rigging.isSquareFrameActive}
+		<div class="square-frame-wrapper">
+			<div
+				class="square-frame-box {rigging.squareFrameFade ? 'square-frame-fade' : ''}"
+				style="width: min(85vmin, {rigging.squareFrameSize}px); height: min(85vmin, {rigging.squareFrameSize}px);"
+			>
+				{#if rigging.avatarEngine === '3d'}
+					<ThreeCanvasStage />
+				{:else}
+					<CanvasStage />
+				{/if}
+			</div>
+		</div>
 	{:else}
-		<CanvasStage />
+		{#if rigging.avatarEngine === '3d'}
+			<ThreeCanvasStage />
+		{:else}
+			<CanvasStage />
+		{/if}
 	{/if}
 
 	<!-- 2. OBS Screen Mode: Floating Auto-Hiding Control Pill -->
@@ -295,16 +336,21 @@
 		<ShortcutGuideModal />
 	{/if}
 
-	<!-- 4. GUI Locked Floating Indicator & Unlock Pill -->
+	<!-- 4. GUI Locked Floating Indicator & Unlock Button (Pojok Kiri Bawah, icon only, hover tooltip) -->
 	{#if rigging.isGuiLocked}
-		<div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+		<div class="fixed bottom-4 left-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
 			<button
 				onclick={() => rigging.toggleGuiLock(false)}
-				class="flex items-center gap-2 px-4 py-2 bg-zinc-950/90 hover:bg-zinc-900 border border-amber-500/40 hover:border-amber-400 rounded-full text-zinc-200 text-xs shadow-2xl backdrop-blur-md transition-all active:scale-95 group"
+				class="relative group flex items-center justify-center w-10 h-10 bg-zinc-950/85 hover:bg-zinc-900 border border-amber-500/50 hover:border-amber-400 rounded-full text-amber-400 shadow-2xl backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+				title="{i18n.t('gui_locked_badge')} [L / ESC]"
+				aria-label="Unlock UI"
 			>
-				<Lock class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-				<span class="font-medium text-xs text-amber-300">{i18n.t('gui_locked_badge')}</span>
-				<span class="font-mono text-[10px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full">[L / ESC]</span>
+				<Lock class="w-4 h-4 group-hover:scale-110 transition-transform" />
+				<!-- Tooltip on hover only -->
+				<div class="absolute left-12 bottom-0 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-xs whitespace-nowrap shadow-xl pointer-events-none">
+					<span class="text-amber-300 font-medium">{i18n.t('gui_locked_badge')}</span>
+					<span class="font-mono text-[10px] text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">[L / ESC]</span>
+				</div>
 			</button>
 		</div>
 	{/if}

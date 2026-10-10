@@ -45,16 +45,16 @@
 		class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150"
 	>
 		<div
-			class="w-full max-w-lg bg-zinc-950/95 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-zinc-100"
+			class="w-full max-w-4xl xl:max-w-5xl bg-zinc-950/98 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden text-zinc-100"
 		>
 			<!-- Header -->
-			<div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
+			<div class="px-6 py-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
 				<div class="flex items-center gap-2.5">
-					<div class="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400">
-						<Radio class="w-4 h-4 animate-pulse" />
+					<div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+						<Radio class="w-5 h-5 animate-pulse" />
 					</div>
 					<div>
-						<h2 class="text-sm font-semibold tracking-wide">
+						<h2 class="text-sm sm:text-base font-bold tracking-wide">
 							{i18n.t('obs_setup')}
 						</h2>
 						<p class="text-xs text-zinc-400">
@@ -64,15 +64,15 @@
 				</div>
 				<button
 					onclick={() => (rigging.isObsModalOpen = false)}
-					class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors"
+					class="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-xl transition-colors"
 					aria-label="Close"
 				>
-					<X class="w-4 h-4" />
+					<X class="w-5 h-5" />
 				</button>
 			</div>
 
-			<!-- Body -->
-			<div class="p-5 space-y-4 text-xs">
+			<!-- Body (2-Column Grid) -->
+			<div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
 				<!-- 1. Background Keying Selector -->
 				<div>
 					<span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block mb-2">

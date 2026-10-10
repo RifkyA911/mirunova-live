@@ -66,24 +66,24 @@ export function detectHardwareBenchmark(currentFps: number = 60): HardwareReport
 
 	let tierLabel: HardwareReport['tierLabel'] = 'Lancar';
 	let tierColor = '#10b981'; // Emerald
-	let recommendation = 'Spesifikasi sangat mumpuni untuk live streaming 60 FPS.';
+	let recommendation = 'Akselerasi hardware WebGL aktif. Avatar dan rendering berjalan lancar.';
 
 	if (finalScore < 35) {
 		tierLabel = 'Tidak Lancar';
 		tierColor = '#ef4444'; // Red
-		recommendation = 'Disarankan kecilkan resolusi browser, nonaktifkan overlay mesh di kamera PIP, dan tutup tab lain.';
+		recommendation = 'Browser kemungkinan menggunakan software rendering. Pastikan hardware acceleration aktif di pengaturan browser.';
 	} else if (finalScore < 60) {
 		tierLabel = 'Cukup';
 		tierColor = '#eab308'; // Yellow
-		recommendation = 'Berjalan baik pada 30-45 FPS. Untuk streaming lancar di OBS, gunakan resolusi 720p.';
+		recommendation = 'Berjalan stabil pada 30–45 FPS. Cocok untuk resolusi standar 720p.';
 	} else if (finalScore < 85) {
 		tierLabel = 'Lancar';
 		tierColor = '#22c55e'; // Green
-		recommendation = 'Performa optimal 60 FPS. MediaPipe dan WebGL berjalan lancar.';
+		recommendation = 'Rendering WebGL optimal 60 FPS dengan beban GPU dan CPU seimbang.';
 	} else {
 		tierLabel = 'Sangat Lancar / Ultra';
 		tierColor = '#10b981'; // Emerald
-		recommendation = 'NVIDIA RTX terdeteksi! Akselerasi WebGL GPU Tensor aktif penuh untuk latensi minimal & 60+ FPS mulus tanpa drop frame.';
+		recommendation = 'GPU terdeteksi dan akselerasi WebGL aktif penuh. Beban rendering sangat ringan dan frame pacing stabil.';
 	}
 
 	return {

@@ -1,0 +1,18 @@
+{
+  "name": "MiruNova Live — Web Live2D & Face Tracker",
+  "short_name": "MiruNova Live",
+  "description": "High-performance Web Live2D & 3D avatar tracking studio with zero setup and OBS Studio support.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#09090b",
+  "theme_color": "#06b6d4",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

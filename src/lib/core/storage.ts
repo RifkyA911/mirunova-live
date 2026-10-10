@@ -36,6 +36,22 @@ export interface SavedUserConfig {
 	holdPoseOnLoss?: boolean;
 	cameraDeviceId?: string;
 	cameraResolution?: string;
+	invertPitch?: boolean;
+	invertYaw?: boolean;
+	framingMode?: 'full' | 'half' | 'closeup';
+	isSquareFrameActive?: boolean;
+	squareFrameFade?: boolean;
+	squareFrameSize?: number;
+	hiddenPartIds?: Record<string, boolean>;
+	riggingWindowX?: number;
+	riggingWindowY?: number;
+	riggingWindowWidth?: number;
+	riggingWindowHeight?: number;
+	isMicActive?: boolean;
+	isMicMonitorActive?: boolean;
+	audioDeviceId?: string;
+	micGain?: number;
+	voiceFilter?: string;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

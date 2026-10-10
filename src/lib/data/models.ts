@@ -13,6 +13,15 @@ export interface Model3DItem {
 
 export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 	{
+		id: 'mihari',
+		name: 'Mihari (绪山美波里)',
+		url: '/models/mihari/Mihari_V1.model3.json',
+		description: 'Model Live2D Cubism 3/4 Oyama Mihari dengan fisika kuncir perak, tekstur 4K, dan part pakaian lengkap.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/mihari.svg',
+		tags: ['Cubism 3/4', 'High-Res 4K', 'Ponytail Physics', 'Body Parts', 'Anime']
+	},
+	{
 		id: 'vivian',
 		name: '薇薇安 (Vivian)',
 		url: '/models/vivian/薇薇安.model3.json',

@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0] - 2026-10-10
+
+### Added
+- **Mihari Official Live2D Model (`Mihari_V1`):**
+  - High-tier Live2D Cubism model with dynamic physics hair ribbons, ponytails, multi-layer eyes, mouth phonemes, and full motion set.
+  - Sanitized model JSON file references (stripped legacy leading whitespace).
+  - Designed custom preview SVG card representation for instant visual identification.
+- **Avatar Framing Presets & Body Parts Inspector:**
+  - One-click framing presets: Full Body, Half Body (Bust-Up), and Close-Up for instant streaming framing.
+  - Model Parts Visibility Inspector: Dynamically queries Live2D `_partIds` to allow toggling visibility and opacity for individual avatar layers.
+- **Streamer Square Frame with Organic Overflow Edge Fade:**
+  - 1:1 Square Frame Box layout option for clean, framed stream avatars.
+  - Smooth top/left/right/bottom organic edge fading gradient mask (`square-frame-fade`) to prevent harsh square boundary cutoffs.
+- **Inverted Pitch (Y) & Inverted Yaw (X) Camera Calibration:**
+  - Toggle inversion for vertical look tilt (fixing down/up inverted tilt / "ndiluk") and horizontal yaw.
+  - Quick-preset tracking calibrations: Responsive (low-end 30fps webcam), Balanced (default), and Ultra Smooth (cinematic).
+- **Real Web Audio API DSP Voice Engine:**
+  - Native browser `AudioContext` microphone engine with live input selector, volume gain slider, and real-time VU meter.
+  - Local DSP voice filters (Natural, Anime Treble, Radio Broadcaster, Walkie-Talkie, Warm Podcast).
+  - External Neural AI Voice Guide: Architectural blueprint for W-Okada AI Voice Changer (RVC v2 + CUDA) paired with VB-Cable virtual audio routing.
+- **Draggable & Resizable Windowed Rigging Inspector:**
+  - Topbar pointer-captured dragging clamped smoothly within viewport boundaries.
+  - Native resizable width and height with enforced min/max limits (`min-w-[320px]`, `max-w-[750px]`, `min-h-[380px]`, `max-h-[850px]`).
+- **2X Wider Dialog Modals:**
+  - Expanded all dialog modals (`SettingsModal`, `ModelCatalogModal`, `ShortcutGuideModal`, `ThemeModal`, `ObsModal`) to `max-w-5xl` / `xl:max-w-6xl` with responsive multi-column layouts.
+- **PWA & Mobile Viewport Readiness:**
+  - Added `manifest.webmanifest`, standalone service worker (`sw.js`), mobile touch viewport rules, and horizontal scrolling dock for mobile streamers.
+- **About & Terms of Service (ToS) Legal Declaration:**
+  - 100% Free & Open Source Software under MIT/Apache 2.0 license.
+  - Zero telemetry, zero cloud tracking, and 100% local client-side processing guarantee.
+
+### Changed & Fixed
+- **Purged Gimmick Claims & Slop:**
+  - Removed all misleading marketing claims about WebGL utilizing "Tensor Cores". Replaced with factual WebGL GPU driver reporting and OS scheduling guides.
+  - Removed "PRO" badges and tier-list labels; all features remain 100% free and open-source.
+- **Repositioned Screen Lock Button:**
+  - Moved the floating unlock screen pill from top center to the discreet bottom-left corner (`bottom-4 left-4`) with hover-only tooltip.
+- **Reactive Autosave:**
+  - Integrated Svelte 5 `$effect` watcher on `RiggingStore` ensuring all theme, tracking, inversion, and audio configurations automatically persist to `localStorage`.
+- **Complete i18n Dictionary:**
+  - Zero missing keys across Indonesian (`id`), English (`en`), and Japanese (`ja`).
+
+---
+
 ## [0.8.0] - 2026-10-10
 
 ### Added
