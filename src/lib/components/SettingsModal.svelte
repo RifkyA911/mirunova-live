@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { rigging, UI_THEMES } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
-	import { voice } from '#lib/core/audio';
+	import { voice, VOICE_MODELS } from '#lib/core/audio';
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
 	import { detectHardwareBenchmark, type HardwareReport } from '#lib/core/hardware';
 	import { clearPreferences, exportConfigJson, importConfigJson } from '#lib/core/storage';
@@ -33,13 +33,90 @@
 		Square,
 		ExternalLink,
 		HelpCircle,
-		RefreshCw
+		RefreshCw,
+		Sun,
+		Moon,
+		Wand2
 	} from 'lucide-svelte';
 
 	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'appearance' | 'storage' | 'about'>('perf');
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 	let storageUsageBytes = $state<number>(0);
+	let appearanceThemeCategory = $state<'light' | 'dark' | 'custom'>('light');
+
+	// Group themes by category
+	const lightThemes = $derived(
+		UI_THEMES.filter((t) => ['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(t.id))
+	);
+	const darkThemes = $derived(
+		UI_THEMES.filter(
+			(t) =>
+				!['light', 'light-cyan-sea', 'sakura-light', 'matcha-light', 'custom'].includes(t.id)
+		)
+	);
+
+	const customPresets = [
+		{
+			name: '🌸 Sakura Bloom',
+			bg: '#fff5f8',
+			surface: '#ffffff',
+			accent: '#FA7FC2',
+			border: '#F5B7CE',
+			text: '#4a044e'
+		},
+		{
+			name: '🍵 Matcha Zen',
+			bg: '#f0fdf4',
+			surface: '#ffffff',
+			accent: '#16a34a',
+			border: '#bbf7d0',
+			text: '#14532d'
+		},
+		{
+			name: '⚡ Cyber Neon',
+			bg: '#09090b',
+			surface: '#13111c',
+			accent: '#00f0ff',
+			border: '#7000ff',
+			text: '#f1f5f9'
+		},
+		{
+			name: '🌌 Cosmic Violet',
+			bg: '#0d0714',
+			surface: '#190f28',
+			accent: '#a855f7',
+			border: '#6b21a8',
+			text: '#faf5ff'
+		},
+		{
+			name: '🍊 Sunset Amber',
+			bg: '#1c0f0a',
+			surface: '#291811',
+			accent: '#f97316',
+			border: '#ea580c',
+			text: '#fff7ed'
+		},
+		{
+			name: '💎 Arctic Ice',
+			bg: '#0f172a',
+			surface: '#1e293b',
+			accent: '#38bdf8',
+			border: '#0ea5e9',
+			text: '#f0f9ff'
+		}
+	];
+
+	function applyCustomPreset(preset: (typeof customPresets)[0]) {
+		rigging.setCustomThemeColors({
+			bg: preset.bg,
+			surface: preset.surface,
+			accent: preset.accent,
+			border: preset.border,
+			text: preset.text
+		});
+		rigging.setUITheme('custom');
+	}
 
 	// Reactive live hardware report directly updated by tracking FPS
 	let hardware = $derived<HardwareReport>(detectHardwareBenchmark(rigging.fps || 60));
@@ -831,58 +908,96 @@
 							</div>
 						</div>
 
-						<!-- Local Voice Filters & AI Voice Changer Guide -->
+						<!-- Web Audio DSP Voice Models (Categorized Grid) -->
 						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-								<Sparkles class="w-4 h-4 text-pink-400" />
-								<span>{i18n.t('voice_filter_label')}</span>
-							</h3>
+							<div class="flex items-center justify-between">
+								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
+									<Sparkles class="w-4 h-4 text-pink-400" />
+									<span>{i18n.t('voice_changer_title')}</span>
+								</h3>
+								<span class="text-[10px] text-zinc-500 font-mono">Web Audio DSP</span>
+							</div>
 
-							<div class="grid grid-cols-2 gap-2 text-xs">
-								<button
-									onclick={() => handleVoiceFilterChange('none')}
-									class="p-2.5 rounded-xl border text-left transition-colors {
-										rigging.voiceFilter === 'none'
-											? 'bg-pink-500/20 text-pink-300 border-pink-500/50 font-semibold'
-											: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
-									}"
-								>
-									{i18n.t('filter_none')}
-								</button>
-								<button
-									onclick={() => handleVoiceFilterChange('pitch-high')}
-									class="p-2.5 rounded-xl border text-left transition-colors {
-										rigging.voiceFilter === 'pitch-high'
-											? 'bg-pink-500/20 text-pink-300 border-pink-500/50 font-semibold'
-											: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
-									}"
-								>
-									{i18n.t('filter_high')}
-								</button>
-								<button
-									onclick={() => handleVoiceFilterChange('pitch-low')}
-									class="p-2.5 rounded-xl border text-left transition-colors {
-										rigging.voiceFilter === 'pitch-low'
-											? 'bg-pink-500/20 text-pink-300 border-pink-500/50 font-semibold'
-											: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
-									}"
-								>
-									{i18n.t('filter_low')}
-								</button>
-								<button
-									onclick={() => handleVoiceFilterChange('radio')}
-									class="p-2.5 rounded-xl border text-left transition-colors {
-										rigging.voiceFilter === 'radio'
-											? 'bg-pink-500/20 text-pink-300 border-pink-500/50 font-semibold'
-											: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
-									}"
-								>
-									{i18n.t('filter_radio')}
-								</button>
+							<!-- 1. Anime Models -->
+							<div class="space-y-1.5">
+								<span class="text-[10px] font-semibold text-pink-400 uppercase tracking-wider block">
+									★ {i18n.t('voice_cat_anime')}
+								</span>
+								<div class="grid grid-cols-2 gap-2 text-xs">
+									{#each VOICE_MODELS.filter((m) => m.category === 'anime') as model}
+										<button
+											type="button"
+											onclick={() => handleVoiceFilterChange(model.id)}
+											class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between {
+												rigging.voiceFilter === model.id
+													? 'bg-pink-500/20 text-pink-200 border-pink-500/60 shadow-md ring-1 ring-pink-500/30'
+													: 'bg-zinc-950 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:bg-zinc-900'
+											}"
+										>
+											<div class="flex items-center justify-between w-full mb-1">
+												<span class="font-bold text-xs">{model.name}</span>
+												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-pink-500/20 text-pink-300">{model.badge}</span>
+											</div>
+											<p class="text-[10px] text-zinc-400 leading-tight line-clamp-2">{model.desc}</p>
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<!-- 2. Studio & Broadcast Models -->
+							<div class="space-y-1.5 pt-1">
+								<span class="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider block">
+									★ {i18n.t('voice_cat_studio')}
+								</span>
+								<div class="grid grid-cols-2 gap-2 text-xs">
+									{#each VOICE_MODELS.filter((m) => m.category === 'studio') as model}
+										<button
+											type="button"
+											onclick={() => handleVoiceFilterChange(model.id)}
+											class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between {
+												rigging.voiceFilter === model.id
+													? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/60 shadow-md ring-1 ring-cyan-500/30'
+													: 'bg-zinc-950 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:bg-zinc-900'
+											}"
+										>
+											<div class="flex items-center justify-between w-full mb-1">
+												<span class="font-bold text-xs">{model.name}</span>
+												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-cyan-500/20 text-cyan-300">{model.badge}</span>
+											</div>
+											<p class="text-[10px] text-zinc-400 leading-tight line-clamp-2">{model.desc}</p>
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<!-- 3. Creative FX & Ambience -->
+							<div class="space-y-1.5 pt-1">
+								<span class="text-[10px] font-semibold text-violet-400 uppercase tracking-wider block">
+									★ {i18n.t('voice_cat_effects')}
+								</span>
+								<div class="grid grid-cols-2 gap-2 text-xs">
+									{#each VOICE_MODELS.filter((m) => m.category === 'effects') as model}
+										<button
+											type="button"
+											onclick={() => handleVoiceFilterChange(model.id)}
+											class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between {
+												rigging.voiceFilter === model.id
+													? 'bg-violet-500/20 text-violet-200 border-violet-500/60 shadow-md ring-1 ring-violet-500/30'
+													: 'bg-zinc-950 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:bg-zinc-900'
+											}"
+										>
+											<div class="flex items-center justify-between w-full mb-1">
+												<span class="font-bold text-xs">{model.name}</span>
+												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-violet-500/20 text-violet-300">{model.badge}</span>
+											</div>
+											<p class="text-[10px] text-zinc-400 leading-tight line-clamp-2">{model.desc}</p>
+										</button>
+									{/each}
+								</div>
 							</div>
 
 							<!-- W-Okada AI RVC Architecture Card -->
-							<div class="p-4 rounded-xl bg-zinc-950/90 border border-zinc-800 space-y-2">
+							<div class="p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800 space-y-1.5 mt-2">
 								<h4 class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
 									<ExternalLink class="w-3.5 h-3.5" />
 									{i18n.t('rvc_guide_title')}
@@ -900,46 +1015,252 @@
 				<!-- TAB 4: THEME & STAGE -->
 				{:else if activeTab === 'appearance'}
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
-						<!-- Theme Customizer Cards -->
+						<!-- Theme Customizer Section (Categorized) -->
 						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-								<Palette class="w-4 h-4 text-pink-400" />
-								<span>{i18n.t('theme_selector_title')}</span>
-							</h3>
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
+									<Palette class="w-4 h-4 text-pink-400" />
+									<span>{i18n.t('theme_selector_title')}</span>
+								</h3>
 
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-								{#each UI_THEMES as t}
+								<!-- Category Pill Selector -->
+								<div class="flex items-center gap-1 p-1 bg-zinc-950/90 border border-zinc-800 rounded-xl">
 									<button
-										onclick={() => {
-											rigging.setUITheme(t.id);
-										}}
-										class="p-3 rounded-xl border text-left transition-all relative cursor-pointer hover:scale-[1.01] active:scale-[0.99] {
-											rigging.uiTheme === t.id
-												? 'bg-zinc-900 border-cyan-500 shadow-lg ring-1 ring-cyan-500/30'
-												: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
+										type="button"
+										onclick={() => (appearanceThemeCategory = 'light')}
+										class="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+											appearanceThemeCategory === 'light'
+												? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm'
+												: 'text-zinc-400 hover:text-zinc-200'
 										}"
 									>
-										<div class="flex items-center gap-2 mb-1">
-											<div class="w-3.5 h-3.5 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};"></div>
-											<span class="font-bold text-xs text-zinc-200">{t.name}</span>
-											<span class="text-[9px] px-1 py-0.2 rounded font-mono bg-zinc-800 text-zinc-400">{t.badge}</span>
-											{#if rigging.uiTheme === t.id}
-												<Check class="w-3.5 h-3.5 text-cyan-400 ml-auto" />
-											{/if}
-										</div>
-										<p class="text-[10px] text-zinc-400 leading-tight mb-2 line-clamp-1">{t.desc}</p>
-										<!-- Palette Swatches -->
-										<div class="flex items-center gap-1.5 pt-1.5 border-t border-zinc-800/60">
-											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.bg};" title="Bg"></div>
-											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.surface};" title="Surface"></div>
-											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};" title="Accent"></div>
-											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.border};" title="Border"></div>
-											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.text};" title="Text"></div>
-											<span class="text-[9px] font-mono text-zinc-500 ml-auto">{t.bgHex}</span>
-										</div>
+										<Sun class="w-3.5 h-3.5" />
+										<span>{i18n.t('theme_category_light')}</span>
 									</button>
-								{/each}
+									<button
+										type="button"
+										onclick={() => (appearanceThemeCategory = 'dark')}
+										class="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+											appearanceThemeCategory === 'dark'
+												? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+												: 'text-zinc-400 hover:text-zinc-200'
+										}"
+									>
+										<Moon class="w-3.5 h-3.5" />
+										<span>{i18n.t('theme_category_dark')}</span>
+									</button>
+									<button
+										type="button"
+										onclick={() => (appearanceThemeCategory = 'custom')}
+										class="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+											appearanceThemeCategory === 'custom'
+												? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
+												: 'text-zinc-400 hover:text-zinc-200'
+										}"
+									>
+										<Wand2 class="w-3.5 h-3.5" />
+										<span>{i18n.t('theme_category_custom')}</span>
+									</button>
+								</div>
 							</div>
+
+							<!-- Light Themes -->
+							{#if appearanceThemeCategory === 'light'}
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-in fade-in duration-150">
+									{#each lightThemes as t}
+										<button
+											type="button"
+											onclick={() => rigging.setUITheme(t.id)}
+											class="p-3 rounded-xl border text-left transition-all relative cursor-pointer hover:scale-[1.01] active:scale-[0.99] {
+												rigging.uiTheme === t.id
+													? 'bg-zinc-900 border-cyan-400 shadow-lg ring-1 ring-cyan-400/30'
+													: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
+											}"
+										>
+											<div class="flex items-center gap-2 mb-1">
+												<div class="w-3.5 h-3.5 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};"></div>
+												<span class="font-bold text-xs text-zinc-200">{t.name}</span>
+												<span class="text-[9px] px-1 py-0.2 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">{t.badge}</span>
+												{#if rigging.uiTheme === t.id}
+													<Check class="w-3.5 h-3.5 text-cyan-400 ml-auto" />
+												{/if}
+											</div>
+											<p class="text-[10px] text-zinc-400 leading-tight mb-2 line-clamp-1">{t.desc}</p>
+											<!-- Palette Swatches -->
+											<div class="flex items-center gap-1.5 pt-1.5 border-t border-zinc-800/60">
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.bg};" title="Bg"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.surface};" title="Surface"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};" title="Accent"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.border};" title="Border"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.text};" title="Text"></div>
+												<span class="text-[9px] font-mono text-zinc-500 ml-auto">{t.bgHex}</span>
+											</div>
+										</button>
+									{/each}
+								</div>
+
+							<!-- Dark Themes -->
+							{:else if appearanceThemeCategory === 'dark'}
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-in fade-in duration-150">
+									{#each darkThemes as t}
+										<button
+											type="button"
+											onclick={() => rigging.setUITheme(t.id)}
+											class="p-3 rounded-xl border text-left transition-all relative cursor-pointer hover:scale-[1.01] active:scale-[0.99] {
+												rigging.uiTheme === t.id
+													? 'bg-zinc-900 border-cyan-500 shadow-lg ring-1 ring-cyan-500/30'
+													: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
+											}"
+										>
+											<div class="flex items-center gap-2 mb-1">
+												<div class="w-3.5 h-3.5 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};"></div>
+												<span class="font-bold text-xs text-zinc-200">{t.name}</span>
+												<span class="text-[9px] px-1 py-0.2 rounded font-mono bg-zinc-800 text-zinc-400">{t.badge}</span>
+												{#if rigging.uiTheme === t.id}
+													<Check class="w-3.5 h-3.5 text-cyan-400 ml-auto" />
+												{/if}
+											</div>
+											<p class="text-[10px] text-zinc-400 leading-tight mb-2 line-clamp-1">{t.desc}</p>
+											<!-- Palette Swatches -->
+											<div class="flex items-center gap-1.5 pt-1.5 border-t border-zinc-800/60">
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.bg};" title="Bg"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.surface};" title="Surface"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};" title="Accent"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.border};" title="Border"></div>
+												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.text};" title="Text"></div>
+												<span class="text-[9px] font-mono text-zinc-500 ml-auto">{t.bgHex}</span>
+											</div>
+										</button>
+									{/each}
+								</div>
+
+							<!-- Custom Theme Studio -->
+							{:else if appearanceThemeCategory === 'custom'}
+								<div class="p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800/90 space-y-3 animate-in fade-in duration-150">
+									<!-- Presets -->
+									<div>
+										<span class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1.5">
+											{i18n.t('custom_presets_title')}
+										</span>
+										<div class="grid grid-cols-3 gap-1.5">
+											{#each customPresets as preset}
+												<button
+													type="button"
+													onclick={() => applyCustomPreset(preset)}
+													class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 hover:border-zinc-700 transition-all text-left flex items-center justify-between cursor-pointer"
+												>
+													<span class="font-bold text-[10px] text-zinc-200 truncate">{preset.name}</span>
+													<div class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {preset.accent};"></div>
+												</button>
+											{/each}
+										</div>
+									</div>
+
+									<!-- Live Pickers -->
+									<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
+											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_bg')}</span>
+											<div class="flex items-center gap-1.5">
+												<input
+													type="color"
+													bind:value={rigging.customThemeConfig.bg}
+													oninput={() => {
+														rigging.setCustomThemeColors({ bg: rigging.customThemeConfig.bg });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+												/>
+												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.bg}</span>
+											</div>
+										</div>
+
+										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
+											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_surface')}</span>
+											<div class="flex items-center gap-1.5">
+												<input
+													type="color"
+													bind:value={rigging.customThemeConfig.surface}
+													oninput={() => {
+														rigging.setCustomThemeColors({ surface: rigging.customThemeConfig.surface });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+												/>
+												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.surface}</span>
+											</div>
+										</div>
+
+										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
+											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_accent')}</span>
+											<div class="flex items-center gap-1.5">
+												<input
+													type="color"
+													bind:value={rigging.customThemeConfig.accent}
+													oninput={() => {
+														rigging.setCustomThemeColors({ accent: rigging.customThemeConfig.accent });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+												/>
+												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.accent}</span>
+											</div>
+										</div>
+
+										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
+											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_border')}</span>
+											<div class="flex items-center gap-1.5">
+												<input
+													type="color"
+													bind:value={rigging.customThemeConfig.border}
+													oninput={() => {
+														rigging.setCustomThemeColors({ border: rigging.customThemeConfig.border });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+												/>
+												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.border}</span>
+											</div>
+										</div>
+
+										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
+											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_text')}</span>
+											<div class="flex items-center gap-1.5">
+												<input
+													type="color"
+													bind:value={rigging.customThemeConfig.text}
+													oninput={() => {
+														rigging.setCustomThemeColors({ text: rigging.customThemeConfig.text });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+												/>
+												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.text}</span>
+											</div>
+										</div>
+
+										<!-- Activate Button -->
+										<div class="flex items-end">
+											<button
+												type="button"
+												onclick={() => rigging.setUITheme('custom')}
+												class="w-full py-2 px-2.5 rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 {
+													rigging.uiTheme === 'custom'
+														? 'bg-pink-500 text-white'
+														: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+												}"
+											>
+												{#if rigging.uiTheme === 'custom'}
+													<Check class="w-3.5 h-3.5 stroke-[3]" />
+													<span>Aktif</span>
+												{:else}
+													<Wand2 class="w-3.5 h-3.5" />
+													<span>Terapkan</span>
+												{/if}
+											</button>
+										</div>
+									</div>
+								</div>
+							{/if}
 
 							<!-- Background Style -->
 							<div class="pt-3 border-t border-zinc-800/60 space-y-2">

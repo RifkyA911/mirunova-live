@@ -586,14 +586,14 @@
 					isDeviceMenuOpen = false;
 				}}
 				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label="Panduan Shortcut"
+				aria-label={i18n.t('shortcuts_title')}
 			>
 				<Keyboard class="w-5 h-5 text-zinc-300" />
 			</button>
 			<div
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
-				Panduan Shortcut [?]
+				{i18n.t('shortcuts_title')} [F1 / ?]
 			</div>
 		</div>
 
@@ -602,14 +602,14 @@
 			<button
 				onclick={() => rigging.toggleDock(true)}
 				class="p-2.5 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label="Sembunyikan Dock"
+				aria-label="Toggle Dock"
 			>
 				<ChevronDown class="w-5 h-5" />
 			</button>
 			<div
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
-				Sembunyikan Panel [H]
+				Dock [H]
 			</div>
 		</div>
 	</nav>

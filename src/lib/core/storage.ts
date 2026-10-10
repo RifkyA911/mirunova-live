@@ -52,6 +52,8 @@ export interface SavedUserConfig {
 	audioDeviceId?: string;
 	micGain?: number;
 	voiceFilter?: string;
+	customThemeConfig?: { bg: string; surface: string; accent: string; border: string; text: string };
+	zoomLevel?: number;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

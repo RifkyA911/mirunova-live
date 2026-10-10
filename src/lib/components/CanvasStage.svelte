@@ -108,6 +108,27 @@
 			currentModel.scale.set(modelScale);
 			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 50 };
 			currentModel.position.set(modelPosition.x, modelPosition.y);
+			rigging.zoomLevel = 1.0;
+		}
+	});
+
+	// Reactively handle zoom in/out/reset signals
+	let lastZoomSignalTime = 0;
+	$effect(() => {
+		const sig = rigging.zoomSignal;
+		if (sig && sig.timestamp !== lastZoomSignalTime && currentModel && app) {
+			lastZoomSignalTime = sig.timestamp;
+			if (sig.type === 'in') {
+				applyZoom(1.15);
+			} else if (sig.type === 'out') {
+				applyZoom(0.87);
+			} else if (sig.type === 'reset') {
+				applyFramingPreset();
+				rigging.zoomLevel = 1.0;
+			} else if (sig.type === 'set' && sig.value) {
+				const target = baseModelScale * sig.value;
+				applyZoom(target / (modelScale || 1));
+			}
 		}
 	});
 
@@ -276,11 +297,14 @@
 		}
 	}
 
+	let baseModelScale = 0.5;
+
 	function applyFramingPreset() {
 		if (!currentModel || !app) return;
 		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
 		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
 		const baseScale = Math.min(rendererWidth / currentModel.width, rendererHeight / currentModel.height);
+		baseModelScale = baseScale;
 
 		if (rigging.framingMode === 'full') {
 			modelScale = baseScale * 0.55;
@@ -295,6 +319,32 @@
 		}
 		currentModel.scale.set(modelScale);
 		currentModel.position.set(modelPosition.x, modelPosition.y);
+		rigging.zoomLevel = Number((modelScale / (baseModelScale || 1)).toFixed(2));
+	}
+
+	function applyZoom(factor: number, anchorX?: number, anchorY?: number) {
+		if (!currentModel || !app) return;
+		const oldScale = modelScale;
+		const newScale = Math.max(0.05, Math.min(3.5, oldScale * factor));
+		if (newScale === oldScale) return;
+
+		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+
+		// Anchor zoom to center of stage viewport (guarantees center-anchored zooming!)
+		const originX = anchorX !== undefined ? anchorX : (rendererWidth / 2);
+		const originY = anchorY !== undefined ? anchorY : (rendererHeight / 2);
+
+		const ratio = newScale / oldScale;
+		modelPosition = {
+			x: originX + (modelPosition.x - originX) * ratio,
+			y: originY + (modelPosition.y - originY) * ratio
+		};
+
+		modelScale = newScale;
+		currentModel.scale.set(modelScale);
+		currentModel.position.set(modelPosition.x, modelPosition.y);
+		rigging.zoomLevel = Number((modelScale / (baseModelScale || 1)).toFixed(2));
 	}
 
 	$effect(() => {
@@ -327,11 +377,13 @@
 
 	function handleWheel(e: WheelEvent) {
 		if (rigging.isGuiLocked) return;
-		if (!currentModel) return;
+		if (!currentModel || !app) return;
 		e.preventDefault();
 		const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-		modelScale = Math.max(0.05, Math.min(3.0, modelScale * zoomFactor));
-		currentModel.scale.set(modelScale);
+		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+		// Center-anchored zoom
+		applyZoom(zoomFactor, rendererWidth / 2, rendererHeight / 2);
 	}
 
 	function handleDoubleClick() {

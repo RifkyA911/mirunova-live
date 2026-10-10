@@ -84,6 +84,24 @@
 		}
 	}
 
+	let lastZoomSignalTime = 0;
+	$effect(() => {
+		const sig = rigging.zoomSignal;
+		if (sig && sig.timestamp !== lastZoomSignalTime) {
+			lastZoomSignalTime = sig.timestamp;
+			if (sig.type === 'in') threeStage.zoomBy(1.15);
+			else if (sig.type === 'out') threeStage.zoomBy(0.87);
+			else if (sig.type === 'reset') threeStage.resetZoom();
+		}
+	});
+
+	function handleWheel(e: WheelEvent) {
+		if (rigging.isGuiLocked) return;
+		e.preventDefault();
+		const factor = e.deltaY < 0 ? 1.08 : 0.92;
+		threeStage.zoomBy(factor);
+	}
+
 	onDestroy(() => {
 		if (animFrameId !== null) {
 			cancelAnimationFrame(animFrameId);
@@ -99,5 +117,6 @@
 	aria-label="3D Model Stage"
 	tabindex="0"
 	bind:this={containerEl}
+	onwheel={handleWheel}
 	class="absolute inset-0 w-full h-full overflow-hidden select-none cursor-grab active:cursor-grabbing z-0"
 ></div>

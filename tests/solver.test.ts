@@ -95,6 +95,28 @@ describe('solveFaceLandmarks', () => {
 		expect(resLinked.eyeBlinkR).toBeLessThan(0.2);
 	});
 
+	it('supports independent left and right eye winking with asymmetric wink isolation', () => {
+		const landmarks = createMockLandmarks();
+
+		// Left Eye Wink: Left eye closed (0.85), Right eye open (0.10)
+		const winkLBlendshapes = new Map<string, number>([
+			['eyeBlinkLeft', 0.85],
+			['eyeBlinkRight', 0.10]
+		]);
+		const resWinkL = solveFaceLandmarks(landmarks, winkLBlendshapes, { yaw: 0, pitch: 0, roll: 0 });
+		expect(resWinkL.eyeBlinkL).toBeLessThan(0.2); // closed
+		expect(resWinkL.eyeBlinkR).toBe(1.0);         // solid open
+
+		// Right Eye Wink: Right eye closed (0.85), Left eye open (0.10)
+		const winkRBlendshapes = new Map<string, number>([
+			['eyeBlinkLeft', 0.10],
+			['eyeBlinkRight', 0.85]
+		]);
+		const resWinkR = solveFaceLandmarks(landmarks, winkRBlendshapes, { yaw: 0, pitch: 0, roll: 0 });
+		expect(resWinkR.eyeBlinkR).toBeLessThan(0.2); // closed
+		expect(resWinkR.eyeBlinkL).toBe(1.0);         // solid open
+	});
+
 	it('computes mouthForm and mouthX for smiling, frowning, and jaw skew', () => {
 		const landmarks = createMockLandmarks();
 		const smileBlendshapes = new Map<string, number>([

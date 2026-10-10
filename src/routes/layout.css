@@ -678,6 +678,274 @@
 	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
 }
 
+/* --- 11. SAKURA LIGHT THEME (Radiant Cherry Blossom Daylight: Evanescia #FA7FC2, #F5B7CE, Pure White) --- */
+.theme-sakura-light {
+	--theme-bg-base: #fff5f8;
+	--theme-surface-950: rgba(255, 255, 255, 0.98);
+	--theme-surface-900: rgba(255, 245, 248, 0.96);
+	--theme-surface-800: rgba(254, 231, 240, 0.92);
+	--theme-border: rgba(245, 183, 206, 0.85);
+	--theme-border-hover: rgba(250, 127, 194, 0.95);
+	--theme-accent: #FA7FC2;
+	--theme-text-accent: #db2777;
+	--theme-glow: 0 0 25px rgba(250, 127, 194, 0.28);
+	--theme-btn-hover-bg: rgba(250, 127, 194, 0.16);
+	--theme-badge-bg: rgba(250, 127, 194, 0.16);
+	--theme-badge-text: #be185d;
+	--theme-badge-border: rgba(245, 183, 206, 0.6);
+}
+
+.theme-sakura-light nav,
+.theme-sakura-light aside,
+.theme-sakura-light header > div,
+.theme-sakura-light header > button,
+.theme-sakura-light [role="dialog"],
+.theme-sakura-light [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+	color: #4a044e !important;
+	box-shadow: 0 10px 25px -5px rgba(250, 127, 194, 0.15), 0 0 20px rgba(245, 183, 206, 0.18) !important;
+}
+
+.theme-sakura-light [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+	color: #701a75 !important;
+}
+
+.theme-sakura-light [class*="bg-zinc-800"] {
+	background-color: var(--theme-surface-800) !important;
+	border-color: var(--theme-border) !important;
+	color: #701a75 !important;
+}
+
+.theme-sakura-light [class*="border-zinc-800"],
+.theme-sakura-light [class*="border-zinc-700"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-sakura-light .text-zinc-100,
+.theme-sakura-light .text-zinc-200 {
+	color: #4a044e !important;
+}
+
+.theme-sakura-light .text-zinc-300,
+.theme-sakura-light .text-zinc-400 {
+	color: #701a75 !important;
+}
+
+.theme-sakura-light .text-zinc-500 {
+	color: #9d174d !important;
+}
+
+.theme-sakura-light .text-cyan-400,
+.theme-sakura-light .text-cyan-300 {
+	color: #db2777 !important;
+}
+
+.theme-sakura-light .bg-cyan-500 {
+	background-color: #FA7FC2 !important;
+	color: #ffffff !important;
+}
+
+.theme-sakura-light .border-cyan-500,
+.theme-sakura-light [class*="border-cyan-500"] {
+	border-color: #FA7FC2 !important;
+}
+
+.theme-sakura-light .bg-cyan-500\/10,
+.theme-sakura-light .bg-cyan-500\/20 {
+	background-color: rgba(250, 127, 194, 0.18) !important;
+}
+
+.theme-sakura-light select,
+.theme-sakura-light input[type="text"],
+.theme-sakura-light input[type="range"] {
+	background-color: #ffffff !important;
+	border-color: var(--theme-border) !important;
+	color: #4a044e !important;
+}
+
+.theme-sakura-light [class*="group-hover:opacity-100"] {
+	background-color: #ffffff !important;
+	border-color: var(--theme-border) !important;
+	color: #4a044e !important;
+	box-shadow: 0 10px 25px -5px rgba(250, 127, 194, 0.2) !important;
+}
+
+/* --- 12. MATCHA LIGHT THEME (Soothing Botanical Green Tea Daylight) --- */
+.theme-matcha-light {
+	--theme-bg-base: #f0fdf4;
+	--theme-surface-950: rgba(255, 255, 255, 0.98);
+	--theme-surface-900: rgba(240, 253, 244, 0.96);
+	--theme-surface-800: rgba(220, 252, 231, 0.92);
+	--theme-border: rgba(187, 247, 208, 0.95);
+	--theme-border-hover: rgba(22, 163, 74, 0.85);
+	--theme-accent: #16a34a;
+	--theme-text-accent: #15803d;
+	--theme-glow: 0 0 25px rgba(34, 197, 94, 0.22);
+	--theme-btn-hover-bg: rgba(34, 197, 94, 0.14);
+	--theme-badge-bg: rgba(34, 197, 94, 0.14);
+	--theme-badge-text: #166534;
+	--theme-badge-border: rgba(34, 197, 94, 0.35);
+}
+
+.theme-matcha-light nav,
+.theme-matcha-light aside,
+.theme-matcha-light header > div,
+.theme-matcha-light header > button,
+.theme-matcha-light [role="dialog"],
+.theme-matcha-light [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+	color: #14532d !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 0 20px rgba(34, 197, 94, 0.12) !important;
+}
+
+.theme-matcha-light [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+	color: #166534 !important;
+}
+
+.theme-matcha-light [class*="bg-zinc-800"] {
+	background-color: var(--theme-surface-800) !important;
+	border-color: var(--theme-border) !important;
+	color: #166534 !important;
+}
+
+.theme-matcha-light [class*="border-zinc-800"],
+.theme-matcha-light [class*="border-zinc-700"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-matcha-light .text-zinc-100,
+.theme-matcha-light .text-zinc-200 {
+	color: #14532d !important;
+}
+
+.theme-matcha-light .text-zinc-300,
+.theme-matcha-light .text-zinc-400 {
+	color: #166534 !important;
+}
+
+.theme-matcha-light .text-zinc-500 {
+	color: #15803d !important;
+}
+
+.theme-matcha-light .text-cyan-400,
+.theme-matcha-light .text-cyan-300 {
+	color: #15803d !important;
+}
+
+.theme-matcha-light .bg-cyan-500 {
+	background-color: #16a34a !important;
+	color: #ffffff !important;
+}
+
+.theme-matcha-light .border-cyan-500,
+.theme-matcha-light [class*="border-cyan-500"] {
+	border-color: #16a34a !important;
+}
+
+.theme-matcha-light .bg-cyan-500\/10,
+.theme-matcha-light .bg-cyan-500\/20 {
+	background-color: rgba(34, 197, 94, 0.16) !important;
+}
+
+.theme-matcha-light select,
+.theme-matcha-light input[type="text"],
+.theme-matcha-light input[type="range"] {
+	background-color: #ffffff !important;
+	border-color: var(--theme-border) !important;
+	color: #14532d !important;
+}
+
+.theme-matcha-light [class*="group-hover:opacity-100"] {
+	background-color: #ffffff !important;
+	border-color: var(--theme-border) !important;
+	color: #14532d !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* --- 13. CUSTOM THEME STUDIO (Fully Reactive Custom Hex Color System) --- */
+.theme-custom {
+	--theme-bg-base: var(--custom-bg, #18181b);
+	--theme-surface-950: var(--custom-surface, #18181b);
+	--theme-surface-900: var(--custom-surface-alt, #27272a);
+	--theme-surface-800: var(--custom-surface-alt, #27272a);
+	--theme-border: var(--custom-border, #3f3f46);
+	--theme-border-hover: var(--custom-accent, #06b6d4);
+	--theme-accent: var(--custom-accent, #06b6d4);
+	--theme-text-accent: var(--custom-accent, #06b6d4);
+	--theme-glow: 0 0 25px var(--custom-accent, rgba(6, 182, 212, 0.3));
+	--theme-btn-hover-bg: rgba(255, 255, 255, 0.08);
+	--theme-badge-bg: rgba(255, 255, 255, 0.1);
+	--theme-badge-text: var(--custom-accent, #06b6d4);
+	--theme-badge-border: var(--custom-border, #3f3f46);
+}
+
+.theme-custom nav,
+.theme-custom aside,
+.theme-custom header > div,
+.theme-custom header > button,
+.theme-custom [role="dialog"],
+.theme-custom [class*="bg-zinc-950"] {
+	background-color: var(--custom-surface, #18181b) !important;
+	border-color: var(--custom-border, #3f3f46) !important;
+	color: var(--custom-text, #f4f4f5) !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+
+.theme-custom [class*="bg-zinc-900"] {
+	background-color: var(--custom-surface-alt, #27272a) !important;
+	border-color: var(--custom-border, #3f3f46) !important;
+	color: var(--custom-text, #f4f4f5) !important;
+}
+
+.theme-custom [class*="bg-zinc-800"] {
+	background-color: var(--custom-surface-alt, #27272a) !important;
+	border-color: var(--custom-border, #3f3f46) !important;
+}
+
+.theme-custom [class*="border-zinc-800"],
+.theme-custom [class*="border-zinc-700"] {
+	border-color: var(--custom-border, #3f3f46) !important;
+}
+
+.theme-custom .text-zinc-100,
+.theme-custom .text-zinc-200 {
+	color: var(--custom-text, #f4f4f5) !important;
+}
+
+.theme-custom .text-cyan-400,
+.theme-custom .text-cyan-300 {
+	color: var(--custom-accent, #06b6d4) !important;
+}
+
+.theme-custom .bg-cyan-500 {
+	background-color: var(--custom-accent, #06b6d4) !important;
+	color: #ffffff !important;
+}
+
+.theme-custom .border-cyan-500,
+.theme-custom [class*="border-cyan-500"] {
+	border-color: var(--custom-accent, #06b6d4) !important;
+}
+
+.theme-custom .bg-cyan-500\/10,
+.theme-custom .bg-cyan-500\/20 {
+	background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.theme-custom select,
+.theme-custom input[type="text"],
+.theme-custom input[type="range"] {
+	background-color: var(--custom-surface, #18181b) !important;
+	border-color: var(--custom-border, #3f3f46) !important;
+	color: var(--custom-text, #f4f4f5) !important;
+}
+
 /* ========================================================
    ADAPTIVE BUTTONS, BADGES & HOVER INTERACTIONS (GLOBAL)
    Dynamically aligns buttons, badges, and hovers across all themes

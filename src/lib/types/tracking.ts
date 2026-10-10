@@ -67,7 +67,10 @@ export type UITheme =
 	| 'cyan'
 	| 'pink'
 	| 'matcha'
-	| 'sakura-sweet';
+	| 'sakura-sweet'
+	| 'sakura-light'
+	| 'matcha-light'
+	| 'custom';
 
 export interface ThemePalette {
 	id: UITheme;
@@ -88,7 +91,19 @@ export interface ThemePalette {
 export type RiggingMode = 'live' | 'manual';
 export type RiggingViewMode = 'stay' | 'windowed' | 'drawer';
 export type AvatarFramingMode = 'full' | 'half' | 'closeup';
-export type VoiceFilterType = 'none' | 'pitch-high' | 'pitch-low' | 'radio' | 'warmth';
+export type VoiceFilterType =
+	| 'none'
+	| 'anime-girl'
+	| 'ikemen'
+	| 'robot'
+	| 'radio-retro'
+	| 'echo-hall'
+	| 'chipmunk'
+	| 'podcast-pro'
+	| 'pitch-high'
+	| 'pitch-low'
+	| 'radio'
+	| 'warmth';
 
 export interface Live2DModelItem {
 	id: string;

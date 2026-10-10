@@ -60,14 +60,14 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 	},
 	{
 		id: 'haru',
-		name: 'Haru Greeter',
-		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Haru/Haru.model3.json',
-		description: 'Official Cubism 4 greeter model with complete facial, hair & body physics rigging.',
+		name: 'Haru (Gesture & High-Five)',
+		url: '/models/haru/Haru.model3.json',
+		description: 'Model resmi Cubism 4 dengan rigging tangan & lengan lengkap: mendukung gesture High-Five, angkat tangan, dan lambaian realtime.',
 		version: 'Cubism 3/4',
 		avatarUrl: '/models/previews/haru.jpg',
 		source: 'official',
 		author: 'Live2D Official',
-		tags: ['Cubism 4', 'Full Rig', 'Hair Physics', 'Motions']
+		tags: ['High-Five Gesture', 'Hand Tracking', 'Arm Rigging', 'Cubism 4', 'Motions']
 	},
 	{
 		id: 'mao',

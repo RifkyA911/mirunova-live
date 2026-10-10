@@ -122,10 +122,21 @@ export class RiggingStore {
 
 	// Theme & Background System
 	uiTheme = $state<UITheme>('cyber-dark');
+	customThemeConfig = $state<{ bg: string; surface: string; accent: string; border: string; text: string }>({
+		bg: '#18181b',
+		surface: '#27272a',
+		accent: '#06b6d4',
+		border: '#3f3f46',
+		text: '#f4f4f5'
+	});
 	backgroundStyle = $state<BackgroundStyle>('solid');
 	backgroundColor = $state<string>('#09090b'); // Custom hex
 	screenEffect = $state<ScreenEffect>('none');
 	customBgUrl = $state<string | null>(null);
+
+	// Zoom Controls System
+	zoomLevel = $state<number>(1.0); // 1.0 = 100%
+	zoomSignal = $state<{ type: 'in' | 'out' | 'reset' | 'set'; value?: number; timestamp: number } | null>(null);
 
 	// Avatar Engine: Live2D vs 3D
 	avatarEngine = $state<'live2d' | '3d'>('live2d');
@@ -232,6 +243,8 @@ export class RiggingStore {
 			audioDeviceId: this.audioDeviceId,
 			micGain: this.micGain,
 			voiceFilter: this.voiceFilter,
+			customThemeConfig: this.customThemeConfig,
+			zoomLevel: this.zoomLevel,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -296,6 +309,8 @@ export class RiggingStore {
 		if (saved.audioDeviceId !== undefined) this.audioDeviceId = saved.audioDeviceId;
 		if (saved.micGain !== undefined) this.micGain = saved.micGain;
 		if (saved.voiceFilter) this.voiceFilter = saved.voiceFilter as any;
+		if (saved.customThemeConfig) this.customThemeConfig = saved.customThemeConfig;
+		if (saved.zoomLevel !== undefined) this.zoomLevel = saved.zoomLevel;
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 
@@ -389,13 +404,46 @@ export class RiggingStore {
 
 	setUITheme(theme: UITheme) {
 		this.uiTheme = theme;
-		const found = UI_THEMES.find((t) => t.id === theme);
-		if (found) {
-			this.backgroundColor = found.bgHex;
+		if (theme === 'custom') {
+			this.backgroundColor = this.customThemeConfig.bg;
 		} else {
-			this.backgroundColor = '#09090b';
+			const found = UI_THEMES.find((t) => t.id === theme);
+			if (found) {
+				this.backgroundColor = found.bgHex;
+			} else {
+				this.backgroundColor = '#09090b';
+			}
 		}
 		this.persist();
+	}
+
+	setCustomThemeColors(config: Partial<{ bg: string; surface: string; accent: string; border: string; text: string }>) {
+		this.customThemeConfig = {
+			...this.customThemeConfig,
+			...config
+		};
+		if (this.uiTheme === 'custom') {
+			this.backgroundColor = this.customThemeConfig.bg;
+		}
+		this.persist();
+	}
+
+	zoomIn() {
+		this.zoomSignal = { type: 'in', timestamp: performance.now() };
+	}
+
+	zoomOut() {
+		this.zoomSignal = { type: 'out', timestamp: performance.now() };
+	}
+
+	resetZoom() {
+		this.zoomLevel = 1.0;
+		this.zoomSignal = { type: 'reset', timestamp: performance.now() };
+	}
+
+	setZoom(level: number) {
+		this.zoomLevel = Math.max(0.1, Math.min(3.0, level));
+		this.zoomSignal = { type: 'set', value: this.zoomLevel, timestamp: performance.now() };
 	}
 
 	setFramingMode(mode: AvatarFramingMode) {

@@ -10,6 +10,7 @@
 	import ObsModal from '#lib/components/ObsModal.svelte';
 	import SettingsModal from '#lib/components/SettingsModal.svelte';
 	import ShortcutGuideModal from '#lib/components/ShortcutGuideModal.svelte';
+	import ZoomControls from '#lib/components/ZoomControls.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
@@ -157,6 +158,12 @@
 			} else if (e.key === '0') {
 				rigging.setUITheme('light-cyan-sea');
 				rigging.showToast('Tema: Light Cyan Sea');
+			} else if (e.key === '=' || e.key === '+') {
+				rigging.zoomIn();
+			} else if (e.key === '-' || e.key === '_') {
+				rigging.zoomOut();
+			} else if (e.key === 'z' || e.key === 'Z') {
+				rigging.resetZoom();
 			}
 		};
 
@@ -180,6 +187,8 @@
 		if (isDefaultHex) {
 			if (rigging.uiTheme === 'light') color = '#f8fafc';
 			else if (rigging.uiTheme === 'light-cyan-sea') color = '#f0fdfa';
+			else if (rigging.uiTheme === 'sakura-light') color = '#fff5f8';
+			else if (rigging.uiTheme === 'matcha-light') color = '#f0fdf4';
 			else if (rigging.uiTheme === 'cyan') color = '#03171a';
 			else if (rigging.uiTheme === 'pink') color = '#1a0613';
 			else if (rigging.uiTheme === 'matcha') color = '#07150c';
@@ -187,6 +196,7 @@
 			else if (rigging.uiTheme === 'synthwave') color = '#18042b';
 			else if (rigging.uiTheme === 'monochrome') color = '#000000';
 			else if (rigging.uiTheme === 'sakura-sweet') color = '#0c1021';
+			else if (rigging.uiTheme === 'custom') color = rigging.customThemeConfig.bg;
 			else color = '#09090b';
 		}
 
@@ -196,6 +206,8 @@
 		if (style === 'gradient') {
 			if (rigging.uiTheme === 'light') return `background: linear-gradient(135deg, ${color} 0%, #e2e8f0 100%);`;
 			if (rigging.uiTheme === 'light-cyan-sea') return `background: linear-gradient(135deg, ${color} 0%, #cffafe 55%, #a5f3fc 100%);`;
+			if (rigging.uiTheme === 'sakura-light') return `background: linear-gradient(135deg, ${color} 0%, #fce7f3 50%, #fbcfe8 100%);`;
+			if (rigging.uiTheme === 'matcha-light') return `background: linear-gradient(135deg, ${color} 0%, #dcfce7 50%, #bbf7d0 100%);`;
 			if (rigging.uiTheme === 'cyan') return `background: linear-gradient(135deg, ${color} 0%, #083344 100%);`;
 			if (rigging.uiTheme === 'pink') return `background: linear-gradient(135deg, ${color} 0%, #4a044e 100%);`;
 			if (rigging.uiTheme === 'matcha') return `background: linear-gradient(135deg, ${color} 0%, #14532d 100%);`;
@@ -250,11 +262,16 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <main
 	onmousemove={handleMouseMove}
+	style={rigging.uiTheme === 'custom' ? `--custom-bg: ${rigging.customThemeConfig.bg}; --custom-surface: ${rigging.customThemeConfig.surface}; --custom-surface-alt: ${rigging.customThemeConfig.surface}; --custom-accent: ${rigging.customThemeConfig.accent}; --custom-border: ${rigging.customThemeConfig.border}; --custom-text: ${rigging.customThemeConfig.text};` : undefined}
 	class="relative w-screen h-screen overflow-hidden font-sans select-none {
 		rigging.uiTheme === 'light'
 			? 'theme-light'
 			: rigging.uiTheme === 'light-cyan-sea'
 			? 'theme-light-cyan-sea'
+			: rigging.uiTheme === 'sakura-light'
+			? 'theme-sakura-light'
+			: rigging.uiTheme === 'matcha-light'
+			? 'theme-matcha-light'
 			: rigging.uiTheme === 'cyan'
 			? 'theme-cyan'
 			: rigging.uiTheme === 'pink'
@@ -269,6 +286,8 @@
 			? 'theme-monochrome'
 			: rigging.uiTheme === 'sakura-sweet'
 			? 'theme-sakura-sweet'
+			: rigging.uiTheme === 'custom'
+			? 'theme-custom'
 			: 'theme-cyber'
 	}"
 >
@@ -401,6 +420,9 @@
 
 		<!-- Picture-in-Picture Webcam & Landmark Wireframe Overlay -->
 		<CameraPip />
+
+		<!-- Right-Edge Hover-Expand Zoom Widget -->
+		<ZoomControls />
 
 		<!-- Floating Streamer Control Dock -->
 		<ControlDock />

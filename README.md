@@ -70,20 +70,46 @@
 * **Transparent PNG Support:** Retains alpha channel transparency for thumbnail creation, Discord emotes, and streaming assets.
 * **Dual Engine Support:** Works seamlessly across both Live2D Cubism and Three.js 3D stages.
 
-### 🎙️ 7. Web Audio DSP Engine & AI Voice Conversion Guide
-* **Real Browser Web Audio API:** Native microphone input device selector, volume gain slider, and real-time VU meter with local DSP voice filters (Natural, Anime Treble, Radio Broadcaster, Walkie-Talkie, Warm Podcast).
+### 🎙️ 7. Web Audio DSP Engine & Voice Models
+* **Real Browser Web Audio API:** Native microphone input device selector, volume gain slider, and real-time VU meter with 8 client-side DSP voice models:
+  * 🌸 **Kawaii Anime Girl:** Formant peak & high-shelf boost for bright anime character voice.
+  * 🎙️ **Ikemen / Deep Anime Boy:** Sub-harmonic low shelf & warm de-esser for deep masculine vocal resonance.
+  * 🐿️ **Chipmunk Helium FX:** Extreme high-frequency formant shift for cartoon helium voice.
+  * 🤖 **Cyber Robot:** 55Hz sci-fi ring modulator amplitude modulation for futuristic robotic voice.
+  * 📻 **Vintage Walkie-Talkie:** 1980s bandpass telephone filter with warm harmonic distortion.
+  * 🏟️ **Concert Hall Echo:** 220ms stage delay feedback loop with acoustic damping.
+  * 🎙️ **Studio Broadcast Vocal:** Professional podcast presence boost for clean voiceover.
+  * 🌿 **Natural Passthrough:** Pristine uncolored audio.
 * **Neural AI Voice Conversion (W-Okada RVC + VB-Cable):** Step-by-step setup guide for running W-Okada Realtime AI Voice Changer with local CUDA acceleration routed via VB-Cable virtual audio cable.
 
-### 🎨 8. Theme & Background Studio
+### 🎨 8. Theme & Background Studio (13 Themes + Custom Studio)
+* **☀️ 4 Light Themes:**
+  * **Sakura Light Pink (Evanescia):** Soft cherry blossom daylight with HoYoverse Evanescia coral pink `#FA7FC2`, pale sakura `#F5B7CE`, and pure white daylight surfaces.
+  * **Matcha Light Green:** Soothing Japanese green tea daylight with botanical green `#16a34a`, soft mint borders `#bbf7d0`, and crisp daylight card surfaces.
+  * **Light Cyan Sea:** Radiant tropical cyan ocean breeze daylight with aqua highlights.
+  * **Light Crisp:** Modern minimalist daylight interface with electric sky accents.
+* **🌙 8 Dark & Neon Themes:**
+  * **Cyber Dark** (Default obsidian & cyan), **Neo Cyan** (Tron aqua), **Sakura Pink** (Kawaii magenta), **Matcha Green** (Zen forest), **Midnight Blue** (Navy calm), **Synthwave** (80s sunset violet), **Monochrome** (OLED black & silver), **Sakura Sweet** (Evanescia Dark).
+* **🎨 Custom Theme Studio:**
+  * Interactive color palette builder with 5 color pickers (`bg`, `surface`, `accent`, `border`, `text`).
+  * 6 Instant Presets: Sakura Bloom, Matcha Zen, Cyber Neon, Cosmic Violet, Sunset Amber, and Arctic Ice.
+  * Real-time interactive preview card demonstrating button, border, badge, and typography styling.
 * **Background Modes:** Transparent (OBS ready), Cyber Mesh (square grid), Solid Color, Tech Grid, Polka Dots, Cosmic Animated (drifting nebula), Deep Gradient, Chroma Green/Blue (#00FF00 / #0000FF), and Custom Photo Upload.
-* **Square Frame with Organic Fade:** Streamer-ready 1:1 square frame box with smooth organic edge fading gradient mask.
-* **UI Themes:** Cyber Dark, Midnight Navy, Synthwave Sunset, and Minimal Monochrome with reactive autosave to `localStorage`.
+* **Square Streamer Frame with Organic Fade:** Streamer-ready 1:1 square frame box with smooth organic edge fading gradient mask.
 
 ### 🎭 9. Multi-Engine Model Catalog
-* **2D Live2D Models:** Mihari (`Mihari_V1`), Vivian (`薇薇安`), Haru Greeter, Hiyori Momose, Mao, Shizuku, Wanko & Rice, and custom `.model3.json` local file loader.
+* **2D Live2D Models:**
+  * **Haru Greeter (Gesture & Arm Rigged):** Full hand tracking, arm rigging, high-five gesture detection, motions, and expressions bundled locally.
+  * **Mihari (`Mihari_V1`), Vivian (`薇薇安`), Hiyori Momose, Mao, Shizuku, Wanko & Rice.**
+  * Custom `.model3.json` local folder & zip loader.
 * **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
 
-### 🎥 10. OBS Studio Integration
+### 🔍 10. Zoom Controls & Center-Anchored Zooming
+* **Right-Edge Floating Zoom Widget:** Hover-expand vertical toolbar with Zoom In, Zoom Out, Reset Center (100%), and framing presets.
+* **Mathematical Center Anchoring:** Mouse wheel and button zooms anchor dead-center to the viewport/avatar without drift.
+* **Keyboard Hotkeys:** `+` / `=` to Zoom In, `-` / `_` to Zoom Out, `Z` to Reset Zoom.
+
+### 🎥 11. OBS Studio Integration
 * **One-Click Screen Mode:** Hides all application UI leaving only the avatar stage.
 * **Auto-Fading Control Pill:** Streamer controls fade out after 3 seconds of cursor inactivity.
 * **URL Parameter Integration:** Add `?obs=true&bg=transparent` or `?obs=true&bg=chroma` directly to OBS Browser Source for zero-configuration integration.
@@ -119,23 +145,27 @@ Open **`http://localhost:5173/`** in your browser.
 
 ## ⌨️ Streamer Hotkeys
 
-| Hotkey | Action | Description |
-| :--- | :--- | :--- |
-| **`H`** | Toggle Menu Dock | Sembunyikan / Tampilkan panel dock bawah |
-| **`Space`** | Toggle Webcam Tracking | Mulai atau hentikan vision tracking webcam |
-| **`C`** | Calibrate Head Pose | Reset head yaw, pitch, and roll to neutral center |
-| **`M`** | Open Models Catalog | Buka katalog avatar 2D Live2D & 3D Cats |
-| **`T`** | Open Themes & Backgrounds | Buka menu kustomisasi tema, grid mesh & latar |
-| **`R`** | Toggle Rigging Panel | Buka / tutup drawer inspeksi parameter rigging |
-| **`S`** | Screenshot Avatar | Tangkap avatar langsung dan unduh file PNG |
-| **`O`** | Toggle OBS Screen Mode | Switch between studio controls and clean streamer view |
-| **`,` / `F2`** | Open Settings | Buka menu spesifikasi sistem & benchmark |
-| **`?` / `F1`** | Shortcut Guide Cheatsheet | Tampilkan panduan lengkap seluruh tombol shortcut |
-| **`P`** | Toggle PIP Camera | Sembunyikan / tampilkan preview webcam PIP |
-| **`V`** | Toggle Microphone | Aktifkan atau matikan input mikrofon |
-| **`B`** | Toggle Eye Blink Sync | Sinkronisasi kedipan mata kiri dan kanan |
-| **`1` – `4`** | Switch UI Themes | Ganti tema cepat (Cyber, Midnight, Synth, Mono) |
-| **`Escape`** | Close Modals / Exit OBS | Dismiss open modals, drawers, or exit OBS view |
+| Hotkey | Category | Action | Description |
+| :--- | :--- | :--- | :--- |
+| **`Space`** | Tracking | Toggle Webcam Tracking | Mulai atau hentikan vision tracking webcam |
+| **`V`** | Audio | Toggle Microphone Engine | Aktifkan atau matikan input mikrofon & DSP |
+| **`C`** | Tracking | Calibrate Head Pose | Reset head yaw, pitch, and roll to neutral center |
+| **`P`** | Tracking | Toggle PIP Camera | Sembunyikan / tampilkan preview webcam PIP |
+| **`B`** | Tracking | Toggle Eye Blink Sync | Sinkronisasi kedipan mata kiri dan kanan |
+| **`+` / `=`** | Zoom | Zoom In Avatar | Perbesar skala avatar di panggung |
+| **`-` / `_`** | Zoom | Zoom Out Avatar | Perkecil skala avatar di panggung |
+| **`Z`** | Zoom | Reset Zoom & Center | Kembalikan avatar ke ukuran 100% dan posisi tengah |
+| **`H`** | Navigation | Toggle Menu Dock | Sembunyikan / Tampilkan panel dock bawah |
+| **`M`** | Navigation | Open Models Catalog | Buka katalog avatar 2D Live2D & 3D Cats |
+| **`T`** | Navigation | Open Themes & Backgrounds | Buka menu kustomisasi tema, grid mesh & latar |
+| **`R`** | Navigation | Toggle Rigging Panel | Buka / tutup drawer inspeksi parameter rigging |
+| **`,` / `F2`** | Navigation | Open Studio Settings | Buka menu spesifikasi sistem & benchmark |
+| **`?` / `F1`** | Navigation | Shortcut Guide Cheatsheet | Tampilkan panduan lengkap seluruh tombol shortcut |
+| **`L`** | Streaming | Clear GUI & Lock Screen | Kunci layar dan sembunyikan semua UI untuk panggung bersih |
+| **`O`** | Streaming | Toggle OBS Screen Mode | Switch between studio controls and clean streamer view |
+| **`S`** | Streaming | Screenshot Avatar | Tangkap avatar langsung dan unduh file PNG |
+| **`1` – `9`, `0`** | Streaming | Switch UI Themes | Ganti tema cepat (13 preset tema) |
+| **`Escape`** | Global | Close Modals / Exit OBS | Dismiss open modals, drawers, or exit OBS view |
 
 ---
 

@@ -138,8 +138,8 @@ export const UI_THEMES: ThemePalette[] = [
 	},
 	{
 		id: 'sakura-sweet',
-		name: 'Sakura Sweet (Evanescia)',
-		desc: 'HoYoverse Evanescia aesthetic: coral pink #FA7FC2, pale sakura #F5B7CE & deep celestial navy',
+		name: 'Sakura Sweet (Evanescia Dark)',
+		desc: 'HoYoverse Evanescia dark celestial aesthetic: coral pink #FA7FC2, pale sakura #F5B7CE & deep navy',
 		badge: 'Evanescia',
 		bgHex: '#0c1021',
 		palette: {
@@ -149,6 +149,51 @@ export const UI_THEMES: ThemePalette[] = [
 			border: '#F5B7CE',
 			text: '#fff1f6',
 			ring: '#FA7FC2'
+		}
+	},
+	{
+		id: 'sakura-light',
+		name: 'Sakura Light Pink (Evanescia)',
+		desc: 'Radiant cherry blossom daylight: coral pink #FA7FC2, pale sakura #F5B7CE & pure white daylight surfaces',
+		badge: 'Sakura Light',
+		bgHex: '#fff5f8',
+		palette: {
+			bg: '#fff5f8',
+			surface: '#ffffff',
+			accent: '#FA7FC2',
+			border: '#F5B7CE',
+			text: '#4a044e',
+			ring: '#FA7FC2'
+		}
+	},
+	{
+		id: 'matcha-light',
+		name: 'Matcha Light Green',
+		desc: 'Soothing organic green tea daylight: fresh botanical green #16a34a, mint borders #bbf7d0 & clean daylight surfaces',
+		badge: 'Matcha Light',
+		bgHex: '#f0fdf4',
+		palette: {
+			bg: '#f0fdf4',
+			surface: '#ffffff',
+			accent: '#16a34a',
+			border: '#bbf7d0',
+			text: '#14532d',
+			ring: '#22c55e'
+		}
+	},
+	{
+		id: 'custom',
+		name: 'Custom Theme Studio',
+		desc: 'Tema kustom interaktif dengan palet warna background, surface, border, dan aksen bebas dipilih',
+		badge: 'Customizer',
+		bgHex: '#18181b',
+		palette: {
+			bg: '#18181b',
+			surface: '#27272a',
+			accent: '#06b6d4',
+			border: '#3f3f46',
+			text: '#f4f4f5',
+			ring: '#06b6d4'
 		}
 	}
 ];

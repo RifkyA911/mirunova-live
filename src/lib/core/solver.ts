@@ -48,7 +48,9 @@ export function solveFaceLandmarks(
 		const radToDeg = 180 / Math.PI;
 
 		// Extract Euler angles (Pitch, Yaw, Roll)
-		const matrixPitch = Math.asin(Math.max(-1, Math.min(1, -m12))) * radToDeg;
+		// Standard MediaPipe matrix: tilting head down rotates forward around X;
+		// Live2D ParamAngleY requires negative angle (-30) for nod-down, positive (+30) for tilt-up.
+		const matrixPitch = Math.asin(Math.max(-1, Math.min(1, m12))) * radToDeg;
 		const matrixYaw = Math.atan2(m02, m22) * radToDeg;
 		const matrixRoll = Math.atan2(m10, m11) * radToDeg;
 
@@ -70,7 +72,7 @@ export function solveFaceLandmarks(
 		const cheekWidth = Math.abs(rightCheek.x - leftCheek.x) || 0.001;
 		rawYaw = ((nose.x - midCheekX) / cheekWidth) * 90 * sensitivity;
 
-		// Pitch (Up/Down)
+		// Pitch (Up/Down): Looking down (ndiluk) produces negative pitch; looking up (ndangak) produces positive pitch
 		const midFaceY = (forehead.y + chin.y) / 2;
 		const faceHeight = Math.abs(chin.y - forehead.y) || 0.001;
 		rawPitch = -((nose.y - midFaceY) / faceHeight) * 90 * sensitivity;
@@ -105,27 +107,69 @@ export function solveFaceLandmarks(
 	}
 	const roll = Math.max(-30, Math.min(30, diffRoll));
 
-	// 2. Eyes: Non-linear Eyelid Curve (Organic smoothstep response)
+	// 2. Eyes: Non-linear Eyelid Curve with Dual-Source (Blendshape + Geometric EAR) & Asymmetric Wink Isolation
 	let blinkL = blendshapesMap.get('eyeBlinkLeft') ?? 0;
 	let blinkR = blendshapesMap.get('eyeBlinkRight') ?? 0;
+
+	// Dual-source fallback: Geometric Eye Aspect Ratio (EAR) ONLY when blendshapes are absent
+	if (!blendshapesMap.has('eyeBlinkLeft') && landmarks && landmarks.length >= 468) {
+		const dist = (p1: { x: number; y: number }, p2: { x: number; y: number }) =>
+			Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+		const p33 = landmarks[33], p133 = landmarks[133], p159 = landmarks[159], p145 = landmarks[145];
+		const p362 = landmarks[362], p263 = landmarks[263], p386 = landmarks[386], p374 = landmarks[374];
+
+		if (p33 && p133 && p159 && p145) {
+			const widthL = dist(p33, p133);
+			const heightL = dist(p159, p145);
+			if (widthL > 0.01 && heightL > 0.005) {
+				const earL = heightL / widthL;
+				const earBlinkL = Math.max(0, Math.min(1, (0.24 - earL) / 0.14));
+				if (earBlinkL > 0) blinkL = earBlinkL;
+			}
+		}
+
+		if (p362 && p263 && p386 && p374) {
+			const widthR = dist(p362, p263);
+			const heightR = dist(p386, p374);
+			if (widthR > 0.01 && heightR > 0.005) {
+				const earR = heightR / widthR;
+				const earBlinkR = Math.max(0, Math.min(1, (0.24 - earR) / 0.14));
+				if (earBlinkR > 0) blinkR = earBlinkR;
+			}
+		}
+	}
 
 	if (eyeBlinkLinked) {
 		const combined = Math.max(blinkL, blinkR);
 		blinkL = combined;
 		blinkR = combined;
+	} else {
+		// Asymmetric Wink Isolation:
+		// When one eye is intentionally closing while the other is open,
+		// prevent facial squint muscle bleed from partially closing the open eye!
+		const blinkDiff = blinkL - blinkR;
+		if (blinkDiff > 0.18 && blinkL > 0.35) {
+			// Deliberate Left eye wink: Keep right eye fully open
+			blinkR = Math.max(0, blinkR - 0.25);
+			blinkL = Math.min(1.0, blinkL * 1.25);
+		} else if (blinkDiff < -0.18 && blinkR > 0.35) {
+			// Deliberate Right eye wink: Keep left eye fully open
+			blinkL = Math.max(0, blinkL - 0.25);
+			blinkR = Math.min(1.0, blinkR * 1.25);
+		}
 	}
 
 	// Crisp eyelid response: baseline open eyes (0.0 to 0.25) remain 100% open
-	// Deliberate blink starts at 0.28 and reaches full closure at 0.70
-	let eyeBlinkL = 1 - smoothStep(0.28, 0.70, blinkL);
-	let eyeBlinkR = 1 - smoothStep(0.28, 0.70, blinkR);
+	let eyeBlinkL = 1 - smoothStep(0.25, 0.65, blinkL);
+	let eyeBlinkR = 1 - smoothStep(0.25, 0.65, blinkR);
 
-	// Solid open eyes lock: snap to 1.0 when >= 0.80 to eliminate trembling/sleepy eye flutter ("kiyer-kiyer")
-	if (eyeBlinkL >= 0.80) eyeBlinkL = 1.0;
-	if (eyeBlinkR >= 0.80) eyeBlinkR = 1.0;
-	// Clean closed eye lock: snap to 0.0 when <= 0.15
-	if (eyeBlinkL <= 0.15) eyeBlinkL = 0.0;
-	if (eyeBlinkR <= 0.15) eyeBlinkR = 0.0;
+	// Solid open eyes lock: snap to 1.0 when >= 0.78
+	if (eyeBlinkL >= 0.78) eyeBlinkL = 1.0;
+	if (eyeBlinkR >= 0.78) eyeBlinkR = 1.0;
+	// Clean closed eye lock: snap to 0.0 when <= 0.18
+	if (eyeBlinkL <= 0.18) eyeBlinkL = 0.0;
+	if (eyeBlinkR <= 0.18) eyeBlinkR = 0.0;
 
 	// Smiling eye blendshapes (^.^)
 	const squintL = blendshapesMap.get('eyeSquintLeft') ?? 0;

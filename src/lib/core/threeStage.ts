@@ -72,6 +72,17 @@ export class ThreeStage {
 		this.startRenderLoop();
 	}
 
+	zoomBy(factor: number) {
+		if (!this.camera) return;
+		const newZ = this.camera.position.z / factor;
+		this.camera.position.z = Math.max(0.8, Math.min(6.0, newZ));
+	}
+
+	resetZoom() {
+		if (!this.camera) return;
+		this.camera.position.set(0, 0, 2.8);
+	}
+
 	private handleResize = () => {
 		if (!this.container || !this.renderer) return;
 		const width = this.container.clientWidth;
