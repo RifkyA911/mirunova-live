@@ -5,24 +5,31 @@
 # MiruNova Live (見るNova)
 **Next-Generation, Zero-Cost, In-Browser Live2D & 3D Real-Time Vision Tracker**
 
+[![Creator](https://img.shields.io/badge/Created_by-Rifky_(@RifkyA911)-ec4899?style=flat-square&logo=github)](https://github.com/RifkyA911)
+[![Repository](https://img.shields.io/badge/GitHub-RifkyA911%2Fmirunova--live-blue?style=flat-square&logo=github)](https://github.com/RifkyA911/mirunova-live)
 [![Bun](https://img.shields.io/badge/Bun-1.3-fbf0df?style=flat-square&logo=bun)](https://bun.sh)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-3.0-ff3e00?style=flat-square&logo=svelte)](https://svelte.dev)
 [![Svelte 5](https://img.shields.io/badge/Svelte-5.x-ff3e00?style=flat-square&logo=svelte)](https://svelte.dev)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-Vision_WASM-06b6d4?style=flat-square&logo=google)](https://developers.google.com/mediapipe)
 [![Live2D](https://img.shields.io/badge/Live2D-Cubism_3%2F4-8b5cf6?style=flat-square)](https://www.live2d.com)
 [![Three.js](https://img.shields.io/badge/Three.js-0.186-049ef4?style=flat-square&logo=three.js)](https://threejs.org)
+[![PWA Ready](https://img.shields.io/badge/PWA-Desktop_App_Ready-emerald?style=flat-square&logo=pwa)](https://web.dev/progressive-web-apps/)
 [![License](https://img.shields.io/badge/License-MIT-10b981?style=flat-square)](LICENSE)
-[![Zero-Cost](https://img.shields.io/badge/100%25-Free_%26_Open_Source-emerald?style=flat-square)](#zero-cost--privacy-mandate)
+[![Zero-Cost](https://img.shields.io/badge/100%25-Free_%26_Open_Source-emerald?style=flat-square)](#-zero-cost--privacy-mandate)
 
-*Tags: `#live2d` `#vtuber` `#face-tracking` `#hand-tracking` `#mediapipe` `#threejs` `#svelte5` `#bun` `#pixijs` `#webgl` `#zero-cost` `#obs-studio`*
+*Tags: `#live2d` `#vtuber` `#face-tracking` `#hand-tracking` `#mediapipe` `#threejs` `#svelte5` `#bun` `#pixijs` `#webgl` `#zero-cost` `#obs-studio` `#pwa`*
 
 </div>
 
 ---
 
-## 🌟 Overview
+## 🌟 Overview & Creator Credits
 
-**MiruNova Live** is an ultra-lightweight, 100% client-side web application for real-time Live2D & 3D avatar animation and vision tracking. Powered by **Bun**, **SvelteKit 5 (Runes)**, **Google MediaPipe Vision**, and **Pixi.js / Three.js**, it brings professional VTuber studio capabilities straight to your browser without heavyweight native installations, watermark restrictions, or paid cloud APIs.
+**MiruNova Live** is an ultra-lightweight, 100% client-side web application for real-time Live2D & 3D avatar animation, facial tracking, and audio DSP processing. Designed and architected by **Rifky ([@RifkyA911](https://github.com/RifkyA911))**, MiruNova Live delivers studio-grade VTuber capabilities straight to your browser without heavyweight native desktop installations, watermarks, or paid cloud APIs.
+
+* **GitHub Repository:** [https://github.com/RifkyA911/mirunova-live](https://github.com/RifkyA911/mirunova-live)
+* **Lead Architect & Creator:** [Rifky (@RifkyA911)](https://github.com/RifkyA911)
+* **Tech Stack:** Bun 1.3, SvelteKit 3 / Svelte 5 (Runes), Google MediaPipe Vision (WASM SIMD), Pixi.js v7 with Cubism SDK, Three.js 0.186, Web Audio API DSP, Tailwind CSS.
 
 ---
 
@@ -30,60 +37,42 @@
 
 ### 👁️ 1. Full-Body, Face & Hand Recognition
 * **Head Pose Kinematics:** 3-axis Euler angle tracking (Yaw, Pitch, Roll) with raw posture baseline calibration.
-* **Eye & Gaze Tracking:** Independent eye blink (`ParamEyeLOpen`, `ParamEyeROpen`), anti-jitter blink threshold, synchronized blink toggle, and iris gaze deflection (`ParamEyeBallX`, `ParamEyeBallY`).
-* **Eyebrows & Expressions:** Brow elevation/furrowing (`ParamBrowLY`, `ParamBrowRY`), cheek puff (`ParamCheek`), smile/frown curve (`ParamMouthForm`), and sadness/frown recognition.
-* **Lip-Sync & Phonemes:** Real-time jaw displacement (`ParamMouthOpenY`) and mouth skew (`ParamMouthX`) mirroring your spoken speech.
+* **Eye & Gaze Tracking:** Independent left & right eye blink with asymmetric wink isolation (`ParamEyeLOpen`, `ParamEyeROpen`), anti-flutter eyelid hysteresis, synchronized blink toggle, and 2D iris gaze deflection (`ParamEyeBallX`, `ParamEyeBallY`).
+* **Eyebrows & Expressions:** Brow elevation/furrowing (`ParamBrowLY`, `ParamBrowRY`), cheek puff (`ParamCheek`), smile/frown curve (`ParamMouthForm`), and sadness/frown recognition via geometric corner droop.
+* **Mouth Tracking Sensitivity & Speech Boost:** Real-time jaw displacement (`ParamMouthOpenY`) and mouth skew (`ParamMouthX`) with adjustable sensitivity (0.5x–2.5x) and a dedicated **Speech Boost** mode (1.65x multiplier + geometric lip separation fallback) ensuring responsive lip-sync during fast speaking or whispering.
 * **Hand Tracking & Gestures:** 21-keypoint MediaPipe hand landmark detection mapping arm angles (`ParamArmLA/RA`) and high-five gesture detection.
 
-### 💾 2. Persistent Configuration Storage
-* **Automatic LocalStorage Sync:** Model choice, 3D avatar, UI theme, background style, hex color, sensitivity, smoothing, deadzone, hand tracking, pose loops, and calibration offsets automatically persist across browser refreshes.
-* **Backup & Restore (JSON):** Export your entire studio configuration to a `.json` backup file and import it anytime.
-* **Factory Reset:** One-click reset to restore default factory preferences.
+### 🎮 2. Discrete GPU Acceleration (NVIDIA / AMD) & WebGL Optimization
+* **High-Performance Context Request:** WebGL contexts explicitly request `powerPreference: 'high-performance'` to ensure modern graphics engines prefer dedicated hardware over integrated graphics.
+* **Dual-GPU Routing Guide:** Comprehensive guidance for dual-GPU laptops (Intel + NVIDIA / AMD + NVIDIA) where Windows/browsers may default to integrated GPUs for power savings.
+  * **Windows Graphics Settings:** Set browser (`chrome.exe` / `msedge.exe` / `brave.exe`) to *High Performance (NVIDIA GPU)* in Windows Settings > System > Display > Graphics.
+  * **NVIDIA Control Panel:** Assign "High-performance NVIDIA processor" in Manage 3D Settings > Program Settings.
+* **Live Hardware Telemetry:** Dynamic 0–100 benchmark scoring, actual rendering FPS, millisecond frame latency, WebGL unmasked GPU renderer info, and CPU thread concurrency.
 
-### 📊 3. Hardware Benchmark & Spec Tier
-* **GPU & CPU Detection:** Automatically identifies GPU renderer via WebGL (`WEBGL_debug_renderer_info`) and CPU thread concurrency.
-* **Performance Rating Bar:** Calculates a dynamic 0–100 benchmark score displayed on a Red-to-Green gradient progress bar:
-  * 🔴 **Tidak Lancar (< 35):** Software rendering / low-spec integrated GPU advice.
-  * 🟡 **Cukup (35 – 59):** 30–45 FPS performance suitable for 720p streams.
-  * 🟢 **Lancar (60 – 84):** Solid 60 FPS performance for 1080p stream capture.
-  * 🌟 **Sangat Lancar / Ultra (85 – 100):** Dedicated GPU hardware acceleration.
-* **Factual Hardware Reporting:** Explains browser WebGL rasterization versus CPU SIMD MediaPipe pipeline, with actionable instructions on routing browser processes to high-performance dedicated GPUs (NVIDIA/AMD) in Windows Settings.
+### 🎙️ 3. Web Audio DSP Engine, Mic Test & Voice Conversion Test
+* **Client-Side DSP Voice Models:** 8 local Web Audio filters (Kawaii Anime Girl, Ikemen Deep Voice, Chipmunk Helium, Cyber Robot, Vintage Walkie-Talkie, Concert Hall Echo, Studio Broadcast Vocal, Natural Passthrough).
+* **Interactive Mic & DSP Conversion Test Widget:**
+  * Record a 4-second voice buffer in Settings to test hardware microphone clarity.
+  * Preview "Raw Mic Voice" (direct recording) or "Converted DSP Voice" (active voice changer effect) with **zero feedback loops** and zero screeching.
+* **External Neural AI Voice Conversion:** Architectural blueprint for W-Okada AI Voice Changer (RVC v2 + CUDA) routed into OBS Studio via VB-Cable virtual audio cable.
 
-### 🛠️ 4. Foldable Accordion Rigging Inspector & Windowed Mode
-* **Categorized Accordion Cards:** Organized into 7 collapsible categories:
-  * 👤 **Head Kinematics** (Angle X, Y, Z, Invert Pitch/Yaw)
-  * 👁️ **Eyes & Eyebrows** (Open, Smile, Form, Gaze, Anti-Jitter)
-  * 👄 **Mouth & Phonemes** (Open Y, Form, Skew X)
-  * 🫀 **Body & Breathing** (Angle X, Y, Z, Breath)
-  * ✋ **Hands & High-Five** (Hand Angles L & R)
-  * 📐 **Framing & Parts** (Full Body, Bust-Up, Close-Up, Individual Part Visibility & Opacity, Square Frame with Edge Fade)
-  * 📁 **Discovered Parameters** (Dynamic Live2D Core Parameters)
-* **Docked & Windowed Layouts:** Toggle between docked "Stay" right-rail mode or freely draggable, resizable windowed floating mode.
+### 🔔 4. Zero-Latency Procedural UI Sound Effects (SFX)
+* **Web Audio Synthesis:** Zero external audio files required; all sound effects are synthesized mathematically in real-time via Web Audio API oscillators, bandpass filters, and exponential gain ramps.
+* **Studio Audio Feedback:** Responsive sounds for button clicks, camera activation, neutral calibration, modal open/close, theme switching, and screenshot shutter.
+* **Configurable:** Dedicated toggle and volume slider in Studio Settings.
 
-### 🎯 5. Accurate Calibration & Invert Controls
-* **Raw Posture Baseline:** Captures raw uncalibrated webcam posture (`lastRawYaw`, `lastRawPitch`, `lastRawRoll`) and zeros the current head rotation.
-* **Invert Pitch & Yaw:** Easily invert vertical look pitch (fixes inverted look up/down) and horizontal yaw.
-* **Quick Tracking Presets:** Instant calibration for Responsive (low-end 30fps webcams), Balanced (default), and Ultra Smooth (cinematic).
+### 📱 5. Progressive Web App (PWA) Desktop Installation
+* **Standalone Desktop Mode:** Install MiruNova Live directly to your desktop or taskbar with a single click, launching in a dedicated window without browser address bars.
+* **Full PWA Suite:** Valid `manifest.webmanifest`, vector `favicon.svg`, and service worker caching core assets for ultra-fast startup.
 
-### 📸 6. Screenshot & Instant Download
-* **One-Click Capture:** Click the Camera icon on the Control Dock to immediately capture the avatar canvas.
-* **Transparent PNG Support:** Retains alpha channel transparency for thumbnail creation, Discord emotes, and streaming assets.
-* **Dual Engine Support:** Works seamlessly across both Live2D Cubism and Three.js 3D stages.
+### 📜 6. Dedicated Studio About & Terms of Service (ToS) Modals
+* **Dedicated About Modal:** Studio-grade modal celebrating project architecture, creator credits for **Rifky (@RifkyA911)**, quick link to the GitHub repository, and PWA desktop installation trigger.
+* **Terms of Service & Privacy Charter:**
+  * **100% Client-Side Privacy Guarantee:** All webcam video frames, MediaPipe 478 landmarks, and microphone streams run exclusively in local browser RAM/WebGL/WASM. Zero data is ever transmitted to cloud servers.
+  * **Commercial VTuber Freedom:** 100% royalty-free commercial live streaming rights on YouTube, Twitch, Kick, Bilibili, TikTok, and other platforms.
 
-### 🎙️ 7. Web Audio DSP Engine & Voice Models
-* **Real Browser Web Audio API:** Native microphone input device selector, volume gain slider, and real-time VU meter with 8 client-side DSP voice models:
-  * 🌸 **Kawaii Anime Girl:** Formant peak & high-shelf boost for bright anime character voice.
-  * 🎙️ **Ikemen / Deep Anime Boy:** Sub-harmonic low shelf & warm de-esser for deep masculine vocal resonance.
-  * 🐿️ **Chipmunk Helium FX:** Extreme high-frequency formant shift for cartoon helium voice.
-  * 🤖 **Cyber Robot:** 55Hz sci-fi ring modulator amplitude modulation for futuristic robotic voice.
-  * 📻 **Vintage Walkie-Talkie:** 1980s bandpass telephone filter with warm harmonic distortion.
-  * 🏟️ **Concert Hall Echo:** 220ms stage delay feedback loop with acoustic damping.
-  * 🎙️ **Studio Broadcast Vocal:** Professional podcast presence boost for clean voiceover.
-  * 🌿 **Natural Passthrough:** Pristine uncolored audio.
-* **Neural AI Voice Conversion (W-Okada RVC + VB-Cable):** Step-by-step setup guide for running W-Okada Realtime AI Voice Changer with local CUDA acceleration routed via VB-Cable virtual audio cable.
-
-### 🎨 8. Theme & Background Studio (13 Themes + Custom Studio)
-* **☀️ 4 Light Themes:**
+### 🎨 7. Theme & Background Studio (13 Themes + Custom Studio)
+* **☀️ 4 Daylight Themes:**
   * **Sakura Light Pink (Evanescia):** Soft cherry blossom daylight with HoYoverse Evanescia coral pink `#FA7FC2`, pale sakura `#F5B7CE`, and pure white daylight surfaces.
   * **Matcha Light Green:** Soothing Japanese green tea daylight with botanical green `#16a34a`, soft mint borders `#bbf7d0`, and crisp daylight card surfaces.
   * **Light Cyan Sea:** Radiant tropical cyan ocean breeze daylight with aqua highlights.
@@ -93,25 +82,23 @@
 * **🎨 Custom Theme Studio:**
   * Interactive color palette builder with 5 color pickers (`bg`, `surface`, `accent`, `border`, `text`).
   * 6 Instant Presets: Sakura Bloom, Matcha Zen, Cyber Neon, Cosmic Violet, Sunset Amber, and Arctic Ice.
-  * Real-time interactive preview card demonstrating button, border, badge, and typography styling.
 * **Background Modes:** Transparent (OBS ready), Cyber Mesh (square grid), Solid Color, Tech Grid, Polka Dots, Cosmic Animated (drifting nebula), Deep Gradient, Chroma Green/Blue (#00FF00 / #0000FF), and Custom Photo Upload.
-* **Square Streamer Frame with Organic Fade:** Streamer-ready 1:1 square frame box with smooth organic edge fading gradient mask.
 
-### 🎭 9. Multi-Engine Model Catalog
+### 🎭 8. Multi-Engine Model Catalog
 * **2D Live2D Models:**
   * **Haru Greeter (Gesture & Arm Rigged):** Full hand tracking, arm rigging, high-five gesture detection, motions, and expressions bundled locally.
   * **Mihari (`Mihari_V1`), Vivian (`薇薇安`), Hiyori Momose, Mao, Shizuku, Wanko & Rice.**
   * Custom `.model3.json` local folder & zip loader.
+  * BOOTH.pm VTuber Showcase catalog.
 * **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
 
-### 🔍 10. Zoom Controls & Center-Anchored Zooming
+### 🔍 9. Zoom Controls & Center-Anchored Zooming
 * **Right-Edge Floating Zoom Widget:** Hover-expand vertical toolbar with Zoom In, Zoom Out, Reset Center (100%), and framing presets.
 * **Mathematical Center Anchoring:** Mouse wheel and button zooms anchor dead-center to the viewport/avatar without drift.
 * **Keyboard Hotkeys:** `+` / `=` to Zoom In, `-` / `_` to Zoom Out, `Z` to Reset Zoom.
 
-### 🎥 11. OBS Studio Integration
+### 🎥 10. OBS Studio Integration
 * **One-Click Screen Mode:** Hides all application UI leaving only the avatar stage.
-* **Auto-Fading Control Pill:** Streamer controls fade out after 3 seconds of cursor inactivity.
 * **URL Parameter Integration:** Add `?obs=true&bg=transparent` or `?obs=true&bg=chroma` directly to OBS Browser Source for zero-configuration integration.
 
 ---
@@ -121,13 +108,13 @@
 ### Prerequisites
 * [Bun](https://bun.sh) (v1.2+ or v1.3+) installed.
 * Modern Web Browser with WebGL support (Google Chrome, Microsoft Edge, Brave).
-* Standard webcam (720p 30fps recommended).
+* Standard webcam (720p 30fps recommended) or smartphone camera via Iriun Webcam / DroidCam.
 
 ### Installation & Run
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/mirunova-live.git
+git clone https://github.com/RifkyA911/mirunova-live.git
 cd mirunova-live
 
 # Install dependencies with Bun
@@ -192,19 +179,20 @@ bun run build
 ## 🏗️ Architecture
 
 ```
-[Webcam Stream]
+[Webcam Stream] ─────────────► [Audio Microphone Stream]
+       │                                     │
+       ▼                                     ▼
+[MediaPipe Vision (WASM SIMD)]       [Web Audio API DSP Engine]
+       │                             (Gain, EQ, VU, Models, Test Buffer)
+       ▼                                     │
+[Rigging Solver & Speech Boost]              ▼
+(Yaw/Pitch/Roll, Eyes, Mouth, Hands)  [Audio Volume & Lip-Sync]
+       │                                     │
+       ▼                                     ▼
+[Lerp Smoother & Deadzone Filter] ◄──────────┘
        │
        ▼
-[MediaPipe Vision (WASM / WebGL)] ──► 478 Face Mesh & 21 Hand Landmarks
-       │
-       ▼
-[Mathematical Rigging Solver]     ──► Yaw/Pitch/Roll, Eyes, Mouth, Hands, Gestures
-       │
-       ▼
-[Lerp Smoother & Deadzone Filter] ──► Jitter & Drift Elimination
-       │
-       ▼
-[Rigging Multiplexer]             ◄── Manual Accordion Sliders Override
+[Rigging Multiplexer] ◄── Manual Sliders Override
        │
        ▼
 ┌─────────────────────────────────┴─────────────────────────────────┐
@@ -219,7 +207,15 @@ bun run build
 ## 🔒 Zero-Cost & Privacy Mandate
 
 * **100% Free & Open Source:** Zero subscription fees, zero watermark charges, zero cloud API tokens.
-* **Local On-Device Execution:** All computer vision calculations execute entirely in your client browser via WebAssembly. No video frames or biometric data ever leave your computer.
+* **Local On-Device Execution:** All computer vision and audio calculations execute entirely in your client browser via WebAssembly and WebGL. No video frames, biometric data, or audio packets ever leave your computer.
+* **Commercial Rights:** Free for commercial live streaming across YouTube, Twitch, Kick, Bilibili, and TikTok.
+
+---
+
+## 👨‍💻 Credits & Creator
+
+* **Lead Architect & Creator:** [Rifky (@RifkyA911)](https://github.com/RifkyA911)
+* **Repository:** [https://github.com/RifkyA911/mirunova-live](https://github.com/RifkyA911/mirunova-live)
 
 ---
 

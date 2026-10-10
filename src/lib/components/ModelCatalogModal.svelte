@@ -23,6 +23,7 @@
 		Heart,
 		FolderOpen
 	} from 'lucide-svelte';
+	import { playSfx } from '#lib/core/sfx';
 
 	let customUrlInput = $state<string>('');
 	let glbFileInput = $state<HTMLInputElement>();
@@ -59,12 +60,14 @@
 	});
 
 	function handleSelect2DModel(m: typeof MODEL_CATALOG[0]) {
+		playSfx('click');
 		rigging.avatarEngine = 'live2d';
 		rigging.setModel(m.id, m.name, m.url);
 		rigging.showToast(`Memuat avatar 2D: ${m.name}`);
 	}
 
 	function handleSelect3DModel(m: Model3DItem) {
+		playSfx('click');
 		rigging.avatarEngine = '3d';
 		rigging.selected3DModelId = m.id;
 		rigging.modelName = m.name;

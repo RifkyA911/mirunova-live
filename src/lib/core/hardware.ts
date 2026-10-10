@@ -30,7 +30,8 @@ export function getCachedGpu(): { gpuVendor: string; gpuRenderer: string } {
 	if (typeof window !== 'undefined') {
 		try {
 			const canvas = document.createElement('canvas');
-			const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl')) as WebGLRenderingContext | null;
+			const opts = { powerPreference: 'high-performance' as const };
+			const gl = (canvas.getContext('webgl2', opts) || canvas.getContext('webgl', opts)) as WebGLRenderingContext | null;
 			if (gl) {
 				const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
 				if (debugInfo) {

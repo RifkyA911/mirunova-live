@@ -60,6 +60,8 @@ export class RiggingStore {
 	isObsModalOpen = $state<boolean>(false);
 	isSettingsModalOpen = $state<boolean>(false);
 	isShortcutModalOpen = $state<boolean>(false);
+	isAboutModalOpen = $state<boolean>(false);
+	isTosModalOpen = $state<boolean>(false);
 	isDockHidden = $state<boolean>(false);
 	resetTransformSignal = $state<number>(0);
 	isCameraActive = $state<boolean>(false);
@@ -92,6 +94,10 @@ export class RiggingStore {
 	holdPoseOnLoss = $state<boolean>(true);     // hold pose on 1-frame drop & smooth decay
 	invertPitch = $state<boolean>(false);       // Invert Y (menunduk / mendongak)
 	invertYaw = $state<boolean>(false);         // Invert X (kiri / kanan)
+	mouthSensitivity = $state<number>(1.2);     // 0.5 to 2.5 mouth responsiveness
+	mouthTrackingMode = $state<'normal' | 'high'>('normal'); // 'normal' | 'high' (Speech boost)
+	isSfxEnabled = $state<boolean>(true);       // UI sound effects toggle
+	sfxVolume = $state<number>(0.6);            // UI sound effects volume (0.0 to 1.0)
 
 	// Camera Hardware Preferences
 	cameraDeviceId = $state<string>('');
@@ -245,6 +251,10 @@ export class RiggingStore {
 			voiceFilter: this.voiceFilter,
 			customThemeConfig: this.customThemeConfig,
 			zoomLevel: this.zoomLevel,
+			mouthSensitivity: this.mouthSensitivity,
+			mouthTrackingMode: this.mouthTrackingMode,
+			isSfxEnabled: this.isSfxEnabled,
+			sfxVolume: this.sfxVolume,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -311,6 +321,10 @@ export class RiggingStore {
 		if (saved.voiceFilter) this.voiceFilter = saved.voiceFilter as any;
 		if (saved.customThemeConfig) this.customThemeConfig = saved.customThemeConfig;
 		if (saved.zoomLevel !== undefined) this.zoomLevel = saved.zoomLevel;
+		if (saved.mouthSensitivity !== undefined) this.mouthSensitivity = saved.mouthSensitivity;
+		if (saved.mouthTrackingMode) this.mouthTrackingMode = saved.mouthTrackingMode;
+		if (saved.isSfxEnabled !== undefined) this.isSfxEnabled = saved.isSfxEnabled;
+		if (saved.sfxVolume !== undefined) this.sfxVolume = saved.sfxVolume;
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 
@@ -323,10 +337,48 @@ export class RiggingStore {
 			this.isObsModalOpen = false;
 			this.isSettingsModalOpen = false;
 			this.isShortcutModalOpen = false;
+			this.isAboutModalOpen = false;
+			this.isTosModalOpen = false;
 			this.showToast(i18n.t('gui_locked_toast'));
 		} else {
 			this.showToast(i18n.t('gui_unlocked_toast'));
 		}
+	}
+
+	toggleAboutModal(open?: boolean) {
+		this.isAboutModalOpen = open !== undefined ? open : !this.isAboutModalOpen;
+		if (this.isAboutModalOpen) {
+			this.isTosModalOpen = false;
+			this.isSettingsModalOpen = false;
+		}
+	}
+
+	toggleTosModal(open?: boolean) {
+		this.isTosModalOpen = open !== undefined ? open : !this.isTosModalOpen;
+		if (this.isTosModalOpen) {
+			this.isAboutModalOpen = false;
+			this.isSettingsModalOpen = false;
+		}
+	}
+
+	setMouthTrackingMode(mode: 'normal' | 'high') {
+		this.mouthTrackingMode = mode;
+		this.persist();
+	}
+
+	setMouthSensitivity(val: number) {
+		this.mouthSensitivity = Math.max(0.5, Math.min(2.5, val));
+		this.persist();
+	}
+
+	setSfxEnabled(enabled: boolean) {
+		this.isSfxEnabled = enabled;
+		this.persist();
+	}
+
+	setSfxVolume(vol: number) {
+		this.sfxVolume = Math.max(0.0, Math.min(1.0, vol));
+		this.persist();
 	}
 
 	toggleObsMode(enable?: boolean) {

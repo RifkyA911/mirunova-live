@@ -89,3 +89,26 @@
 * Toggle layer canvas 2D transparan yang menggambar garis titik jaring wajah (MediaPipe 468 mesh).
 * Indikator FPS tracking (misal: `Tracking: 60 FPS | 16ms`).
 * Tombol collapse/minimize agar tidak menghalangi saat streaming.
+
+### 4.5 Daylight & Pastel Color System
+* Mendukung 4 palet Daylight yang lembut dan kontras tinggi:
+  * **Sakura Light Pink (Evanescia):** `#FA7FC2` (coral pink highlight), `#F5B7CE` (pale sakura pink), permukaan putih susu `#FFF5F8`.
+  * **Matcha Light Green:** `#16A34A` (botanical green), `#BBF7D0` (mint borders), permukaan `#F4FBF6`.
+  * **Light Cyan Sea:** `#06B6D4` (aqua cyan), `#CFFAFE` (sea spray borders), permukaan `#F0FDFA`.
+  * **Light Crisp:** `#0284C7` (sky blue), `#E0F2FE` (crisp slate), permukaan `#FFFFFF`.
+
+### 4.6 Procedural Web Audio Synthesizer (UI SFX)
+* Zero-latency feedback audio tanpa file eksternal (menggunakan `AudioContext` sintetis):
+  * `click`: 440Hz short triangle blip (40ms).
+  * `camera`: Frequency glide upward 300Hz -> 600Hz (120ms).
+  * `calibrate`: Two-tone harmonic chime 523Hz -> 784Hz (250ms).
+  * `shutter`: White-noise burst with bandpass filter (80ms).
+  * `toggle`: Pitch toggle indicator 350Hz / 500Hz (60ms).
+
+### 4.7 Dedicated Studio Modals
+* **About Modal (`AboutModal.svelte`):** Menampilkan arsitektur studio, badge Open Source, atribusi kreator **Rifky (@RifkyA911)**, tombol repo GitHub, dan tombol instalasi desktop PWA.
+* **Terms of Service Modal (`TosModal.svelte`):** Menampilkan Piagam Privasi 100% Client-Side dan Hak Siaran Komersial VTuber tanpa royalti.
+
+### 4.8 PWA Desktop App Shell
+* Ikon vektor SVG bertema anime cat visor di `static/favicon.svg`.
+* Konfigurasi `manifest.webmanifest` untuk standalone display mode dengan theme color cyan `#06b6d4`.

@@ -10,6 +10,7 @@
 		User,
 		Smile
 	} from 'lucide-svelte';
+	import { playSfx } from '#lib/core/sfx';
 
 	let isExpanded = $state<boolean>(false);
 	let isHovered = $state<boolean>(false);
@@ -38,7 +39,10 @@
 			<!-- 1. Zoom In (+) -->
 			<button
 				type="button"
-				onclick={() => rigging.zoomIn()}
+				onclick={() => {
+					playSfx('click');
+					rigging.zoomIn();
+				}}
 				title="Zoom In [+ / =]"
 				class="p-2 rounded-xl text-zinc-300 hover:text-cyan-300 hover:bg-cyan-500/15 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
 				aria-label="Zoom In"
@@ -49,7 +53,10 @@
 			<!-- 2. Zoom Level Percentage (Clickable to Reset) -->
 			<button
 				type="button"
-				onclick={() => rigging.resetZoom()}
+				onclick={() => {
+					playSfx('click');
+					rigging.resetZoom();
+				}}
 				title="{i18n.t('reset_confirm')} [0]"
 				class="px-1.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer {
 					isHovered || isExpanded
@@ -64,7 +71,10 @@
 			<!-- 3. Zoom Out (-) -->
 			<button
 				type="button"
-				onclick={() => rigging.zoomOut()}
+				onclick={() => {
+					playSfx('click');
+					rigging.zoomOut();
+				}}
 				title="Zoom Out [-]"
 				class="p-2 rounded-xl text-zinc-300 hover:text-cyan-300 hover:bg-cyan-500/15 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
 				aria-label="Zoom Out"
@@ -79,7 +89,10 @@
 				<!-- Quick Reset Center Button -->
 				<button
 					type="button"
-					onclick={() => rigging.resetZoom()}
+					onclick={() => {
+						playSfx('click');
+						rigging.resetZoom();
+					}}
 					title="Reset Center & Scale [0]"
 					class="p-2 rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-amber-500/15 border border-transparent hover:border-amber-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
 					aria-label="Reset Position and Zoom"

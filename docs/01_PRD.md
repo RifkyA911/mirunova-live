@@ -42,15 +42,35 @@ Aplikasi pelacak avatar Live2D tradisional (seperti VTube Studio atau PrprLive) 
    * **Mode B: Manual Rigging Test (Override Mode)** — Memungkinkan pengguna mematikan webcam dan menggeser slider secara manual untuk memvalidasi rigging model, range parameter, dan deformasi mesh.
    * **Mode C: Landmark Mesh Preview** — Menampilkan overlay jaring kawat (wireframe mesh) wajah pada video webcam mini untuk memantau akurasi landmark.
 4. **Model Management**
-   * Dilengkapi model sampel gratis bawaan.
+   * Dilengkapi model sampel gratis bawaan (Haru Greeter gesture-rigged, Mihari, Vivian, Hiyori, Mao, Shizuku, Wanko).
    * Mendukung pemuatan model custom (.zip atau pilih folder model yang berisi `.model3.json`, `.moc3`, dan textures).
+   * Integrasi kurasi katalog model BOOTH.pm.
+
+### 3.2 Advanced Studio Capabilities
+5. **Discrete GPU WebGL Acceleration & Hardware Routing**
+   * WebGL context di Three.js dan Pixi.js meminta `powerPreference: 'high-performance'`.
+   * Panduan konfigurasi eksplisit Windows Graphics Settings & NVIDIA Control Panel untuk laptop dual-GPU.
+   * Telemetry hardware real-time (FPS, frame latency, GPU renderer unmasked, CPU threads).
+6. **Mouth Tracking Sensitivity & Speech Boost**
+   * Mode Speech Boost (1.65x multiplier + geometric lip separation fallback) untuk artikulasi responsif saat berbicara cepat atau berbisik.
+   * Slider sensitivitas bukaan mulut granular (0.5x s/d 2.5x).
+7. **Web Audio DSP Engine, Mic Test & Voice Changer**
+   * 8 preset DSP voice changer murni client-side Web Audio API.
+   * Modul uji mikrofon 4 detik dengan tombol uji suara asli dan suara DSP bebas feedback loop.
+8. **Procedural UI Sound Effects (SFX)**
+   * Efek audio sintetis Web Audio API tanpa file audio eksternal untuk klik, kamera, kalibrasi, shutter, dan pergantian tema.
+9. **Dedicated About & Terms of Service (ToS) Modals**
+   * Modal About mandiri dengan atribusi arsitek & pembuat **Rifky (@RifkyA911)** dan link repositori GitHub.
+   * Piagam Privasi 100% Client-Side dan Hak Siaran Komersial VTuber bebas royalti.
+10. **Progressive Web App (PWA) Desktop Ready**
+    * Dukungan instalasi aplikasi desktop standalone (PWA) dengan manifest, favicon SVG, dan service worker.
 
 ---
 
 ## 4. Non-Functional Requirements
-* **Performa:** Minimal 30–60 FPS stabil pada laptop dengan integrated GPU (Intel Iris Xe / AMD Radeon Vega).
+* **Performa:** Minimal 30–60 FPS stabil pada laptop dengan integrated GPU, dan 60+ FPS pada discrete GPU (NVIDIA/AMD).
 * **Zero Cost:** Tidak ada dependencies atau service yang memerlukan API key berbayar, credit card, atau sistem trial.
-* **Privasi:** Pemrosesan video 100% lokal di browser (tidak ada rekaman atau frame yang diunggah).
+* **Privasi:** Pemrosesan video dan audio 100% lokal di browser (zero data collection, zero telemetry).
 
 ---
 
@@ -58,3 +78,4 @@ Aplikasi pelacak avatar Live2D tradisional (seperti VTube Studio atau PrprLive) 
 * Latensi dari pergerakan wajah ke respons model < 50ms.
 * Waktu inisialisasi awal (load model + load model AI) < 3 detik pada koneksi internet standar.
 * 0 dropped frames yang disebabkan oleh Garbage Collection di rendering loop.
+* 100% lulus seluruh unit tests (44 passing tests).

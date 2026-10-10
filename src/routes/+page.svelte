@@ -10,11 +10,14 @@
 	import ObsModal from '#lib/components/ObsModal.svelte';
 	import SettingsModal from '#lib/components/SettingsModal.svelte';
 	import ShortcutGuideModal from '#lib/components/ShortcutGuideModal.svelte';
+	import AboutModal from '#lib/components/AboutModal.svelte';
+	import TosModal from '#lib/components/TosModal.svelte';
 	import ZoomControls from '#lib/components/ZoomControls.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
 	import { i18n } from '#lib/i18n/index.svelte';
+	import { playSfx } from '#lib/core/sfx';
 	import { Radio, X, Sparkles, Check, Lock } from 'lucide-svelte';
 
 	// OBS Mode auto-fade control
@@ -70,6 +73,8 @@
 				if (rigging.isObsModalOpen) rigging.isObsModalOpen = false;
 				if (rigging.isSettingsModalOpen) rigging.isSettingsModalOpen = false;
 				if (rigging.isShortcutModalOpen) rigging.isShortcutModalOpen = false;
+				if (rigging.isAboutModalOpen) rigging.isAboutModalOpen = false;
+				if (rigging.isTosModalOpen) rigging.isTosModalOpen = false;
 			} else if (e.key === ' ' || e.code === 'Space') {
 				e.preventDefault();
 				if (rigging.isCameraActive) tracker.stopCamera();
@@ -403,10 +408,11 @@
 			<button
 				type="button"
 				onclick={() => {
-					rigging.isSettingsModalOpen = true;
+					playSfx('modal');
+					rigging.toggleAboutModal(true);
 				}}
 				class="px-3.5 py-1.5 bg-zinc-950/85 backdrop-blur-xl border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-2xl hover:scale-105 hover:border-cyan-500/50 active:scale-95 transition-all cursor-pointer group text-left"
-				title="{i18n.t('settings_title')} [F2]"
+				title="{i18n.t('about_title')} • MiruNova Live"
 			>
 				<div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse group-hover:scale-125 transition-transform"></div>
 				<span class="text-xs font-bold tracking-wider text-zinc-100">
@@ -444,6 +450,12 @@
 
 		<!-- Comprehensive Keyboard Shortcuts Guide Modal -->
 		<ShortcutGuideModal />
+
+		<!-- Studio About & Creator Credits Modal -->
+		<AboutModal />
+
+		<!-- Studio Privacy Charter & Terms of Service Modal -->
+		<TosModal />
 	{/if}
 
 	<!-- 4. GUI Locked Floating Indicator & Unlock Button (Pojok Kiri Bawah, icon only, hover tooltip) -->

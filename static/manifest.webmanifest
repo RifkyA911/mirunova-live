@@ -3,16 +3,32 @@
   "short_name": "MiruNova Live",
   "description": "High-performance Web Live2D & 3D avatar tracking studio with zero setup and OBS Studio support.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#09090b",
   "theme_color": "#06b6d4",
+  "categories": ["entertainment", "video", "graphics", "utilities"],
   "icons": [
     {
       "src": "/favicon.svg",
-      "sizes": "any",
+      "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mulai Tracking",
+      "short_name": "Tracking",
+      "description": "Mulai pelacakan wajah & kamera langsung",
+      "url": "/?start=1"
+    },
+    {
+      "name": "OBS Stream Mode",
+      "short_name": "OBS Mode",
+      "description": "Mode layar transparan untuk OBS Studio",
+      "url": "/?obs=true&bg=transparent"
     }
   ]
 }

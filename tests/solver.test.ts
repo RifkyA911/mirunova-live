@@ -212,4 +212,30 @@ describe('solveFaceLandmarks', () => {
 		expect(inverted.pitch).toBeCloseTo(-normal.pitch, 3);
 		expect(inverted.yaw).toBeCloseTo(-normal.yaw, 3);
 	});
+
+	it('amplifies mouth opening when mouthTrackingMode is high and mouthSensitivity is increased', () => {
+		const landmarks = createMockLandmarks({
+			13: { x: 0.5, y: 0.495, z: 0 },
+			14: { x: 0.5, y: 0.505, z: 0 } // subtle vertical separation = 0.01
+		});
+		const blendshapes = new Map<string, number>([['jawOpen', 0.06]]);
+
+		const normalRes = solveFaceLandmarks(
+			landmarks,
+			blendshapes,
+			{ yaw: 0, pitch: 0, roll: 0 },
+			null,
+			{ mouthSensitivity: 1.0, mouthTrackingMode: 'normal' }
+		);
+
+		const speechBoostRes = solveFaceLandmarks(
+			landmarks,
+			blendshapes,
+			{ yaw: 0, pitch: 0, roll: 0 },
+			null,
+			{ mouthSensitivity: 1.8, mouthTrackingMode: 'high' }
+		);
+
+		expect(speechBoostRes.mouthOpen).toBeGreaterThan(normalRes.mouthOpen);
+	});
 });

@@ -28,6 +28,8 @@ export function solveFaceLandmarks(
 	const eyeBlinkLinked = config?.eyeBlinkLinked ?? false;
 	const invertPitch = config?.invertPitch ?? false;
 	const invertYaw = config?.invertYaw ?? false;
+	const mouthSensitivity = config?.mouthSensitivity ?? 1.2;
+	const isSpeechHigh = config?.mouthTrackingMode === 'high';
 
 	let rawYaw = 0;
 	let rawPitch = 0;
@@ -202,7 +204,22 @@ export function solveFaceLandmarks(
 	const mouthClose = blendshapesMap.get('mouthClose') ?? 0;
 	const mouthPucker = blendshapesMap.get('mouthPucker') ?? 0;
 	const mouthFunnel = blendshapesMap.get('mouthFunnel') ?? 0;
-	const mouthOpen = Math.max(0, Math.min(1, jawOpen * 1.5 + mouthFunnel * 0.5 - mouthClose * 0.7));
+
+	// Geometric lip separation fallback (landmarks 13 = upper inner lip, 14 = lower inner lip, 61 & 291 = corners)
+	let geometricMouthOpen = 0;
+	if (landmarks && landmarks[13] && landmarks[14] && landmarks[61] && landmarks[291]) {
+		const lipHeight = Math.hypot(landmarks[14].x - landmarks[13].x, landmarks[14].y - landmarks[13].y);
+		const lipWidth = Math.hypot(landmarks[291].x - landmarks[61].x, landmarks[291].y - landmarks[61].y) || 0.08;
+		const lipRatio = lipHeight / lipWidth;
+		if (lipRatio > 0.05) {
+			geometricMouthOpen = Math.min(1.0, (lipRatio - 0.05) * (isSpeechHigh ? 5.2 : 3.8));
+		}
+	}
+
+	const speechMultiplier = isSpeechHigh ? 1.65 : 1.0;
+	const effectiveMouthSens = Math.max(0.5, mouthSensitivity) * speechMultiplier;
+	const rawMouthOpen = (jawOpen * 1.5 * effectiveMouthSens) + (mouthFunnel * 0.5) - (mouthClose * 0.7);
+	const mouthOpen = Math.max(0, Math.min(1, Math.max(rawMouthOpen, geometricMouthOpen * effectiveMouthSens)));
 
 	const smileL = blendshapesMap.get('mouthSmileLeft') ?? 0;
 	const smileR = blendshapesMap.get('mouthSmileRight') ?? 0;

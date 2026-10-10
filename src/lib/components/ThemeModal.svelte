@@ -15,6 +15,7 @@
 		Eye,
 		Sliders
 	} from 'lucide-svelte';
+	import { playSfx } from '#lib/core/sfx';
 
 	let fileInputEl = $state<HTMLInputElement>();
 	let themeCategory = $state<'light' | 'dark' | 'custom'>('light');
@@ -81,7 +82,13 @@
 		}
 	];
 
+	function selectTheme(themeId: UITheme) {
+		playSfx('theme');
+		rigging.setUITheme(themeId);
+	}
+
 	function applyCustomPreset(preset: (typeof customPresets)[0]) {
+		playSfx('theme');
 		rigging.setCustomThemeColors({
 			bg: preset.bg,
 			surface: preset.surface,
@@ -238,7 +245,7 @@
 							{#each lightThemes as theme}
 								<button
 									type="button"
-									onclick={() => rigging.setUITheme(theme.id)}
+									onclick={() => selectTheme(theme.id)}
 									class="flex flex-col p-3 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] {
 										rigging.uiTheme === theme.id
 											? 'bg-zinc-900 border-cyan-400 text-white shadow-lg ring-2 ring-cyan-400/30'
@@ -278,7 +285,7 @@
 							{#each darkThemes as theme}
 								<button
 									type="button"
-									onclick={() => rigging.setUITheme(theme.id)}
+									onclick={() => selectTheme(theme.id)}
 									class="flex flex-col p-3 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] {
 										rigging.uiTheme === theme.id
 											? 'bg-zinc-900 border-cyan-500 text-white shadow-lg ring-2 ring-cyan-500/30'

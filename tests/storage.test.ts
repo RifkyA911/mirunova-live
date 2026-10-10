@@ -106,7 +106,11 @@ describe('Persistent Configuration Storage', () => {
 			invertYaw: true,
 			framingMode: 'closeup',
 			isSquareFrameActive: true,
-			voiceFilter: 'pitch-high'
+			voiceFilter: 'pitch-high',
+			mouthSensitivity: 1.8,
+			mouthTrackingMode: 'high',
+			isSfxEnabled: true,
+			sfxVolume: 0.65
 		});
 
 		const loaded = loadPreferences();
@@ -120,5 +124,9 @@ describe('Persistent Configuration Storage', () => {
 		expect(loaded?.framingMode).toBe('closeup');
 		expect(loaded?.isSquareFrameActive).toBe(true);
 		expect(loaded?.voiceFilter).toBe('pitch-high');
+		expect(loaded?.mouthSensitivity).toBe(1.8);
+		expect(loaded?.mouthTrackingMode).toBe('high');
+		expect(loaded?.isSfxEnabled).toBe(true);
+		expect(loaded?.sfxVolume).toBe(0.65);
 	});
 });

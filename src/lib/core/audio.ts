@@ -411,6 +411,157 @@ class VoiceEngine {
 			}
 		}
 	}
+
+	// ==========================================
+	// MIC TEST & VOICE CONVERSION TEST ENGINE
+	// ==========================================
+	private testAudioBuffer: AudioBuffer | null = null;
+	private testSourceNode: AudioBufferSourceNode | null = null;
+	private isRecordingTest = false;
+
+	async recordSample(deviceId?: string, durationSec: number = 4, onTick?: (left: number) => void): Promise<boolean> {
+		if (typeof window === 'undefined') return false;
+		if (this.isRecordingTest) return false;
+		this.isRecordingTest = true;
+
+		try {
+			if (!this.audioCtx) {
+				const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+				this.audioCtx = new AudioCtxClass();
+			}
+			if (this.audioCtx.state === 'suspended') {
+				await this.audioCtx.resume();
+			}
+
+			let streamToUse = this.micStream;
+			let ownsStream = false;
+
+			if (!streamToUse || !streamToUse.active) {
+				const constraints: MediaStreamConstraints = {
+					audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+					video: false
+				};
+				streamToUse = await navigator.mediaDevices.getUserMedia(constraints);
+				ownsStream = true;
+			}
+
+			const recorder = new MediaRecorder(streamToUse);
+			const chunks: Blob[] = [];
+
+			recorder.ondataavailable = (e) => {
+				if (e.data && e.data.size > 0) chunks.push(e.data);
+			};
+
+			const recordPromise = new Promise<boolean>((resolve) => {
+				recorder.onstop = async () => {
+					try {
+						const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+						const arrayBuf = await blob.arrayBuffer();
+						if (this.audioCtx) {
+							this.testAudioBuffer = await this.audioCtx.decodeAudioData(arrayBuf);
+							resolve(true);
+						} else {
+							resolve(false);
+						}
+					} catch (err) {
+						console.warn('VoiceEngine: Failed to decode recorded test sample:', err);
+						resolve(false);
+					} finally {
+						if (ownsStream) {
+							streamToUse?.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+						}
+						this.isRecordingTest = false;
+					}
+				};
+			});
+
+			recorder.start();
+			let secRemaining = durationSec;
+			if (onTick) onTick(secRemaining);
+
+			const interval = setInterval(() => {
+				secRemaining -= 1;
+				if (secRemaining > 0) {
+					if (onTick) onTick(secRemaining);
+				} else {
+					clearInterval(interval);
+					if (recorder.state === 'recording') {
+						recorder.stop();
+					}
+				}
+			}, 1000);
+
+			return await recordPromise;
+		} catch (err) {
+			console.warn('VoiceEngine: recordSample error:', err);
+			this.isRecordingTest = false;
+			return false;
+		}
+	}
+
+	hasRecordedSample(): boolean {
+		return this.testAudioBuffer !== null;
+	}
+
+	stopPlayback() {
+		if (this.testSourceNode) {
+			try {
+				this.testSourceNode.stop();
+				this.testSourceNode.disconnect();
+			} catch {}
+			this.testSourceNode = null;
+		}
+	}
+
+	playRawSample(onEnded?: () => void): boolean {
+		if (!this.testAudioBuffer || !this.audioCtx) return false;
+		this.stopPlayback();
+
+		try {
+			const source = this.audioCtx.createBufferSource();
+			source.buffer = this.testAudioBuffer;
+			source.connect(this.audioCtx.destination);
+			source.onended = () => {
+				this.testSourceNode = null;
+				if (onEnded) onEnded();
+			};
+			this.testSourceNode = source;
+			source.start(0);
+			return true;
+		} catch (err) {
+			console.warn('VoiceEngine: playRawSample error:', err);
+			return false;
+		}
+	}
+
+	playConvertedSample(onEnded?: () => void): boolean {
+		if (!this.testAudioBuffer || !this.audioCtx || !this.filterNode || !this.gainNode) return false;
+		this.stopPlayback();
+
+		try {
+			const source = this.audioCtx.createBufferSource();
+			source.buffer = this.testAudioBuffer;
+
+			// Route through active DSP filter chain directly to destination
+			source.connect(this.filterNode);
+			this.gainNode.connect(this.audioCtx.destination);
+
+			source.onended = () => {
+				this.testSourceNode = null;
+				try {
+					this.gainNode?.disconnect(this.audioCtx!.destination);
+				} catch {}
+				if (onEnded) onEnded();
+			};
+
+			this.testSourceNode = source;
+			source.start(0);
+			return true;
+		} catch (err) {
+			console.warn('VoiceEngine: playConvertedSample error:', err);
+			return false;
+		}
+	}
 }
 
 export const voice = new VoiceEngine();

@@ -31,7 +31,8 @@
 				antialias: true,
 				resolution: window.devicePixelRatio || 1,
 				autoDensity: true,
-				preserveDrawingBuffer: true
+				preserveDrawingBuffer: true,
+				powerPreference: 'high-performance'
 			});
 
 			containerEl.appendChild(app.view as HTMLCanvasElement);

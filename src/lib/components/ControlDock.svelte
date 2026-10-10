@@ -28,6 +28,7 @@
 		SlidersHorizontal,
 		Info
 	} from 'lucide-svelte';
+	import { playSfx } from '#lib/core/sfx';
 
 	let isLangMenuOpen = $state<boolean>(false);
 	let isDeviceMenuOpen = $state<boolean>(false);
@@ -68,9 +69,11 @@
 
 	async function toggleCamera() {
 		if (rigging.isCameraActive) {
+			playSfx('cameraOff');
 			tracker.stopCamera();
 		} else {
 			try {
+				playSfx('cameraOn');
 				await tracker.startCamera();
 				refreshDevices(false);
 			} catch (e: any) {
@@ -80,6 +83,7 @@
 	}
 
 	async function toggleMicrophone() {
+		playSfx('toggle');
 		rigging.isMicActive = !rigging.isMicActive;
 		if (rigging.isMicActive) {
 			const ok = await voice.start(rigging.audioDeviceId, (vol) => {
@@ -104,6 +108,7 @@
 	}
 
 	function handleCalibrate() {
+		playSfx('calibrate');
 		tracker.calibrate();
 	}
 </script>
@@ -581,6 +586,7 @@
 		<div class="group relative flex items-center justify-center">
 			<button
 				onclick={() => {
+					playSfx('modal');
 					rigging.toggleShortcutModal();
 					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
@@ -594,6 +600,31 @@
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				{i18n.t('shortcuts_title')} [F1 / ?]
+			</div>
+		</div>
+
+		<!-- 14. Dedicated Studio About & Creator Credits Modal Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					playSfx('modal');
+					rigging.toggleAboutModal();
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					rigging.isSettingsModalOpen = false;
+					isLangMenuOpen = false;
+					isDeviceMenuOpen = false;
+				}}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label={i18n.t('about_title')}
+			>
+				<Info class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('about_title')} • Rifky (@RifkyA911)
 			</div>
 		</div>
 

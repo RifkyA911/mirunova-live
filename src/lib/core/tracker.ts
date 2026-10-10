@@ -584,7 +584,9 @@ export class FaceTracker {
 							deadzone: rigging.deadzoneThreshold,
 							eyeBlinkLinked: rigging.eyeBlinkLinked,
 							invertPitch: rigging.invertPitch,
-							invertYaw: rigging.invertYaw
+							invertYaw: rigging.invertYaw,
+							mouthSensitivity: rigging.mouthSensitivity,
+							mouthTrackingMode: rigging.mouthTrackingMode
 						},
 						handData
 					);

@@ -43,6 +43,8 @@ export interface TrackingConfig {
 	eyeBlinkLinked: boolean;   // sync both eyes
 	invertPitch?: boolean;     // invert up/down head pitch (ndiluk / mendongak)
 	invertYaw?: boolean;       // invert left/right head yaw
+	mouthSensitivity?: number; // 0.5 to 2.5 (default 1.2)
+	mouthTrackingMode?: 'normal' | 'high'; // Normal vs High Speech Sensitivity
 }
 
 export type BackgroundStyle =

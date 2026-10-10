@@ -36,14 +36,77 @@
 		RefreshCw,
 		Sun,
 		Moon,
-		Wand2
+		Wand2,
+		Play,
+		Square as StopSquare,
+		Volume1,
+		Bell
 	} from 'lucide-svelte';
+	import { playSfx } from '#lib/core/sfx';
 
 	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'appearance' | 'storage' | 'about'>('perf');
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 	let storageUsageBytes = $state<number>(0);
 	let appearanceThemeCategory = $state<'light' | 'dark' | 'custom'>('light');
+
+	// Interactive Mic & Voice Conversion Test states
+	let isRecordingTest = $state<boolean>(false);
+	let testRecordSeconds = $state<number>(0);
+	let hasTestSample = $state<boolean>(false);
+	let isPlayingTest = $state<boolean>(false);
+	let testPlaybackMode = $state<'raw' | 'converted' | null>(null);
+
+	async function handleRecordSample() {
+		if (isRecordingTest) return;
+		isRecordingTest = true;
+		testRecordSeconds = 4;
+		hasTestSample = false;
+		testPlaybackMode = null;
+		playSfx('toggle');
+
+		const ok = await voice.recordSample(rigging.audioDeviceId, 4, (remaining) => {
+			testRecordSeconds = remaining;
+		});
+
+		isRecordingTest = false;
+		hasTestSample = ok;
+		if (ok) {
+			playSfx('success');
+			rigging.showToast('✓ ' + i18n.t('mic_record_done'));
+		} else {
+			rigging.showToast('Gagal merekam sampel mikrofon');
+		}
+	}
+
+	function handlePlayRawSample() {
+		if (!hasTestSample) return;
+		playSfx('click');
+		isPlayingTest = true;
+		testPlaybackMode = 'raw';
+		voice.playRawSample(() => {
+			isPlayingTest = false;
+			testPlaybackMode = null;
+		});
+	}
+
+	function handlePlayConvertedSample() {
+		if (!hasTestSample) return;
+		playSfx('click');
+		isPlayingTest = true;
+		testPlaybackMode = 'converted';
+		voice.playConvertedSample(() => {
+			isPlayingTest = false;
+			testPlaybackMode = null;
+		});
+	}
+
+	function handleStopTestPlayback() {
+		voice.stopPlayback();
+		isPlayingTest = false;
+		testPlaybackMode = null;
+		playSfx('click');
+	}
 
 	// Group themes by category
 	const lightThemes = $derived(
@@ -305,6 +368,10 @@
 			audioDeviceId: rigging.audioDeviceId,
 			micGain: rigging.micGain,
 			voiceFilter: rigging.voiceFilter,
+			mouthSensitivity: rigging.mouthSensitivity,
+			mouthTrackingMode: rigging.mouthTrackingMode,
+			isSfxEnabled: rigging.isSfxEnabled,
+			sfxVolume: rigging.sfxVolume,
 			currentLocale: i18n.currentLocale
 		});
 
@@ -341,6 +408,10 @@
 				if (parsed.deadzoneThreshold !== undefined) rigging.deadzoneThreshold = parsed.deadzoneThreshold;
 				if (parsed.invertPitch !== undefined) rigging.invertPitch = parsed.invertPitch;
 				if (parsed.invertYaw !== undefined) rigging.invertYaw = parsed.invertYaw;
+				if (parsed.mouthSensitivity !== undefined) rigging.mouthSensitivity = parsed.mouthSensitivity;
+				if (parsed.mouthTrackingMode !== undefined) rigging.mouthTrackingMode = parsed.mouthTrackingMode;
+				if (parsed.isSfxEnabled !== undefined) rigging.isSfxEnabled = parsed.isSfxEnabled;
+				if (parsed.sfxVolume !== undefined) rigging.sfxVolume = parsed.sfxVolume;
 				if (parsed.framingMode) rigging.framingMode = parsed.framingMode as any;
 				if (parsed.isSquareFrameActive !== undefined) rigging.isSquareFrameActive = parsed.isSquareFrameActive;
 				if (parsed.currentLocale) i18n.setLocale(parsed.currentLocale as any);
@@ -555,26 +626,51 @@
 
 						<!-- GPU Architecture & Optimization Guide -->
 						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-								<Cpu class="w-4 h-4 text-emerald-400" />
-								<span>{i18n.t('gpu_info_title')}</span>
-							</h3>
+							<div class="flex items-center justify-between">
+								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
+									<Cpu class="w-4 h-4 text-emerald-400" />
+									<span>{i18n.t('gpu_info_title')}</span>
+								</h3>
+								<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
+									WebGL High-Perf Enabled
+								</span>
+							</div>
 
 							<p class="text-xs text-zinc-400 leading-relaxed">
 								{i18n.t('gpu_info_desc')}
 							</p>
 
 							<!-- Factual Windows Guide for Dedicated GPU -->
-							<div class="p-4 rounded-xl bg-zinc-950/90 border border-zinc-800 space-y-2">
-								<span class="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-									<Info class="w-3.5 h-3.5" />
-									{i18n.t('gpu_nvidia_guide_title')}
-								</span>
+							<div class="p-4 rounded-xl bg-zinc-950/90 border border-cyan-500/30 space-y-3">
+								<div class="flex items-center gap-2 text-xs font-bold text-cyan-300">
+									<Info class="w-4 h-4 text-cyan-400 shrink-0" />
+									<span>{i18n.t('gpu_nvidia_guide_title')}</span>
+								</div>
 								<p class="text-[11px] text-zinc-400 leading-relaxed">
 									{i18n.t('gpu_nvidia_guide_desc')}
 								</p>
-								<div class="p-2.5 rounded bg-zinc-900/80 border border-zinc-800/60 font-mono text-[10px] text-zinc-300">
-									Windows Settings &gt; System &gt; Display &gt; Graphics &gt; High Performance (NVIDIA GPU)
+
+								<div class="space-y-2 text-[11px] text-zinc-300">
+									<div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+										<div class="font-bold text-cyan-400 mb-0.5">Langkah 1: Windows Graphics Settings</div>
+										<div class="text-[10px] text-zinc-400">
+											Buka <span class="text-zinc-200 font-mono">Start &gt; Settings &gt; System &gt; Display &gt; Graphics</span>. Pilih browser Anda (Chrome/Edge/Brave), klik <strong>Options</strong>, lalu centang <strong>High performance (NVIDIA GeForce)</strong>.
+										</div>
+									</div>
+
+									<div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+										<div class="font-bold text-cyan-400 mb-0.5">Langkah 2: NVIDIA Control Panel</div>
+										<div class="text-[10px] text-zinc-400">
+											Buka <span class="text-zinc-200 font-mono">NVIDIA Control Panel &gt; Manage 3D Settings &gt; Program Settings</span>. Tambahkan browser Anda, lalu atur <em>Preferred graphics processor</em> ke <strong>High-performance NVIDIA processor</strong>.
+										</div>
+									</div>
+
+									<div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+										<div class="font-bold text-cyan-400 mb-0.5">Langkah 3: Hardware Acceleration Browser</div>
+										<div class="text-[10px] text-zinc-400">
+											Pastikan di pengaturan browser: <span class="text-zinc-200 font-mono">Settings &gt; System &gt; "Use graphics acceleration when available"</span> aktif (ON), lalu restart browser.
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -796,6 +892,50 @@
 										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
 									/>
 								</div>
+
+								<!-- Mouth Speech Sensitivity & Speech Boost -->
+								<div class="pt-3 border-t border-zinc-800/60 space-y-3">
+									<div class="flex items-center justify-between">
+										<div>
+											<span class="text-[11px] font-semibold text-zinc-300 block">{i18n.t('mouth_sensitivity_title')}</span>
+											<span class="text-[10px] text-zinc-500">{i18n.t('mouth_sensitivity_desc')}</span>
+										</div>
+										<button
+											onclick={() => {
+												rigging.mouthTrackingMode = rigging.mouthTrackingMode === 'high' ? 'normal' : 'high';
+												rigging.persist();
+												playSfx('toggle');
+											}}
+											class="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors cursor-pointer {
+												rigging.mouthTrackingMode === 'high'
+													? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
+													: 'bg-zinc-800 text-zinc-400 border-zinc-700'
+											}"
+										>
+											{rigging.mouthTrackingMode === 'high' ? '🔥 ' + i18n.t('speech_boost_high') : i18n.t('speech_boost_normal')}
+										</button>
+									</div>
+
+									<div>
+										<div class="flex justify-between mb-1">
+											<span class="text-zinc-400">{i18n.t('mouth_multiplier_label')}</span>
+											<span class="font-mono text-rose-400 font-bold">{(rigging.mouthSensitivity || 1.0).toFixed(1)}x</span>
+										</div>
+										<input
+											type="range"
+											min="0.5"
+											max="2.5"
+											step="0.1"
+											value={rigging.mouthSensitivity || 1.0}
+											oninput={(e) => {
+												const target = e.target as HTMLInputElement;
+												rigging.mouthSensitivity = parseFloat(target.value);
+												rigging.persist();
+											}}
+											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+										/>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -904,6 +1044,85 @@
 											<VolumeX class="w-4 h-4" />
 										{/if}
 									</button>
+								</div>
+							</div>
+
+							<!-- Interactive Mic Test & DSP Conversion Test Widget -->
+							<div class="p-3.5 bg-zinc-950/90 rounded-2xl border border-emerald-500/30 space-y-3">
+								<div class="flex items-center justify-between">
+									<h4 class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+										<Volume1 class="w-4 h-4 text-emerald-400" />
+										<span>{i18n.t('mic_test_title')}</span>
+									</h4>
+									{#if isRecordingTest}
+										<span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800 font-mono text-[10px] animate-pulse">
+											<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+											{testRecordSeconds}s Rekam...
+										</span>
+									{:else if hasTestSample}
+										<span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono text-[10px]">
+											Sample 4s Tersimpan
+										</span>
+									{/if}
+								</div>
+
+								<p class="text-[10px] text-zinc-400 leading-relaxed">
+									{i18n.t('mic_test_desc')}
+								</p>
+
+								<!-- Action Buttons -->
+								<div class="space-y-2">
+									{#if !isRecordingTest}
+										<button
+											onclick={handleRecordSample}
+											class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+										>
+											<Mic class="w-3.5 h-3.5 text-emerald-400" />
+											<span>{hasTestSample ? 'Rekam Ulang Sampel 4 Detik' : i18n.t('mic_record_btn')}</span>
+										</button>
+									{:else}
+										<div class="w-full py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 rounded-xl text-xs font-bold text-center animate-pulse">
+											Sedang Merekam Suara... Bicara sekarang! ({testRecordSeconds}s)
+										</div>
+									{/if}
+
+									{#if hasTestSample}
+										<div class="grid grid-cols-2 gap-2 pt-1">
+											<button
+												onclick={handlePlayRawSample}
+												disabled={isPlayingTest && testPlaybackMode === 'raw'}
+												class="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 rounded-xl text-[11px] font-medium transition-colors cursor-pointer disabled:opacity-50"
+											>
+												<Play class="w-3 h-3 text-cyan-400" />
+												<span>{i18n.t('mic_play_raw')}</span>
+											</button>
+
+											<button
+												onclick={handlePlayConvertedSample}
+												disabled={isPlayingTest && testPlaybackMode === 'converted'}
+												class="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/40 rounded-xl text-[11px] font-medium transition-colors cursor-pointer disabled:opacity-50"
+											>
+												<Sparkles class="w-3 h-3 text-pink-400" />
+												<span>{i18n.t('mic_play_dsp')}</span>
+											</button>
+										</div>
+
+										{#if isPlayingTest}
+											<div class="flex items-center justify-between pt-1">
+												<span class="text-[10px] text-zinc-400 flex items-center gap-1 font-mono">
+													<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+													Playing: {testPlaybackMode === 'raw' ? 'Hardware Mic Raw' : 'DSP Voice: ' + rigging.voiceFilter}
+												</span>
+												<button
+													onclick={handleStopTestPlayback}
+													class="flex items-center gap-1 text-[10px] text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
+												>
+													<StopSquare class="w-3 h-3" />
+													<span>Stop</span>
+												</button>
+											</div>
+										{/if}
+									{/if}
 								</div>
 							</div>
 						</div>
@@ -1362,6 +1581,62 @@
 								{/if}
 							</div>
 
+							<!-- Studio Sound Effects (Procedural SFX) Section -->
+							<div class="p-3.5 bg-zinc-950/80 rounded-2xl border border-cyan-500/30 space-y-3">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<Bell class="w-4 h-4 text-cyan-400" />
+										<span class="text-xs font-semibold text-zinc-200">{i18n.t('sfx_toggle_title')}</span>
+									</div>
+									<button
+										onclick={() => {
+											rigging.isSfxEnabled = !rigging.isSfxEnabled;
+											rigging.persist();
+											if (rigging.isSfxEnabled) playSfx('toggle');
+										}}
+										aria-label={i18n.t('sfx_toggle_title')}
+										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
+											rigging.isSfxEnabled ? 'bg-cyan-500' : 'bg-zinc-700'
+										}"
+									>
+										<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+											rigging.isSfxEnabled ? 'translate-x-4.5' : 'translate-x-1'
+										}"></span>
+									</button>
+								</div>
+
+								<p class="text-[10px] text-zinc-400 leading-relaxed">
+									{i18n.t('sfx_desc')}
+								</p>
+
+								{#if rigging.isSfxEnabled}
+									<div class="space-y-2 pt-1 border-t border-zinc-800/60">
+										<div class="flex items-center justify-between text-xs">
+											<span class="text-zinc-400">{i18n.t('sfx_volume')}</span>
+											<span class="font-mono text-cyan-400 font-bold">{Math.round(rigging.sfxVolume * 100)}%</span>
+										</div>
+										<input
+											type="range"
+											min="0.0"
+											max="1.0"
+											step="0.05"
+											bind:value={rigging.sfxVolume}
+											oninput={() => rigging.persist()}
+											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+										/>
+										<div class="flex justify-end pt-0.5">
+											<button
+												type="button"
+												onclick={() => playSfx('click')}
+												class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-cyan-300 border border-zinc-700/80 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer"
+											>
+												🔊 {i18n.t('sfx_test_btn')}
+											</button>
+										</div>
+									</div>
+								{/if}
+							</div>
+
 							<!-- Language Selection -->
 							<div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
 								<span class="text-xs text-zinc-400 font-medium block flex items-center gap-1.5">
@@ -1437,50 +1712,85 @@
 						</div>
 					</div>
 
-				<!-- TAB 6: ABOUT & TERMS OF SERVICE -->
+				<!-- TAB 6: ABOUT & TERMS OF SERVICE LAUNCHPAD -->
 				{:else if activeTab === 'about'}
 					<div class="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-6 max-w-3xl mx-auto animate-in fade-in duration-150">
-						<div class="flex items-center gap-3 pb-4 border-b border-zinc-800">
-							<div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-violet-500 flex items-center justify-center font-bold text-white shadow-lg">
-								MN
-							</div>
-							<div>
-								<h3 class="text-base font-bold text-zinc-100 flex items-center gap-2">
-									{i18n.t('about_title')}
-									<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/80 font-mono">
-										{i18n.t('about_foss_badge')}
-									</span>
-								</h3>
-								<p class="text-xs text-zinc-400">
-									Open Source Virtual Studio • MIT / Apache 2.0 License
-								</p>
-							</div>
-						</div>
+						<!-- Lead Creator & Studio Launch Card -->
+						<div class="p-5 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-cyan-500/40 shadow-xl space-y-4">
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+								<div class="flex items-center gap-3.5">
+									<div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 to-violet-600 flex items-center justify-center font-bold text-white shadow-lg text-lg">
+										<Sparkles class="w-6 h-6 text-white animate-pulse" />
+									</div>
+									<div>
+										<h3 class="text-base font-bold text-zinc-100 flex items-center gap-2">
+											{i18n.t('about_title')}
+											<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono font-medium">
+												v2.4.0 Studio
+											</span>
+										</h3>
+										<p class="text-xs text-zinc-400 mt-0.5">
+											Arsitek & Developer Utama: <strong class="text-cyan-300">Rifky (@RifkyA911)</strong>
+										</p>
+									</div>
+								</div>
 
-						<p class="text-xs text-zinc-300 leading-relaxed">
-							{i18n.t('about_desc')}
-						</p>
+								<button
+									onclick={() => {
+										playSfx('modal');
+										rigging.isSettingsModalOpen = false;
+										rigging.toggleAboutModal(true);
+									}}
+									class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-xl text-xs transition-all hover:scale-105 active:scale-95 shadow-md shadow-cyan-500/20 cursor-pointer"
+								>
+									Buka Studio About &amp; Kredit Penuh &rarr;
+								</button>
+							</div>
 
-						<!-- Privacy Policy & Zero Data Collection -->
-						<div class="p-4 rounded-2xl bg-zinc-950/80 border border-emerald-500/30 space-y-2">
-							<h4 class="text-xs font-bold text-emerald-400 flex items-center gap-2">
-								<ShieldCheck class="w-4 h-4" />
-								<span>{i18n.t('about_privacy_title')}</span>
-							</h4>
-							<p class="text-[11px] text-zinc-400 leading-relaxed">
-								{i18n.t('about_privacy_desc')}
+							<p class="text-xs text-zinc-300 leading-relaxed">
+								{i18n.t('about_desc')}
 							</p>
 						</div>
 
-						<!-- Licensing & Legal -->
-						<div class="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-2">
-							<h4 class="text-xs font-bold text-zinc-300 flex items-center gap-2">
-								<Info class="w-4 h-4 text-cyan-400" />
-								<span>{i18n.t('about_license_title')}</span>
-							</h4>
-							<p class="text-[11px] text-zinc-400 leading-relaxed">
-								{i18n.t('about_license_desc')}
-							</p>
+						<!-- Privacy Charter & Commercial VTuber Rights Launch Card -->
+						<div class="p-5 rounded-2xl bg-zinc-950/80 border border-emerald-500/30 shadow-lg space-y-4">
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+								<div class="flex items-center gap-3">
+									<div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+										<ShieldCheck class="w-5 h-5" />
+									</div>
+									<div>
+										<h4 class="text-sm font-bold text-emerald-300">
+											{i18n.t('tos_modal_title')}
+										</h4>
+										<p class="text-[11px] text-zinc-400 mt-0.5">
+											100% Client-Side Privacy Charter • Komersial Bebas Royalti Streaming VTuber
+										</p>
+									</div>
+								</div>
+
+								<button
+									onclick={() => {
+										playSfx('modal');
+										rigging.isSettingsModalOpen = false;
+										rigging.toggleTosModal(true);
+									}}
+									class="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+								>
+									Buka Privacy Charter &amp; ToS &rarr;
+								</button>
+							</div>
+
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-[11px] text-zinc-400">
+								<div class="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-2">
+									<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+									<span>Zero Biometric Telemetry (Local WASM)</span>
+								</div>
+								<div class="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-2">
+									<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+									<span>Hak Streaming YouTube / Twitch 100% Bebas</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				{/if}

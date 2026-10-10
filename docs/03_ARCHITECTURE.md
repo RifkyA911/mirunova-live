@@ -74,7 +74,7 @@ Nilai default $\alpha = 0.35$ (dapat diatur di settings).
 * Saat `isManualTestMode == true`, loop render mengambil nilai dari `overrideParams`, memungkinkan rigger menguji deformasi mesh secara presisi tanpa webcam.
 
 ### 2.5 Live2D Stage Renderer (`src/lib/components/CanvasStage.svelte`)
-* Menggunakan `pixi.js` Application dengan `backgroundAlpha: 0`.
+* Menggunakan `pixi.js` Application dengan `backgroundAlpha: 0` dan `powerPreference: 'high-performance'`.
 * Mengintegrasikan `Live2DModel.from(modelPath)` dari `pixi-live2d-display`.
 * Update loop berjalan di `app.ticker.add()` atau `requestAnimationFrame()`:
   ```ts
@@ -82,6 +82,27 @@ Nilai default $\alpha = 0.35$ (dapat diatur di settings).
     coreModel.setParameterValueById(id, value);
   }
   ```
+
+### 2.6 Discrete GPU Acceleration & Multi-GPU Routing
+* WebGL context di Three.js dan Pixi.js diinisialisasi dengan `powerPreference: 'high-performance'`.
+* Browser secara proaktif merequest akselerasi discrete GPU (NVIDIA GeForce / AMD Radeon).
+* Panduan sistem disediakan di UI untuk memetakan proses browser ke High-Performance GPU pada Windows Graphics Settings untuk mengeliminasi bottleneck integrated GPU.
+
+### 2.7 Web Audio DSP Pipeline & Voice Conversion Test (`src/lib/core/audio.ts`)
+* Arsitektur audio murni lokal menggunakan native browser `AudioContext`.
+* Pipeline perutean audio:
+  ```
+  [Microphone Input] -> [GainNode] -> [BiquadFilter / WaveShaper] -> [AnalyserNode (VU)]
+  ```
+* Recorder audio buffer 4 detik menggunakan `ScriptProcessorNode` / audio chunks lokal untuk pengujian kejelasan mic dan mendengar model voice changer tanpa feedback loop.
+
+### 2.8 Procedural UI Sound Effects Engine (`src/lib/core/sfx.ts`)
+* Zero external assets; seluruh SFX disintesis secara matematika menggunakan oscillator, gain node, dan noise buffer.
+* Berjalan dengan latensi 0ms dan tidak membebani network bandwidth.
+
+### 2.9 PWA & Offline Service Worker (`static/sw.js`)
+* Service worker murni client-side yang meng-cache aset statis dan skrip aplikasi.
+* Mendukung peluncuran cepat sebagai standalone window desktop app tanpa bilah URL browser.
 
 ---
 
@@ -92,4 +113,7 @@ Nilai default $\alpha = 0.35$ (dapat diatur di settings).
 3. **Tailwind CSS v4**: Utility styling modern tanpa runtime CSS-in-JS.
 4. **MediaPipe Tasks Vision**: Engine AI computer vision 100% lokal berbasis WebAssembly & WebGL shader.
 5. **Pixi.js v7 + pixi-live2d-display**: WebGL 2D renderer rendering model Live2D Cubism 3/4.
-6. **Zero-Cost Constraint**: Tidak diperbolehkan menyertakan dependensi yang meminta API token berbayar.
+6. **Three.js 0.186**: WebGL 3D avatar engine untuk model anime cat prosedural dan GLB.
+7. **Web Audio API**: Real-time DSP audio processing, volume monitoring, dan procedural sound synthesizer.
+8. **Zero-Cost Constraint**: Tidak diperbolehkan menyertakan dependensi yang meminta API token berbayar.
+

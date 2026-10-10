@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.11.0] - 2026-10-11
+
+### Added
+- **Dedicated About & Terms of Service (ToS) Modals:**
+  - Created standalone, high-end studio modal `AboutModal.svelte` prominently crediting lead architect & creator **Rifky (@RifkyA911)**, linking directly to GitHub repository (`https://github.com/RifkyA911/mirunova-live`), and offering PWA desktop installation.
+  - Created `TosModal.svelte` formalizing the **100% Client-Side Privacy Guarantee** (zero cloud telemetry, 100% local RAM/WebGL/WASM processing) and **Commercial VTuber Live Streaming Freedom** (100% royalty-free broadcast rights on YouTube, Twitch, Kick, Bilibili, TikTok).
+  - Dedicated access buttons on the Control Dock and Settings Modal.
+- **Discrete GPU WebGL Acceleration & Hardware Routing Guide:**
+  - Configured WebGL contexts in Three.js and Pixi.js stages with `powerPreference: 'high-performance'`.
+  - Added comprehensive step-by-step Windows Graphics Settings & NVIDIA Control Panel assignment cards in Settings Modal explaining dual-GPU routing for laptops/desktops.
+- **Mouth Tracking Sensitivity & Speech Boost Mode:**
+  - High sensitivity speech boost mode with 1.65x multiplier and geometric lip separation fallback to ensure responsive mouth movement during fast speech or whisper phonemes.
+  - Granular mouth sensitivity slider (0.5x to 2.5x) persisted in `RiggingStore` and `localStorage`.
+- **Interactive Microphone & DSP Voice Conversion Test:**
+  - 4-second audio recorder widget in Settings Modal allowing streamers to record voice samples.
+  - Zero-feedback-loop playback for "Raw Mic Voice" (hardware test) and "Converted DSP Voice" (active voice changer preview).
+- **Procedural UI Sound Effects (SFX) Engine:**
+  - Built zero-latency synthesized procedural Web Audio effects in `src/lib/core/sfx.ts` (clicks, camera toggle, neutral calibration, modal open/close, theme switch, shutter).
+  - Added SFX toggle and volume slider in Settings Modal Tab 4 with persistent configuration.
+- **Progressive Web App (PWA) Desktop Ready:**
+  - Added `static/favicon.svg` with cute anime cat visor motif.
+  - Enriched `manifest.webmanifest` and service worker `sw.js` for desktop app install prompts and standalone window operation.
+
+---
+
 ## [0.10.0] - 2026-10-10
 
 ### Added
