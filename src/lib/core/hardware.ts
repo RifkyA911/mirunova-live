@@ -17,7 +17,13 @@ export interface HardwareReport {
 	recommendation: string;
 }
 
-export function detectHardwareBenchmark(currentFps: number = 60): HardwareReport {
+let cachedGpuVendor: string | null = null;
+let cachedGpuRenderer: string | null = null;
+
+export function getCachedGpu(): { gpuVendor: string; gpuRenderer: string } {
+	if (cachedGpuVendor !== null && cachedGpuRenderer !== null) {
+		return { gpuVendor: cachedGpuVendor, gpuRenderer: cachedGpuRenderer };
+	}
 	let gpuRenderer = 'Standard WebGL';
 	let gpuVendor = 'Generic';
 
@@ -36,6 +42,14 @@ export function detectHardwareBenchmark(currentFps: number = 60): HardwareReport
 			// WebGL context blocked or unavailable
 		}
 	}
+
+	cachedGpuVendor = gpuVendor;
+	cachedGpuRenderer = gpuRenderer;
+	return { gpuVendor, gpuRenderer };
+}
+
+export function detectHardwareBenchmark(currentFps: number = 60): HardwareReport {
+	const { gpuVendor, gpuRenderer } = getCachedGpu();
 
 	const cpuCores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
 	const lowerGpu = gpuRenderer.toLowerCase();

@@ -151,6 +151,9 @@
 			} else if (e.key === '8') {
 				rigging.setUITheme('monochrome');
 				rigging.showToast('Tema: Monochrome');
+			} else if (e.key === '9') {
+				rigging.setUITheme('sakura-sweet');
+				rigging.showToast('Tema: Sakura Sweet (Evanescia)');
 			}
 		};
 
@@ -168,7 +171,7 @@
 
 		const isDefaultHex = [
 			'#09090b', '#f8fafc', '#03171a', '#1a0613', '#07150c',
-			'#030718', '#030712', '#18042b', '#130324', '#000000'
+			'#030718', '#030712', '#18042b', '#130324', '#000000', '#0c1021'
 		].includes(color);
 
 		if (isDefaultHex) {
@@ -179,6 +182,7 @@
 			else if (rigging.uiTheme === 'midnight') color = '#030718';
 			else if (rigging.uiTheme === 'synthwave') color = '#18042b';
 			else if (rigging.uiTheme === 'monochrome') color = '#000000';
+			else if (rigging.uiTheme === 'sakura-sweet') color = '#0c1021';
 			else color = '#09090b';
 		}
 
@@ -193,6 +197,7 @@
 			if (rigging.uiTheme === 'midnight') return `background: linear-gradient(135deg, ${color} 0%, #0c1a40 100%);`;
 			if (rigging.uiTheme === 'synthwave') return `background: linear-gradient(135deg, ${color} 0%, #4a044e 100%);`;
 			if (rigging.uiTheme === 'monochrome') return `background: linear-gradient(135deg, ${color} 0%, #1c1917 100%);`;
+			if (rigging.uiTheme === 'sakura-sweet') return `background: linear-gradient(135deg, ${color} 0%, #26112a 50%, #150a21 100%);`;
 			return `background: linear-gradient(135deg, ${color} 0%, #111827 100%);`;
 		}
 		if (style === 'mesh')
@@ -255,6 +260,8 @@
 			? 'theme-synthwave'
 			: rigging.uiTheme === 'monochrome'
 			? 'theme-monochrome'
+			: rigging.uiTheme === 'sakura-sweet'
+			? 'theme-sakura-sweet'
 			: 'theme-cyber'
 	}"
 >

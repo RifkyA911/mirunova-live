@@ -44,7 +44,7 @@
 		{ key: 'L', description: 'Kunci Layar & Mode Bersih (Clear GUI / Lock)', category: 'streaming' },
 		{ key: 'O', description: 'Toggle Mode Bersih Layar OBS Streamer', category: 'streaming' },
 		{ key: 'S', description: 'Ambil Screenshot Avatar & Download PNG', category: 'streaming' },
-		{ key: '1 - 8', description: 'Pilih Cepat 8 Tema (Cyber, Light, Cyan, Pink, Matcha, Mid, Synth, Mono)', category: 'streaming' }
+		{ key: '1 - 9', description: 'Pilih Cepat 9 Tema (Cyber, Light, Cyan, Pink, Matcha, Mid, Synth, Mono, Sakura Sweet)', category: 'streaming' }
 	];
 
 	onMount(() => {

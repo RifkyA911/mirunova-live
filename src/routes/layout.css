@@ -473,6 +473,58 @@
 	background-color: rgba(34, 197, 94, 0.22) !important;
 }
 
+/* --- 9. SAKURA SWEET (Evanescia HoYoverse: Coral Pink #FA7FC2, Pale Sakura #F5B7CE & Deep Navy) --- */
+.theme-sakura-sweet {
+	--theme-bg-base: #0c1021;
+	--theme-surface-950: rgba(14, 19, 39, 0.95);
+	--theme-surface-900: rgba(22, 30, 54, 0.93);
+	--theme-surface-800: rgba(30, 41, 74, 0.9);
+	--theme-border: rgba(245, 183, 206, 0.45);
+	--theme-border-hover: rgba(250, 127, 194, 0.85);
+	--theme-accent: #FA7FC2;
+	--theme-text-accent: #FA7FC2;
+	--theme-glow: 0 0 25px rgba(250, 127, 194, 0.35);
+}
+
+.theme-sakura-sweet nav,
+.theme-sakura-sweet aside,
+.theme-sakura-sweet header > button,
+.theme-sakura-sweet [role="dialog"],
+.theme-sakura-sweet [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+	box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(250, 127, 194, 0.15) !important;
+}
+
+.theme-sakura-sweet [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-sakura-sweet [class*="border-zinc-800"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-sakura-sweet .text-cyan-400,
+.theme-sakura-sweet .text-cyan-300 {
+	color: #FA7FC2 !important;
+}
+
+.theme-sakura-sweet .bg-cyan-500 {
+	background-color: #FA7FC2 !important;
+	color: #0c1021 !important;
+}
+
+.theme-sakura-sweet .border-cyan-500,
+.theme-sakura-sweet [class*="border-cyan-500"] {
+	border-color: #FA7FC2 !important;
+}
+
+.theme-sakura-sweet .bg-cyan-500\/10,
+.theme-sakura-sweet .bg-cyan-500\/20 {
+	background-color: rgba(250, 127, 194, 0.2) !important;
+}
+
 /* Streamer Square Frame with Organic Overflow Edge Fade */
 .square-frame-wrapper {
 	position: absolute;

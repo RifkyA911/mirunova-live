@@ -152,6 +152,8 @@ export const translations = {
 		gpu_nvidia_guide_title: 'How to Force Browser on NVIDIA Dedicated GPU in Windows',
 		gpu_nvidia_guide_desc: 'Open Windows Settings > System > Display > Graphics > Locate your browser (Chrome/Edge) > Options > Select "High Performance" (NVIDIA GPU).',
 		camera_device: 'Camera Device Selection',
+		active_camera_hardware: 'Active Hardware Camera:',
+		hand_tracking_perf_tip: 'Track hands with MediaPipe (Turn off to boost FPS/GPU on low-end hardware)',
 		camera_resolution: 'Camera Resolution',
 		refresh_devices: 'Rescan Devices',
 		mic_toggle: 'Toggle Microphone',
@@ -222,6 +224,7 @@ export const translations = {
 		theme_cyan: 'Neo Cyan',
 		theme_pink: 'Sakura Pink',
 		theme_matcha: 'Matcha Green',
+		theme_sakura_sweet: 'Sakura Sweet (Evanescia)',
 		swatch_palette: 'Color Palette Swatches',
 
 		// Phone Webcam
@@ -384,6 +387,8 @@ export const translations = {
 		gpu_nvidia_guide_title: 'Cara Mengarahkan Browser ke GPU NVIDIA di Windows',
 		gpu_nvidia_guide_desc: 'Buka Windows Settings > System > Display > Graphics > Cari browser (Chrome/Edge) > Options > Pilih "High Performance" (NVIDIA GPU).',
 		camera_device: 'Pilihan Perangkat Kamera',
+		active_camera_hardware: 'Hardware Kamera Aktif:',
+		hand_tracking_perf_tip: 'Deteksi gestur tangan MediaPipe (Nonaktifkan untuk hemat FPS/GPU spek rendah)',
 		camera_resolution: 'Resolusi Kamera',
 		refresh_devices: 'Pindai Ulang Perangkat',
 		mic_toggle: 'Toggle Mikrofon',
@@ -454,6 +459,7 @@ export const translations = {
 		theme_cyan: 'Neo Cyan (Biru Neon)',
 		theme_pink: 'Sakura Pink (Merah Muda)',
 		theme_matcha: 'Matcha Green (Hijau Alami)',
+		theme_sakura_sweet: 'Sakura Sweet (Evanescia)',
 		swatch_palette: 'Palet Warna Tema',
 
 		// Phone Webcam
@@ -616,6 +622,8 @@ export const translations = {
 		gpu_nvidia_guide_title: 'WindowsでブラウザにNVIDIA GPUを割り当てる方法',
 		gpu_nvidia_guide_desc: 'Windows設定 > システム > ディスプレイ > グラフィック > ブラウザを選択 > オプション > 「高パフォーマンス (NVIDIA GPU)」を選択してください。',
 		camera_device: 'カメラデバイス選択',
+		active_camera_hardware: '接続中のカメラハードウェア:',
+		hand_tracking_perf_tip: 'MediaPipe手追跡 (低スペックPCのGPU/FPS節約のためオフ可能)',
 		camera_resolution: 'カメラ解像度',
 		refresh_devices: 'デバイス再検出',
 		mic_toggle: 'マイク切替',
@@ -686,6 +694,7 @@ export const translations = {
 		theme_cyan: 'ネオ・シアン',
 		theme_pink: 'サクラ・ピンク',
 		theme_matcha: '抹茶グリーン',
+		theme_sakura_sweet: 'サクラスイート (Evanescia)',
 		swatch_palette: 'カラーパレット一覧',
 
 		// Phone Webcam

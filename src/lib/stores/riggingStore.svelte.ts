@@ -96,6 +96,7 @@ export class RiggingStore {
 	// Camera Hardware Preferences
 	cameraDeviceId = $state<string>('');
 	cameraResolution = $state<'1080p' | '720p' | '480p'>('720p');
+	activeCameraLabel = $state<string>('');
 
 	// Avatar Framing & Parts Visibility System
 	framingMode = $state<AvatarFramingMode>('half'); // 'full' | 'half' | 'closeup'

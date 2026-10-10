@@ -65,7 +65,8 @@ export type UITheme =
 	| 'light'
 	| 'cyan'
 	| 'pink'
-	| 'matcha';
+	| 'matcha'
+	| 'sakura-sweet';
 
 export interface ThemePalette {
 	id: UITheme;

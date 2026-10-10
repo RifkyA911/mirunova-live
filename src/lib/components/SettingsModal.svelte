@@ -538,6 +538,12 @@
 											<option value={cam.deviceId}>{cam.label}</option>
 										{/each}
 									</select>
+									{#if rigging.activeCameraLabel}
+										<div class="mt-2 p-2 bg-emerald-950/30 border border-emerald-800/40 rounded-xl text-[11px] text-emerald-300 flex items-center gap-2 font-mono">
+											<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+											<span class="truncate"><strong>{i18n.t('active_camera_hardware')}</strong> {rigging.activeCameraLabel}</span>
+										</div>
+									{/if}
 									<div class="mt-2 p-2.5 bg-cyan-950/30 border border-cyan-800/30 rounded-xl text-[11px] text-cyan-300/90 flex items-start gap-2 leading-relaxed">
 										<Info class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
 										<span><strong>Iriun / DroidCam / Windows Phone Link:</strong> {i18n.t('phone_webcam_tip')}</span>
@@ -559,7 +565,7 @@
 									</select>
 								</div>
 
-								<!-- Invert Pitch Y & Invert Yaw X Switches -->
+								<!-- Invert Pitch Y, Invert Yaw X & Hand Tracking Switches -->
 								<div class="pt-2 border-t border-zinc-800/60 space-y-3">
 									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
 										<div>
@@ -599,6 +605,27 @@
 										>
 											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
 												rigging.invertYaw ? 'translate-x-4.5' : 'translate-x-1'
+											}"></span>
+										</button>
+									</div>
+
+									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
+										<div>
+											<span class="font-semibold text-zinc-200 block">{i18n.t('hands_toggle')}</span>
+											<span class="text-[10px] text-zinc-500">{i18n.t('hand_tracking_perf_tip')}</span>
+										</div>
+										<button
+											onclick={() => {
+												rigging.enableHandTracking = !rigging.enableHandTracking;
+												rigging.persist();
+											}}
+											aria-label={i18n.t('hands_toggle')}
+											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
+												rigging.enableHandTracking ? 'bg-indigo-500' : 'bg-zinc-700'
+											}"
+										>
+											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+												rigging.enableHandTracking ? 'translate-x-4.5' : 'translate-x-1'
 											}"></span>
 										</button>
 									</div>

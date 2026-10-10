@@ -245,6 +245,13 @@
 							{/each}
 						</select>
 
+						{#if rigging.activeCameraLabel}
+							<div class="px-2 py-1 bg-emerald-950/30 border border-emerald-800/40 rounded-lg text-[10px] text-emerald-300 flex items-center gap-1.5 font-mono">
+								<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+								<span class="truncate"><strong>Hardware:</strong> {rigging.activeCameraLabel}</span>
+							</div>
+						{/if}
+
 						<div class="p-2 bg-cyan-950/30 border border-cyan-800/30 rounded-xl text-[10px] text-cyan-300/90 flex items-start gap-1.5 leading-relaxed">
 							<Info class="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
 							<span><strong>Iriun / DroidCam / Phone:</strong> {i18n.t('phone_webcam_tip')}</span>

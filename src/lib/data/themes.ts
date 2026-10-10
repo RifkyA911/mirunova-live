@@ -120,5 +120,20 @@ export const UI_THEMES: ThemePalette[] = [
 			text: '#ffffff',
 			ring: '#a1a1aa'
 		}
+	},
+	{
+		id: 'sakura-sweet',
+		name: 'Sakura Sweet (Evanescia)',
+		desc: 'HoYoverse Evanescia aesthetic: coral pink #FA7FC2, pale sakura #F5B7CE & deep celestial navy',
+		badge: 'Evanescia',
+		bgHex: '#0c1021',
+		palette: {
+			bg: '#0c1021',
+			surface: '#171e36',
+			accent: '#FA7FC2',
+			border: '#F5B7CE',
+			text: '#fff1f6',
+			ring: '#FA7FC2'
+		}
 	}
 ];

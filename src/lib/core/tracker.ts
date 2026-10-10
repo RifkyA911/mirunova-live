@@ -19,8 +19,10 @@ export class FaceTracker {
 
 	// Performance Tracking & Reusable State Buffers (Zero Allocation Mandate)
 	private frameCount = 0;
+	private frameLoopIndex = 0;
 	private lastFpsCalcTime = performance.now();
 	private consecutiveLostFrames = 0;
+	private cachedHandsList: Array<Array<{ x: number; y: number; z: number }>> = [];
 	private blendshapesMap = new Map<string, number>();
 	private handDataBuffer = {
 		leftDetected: false,
@@ -180,12 +182,10 @@ export class FaceTracker {
 		const videoConstraints: MediaTrackConstraints = {};
 
 		if (rigging.cameraDeviceId) {
-			// Specific device selected (e.g. Iriun Webcam, Windows Phone, DroidCam, OBS Virtual Camera)
-			// Crucial: DO NOT enforce facingMode! Virtual/Phone webcam drivers reject or fail constraint matching when facingMode: 'user' is set!
-			videoConstraints.deviceId = { ideal: rigging.cameraDeviceId };
+			// Specific device selected: enforce exact deviceId so browser NEVER hijacks with POCO F7 / phone camera
+			videoConstraints.deviceId = { exact: rigging.cameraDeviceId };
 			videoConstraints.width = { ideal: targetWidth };
 			videoConstraints.height = { ideal: targetHeight };
-			videoConstraints.frameRate = { ideal: 30 }; // 30fps is universally supported by virtual & phone drivers
 		} else {
 			// Default user webcam
 			videoConstraints.facingMode = 'user';
@@ -200,35 +200,33 @@ export class FaceTracker {
 				audio: false
 			});
 		} catch (err: any) {
-			// Fallback 1: Try relaxed resolution without frameRate constraint (fixes Iriun 720p/1080p fixed modes)
 			if (rigging.cameraDeviceId) {
+				// Fallback 1: Try exact deviceId without width/height constraints (allows device native resolution)
 				try {
 					this.stream = await navigator.mediaDevices.getUserMedia({
-						video: {
-							deviceId: { ideal: rigging.cameraDeviceId },
-							width: { ideal: targetWidth },
-							height: { ideal: targetHeight }
-						},
+						video: { deviceId: { exact: rigging.cameraDeviceId } },
 						audio: false
 					});
 				} catch (fallback1: any) {
-					// Fallback 2: Try basic camera deviceId only without dimension constraints
+					// Fallback 2: Try ideal deviceId if driver has strict exact constraint bug
 					try {
 						this.stream = await navigator.mediaDevices.getUserMedia({
 							video: { deviceId: { ideal: rigging.cameraDeviceId } },
 							audio: false
 						});
 					} catch (fallback2: any) {
-						// Fallback 3: Fall back to default camera
-						try {
-							this.stream = await navigator.mediaDevices.getUserMedia({
-								video: true,
-								audio: false
-							});
-						} catch (fallback3: any) {
-							err = fallback3;
-						}
+						err = fallback2;
 					}
+				}
+			} else {
+				// Default camera fallback
+				try {
+					this.stream = await navigator.mediaDevices.getUserMedia({
+						video: true,
+						audio: false
+					});
+				} catch (fallbackDef: any) {
+					err = fallbackDef;
 				}
 			}
 
@@ -236,12 +234,21 @@ export class FaceTracker {
 				if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
 					throw new Error('Izin kamera ditolak. Buka izin situs (klik ikon gembok di URL bar browser) lalu izinkan akses Kamera.');
 				} else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-					throw new Error('Perangkat kamera (webcam) tidak terdeteksi pada sistem Anda.');
+					throw new Error('Perangkat kamera (webcam) yang dipilih tidak ditemukan atau telah terputus.');
 				} else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
 					throw new Error('Kamera sedang digunakan oleh aplikasi lain (seperti OBS, Zoom, Discord, atau tab lain). Tutup aplikasi tersebut dan coba lagi.');
+				} else if (err.name === 'OverconstrainedError') {
+					throw new Error('Kamera yang dipilih tidak dapat memenuhi format yang diminta browser.');
 				}
 				throw new Error(`Gagal membuka kamera: ${err.message || err.name}`);
 			}
+		}
+
+		// Read and record the actual active hardware track label
+		const activeTrack = this.stream.getVideoTracks()[0];
+		if (activeTrack) {
+			rigging.activeCameraLabel = activeTrack.label || 'Webcam';
+			console.log('[FaceTracker] Active camera stream initialized:', activeTrack.label);
 		}
 
 		const trackerVid = this.getOrCreateTrackingVideo();
@@ -356,7 +363,8 @@ export class FaceTracker {
 
 		try {
 			await this.startCamera(prevVid, prevCanvas);
-			rigging.showToast('✓ Kamera berhasil dialihkan');
+			const label = rigging.activeCameraLabel || 'Webcam';
+			rigging.showToast(`✓ Kamera aktif: ${label}`);
 			return true;
 		} catch (err: any) {
 			console.error('Failed to switch camera:', err);
@@ -416,94 +424,116 @@ export class FaceTracker {
 				// 1. Face Landmark Tracking
 				const faceResults = this.landmarker.detectForVideo(vid, startTime);
 
-				// 2. Hand Landmark Tracking with Gesture & High-Five Recognition
+				// 2. Hand Landmark Tracking with Gesture & High-Five Recognition (Throttled to every 2nd frame for 50% GPU/CPU savings)
+				this.frameLoopIndex++;
+				const shouldRunHandInference = this.frameLoopIndex % 2 === 0;
+
+				let handsList: Array<Array<{ x: number; y: number; z: number }>> = this.cachedHandsList;
 				const handData = this.handDataBuffer;
-				handData.leftDetected = false;
-				handData.rightDetected = false;
-				handData.armLA = 0;
-				handData.armRA = 0;
-				handData.gestureL = 'none';
-				handData.gestureR = 'none';
-				handData.isHighFiveL = false;
-				handData.isHighFiveR = false;
-				let handsList: Array<Array<{ x: number; y: number; z: number }>> = [];
 
 				if (this.handLandmarker && rigging.enableHandTracking) {
-					try {
-						const handResults = this.handLandmarker.detectForVideo(vid, startTime);
-						if (handResults.landmarks && handResults.landmarks.length > 0) {
-							handsList = handResults.landmarks;
-							for (let i = 0; i < handResults.landmarks.length; i++) {
-								const handPts = handResults.landmarks[i];
-								const wrist = handPts[0];
-								const middleTip = handPts[12];
-								const handY = Math.min(wrist.y, middleTip.y);
+					if (shouldRunHandInference) {
+						try {
+							const handResults = this.handLandmarker.detectForVideo(vid, startTime);
+							if (handResults.landmarks && handResults.landmarks.length > 0) {
+								handsList = handResults.landmarks;
+								this.cachedHandsList = handsList;
+								handData.leftDetected = false;
+								handData.rightDetected = false;
+								handData.armLA = 0;
+								handData.armRA = 0;
+								handData.gestureL = 'none';
+								handData.gestureR = 'none';
+								handData.isHighFiveL = false;
+								handData.isHighFiveR = false;
 
-								// Natural mirror mapping:
-								// In mirrored camera preview (scale-x-[-1]), wrist.x < 0.5 appears on user's right side (screen right).
-								// In Live2D, screen right is the model's anatomical LEFT arm (ParamArmLA).
-								// wrist.x >= 0.5 appears on screen left, which is model's RIGHT arm (ParamArmRA).
-								const isScreenRight = wrist.x < 0.5;
+								for (let i = 0; i < handResults.landmarks.length; i++) {
+									const handPts = handResults.landmarks[i];
+									const wrist = handPts[0];
+									const middleTip = handPts[12];
+									const handY = Math.min(wrist.y, middleTip.y);
 
-								// Elevation calculation: 0 = top of screen, 1 = bottom
-								const elevation = Math.max(0, Math.min(1, (0.75 - handY) / 0.5));
-								let armAngle = elevation * 30;
+									// Natural mirror mapping:
+									// In mirrored camera preview (scale-x-[-1]), wrist.x < 0.5 appears on user's right side (screen right).
+									// In Live2D, screen right is the model's anatomical LEFT arm (ParamArmLA).
+									// wrist.x >= 0.5 appears on screen left, which is model's RIGHT arm (ParamArmRA).
+									const isScreenRight = wrist.x < 0.5;
 
-								// Finger extension Euclidean distance checks
-								const dist = (p1: { x: number; y: number }, p2: { x: number; y: number }) =>
-									Math.hypot(p1.x - p2.x, p1.y - p2.y);
+									// Elevation calculation: 0 = top of screen, 1 = bottom
+									const elevation = Math.max(0, Math.min(1, (0.75 - handY) / 0.5));
+									let armAngle = elevation * 30;
 
-								const isThumbOpen = dist(handPts[4], wrist) > dist(handPts[2], wrist) * 1.15;
-								const isIndexOpen = dist(handPts[8], wrist) > dist(handPts[6], wrist) * 1.15;
-								const isMiddleOpen = dist(handPts[12], wrist) > dist(handPts[10], wrist) * 1.15;
-								const isRingOpen = dist(handPts[16], wrist) > dist(handPts[14], wrist) * 1.15;
-								const isPinkyOpen = dist(handPts[20], wrist) > dist(handPts[18], wrist) * 1.15;
+									// Finger extension Euclidean distance checks
+									const dist = (p1: { x: number; y: number }, p2: { x: number; y: number }) =>
+										Math.hypot(p1.x - p2.x, p1.y - p2.y);
 
-								const openFingers = (isIndexOpen ? 1 : 0) + (isMiddleOpen ? 1 : 0) + (isRingOpen ? 1 : 0) + (isPinkyOpen ? 1 : 0) + (isThumbOpen ? 1 : 0);
-								const isOpenPalm = openFingers >= 4;
-								const isPeace = isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen;
-								const isFist = openFingers <= 1;
+									const isThumbOpen = dist(handPts[4], wrist) > dist(handPts[2], wrist) * 1.15;
+									const isIndexOpen = dist(handPts[8], wrist) > dist(handPts[6], wrist) * 1.15;
+									const isMiddleOpen = dist(handPts[12], wrist) > dist(handPts[10], wrist) * 1.15;
+									const isRingOpen = dist(handPts[16], wrist) > dist(handPts[14], wrist) * 1.15;
+									const isPinkyOpen = dist(handPts[20], wrist) > dist(handPts[18], wrist) * 1.15;
 
-								let gesture: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none' = 'none';
-								let isHighFive = false;
+									const openFingers = (isIndexOpen ? 1 : 0) + (isMiddleOpen ? 1 : 0) + (isRingOpen ? 1 : 0) + (isPinkyOpen ? 1 : 0) + (isThumbOpen ? 1 : 0);
+									const isOpenPalm = openFingers >= 4;
+									const isPeace = isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen;
+									const isFist = openFingers <= 1;
 
-								if (isOpenPalm && elevation > 0.35) {
-									gesture = 'high_five';
-									isHighFive = true;
-									armAngle = Math.max(armAngle, 28);
-								} else if (isOpenPalm) {
-									gesture = 'open';
-								} else if (isPeace) {
-									gesture = 'peace';
-								} else if (isFist) {
-									gesture = 'fist';
+									let gesture: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none' = 'none';
+									let isHighFive = false;
+
+									if (isOpenPalm && elevation > 0.35) {
+										gesture = 'high_five';
+										isHighFive = true;
+										armAngle = Math.max(armAngle, 28);
+									} else if (isOpenPalm) {
+										gesture = 'open';
+									} else if (isPeace) {
+										gesture = 'peace';
+									} else if (isFist) {
+										gesture = 'fist';
+									}
+
+									if (isScreenRight) {
+										handData.leftDetected = true;
+										handData.armLA = armAngle;
+										handData.gestureL = gesture;
+										handData.isHighFiveL = isHighFive;
+										rigging.isHandLDetected = true;
+										rigging.handLGesture = gesture;
+									} else {
+										handData.rightDetected = true;
+										handData.armRA = armAngle;
+										handData.gestureR = gesture;
+										handData.isHighFiveR = isHighFive;
+										rigging.isHandRDetected = true;
+										rigging.handRGesture = gesture;
+									}
 								}
-
-								if (isScreenRight) {
-									handData.leftDetected = true;
-									handData.armLA = armAngle;
-									handData.gestureL = gesture;
-									handData.isHighFiveL = isHighFive;
-									rigging.isHandLDetected = true;
-									rigging.handLGesture = gesture;
-								} else {
-									handData.rightDetected = true;
-									handData.armRA = armAngle;
-									handData.gestureR = gesture;
-									handData.isHighFiveR = isHighFive;
-									rigging.isHandRDetected = true;
-									rigging.handRGesture = gesture;
-								}
+							} else {
+								this.cachedHandsList = [];
+								handsList = [];
+								rigging.isHandLDetected = false;
+								rigging.isHandRDetected = false;
+								rigging.handLGesture = 'none';
+								rigging.handRGesture = 'none';
 							}
-						} else {
-							rigging.isHandLDetected = false;
-							rigging.isHandRDetected = false;
-							rigging.handLGesture = 'none';
-							rigging.handRGesture = 'none';
+						} catch {
+							// Hand detection frame error ignored
 						}
-					} catch {
-						// Hand detection frame error ignored
 					}
+				} else {
+					this.cachedHandsList = [];
+					handsList = [];
+					handData.leftDetected = false;
+					handData.rightDetected = false;
+					handData.armLA = 0;
+					handData.armRA = 0;
+					handData.gestureL = 'none';
+					handData.gestureR = 'none';
+					rigging.isHandLDetected = false;
+					rigging.isHandRDetected = false;
+					rigging.handLGesture = 'none';
+					rigging.handRGesture = 'none';
 				}
 
 				if (faceResults.faceLandmarks && faceResults.faceLandmarks.length > 0) {
@@ -583,8 +613,9 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamEyeLSmile', solved.eyeSmileL ?? 0);
 					rigging.setLiveValue('ParamEyeRSmile', solved.eyeSmileR ?? 0);
 
-					// Draw wireframe overlay only if PIP is visible and mesh is enabled (Anti-slop CPU saving)
-					if (this.canvasOverlay && rigging.showCameraPip && rigging.showLandmarksMesh) {
+					// Draw wireframe overlay only if PIP is visible, mesh is enabled, and NO blocking modal is active
+					const isModalOpen = rigging.isSettingsModalOpen || rigging.isModelModalOpen || rigging.isThemeModalOpen || rigging.isObsModalOpen || rigging.isShortcutModalOpen;
+					if (this.canvasOverlay && rigging.showCameraPip && rigging.showLandmarksMesh && !isModalOpen) {
 						this.drawLandmarksOverlay(landmarks, handsList);
 					}
 				} else {
@@ -611,7 +642,8 @@ export class FaceTracker {
 						}
 					}
 
-					if (this.canvasOverlay && rigging.showCameraPip) {
+					const isModalOpen = rigging.isSettingsModalOpen || rigging.isModelModalOpen || rigging.isThemeModalOpen || rigging.isObsModalOpen || rigging.isShortcutModalOpen;
+					if (this.canvasOverlay && rigging.showCameraPip && !isModalOpen) {
 						if (handsList.length > 0 && rigging.showLandmarksMesh) {
 							this.drawLandmarksOverlay([], handsList);
 						} else {
@@ -624,15 +656,18 @@ export class FaceTracker {
 				console.warn('[FaceTracker] Detection error:', err);
 			}
 
-			// Performance calculation (FPS & Latency)
+			// Performance calculation (FPS & Latency) - Throttled to 250ms to eliminate UI thrashing
 			this.frameCount++;
 			const now = performance.now();
-			rigging.latencyMs = Math.round(now - startTime);
+			const frameLatency = Math.round(now - startTime);
 
-			if (now - this.lastFpsCalcTime >= 1000) {
-				rigging.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsCalcTime));
-				this.frameCount = 0;
-				this.lastFpsCalcTime = now;
+			if (now - this.lastFpsCalcTime >= 250) {
+				rigging.latencyMs = frameLatency;
+				if (now - this.lastFpsCalcTime >= 1000) {
+					rigging.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsCalcTime));
+					this.frameCount = 0;
+					this.lastFpsCalcTime = now;
+				}
 			}
 		}
 
@@ -652,24 +687,37 @@ export class FaceTracker {
 
 		ctx.clearRect(0, 0, width, height);
 
-		// 1. Draw Face Landmarks (Cyan)
+		// 1. Draw Face Landmarks (Cyan) - Single Batched Draw Call
 		if (faceLandmarks.length > 0) {
 			ctx.fillStyle = '#06b6d4';
-			for (let i = 0; i < faceLandmarks.length; i += 3) {
+			ctx.beginPath();
+			for (let i = 0; i < faceLandmarks.length; i += 4) {
 				const pt = faceLandmarks[i];
 				const x = pt.x * width;
 				const y = pt.y * height;
-				ctx.beginPath();
+				ctx.moveTo(x + 1.2, y);
 				ctx.arc(x, y, 1.2, 0, 2 * Math.PI);
-				ctx.fill();
 			}
+			ctx.fill();
 		}
 
-		// 2. Draw Hand Landmarks & Skeleton Bones (Emerald Green)
+		// 2. Draw Hand Landmarks & Skeleton Bones (Emerald Green) - Batched Calls
 		if (handsList.length > 0) {
 			ctx.fillStyle = '#10b981';
+			ctx.beginPath();
+			for (const hand of handsList) {
+				for (const pt of hand) {
+					const x = pt.x * width;
+					const y = pt.y * height;
+					ctx.moveTo(x + 2.2, y);
+					ctx.arc(x, y, 2.2, 0, 2 * Math.PI);
+				}
+			}
+			ctx.fill();
+
 			ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
 			ctx.lineWidth = 1.5;
+			ctx.beginPath();
 
 			const fingerChains = [
 				[0, 1, 2, 3, 4],
@@ -680,25 +728,16 @@ export class FaceTracker {
 			];
 
 			for (const hand of handsList) {
-				for (const pt of hand) {
-					const x = pt.x * width;
-					const y = pt.y * height;
-					ctx.beginPath();
-					ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
-					ctx.fill();
-				}
-
 				for (const chain of fingerChains) {
-					ctx.beginPath();
 					for (let i = 0; i < chain.length; i++) {
 						const pt = hand[chain[i]];
 						if (!pt) continue;
 						if (i === 0) ctx.moveTo(pt.x * width, pt.y * height);
 						else ctx.lineTo(pt.x * width, pt.y * height);
 					}
-					ctx.stroke();
 				}
 			}
+			ctx.stroke();
 		}
 	}
 }

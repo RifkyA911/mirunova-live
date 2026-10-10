@@ -41,11 +41,11 @@ describe('Dynamic Background Style Computation', () => {
 		expect(bg).toContain("url('blob:http://localhost/123')");
 	});
 
-	it('should provide complete 8 color palettes including Light, Cyan, Pink, and Matcha', () => {
+	it('should provide complete 9 color palettes including Light, Cyan, Pink, Matcha, and Sakura Sweet', () => {
 		const { UI_THEMES } = require('../src/lib/data/themes');
-		expect(UI_THEMES.length).toBe(8);
+		expect(UI_THEMES.length).toBe(9);
 
-		const themeIds = UI_THEMES.map((t) => t.id);
+		const themeIds = UI_THEMES.map((t: any) => t.id);
 		expect(themeIds).toContain('cyber-dark');
 		expect(themeIds).toContain('midnight');
 		expect(themeIds).toContain('synthwave');
@@ -54,6 +54,7 @@ describe('Dynamic Background Style Computation', () => {
 		expect(themeIds).toContain('cyan');
 		expect(themeIds).toContain('pink');
 		expect(themeIds).toContain('matcha');
+		expect(themeIds).toContain('sakura-sweet');
 
 		for (const theme of UI_THEMES) {
 			expect(theme.name).toBeTruthy();
