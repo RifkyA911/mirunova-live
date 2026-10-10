@@ -56,8 +56,33 @@ export type BackgroundStyle =
 	| 'custom-image'
 	| 'chroma';
 export type ScreenEffect = 'none' | 'vignette' | 'scanlines' | 'crt' | 'blur';
-export type UITheme = 'cyber-dark' | 'midnight' | 'monochrome' | 'synthwave';
 export type PoseLoopMode = 'none' | 'idle-breath' | 'gentle-sway' | 'head-nod';
+export type UITheme =
+	| 'cyber-dark'
+	| 'midnight'
+	| 'synthwave'
+	| 'monochrome'
+	| 'light'
+	| 'cyan'
+	| 'pink'
+	| 'matcha';
+
+export interface ThemePalette {
+	id: UITheme;
+	name: string;
+	desc: string;
+	badge: string;
+	bgHex: string;
+	palette: {
+		bg: string;
+		surface: string;
+		accent: string;
+		border: string;
+		text: string;
+		ring: string;
+	};
+}
+
 export type RiggingMode = 'live' | 'manual';
 export type RiggingViewMode = 'stay' | 'windowed' | 'drawer';
 export type AvatarFramingMode = 'full' | 'half' | 'closeup';
@@ -70,4 +95,7 @@ export interface Live2DModelItem {
 	description: string;
 	version: 'Cubism 3/4' | 'Cubism 2';
 	avatarUrl?: string;
+	source?: 'booth' | 'official' | 'community';
+	boothUrl?: string;
+	author?: string;
 }

@@ -251,6 +251,228 @@
 	border-color: rgba(6, 182, 212, 0.2) !important;
 }
 
+/* --- 5. CLEAN CRISP LIGHT THEME (Slate / Pure White / Electric Sky) --- */
+.theme-light {
+	--theme-bg-base: #f8fafc;
+	--theme-surface-950: rgba(255, 255, 255, 0.98);
+	--theme-surface-900: rgba(248, 250, 252, 0.96);
+	--theme-surface-800: rgba(241, 245, 249, 0.92);
+	--theme-border: rgba(203, 213, 225, 0.9);
+	--theme-border-hover: rgba(148, 163, 184, 1);
+	--theme-accent: #0284c7;
+	--theme-text-accent: #0369a1;
+	--theme-glow: 0 0 25px rgba(2, 132, 199, 0.18);
+}
+
+.theme-light nav,
+.theme-light aside,
+.theme-light header > div,
+.theme-light [role="dialog"],
+.theme-light [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+	color: #0f172a !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-light [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+	color: #1e293b !important;
+}
+
+.theme-light [class*="border-zinc-800"],
+.theme-light [class*="border-zinc-700"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-light .text-zinc-100,
+.theme-light .text-zinc-200 {
+	color: #0f172a !important;
+}
+
+.theme-light .text-zinc-300,
+.theme-light .text-zinc-400 {
+	color: #334155 !important;
+}
+
+.theme-light .text-zinc-500 {
+	color: #64748b !important;
+}
+
+.theme-light .text-cyan-400,
+.theme-light .text-cyan-300 {
+	color: #0284c7 !important;
+}
+
+.theme-light .bg-cyan-500 {
+	background-color: #0284c7 !important;
+	color: #ffffff !important;
+}
+
+.theme-light .border-cyan-500,
+.theme-light [class*="border-cyan-500"] {
+	border-color: #0284c7 !important;
+}
+
+.theme-light .bg-cyan-500\/10,
+.theme-light .bg-cyan-500\/20 {
+	background-color: rgba(2, 132, 199, 0.12) !important;
+}
+
+/* --- 6. NEO CYAN THEME (Deep Oceanic Cyan / Bright Aqua Glow) --- */
+.theme-cyan {
+	--theme-bg-base: #03171a;
+	--theme-surface-950: rgba(3, 27, 31, 0.95);
+	--theme-surface-900: rgba(5, 39, 44, 0.93);
+	--theme-surface-800: rgba(8, 54, 61, 0.9);
+	--theme-border: rgba(6, 182, 212, 0.48);
+	--theme-border-hover: rgba(34, 211, 238, 0.8);
+	--theme-accent: #06b6d4;
+	--theme-text-accent: #22d3ee;
+	--theme-glow: 0 0 25px rgba(6, 182, 212, 0.45);
+}
+
+.theme-cyan nav,
+.theme-cyan aside,
+.theme-cyan header > div,
+.theme-cyan [role="dialog"],
+.theme-cyan [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-cyan [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-cyan [class*="border-zinc-800"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-cyan .text-cyan-400,
+.theme-cyan .text-cyan-300 {
+	color: #22d3ee !important;
+}
+
+.theme-cyan .bg-cyan-500 {
+	background-color: #06b6d4 !important;
+	color: #042f2e !important;
+}
+
+.theme-cyan .border-cyan-500,
+.theme-cyan [class*="border-cyan-500"] {
+	border-color: #22d3ee !important;
+}
+
+.theme-cyan .bg-cyan-500\/10,
+.theme-cyan .bg-cyan-500\/20 {
+	background-color: rgba(6, 182, 212, 0.22) !important;
+}
+
+/* --- 7. SAKURA PINK THEME (Kawaii Cherry Blossom / Neon Fuchsia) --- */
+.theme-pink {
+	--theme-bg-base: #1a0613;
+	--theme-surface-950: rgba(36, 10, 27, 0.96);
+	--theme-surface-900: rgba(54, 14, 40, 0.94);
+	--theme-surface-800: rgba(77, 19, 56, 0.9);
+	--theme-border: rgba(236, 72, 153, 0.48);
+	--theme-border-hover: rgba(244, 114, 182, 0.85);
+	--theme-accent: #ec4899;
+	--theme-text-accent: #f472b6;
+	--theme-glow: 0 0 25px rgba(236, 72, 153, 0.45);
+}
+
+.theme-pink nav,
+.theme-pink aside,
+.theme-pink header > div,
+.theme-pink [role="dialog"],
+.theme-pink [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-pink [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-pink [class*="border-zinc-800"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-pink .text-cyan-400,
+.theme-pink .text-cyan-300 {
+	color: #f472b6 !important;
+}
+
+.theme-pink .bg-cyan-500 {
+	background-color: #ec4899 !important;
+	color: #ffffff !important;
+}
+
+.theme-pink .border-cyan-500,
+.theme-pink [class*="border-cyan-500"] {
+	border-color: #ec4899 !important;
+}
+
+.theme-pink .bg-cyan-500\/10,
+.theme-pink .bg-cyan-500\/20 {
+	background-color: rgba(236, 72, 153, 0.22) !important;
+}
+
+/* --- 8. MATCHA GREEN THEME (Zen Japanese Green Tea / Fresh Botanical) --- */
+.theme-matcha {
+	--theme-bg-base: #07150c;
+	--theme-surface-950: rgba(10, 28, 17, 0.96);
+	--theme-surface-900: rgba(16, 43, 26, 0.94);
+	--theme-surface-800: rgba(23, 61, 37, 0.9);
+	--theme-border: rgba(34, 197, 94, 0.45);
+	--theme-border-hover: rgba(74, 222, 128, 0.8);
+	--theme-accent: #22c55e;
+	--theme-text-accent: #86efac;
+	--theme-glow: 0 0 25px rgba(34, 197, 94, 0.4);
+}
+
+.theme-matcha nav,
+.theme-matcha aside,
+.theme-matcha header > div,
+.theme-matcha [role="dialog"],
+.theme-matcha [class*="bg-zinc-950"] {
+	background-color: var(--theme-surface-950) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-matcha [class*="bg-zinc-900"] {
+	background-color: var(--theme-surface-900) !important;
+	border-color: var(--theme-border) !important;
+}
+
+.theme-matcha [class*="border-zinc-800"] {
+	border-color: var(--theme-border) !important;
+}
+
+.theme-matcha .text-cyan-400,
+.theme-matcha .text-cyan-300 {
+	color: #86efac !important;
+}
+
+.theme-matcha .bg-cyan-500 {
+	background-color: #22c55e !important;
+	color: #052e16 !important;
+}
+
+.theme-matcha .border-cyan-500,
+.theme-matcha [class*="border-cyan-500"] {
+	border-color: #22c55e !important;
+}
+
+.theme-matcha .bg-cyan-500\/10,
+.theme-matcha .bg-cyan-500\/20 {
+	background-color: rgba(34, 197, 94, 0.22) !important;
+}
+
 /* Streamer Square Frame with Organic Overflow Edge Fade */
 .square-frame-wrapper {
 	position: absolute;

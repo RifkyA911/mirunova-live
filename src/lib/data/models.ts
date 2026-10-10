@@ -16,19 +16,47 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		id: 'mihari',
 		name: 'Mihari (绪山美波里)',
 		url: '/models/mihari/Mihari_V1.model3.json',
-		description: 'Model Live2D Cubism 3/4 Oyama Mihari dengan fisika kuncir perak, tekstur 4K, dan part pakaian lengkap.',
+		description: 'Model Live2D Cubism 3/4 Oyama Mihari dengan fisika kuncir perak, tekstur 4K, dan part pakaian lengkap dari Booth VTS.',
 		version: 'Cubism 3/4',
-		avatarUrl: '/models/previews/mihari.svg',
-		tags: ['Cubism 3/4', 'High-Res 4K', 'Ponytail Physics', 'Body Parts', 'Anime']
+		avatarUrl: '/models/mihari/Mihari.jpg',
+		source: 'booth',
+		boothUrl: 'https://booth.pm/en/search/Live2D',
+		author: 'nekotoufu / Booth VTS',
+		tags: ['BOOTH.pm', 'Kawaii Girl', 'Cubism 3/4', 'High-Res 4K', 'Ponytail Physics', 'Body Parts', 'Anime']
 	},
 	{
 		id: 'vivian',
 		name: '薇薇安 (Vivian)',
 		url: '/models/vivian/薇薇安.model3.json',
-		description: 'Model Live2D Cubism 4 beresolusi tinggi (4096px) dengan fisika rambut gaun halus, parasol, dan 6 ekspresi.',
+		description: 'Model Live2D Cubism 4 beresolusi ultra-tinggi (4096px) dengan fisika rambut gaun halus, parasol, dan 6 ekspresi dari Booth.',
 		version: 'Cubism 3/4',
 		avatarUrl: '/models/previews/vivian.svg',
-		tags: ['Cubism 4', 'High-Res 4K', 'Expressions', 'Physics', 'Parasol']
+		source: 'booth',
+		boothUrl: 'https://booth.pm/en/search/Live2D',
+		author: '魔都Romantic / Booth Creator',
+		tags: ['BOOTH.pm', 'Kawaii Girl', 'Cubism 4', 'High-Res 4K', 'Expressions', 'Physics', 'Parasol']
+	},
+	{
+		id: 'hiyori',
+		name: 'Hiyori Momose (百瀬ヒヨリ)',
+		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Hiyori/Hiyori.model3.json',
+		description: 'Official Live2D Cubism high-definition showcase anime twin-tail idol dengan ekspresi kaya.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/hiyori.svg',
+		source: 'official',
+		author: 'Live2D Official',
+		tags: ['Kawaii Idol', 'Cubism 4', 'Showcase', 'Expressions', 'Twin-Tail']
+	},
+	{
+		id: 'rice',
+		name: 'Rice (Neko Chibi / こめ)',
+		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Rice/Rice.model3.json',
+		description: 'Maskot anime chibi telinga kucing super kawaii dengan fisika fluid dan ekspresi gemas.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/rice.svg',
+		source: 'official',
+		author: 'Live2D Official',
+		tags: ['Kawaii Neko', 'Chibi', 'Cat Ears', 'Fluid Physics']
 	},
 	{
 		id: 'haru',
@@ -37,16 +65,9 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		description: 'Official Cubism 4 greeter model with complete facial, hair & body physics rigging.',
 		version: 'Cubism 3/4',
 		avatarUrl: '/models/previews/haru.svg',
+		source: 'official',
+		author: 'Live2D Official',
 		tags: ['Cubism 4', 'Full Rig', 'Hair Physics', 'Motions']
-	},
-	{
-		id: 'hiyori',
-		name: 'Hiyori Momose',
-		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Hiyori/Hiyori.model3.json',
-		description: 'Official Live2D Cubism high-definition showcase anime model with rich expressions.',
-		version: 'Cubism 3/4',
-		avatarUrl: '/models/previews/hiyori.svg',
-		tags: ['Cubism 4', 'Showcase', 'Expressions', 'Twin-Tail']
 	},
 	{
 		id: 'mao',
@@ -55,16 +76,9 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		description: 'Expressive student avatar with broad eyebrow and phoneme mouth blendshapes.',
 		version: 'Cubism 3/4',
 		avatarUrl: '/models/previews/mao.svg',
+		source: 'official',
+		author: 'Live2D Official',
 		tags: ['Cubism 4', 'Student', 'Eyebrow Sync', 'Motions']
-	},
-	{
-		id: 'rice',
-		name: 'Rice (Neko Chibi)',
-		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Rice/Rice.model3.json',
-		description: 'Adorable cat-eared chibi anime mascot with fluid physics and cute expressions.',
-		version: 'Cubism 3/4',
-		avatarUrl: '/models/previews/rice.svg',
-		tags: ['Cubism 4', 'Chibi', 'Cat Ears', 'Fluid Physics']
 	},
 	{
 		id: 'wanko',
@@ -73,6 +87,8 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		description: 'Adorable puppy mascot with reactive ear and wagging tail physics.',
 		version: 'Cubism 3/4',
 		avatarUrl: '/models/previews/wanko.svg',
+		source: 'official',
+		author: 'Live2D Official',
 		tags: ['Cubism 4', 'Puppy', 'Tail Wag', 'Ear Bounce']
 	},
 	{
@@ -82,6 +98,8 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		description: 'Classic school uniform avatar with subtle tilt and expression dynamics.',
 		version: 'Cubism 3/4',
 		avatarUrl: '/models/previews/natori.svg',
+		source: 'official',
+		author: 'Live2D Official',
 		tags: ['Cubism 4', 'School', 'Subtle Physics', 'Classic']
 	}
 ];

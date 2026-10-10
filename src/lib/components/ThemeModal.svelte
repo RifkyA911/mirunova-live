@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { rigging } from '#lib/stores/riggingStore.svelte';
+	import { rigging, UI_THEMES } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import type { BackgroundStyle, ScreenEffect, UITheme } from '#lib/types/tracking';
 	import {
@@ -103,31 +103,56 @@
 				</button>
 			</div>
 
-			<!-- Body Content (2-Column Responsive Layout) -->
-			<div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-				<!-- 1. UI Theme Toggler -->
+			<!-- Body Content (Responsive Grid Layout) -->
+			<div class="p-6 overflow-y-auto space-y-6 text-xs">
+				<!-- 1. UI Theme Toggler with Color Palettes -->
 				<div>
-					<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
-						{i18n.t('ui_theme')}
-					</h3>
-					<div class="grid grid-cols-2 gap-2">
-						{#each uiThemes as theme}
+					<div class="flex items-center justify-between mb-2.5">
+						<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+							<Palette class="w-3.5 h-3.5 text-cyan-400" />
+							{i18n.t('ui_theme')} — {i18n.t('swatch_palette')}
+						</h3>
+						<span class="text-[10px] text-zinc-500 font-mono">Hotkeys: [1 – 8]</span>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+						{#each UI_THEMES as theme}
 							<button
 								onclick={() => rigging.setUITheme(theme.id)}
-								class="flex items-center justify-between p-2.5 rounded-xl border text-left transition-all {
+								class="flex flex-col p-3 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] {
 									rigging.uiTheme === theme.id
-										? `bg-zinc-900 ${theme.border} text-white shadow-sm ring-1 ring-cyan-500/30`
-										: 'bg-zinc-900/40 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+										? 'bg-zinc-900 border-cyan-500 text-white shadow-lg ring-2 ring-cyan-500/30'
+										: 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
 								}"
 							>
-								<span class="font-medium text-xs">{theme.label}</span>
-								{#if rigging.uiTheme === theme.id}
-									<Check class="w-3.5 h-3.5 text-cyan-400" />
-								{/if}
+								<div class="flex items-center justify-between w-full mb-1">
+									<div class="flex items-center gap-1.5">
+										<span class="font-bold text-xs text-zinc-100">{theme.name}</span>
+										<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-zinc-800 text-zinc-400">{theme.badge}</span>
+									</div>
+									{#if rigging.uiTheme === theme.id}
+										<div class="w-4 h-4 rounded-full bg-cyan-500 flex items-center justify-center text-zinc-950">
+											<Check class="w-3 h-3 stroke-[3]" />
+										</div>
+									{/if}
+								</div>
+								<p class="text-[10px] text-zinc-400 leading-tight mb-2.5 line-clamp-2">
+									{theme.desc}
+								</p>
+								<!-- Color Palette Swatches -->
+								<div class="mt-auto pt-2 border-t border-zinc-800/80 flex items-center gap-1.5">
+									<div class="w-3.5 h-3.5 rounded-full border border-zinc-700 shadow-sm" style="background-color: {theme.palette.bg};" title="Background: {theme.palette.bg}"></div>
+									<div class="w-3.5 h-3.5 rounded-full border border-zinc-700 shadow-sm" style="background-color: {theme.palette.surface};" title="Surface: {theme.palette.surface}"></div>
+									<div class="w-3.5 h-3.5 rounded-full border border-zinc-700 shadow-sm" style="background-color: {theme.palette.accent};" title="Accent: {theme.palette.accent}"></div>
+									<div class="w-3.5 h-3.5 rounded-full border border-zinc-700 shadow-sm" style="background-color: {theme.palette.border};" title="Border: {theme.palette.border}"></div>
+									<div class="w-3.5 h-3.5 rounded-full border border-zinc-700 shadow-sm" style="background-color: {theme.palette.text};" title="Text: {theme.palette.text}"></div>
+									<span class="text-[9px] font-mono text-zinc-500 ml-auto">{theme.bgHex}</span>
+								</div>
 							</button>
 						{/each}
 					</div>
 				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
 				<!-- 2. Background Style -->
 				<div>
@@ -241,6 +266,7 @@
 						{/each}
 					</div>
 				</div>
+			</div>
 			</div>
 		</div>
 	</div>

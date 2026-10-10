@@ -18,12 +18,28 @@
 		RotateCcw,
 		Maximize2,
 		Activity,
-		Tag
+		Tag,
+		ExternalLink,
+		Heart,
+		FolderOpen
 	} from 'lucide-svelte';
 
 	let customUrlInput = $state<string>('');
 	let glbFileInput = $state<HTMLInputElement>();
+	let localModelFileInput = $state<HTMLInputElement>();
 	let catalogTab = $state<'2d' | '3d'>('2d');
+	let model2DFilter = $state<'all' | 'booth' | 'official'>('all');
+
+	let boothCount = $derived(MODEL_CATALOG.filter((m) => m.source === 'booth').length);
+	let officialCount = $derived(MODEL_CATALOG.filter((m) => m.source === 'official').length);
+	let displayed2DModels = $derived(
+		MODEL_CATALOG.filter(
+			(m) =>
+				model2DFilter === 'all' ||
+				(model2DFilter === 'booth' && m.source === 'booth') ||
+				(model2DFilter === 'official' && m.source === 'official')
+		)
+	);
 
 	const poseLoops: Array<{ id: PoseLoopMode; label: string; desc: string }> = [
 		{ id: 'none', label: 'Mati', desc: 'Hanya ikuti tracking webcam' },
@@ -61,6 +77,16 @@
 		rigging.setModel('custom', 'Custom Model', customUrlInput.trim());
 		rigging.showToast('Memuat model Live2D dari URL...');
 		customUrlInput = '';
+	}
+
+	function handleLocalModelSelect(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+		const url = URL.createObjectURL(file);
+		rigging.avatarEngine = 'live2d';
+		rigging.setModel('custom-local', file.name.replace(/\.[^/.]+$/, ''), url);
+		rigging.showToast(`Memuat model Live2D lokal: ${file.name}`);
 	}
 
 	function handleGlbUpload(e: Event) {
@@ -170,17 +196,96 @@
 			<div class="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
 				{#if catalogTab === '2d'}
 					<!-- 2D Live2D Catalog Grid (Multi-Column) -->
-					<div>
-						<div class="flex items-center justify-between mb-3">
+					<div class="space-y-4">
+						<!-- BOOTH.pm Kawaii Showcase Banner -->
+						<div class="p-4 bg-gradient-to-r from-pink-950/40 via-purple-950/30 to-zinc-900/60 rounded-2xl border border-pink-500/30 shadow-lg space-y-3">
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+								<div class="flex items-start gap-3">
+									<div class="p-2.5 bg-pink-500/20 border border-pink-500/40 rounded-xl text-pink-400 shadow-sm shrink-0">
+										<Heart class="w-5 h-5 fill-pink-500/30 text-pink-400" />
+									</div>
+									<div>
+										<div class="flex items-center gap-2">
+											<h4 class="font-bold text-sm text-pink-200">{i18n.t('booth_hub_title')}</h4>
+											<span class="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono text-[9px] font-semibold uppercase tracking-wider border border-pink-500/30">
+												Kawaii Anime Girl
+											</span>
+										</div>
+										<p class="text-xs text-zinc-300/90 mt-0.5 leading-relaxed">
+											{i18n.t('booth_hub_desc')} Model seperti <strong>Mihari</strong> dan <strong>Vivian</strong> sudah terpasang siap pakai dengan fisika rambut, pakaian, dan ekspresi lengkap.
+										</p>
+									</div>
+								</div>
+
+								<div class="flex items-center gap-2 shrink-0">
+									<a
+										href="https://booth.pm/ja/topics/FREE_LIVE2D"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="flex items-center gap-1.5 px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 cursor-pointer"
+									>
+										<ExternalLink class="w-3.5 h-3.5" />
+										<span>{i18n.t('booth_open_btn')}</span>
+									</a>
+									<a
+										href="https://booth.pm/en/items?tags%5B%5D=Live2D&sort=popular"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-medium transition-all active:scale-95 cursor-pointer"
+									>
+										<ExternalLink class="w-3.5 h-3.5 text-pink-400" />
+										<span>BOOTH Populer</span>
+									</a>
+								</div>
+							</div>
+
+							<!-- Filter Chips -->
+							<div class="flex items-center gap-2 pt-2 border-t border-pink-500/20 text-[11px]">
+								<span class="text-zinc-400 font-medium mr-1">Filter:</span>
+								<button
+									onclick={() => (model2DFilter = 'all')}
+									class="px-2.5 py-1 rounded-lg border font-medium transition-colors {
+										model2DFilter === 'all'
+											? 'bg-pink-500/20 border-pink-500/50 text-pink-200 font-semibold'
+											: 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									Semua ({MODEL_CATALOG.length})
+								</button>
+								<button
+									onclick={() => (model2DFilter = 'booth')}
+									class="flex items-center gap-1 px-2.5 py-1 rounded-lg border font-medium transition-colors {
+										model2DFilter === 'booth'
+											? 'bg-pink-500/30 border-pink-500 text-pink-200 font-semibold shadow-sm'
+											: 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-pink-300'
+									}"
+								>
+									<Heart class="w-3 h-3 text-pink-400 fill-pink-400/40" />
+									<span>BOOTH.pm Kawaii ({boothCount})</span>
+								</button>
+								<button
+									onclick={() => (model2DFilter = 'official')}
+									class="px-2.5 py-1 rounded-lg border font-medium transition-colors {
+										model2DFilter === 'official'
+											? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-200 font-semibold'
+											: 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									Official Samples ({officialCount})
+								</button>
+							</div>
+						</div>
+
+						<div class="flex items-center justify-between">
 							<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
 								<Sparkles class="w-3.5 h-3.5 text-pink-400" />
-								Pilih Model Live2D & Avatar 2D
+								Pilih Model Live2D ({displayed2DModels.length} Tersedia)
 							</h3>
 							<span class="text-[10px] text-zinc-500">Klik kartu untuk langsung mengaktifkan avatar</span>
 						</div>
 
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-							{#each MODEL_CATALOG as model}
+							{#each displayed2DModels as model}
 								{@const isActive = rigging.avatarEngine === 'live2d' && (rigging.selectedModelId === model.id || rigging.modelUrl === model.url)}
 								<div
 									role="button"
@@ -222,9 +327,21 @@
 											<div class="flex items-center gap-1.5 mb-1">
 												<span class="font-bold text-xs text-zinc-100 truncate">{model.name}</span>
 											</div>
-											<span class="inline-flex self-start px-1.5 py-0.5 rounded bg-zinc-800 text-pink-400 font-mono text-[9px] border border-zinc-700 mb-1">
-												{model.version}
-											</span>
+											<div class="flex items-center gap-1.5 mb-1">
+												<span class="inline-flex self-start px-1.5 py-0.5 rounded bg-zinc-800 text-pink-400 font-mono text-[9px] border border-zinc-700">
+													{model.version}
+												</span>
+												{#if model.source === 'booth'}
+													<span class="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/30 font-semibold text-[8px] uppercase tracking-wide">
+														BOOTH.pm
+													</span>
+												{/if}
+											</div>
+											{#if model.author}
+												<span class="text-[9px] text-zinc-400 truncate mb-1">
+													{model.author}
+												</span>
+											{/if}
 											<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed">
 												{model.description}
 											</p>
@@ -235,7 +352,7 @@
 									{#if model.tags && model.tags.length > 0}
 										<div class="flex flex-wrap gap-1 mt-auto pt-2 border-t border-zinc-800/60">
 											{#each model.tags as tag}
-												<span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-zinc-800/80 text-zinc-300">
+												<span class="px-1.5 py-0.5 rounded text-[9px] font-medium {tag.includes('BOOTH') ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-zinc-800/80 text-zinc-300'}">
 													{tag}
 												</span>
 											{/each}
@@ -245,21 +362,43 @@
 							{/each}
 						</div>
 
-						<!-- Custom Live2D URL Input Box -->
-						<div class="mt-4 p-3 bg-zinc-900/60 rounded-xl border border-zinc-800 flex items-center gap-2">
-							<Link class="w-4 h-4 text-pink-400 shrink-0 ml-1" />
-							<input
-								type="text"
-								bind:value={customUrlInput}
-								placeholder="Muat Live2D Kustom: https://.../model.model3.json"
-								class="flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none"
-							/>
-							<button
-								onclick={handleLoadCustomUrl}
-								class="px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-lg text-xs transition-colors shadow-sm"
-							>
-								Muat URL
-							</button>
+						<!-- Custom Live2D Model Loader (URL & Local File) -->
+						<div class="mt-4 p-4 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-3">
+							<div class="flex items-center justify-between">
+								<span class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+									<UploadCloud class="w-4 h-4 text-pink-400" />
+									Muat Model Live2D Sendiri (URL / File Lokal)
+								</span>
+								<button
+									onclick={() => localModelFileInput?.click()}
+									class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium flex items-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
+								>
+									<FolderOpen class="w-3.5 h-3.5 text-pink-400" />
+									<span>{i18n.t('import_local_model')}</span>
+								</button>
+								<input
+									type="file"
+									accept=".json,.model3.json"
+									bind:this={localModelFileInput}
+									onchange={handleLocalModelSelect}
+									class="hidden"
+								/>
+							</div>
+							<div class="flex items-center gap-2">
+								<Link class="w-4 h-4 text-pink-400 shrink-0 ml-1" />
+								<input
+									type="text"
+									bind:value={customUrlInput}
+									placeholder="Muat Live2D Kustom: https://.../model.model3.json"
+									class="flex-1 bg-zinc-950/80 px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-pink-500"
+								/>
+								<button
+									onclick={handleLoadCustomUrl}
+									class="px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-lg text-xs transition-colors shadow-sm cursor-pointer"
+								>
+									Muat URL
+								</button>
+							</div>
 						</div>
 					</div>
 				{:else}

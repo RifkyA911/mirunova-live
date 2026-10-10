@@ -7,10 +7,14 @@ import type {
 	RiggingMode,
 	RiggingViewMode,
 	AvatarFramingMode,
-	VoiceFilterType
+	VoiceFilterType,
+	ThemePalette
 } from '#lib/types/tracking';
 import { MODEL_CATALOG } from '#lib/data/models';
+import { UI_THEMES } from '#lib/data/themes';
 import { i18n, type Locale } from '#lib/i18n/index.svelte';
+
+export { UI_THEMES };
 
 export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	// Head Rotation
@@ -384,13 +388,10 @@ export class RiggingStore {
 
 	setUITheme(theme: UITheme) {
 		this.uiTheme = theme;
-		if (theme === 'midnight') {
-			this.backgroundColor = '#030718';
-		} else if (theme === 'synthwave') {
-			this.backgroundColor = '#18042b';
-		} else if (theme === 'monochrome') {
-			this.backgroundColor = '#000000';
-		} else if (theme === 'cyber-dark') {
+		const found = UI_THEMES.find((t) => t.id === theme);
+		if (found) {
+			this.backgroundColor = found.bgHex;
+		} else {
 			this.backgroundColor = '#09090b';
 		}
 		this.persist();

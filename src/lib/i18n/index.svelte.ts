@@ -215,7 +215,23 @@ export const translations = {
 
 		// Shortcuts
 		shortcuts_title: 'Keyboard Shortcuts Cheatsheet',
-		shortcuts_subtitle: 'Full hotkey navigation for quick live streaming control'
+		shortcuts_subtitle: 'Full hotkey navigation for quick live streaming control',
+
+		// Themes & Palettes
+		theme_light: 'Light Crisp',
+		theme_cyan: 'Neo Cyan',
+		theme_pink: 'Sakura Pink',
+		theme_matcha: 'Matcha Green',
+		swatch_palette: 'Color Palette Swatches',
+
+		// Phone Webcam
+		phone_webcam_tip: 'For Iriun Webcam, DroidCam, or Phone Link: Launch the app on your phone & PC, then select it from the camera list above.',
+
+		// Booth
+		booth_hub_title: 'BOOTH.pm VTuber Showcase',
+		booth_hub_desc: 'Popular kawaii Live2D models from Japanese creators on BOOTH.pm.',
+		booth_open_btn: 'Browse Free Live2D on BOOTH.pm',
+		import_local_model: 'Load Local Model Folder / Zip'
 	},
 	id: {
 		app_title: 'MiruNova Live — Web Live2D & Face Tracker',
@@ -431,7 +447,23 @@ export const translations = {
 
 		// Shortcuts
 		shortcuts_title: 'Daftar Shortcut Keyboard',
-		shortcuts_subtitle: 'Panduan tombol cepat untuk kontrol live streaming'
+		shortcuts_subtitle: 'Panduan tombol cepat untuk kontrol live streaming',
+
+		// Themes & Palettes
+		theme_light: 'Light Crisp (Terang)',
+		theme_cyan: 'Neo Cyan (Biru Neon)',
+		theme_pink: 'Sakura Pink (Merah Muda)',
+		theme_matcha: 'Matcha Green (Hijau Alami)',
+		swatch_palette: 'Palet Warna Tema',
+
+		// Phone Webcam
+		phone_webcam_tip: 'Untuk Iriun Webcam, DroidCam, atau Phone Link: Buka aplikasi di HP & PC, lalu pilih dari daftar kamera di atas.',
+
+		// Booth
+		booth_hub_title: 'Koleksi Model BOOTH.pm',
+		booth_hub_desc: 'Model Live2D populer dari kreator Jepang di platform BOOTH.pm.',
+		booth_open_btn: 'Buka Katalog Gratis di BOOTH.pm',
+		import_local_model: 'Muat Folder / Zip Model Lokal'
 	},
 	ja: {
 		app_title: 'MiruNova Live — Web Live2D & Face Tracker',
@@ -647,15 +679,38 @@ export const translations = {
 
 		// Shortcuts
 		shortcuts_title: 'キーボードショートカット一覧',
-		shortcuts_subtitle: '配信中に素早く操作できるホットキー一覧'
+		shortcuts_subtitle: '配信中に素早く操作できるホットキー一覧',
+
+		// Themes & Palettes
+		theme_light: 'ライト・クリスプ',
+		theme_cyan: 'ネオ・シアン',
+		theme_pink: 'サクラ・ピンク',
+		theme_matcha: '抹茶グリーン',
+		swatch_palette: 'カラーパレット一覧',
+
+		// Phone Webcam
+		phone_webcam_tip: 'Iriun / DroidCam / スマホ連携カメラ: PCとスマホの両方でアプリを起動し、上のカメラ一覧から選択してください。',
+
+		// Booth
+		booth_hub_title: 'BOOTH.pm VTuberモデル',
+		booth_hub_desc: '日本のクリエイターによる人気Live2Dモデル一覧。',
+		booth_open_btn: 'BOOTHで無料Live2Dを探す',
+		import_local_model: 'ローカルモデルの読み込み'
 	}
 };
 
 export class I18nStore {
-	currentLocale = $state<Locale>('id');
+	currentLocale = $state<Locale>(
+		typeof window !== 'undefined'
+			? ((localStorage.getItem('mirunova_locale') as Locale) || 'id')
+			: 'id'
+	);
 
 	setLocale(locale: Locale) {
 		this.currentLocale = locale;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('mirunova_locale', locale);
+		}
 	}
 
 	t(key: keyof typeof translations.en): string {

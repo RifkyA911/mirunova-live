@@ -131,12 +131,24 @@
 				rigging.setUITheme('cyber-dark');
 				rigging.showToast('Tema: Cyber Dark');
 			} else if (e.key === '2') {
+				rigging.setUITheme('light');
+				rigging.showToast('Tema: Light Crisp');
+			} else if (e.key === '3') {
+				rigging.setUITheme('cyan');
+				rigging.showToast('Tema: Neo Cyan');
+			} else if (e.key === '4') {
+				rigging.setUITheme('pink');
+				rigging.showToast('Tema: Sakura Pink');
+			} else if (e.key === '5') {
+				rigging.setUITheme('matcha');
+				rigging.showToast('Tema: Matcha Green');
+			} else if (e.key === '6') {
 				rigging.setUITheme('midnight');
 				rigging.showToast('Tema: Midnight Blue');
-			} else if (e.key === '3') {
+			} else if (e.key === '7') {
 				rigging.setUITheme('synthwave');
 				rigging.showToast('Tema: Synthwave');
-			} else if (e.key === '4') {
+			} else if (e.key === '8') {
 				rigging.setUITheme('monochrome');
 				rigging.showToast('Tema: Monochrome');
 			}
@@ -154,9 +166,17 @@
 		const style = rigging.backgroundStyle;
 		let color = rigging.backgroundColor || '#09090b';
 
-		const isDefaultHex = ['#09090b', '#030718', '#030712', '#18042b', '#130324', '#000000'].includes(color);
+		const isDefaultHex = [
+			'#09090b', '#f8fafc', '#03171a', '#1a0613', '#07150c',
+			'#030718', '#030712', '#18042b', '#130324', '#000000'
+		].includes(color);
+
 		if (isDefaultHex) {
-			if (rigging.uiTheme === 'midnight') color = '#030718';
+			if (rigging.uiTheme === 'light') color = '#f8fafc';
+			else if (rigging.uiTheme === 'cyan') color = '#03171a';
+			else if (rigging.uiTheme === 'pink') color = '#1a0613';
+			else if (rigging.uiTheme === 'matcha') color = '#07150c';
+			else if (rigging.uiTheme === 'midnight') color = '#030718';
 			else if (rigging.uiTheme === 'synthwave') color = '#18042b';
 			else if (rigging.uiTheme === 'monochrome') color = '#000000';
 			else color = '#09090b';
@@ -166,6 +186,10 @@
 		if (style === 'chroma') return 'background-color: #00ff00;';
 		if (style === 'solid') return `background-color: ${color};`;
 		if (style === 'gradient') {
+			if (rigging.uiTheme === 'light') return `background: linear-gradient(135deg, ${color} 0%, #e2e8f0 100%);`;
+			if (rigging.uiTheme === 'cyan') return `background: linear-gradient(135deg, ${color} 0%, #083344 100%);`;
+			if (rigging.uiTheme === 'pink') return `background: linear-gradient(135deg, ${color} 0%, #4a044e 100%);`;
+			if (rigging.uiTheme === 'matcha') return `background: linear-gradient(135deg, ${color} 0%, #14532d 100%);`;
 			if (rigging.uiTheme === 'midnight') return `background: linear-gradient(135deg, ${color} 0%, #0c1a40 100%);`;
 			if (rigging.uiTheme === 'synthwave') return `background: linear-gradient(135deg, ${color} 0%, #4a044e 100%);`;
 			if (rigging.uiTheme === 'monochrome') return `background: linear-gradient(135deg, ${color} 0%, #1c1917 100%);`;
@@ -217,7 +241,15 @@
 <main
 	onmousemove={handleMouseMove}
 	class="relative w-screen h-screen overflow-hidden font-sans select-none {
-		rigging.uiTheme === 'midnight'
+		rigging.uiTheme === 'light'
+			? 'theme-light'
+			: rigging.uiTheme === 'cyan'
+			? 'theme-cyan'
+			: rigging.uiTheme === 'pink'
+			? 'theme-pink'
+			: rigging.uiTheme === 'matcha'
+			? 'theme-matcha'
+			: rigging.uiTheme === 'midnight'
 			? 'theme-midnight'
 			: rigging.uiTheme === 'synthwave'
 			? 'theme-synthwave'
@@ -334,16 +366,23 @@
 	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode or when GUI is locked) -->
 	{#if !rigging.isObsMode && !rigging.isGuiLocked}
 		<!-- Header Brand Watermark (Subtle & Non-intrusive) -->
-		<header class="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
-			<div class="px-3 py-1.5 bg-zinc-950/75 backdrop-blur-md border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-lg">
-				<div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+		<header class="absolute top-4 right-4 z-40 flex items-center gap-2 pointer-events-auto select-none">
+			<button
+				type="button"
+				onclick={() => {
+					rigging.isSettingsModalOpen = true;
+				}}
+				class="px-3.5 py-1.5 bg-zinc-950/85 backdrop-blur-xl border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-2xl hover:scale-105 hover:border-cyan-500/50 active:scale-95 transition-all cursor-pointer group text-left"
+				title="{i18n.t('settings_title')} [F2]"
+			>
+				<div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse group-hover:scale-125 transition-transform"></div>
 				<span class="text-xs font-bold tracking-wider text-zinc-100">
 					MIRUNOVA <span class="text-cyan-400 font-extrabold">LIVE</span>
 				</span>
-				<span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
+				<span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono group-hover:text-cyan-300 transition-colors">
 					{rigging.avatarEngine === '3d' ? rigging.selected3DModelId : rigging.modelName}
 				</span>
-			</div>
+			</button>
 		</header>
 
 		<!-- Picture-in-Picture Webcam & Landmark Wireframe Overlay -->

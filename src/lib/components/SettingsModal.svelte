@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { rigging } from '#lib/stores/riggingStore.svelte';
+	import { rigging, UI_THEMES } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
@@ -538,6 +538,10 @@
 											<option value={cam.deviceId}>{cam.label}</option>
 										{/each}
 									</select>
+									<div class="mt-2 p-2.5 bg-cyan-950/30 border border-cyan-800/30 rounded-xl text-[11px] text-cyan-300/90 flex items-start gap-2 leading-relaxed">
+										<Info class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+										<span><strong>Iriun / DroidCam / Windows Phone Link:</strong> {i18n.t('phone_webcam_tip')}</span>
+									</div>
 								</div>
 
 								<!-- Resolution Picker -->
@@ -877,25 +881,35 @@
 							</h3>
 
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-								{#each themes as t}
+								{#each UI_THEMES as t}
 									<button
 										onclick={() => {
 											rigging.setUITheme(t.id);
 										}}
-										class="p-3 rounded-xl border text-left transition-all relative {
+										class="p-3 rounded-xl border text-left transition-all relative cursor-pointer hover:scale-[1.01] active:scale-[0.99] {
 											rigging.uiTheme === t.id
-												? 'bg-zinc-900 border-cyan-500/60 shadow-lg'
+												? 'bg-zinc-900 border-cyan-500 shadow-lg ring-1 ring-cyan-500/30'
 												: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
 										}"
 									>
 										<div class="flex items-center gap-2 mb-1">
-											<div class="w-3 h-3 rounded-full {t.color}"></div>
-											<span class="font-bold text-xs text-zinc-200">{t.label}</span>
+											<div class="w-3.5 h-3.5 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};"></div>
+											<span class="font-bold text-xs text-zinc-200">{t.name}</span>
+											<span class="text-[9px] px-1 py-0.2 rounded font-mono bg-zinc-800 text-zinc-400">{t.badge}</span>
 											{#if rigging.uiTheme === t.id}
 												<Check class="w-3.5 h-3.5 text-cyan-400 ml-auto" />
 											{/if}
 										</div>
-										<p class="text-[10px] text-zinc-400 leading-tight">{t.desc}</p>
+										<p class="text-[10px] text-zinc-400 leading-tight mb-2 line-clamp-1">{t.desc}</p>
+										<!-- Palette Swatches -->
+										<div class="flex items-center gap-1.5 pt-1.5 border-t border-zinc-800/60">
+											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.bg};" title="Bg"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.surface};" title="Surface"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};" title="Accent"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.border};" title="Border"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.text};" title="Text"></div>
+											<span class="text-[9px] font-mono text-zinc-500 ml-auto">{t.bgHex}</span>
+										</div>
 									</button>
 								{/each}
 							</div>

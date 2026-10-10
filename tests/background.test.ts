@@ -40,4 +40,30 @@ describe('Dynamic Background Style Computation', () => {
 		const bg = computeDynamicBgStyle('custom-image', '#000000', 'blob:http://localhost/123');
 		expect(bg).toContain("url('blob:http://localhost/123')");
 	});
+
+	it('should provide complete 8 color palettes including Light, Cyan, Pink, and Matcha', () => {
+		const { UI_THEMES } = require('../src/lib/data/themes');
+		expect(UI_THEMES.length).toBe(8);
+
+		const themeIds = UI_THEMES.map((t) => t.id);
+		expect(themeIds).toContain('cyber-dark');
+		expect(themeIds).toContain('midnight');
+		expect(themeIds).toContain('synthwave');
+		expect(themeIds).toContain('monochrome');
+		expect(themeIds).toContain('light');
+		expect(themeIds).toContain('cyan');
+		expect(themeIds).toContain('pink');
+		expect(themeIds).toContain('matcha');
+
+		for (const theme of UI_THEMES) {
+			expect(theme.name).toBeTruthy();
+			expect(theme.bgHex).toMatch(/^#[0-9a-fA-F]{6}$/);
+			expect(theme.palette.bg).toBeTruthy();
+			expect(theme.palette.surface).toBeTruthy();
+			expect(theme.palette.accent).toBeTruthy();
+			expect(theme.palette.border).toBeTruthy();
+			expect(theme.palette.text).toBeTruthy();
+			expect(theme.palette.ring).toBeTruthy();
+		}
+	});
 });

@@ -13,16 +13,20 @@ describe('Model Catalog Validation', () => {
 			expect(model.version).toBe('Cubism 3/4');
 		}
 
-		// Vivian and Mihari verification
+		// Vivian and Mihari verification (BOOTH.pm Famous Models)
 		const vivian = MODEL_CATALOG.find((m) => m.id === 'vivian');
 		expect(vivian).toBeDefined();
 		expect(vivian?.name).toContain('薇薇安');
 		expect(vivian?.url).toBe('/models/vivian/薇薇安.model3.json');
+		expect(vivian?.source).toBe('booth');
+		expect(vivian?.tags).toContain('BOOTH.pm');
 
 		const mihari = MODEL_CATALOG.find((m) => m.id === 'mihari');
 		expect(mihari).toBeDefined();
 		expect(mihari?.name).toContain('Mihari');
 		expect(mihari?.url).toBe('/models/mihari/Mihari_V1.model3.json');
+		expect(mihari?.source).toBe('booth');
+		expect(mihari?.tags).toContain('BOOTH.pm');
 	});
 
 	it('should not contain blocked or dead CDN repositories', () => {

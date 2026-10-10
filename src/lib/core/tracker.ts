@@ -177,15 +177,21 @@ export class FaceTracker {
 		const targetHeight = rigging.cameraResolution === '1080p' ? 1080 : rigging.cameraResolution === '480p' ? 480 : 720;
 		const targetFps = rigging.cameraResolution === '480p' ? 30 : 60;
 
-		const videoConstraints: MediaTrackConstraints = {
-			width: { ideal: targetWidth },
-			height: { ideal: targetHeight },
-			frameRate: { ideal: targetFps },
-			facingMode: 'user'
-		};
+		const videoConstraints: MediaTrackConstraints = {};
 
 		if (rigging.cameraDeviceId) {
+			// Specific device selected (e.g. Iriun Webcam, Windows Phone, DroidCam, OBS Virtual Camera)
+			// Crucial: DO NOT enforce facingMode! Virtual/Phone webcam drivers reject or fail constraint matching when facingMode: 'user' is set!
 			videoConstraints.deviceId = { ideal: rigging.cameraDeviceId };
+			videoConstraints.width = { ideal: targetWidth };
+			videoConstraints.height = { ideal: targetHeight };
+			videoConstraints.frameRate = { ideal: 30 }; // 30fps is universally supported by virtual & phone drivers
+		} else {
+			// Default user webcam
+			videoConstraints.facingMode = 'user';
+			videoConstraints.width = { ideal: targetWidth };
+			videoConstraints.height = { ideal: targetHeight };
+			videoConstraints.frameRate = { ideal: targetFps };
 		}
 
 		try {
@@ -194,15 +200,35 @@ export class FaceTracker {
 				audio: false
 			});
 		} catch (err: any) {
-			// Fallback to basic default user video if custom constraints failed
+			// Fallback 1: Try relaxed resolution without frameRate constraint (fixes Iriun 720p/1080p fixed modes)
 			if (rigging.cameraDeviceId) {
 				try {
 					this.stream = await navigator.mediaDevices.getUserMedia({
-						video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+						video: {
+							deviceId: { ideal: rigging.cameraDeviceId },
+							width: { ideal: targetWidth },
+							height: { ideal: targetHeight }
+						},
 						audio: false
 					});
-				} catch (fallbackErr: any) {
-					err = fallbackErr;
+				} catch (fallback1: any) {
+					// Fallback 2: Try basic camera deviceId only without dimension constraints
+					try {
+						this.stream = await navigator.mediaDevices.getUserMedia({
+							video: { deviceId: { ideal: rigging.cameraDeviceId } },
+							audio: false
+						});
+					} catch (fallback2: any) {
+						// Fallback 3: Fall back to default camera
+						try {
+							this.stream = await navigator.mediaDevices.getUserMedia({
+								video: true,
+								audio: false
+							});
+						} catch (fallback3: any) {
+							err = fallback3;
+						}
+					}
 				}
 			}
 
@@ -339,7 +365,7 @@ export class FaceTracker {
 		}
 	}
 
-	async getAvailableVideoDevices(requestPermissionIfEmpty: boolean = false): Promise<Array<{ deviceId: string; label: string }>> {
+	async getAvailableVideoDevices(requestPermissionIfEmpty: boolean = true): Promise<Array<{ deviceId: string; label: string }>> {
 		if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) return [];
 		try {
 			let devices = await navigator.mediaDevices.enumerateDevices();
