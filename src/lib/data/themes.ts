@@ -32,6 +32,21 @@ export const UI_THEMES: ThemePalette[] = [
 		}
 	},
 	{
+		id: 'light-cyan-sea',
+		name: 'Light Cyan Sea',
+		desc: 'Radiant tropical cyan ocean daylight, pure sea breeze aqua & crisp white surfaces',
+		badge: 'Cyan Sea',
+		bgHex: '#f0fdfa',
+		palette: {
+			bg: '#f0fdfa',
+			surface: '#ffffff',
+			accent: '#0891b2',
+			border: '#99f6e4',
+			text: '#0f172a',
+			ring: '#06b6d4'
+		}
+	},
+	{
 		id: 'cyan',
 		name: 'Neo Cyan',
 		desc: 'Electrified deep cyan ocean with vibrant bright aqua glow',

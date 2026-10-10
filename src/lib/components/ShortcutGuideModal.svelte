@@ -23,29 +23,29 @@
 		category: 'tracking' | 'navigation' | 'streaming';
 	}
 
-	const shortcuts: ShortcutItem[] = [
+	let shortcuts = $derived<ShortcutItem[]>([
 		// Vision Tracking & Audio
-		{ key: 'Space', description: 'Mulai / Hentikan Webcam & Vision Tracking', category: 'tracking' },
-		{ key: 'V', description: 'Mulai / Matikan Mikrofon (Web Audio DSP)', category: 'tracking' },
-		{ key: 'C', description: 'Kalibrasi Posisi Netral Wajah (Center Pose)', category: 'tracking' },
-		{ key: 'P', description: 'Tampilkan / Sembunyikan PIP Kamera & Mesh', category: 'tracking' },
-		{ key: 'B', description: 'Kunci / Sinkronkan Kedipan Kedua Mata', category: 'tracking' },
+		{ key: 'Space', description: i18n.t('shortcut_space'), category: 'tracking' },
+		{ key: 'V', description: i18n.t('shortcut_v'), category: 'tracking' },
+		{ key: 'C', description: i18n.t('shortcut_c'), category: 'tracking' },
+		{ key: 'P', description: i18n.t('shortcut_p'), category: 'tracking' },
+		{ key: 'B', description: i18n.t('shortcut_b'), category: 'tracking' },
 
 		// Navigasi Studio
-		{ key: 'H', description: 'Sembunyikan / Tampilkan Menu Dock Bawah', category: 'navigation' },
-		{ key: 'M', description: 'Buka / Tutup Katalog Model & Motions', category: 'navigation' },
-		{ key: 'T', description: 'Buka / Tutup Kustomisasi Tema & Background', category: 'navigation' },
-		{ key: 'R', description: 'Buka / Tutup Inspector Rigging Preview', category: 'navigation' },
-		{ key: 'F2 / ,', description: 'Buka Menu Pengaturan & Hardware Benchmark', category: 'navigation' },
-		{ key: 'F1 / ?', description: 'Buka Panduan Shortcut Keyboard Ini', category: 'navigation' },
-		{ key: 'Esc', description: 'Tutup Semua Modal / Keluar Mode OBS / Buka Kunci', category: 'navigation' },
+		{ key: 'H', description: i18n.t('shortcut_h'), category: 'navigation' },
+		{ key: 'M', description: i18n.t('shortcut_m'), category: 'navigation' },
+		{ key: 'T', description: i18n.t('shortcut_t'), category: 'navigation' },
+		{ key: 'R', description: i18n.t('shortcut_r'), category: 'navigation' },
+		{ key: 'F2 / ,', description: i18n.t('shortcut_f2'), category: 'navigation' },
+		{ key: 'F1 / ?', description: i18n.t('shortcut_f1'), category: 'navigation' },
+		{ key: 'Esc', description: i18n.t('shortcut_esc'), category: 'navigation' },
 
 		// Streaming & Themes
-		{ key: 'L', description: 'Kunci Layar & Mode Bersih (Clear GUI / Lock)', category: 'streaming' },
-		{ key: 'O', description: 'Toggle Mode Bersih Layar OBS Streamer', category: 'streaming' },
-		{ key: 'S', description: 'Ambil Screenshot Avatar & Download PNG', category: 'streaming' },
-		{ key: '1 - 9', description: 'Pilih Cepat 9 Tema (Cyber, Light, Cyan, Pink, Matcha, Mid, Synth, Mono, Sakura Sweet)', category: 'streaming' }
-	];
+		{ key: 'L', description: i18n.t('shortcut_l'), category: 'streaming' },
+		{ key: 'O', description: i18n.t('shortcut_o'), category: 'streaming' },
+		{ key: 'S', description: i18n.t('shortcut_s'), category: 'streaming' },
+		{ key: '1 - 9, 0', description: i18n.t('shortcut_numbers'), category: 'streaming' }
+	]);
 
 	onMount(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -102,7 +102,7 @@
 				<div>
 					<h3 class="text-[11px] font-semibold text-cyan-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
 						<Camera class="w-3.5 h-3.5" />
-						Vision Tracking & Kalibrasi
+						{i18n.t('shortcut_cat_tracking')}
 					</h3>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 						{#each shortcuts.filter((s) => s.category === 'tracking') as item}
@@ -120,7 +120,7 @@
 				<div>
 					<h3 class="text-[11px] font-semibold text-violet-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
 						<Sliders class="w-3.5 h-3.5" />
-						Navigasi Menu & Studio Panel
+						{i18n.t('shortcut_cat_navigation')}
 					</h3>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 						{#each shortcuts.filter((s) => s.category === 'navigation') as item}
@@ -138,7 +138,7 @@
 				<div>
 					<h3 class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
 						<Radio class="w-3.5 h-3.5" />
-						Live Streaming & Aksi Cepat
+						{i18n.t('shortcut_cat_streaming')}
 					</h3>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 						{#each shortcuts.filter((s) => s.category === 'streaming') as item}
@@ -153,10 +153,10 @@
 				</div>
 
 				<!-- Pro Streamer Tips -->
-				<div class="p-3 bg-cyan-950/20 border border-cyan-800/40 rounded-xl flex items-start gap-2.5">
+				<div class="p-3 bg-cyan-950/20 border border-cyan-800/40 rounded-xl flex items-start gap-2.5 col-span-1 md:col-span-3">
 					<HelpCircle class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
 					<div class="text-[11px] text-zinc-400 leading-relaxed">
-						<span class="text-cyan-300 font-semibold">Tips Streamer:</span> Tekan <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded font-mono text-[10px] text-zinc-200">H</kbd> kapan saja untuk menyembunyikan menu dock agar stage bersih. Tekan <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded font-mono text-[10px] text-zinc-200">O</kbd> untuk masuk ke OBS Screen Mode langsung dengan background transparan.
+						<span class="text-cyan-300 font-semibold">{i18n.t('shortcut_pro_tip_title')}</span> {i18n.t('shortcut_pro_tip_desc')}
 					</div>
 				</div>
 			</div>

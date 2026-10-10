@@ -63,6 +63,7 @@ export type UITheme =
 	| 'synthwave'
 	| 'monochrome'
 	| 'light'
+	| 'light-cyan-sea'
 	| 'cyan'
 	| 'pink'
 	| 'matcha'

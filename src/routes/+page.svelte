@@ -154,6 +154,9 @@
 			} else if (e.key === '9') {
 				rigging.setUITheme('sakura-sweet');
 				rigging.showToast('Tema: Sakura Sweet (Evanescia)');
+			} else if (e.key === '0') {
+				rigging.setUITheme('light-cyan-sea');
+				rigging.showToast('Tema: Light Cyan Sea');
 			}
 		};
 
@@ -170,12 +173,13 @@
 		let color = rigging.backgroundColor || '#09090b';
 
 		const isDefaultHex = [
-			'#09090b', '#f8fafc', '#03171a', '#1a0613', '#07150c',
+			'#09090b', '#f8fafc', '#f0fdfa', '#03171a', '#1a0613', '#07150c',
 			'#030718', '#030712', '#18042b', '#130324', '#000000', '#0c1021'
 		].includes(color);
 
 		if (isDefaultHex) {
 			if (rigging.uiTheme === 'light') color = '#f8fafc';
+			else if (rigging.uiTheme === 'light-cyan-sea') color = '#f0fdfa';
 			else if (rigging.uiTheme === 'cyan') color = '#03171a';
 			else if (rigging.uiTheme === 'pink') color = '#1a0613';
 			else if (rigging.uiTheme === 'matcha') color = '#07150c';
@@ -191,6 +195,7 @@
 		if (style === 'solid') return `background-color: ${color};`;
 		if (style === 'gradient') {
 			if (rigging.uiTheme === 'light') return `background: linear-gradient(135deg, ${color} 0%, #e2e8f0 100%);`;
+			if (rigging.uiTheme === 'light-cyan-sea') return `background: linear-gradient(135deg, ${color} 0%, #cffafe 55%, #a5f3fc 100%);`;
 			if (rigging.uiTheme === 'cyan') return `background: linear-gradient(135deg, ${color} 0%, #083344 100%);`;
 			if (rigging.uiTheme === 'pink') return `background: linear-gradient(135deg, ${color} 0%, #4a044e 100%);`;
 			if (rigging.uiTheme === 'matcha') return `background: linear-gradient(135deg, ${color} 0%, #14532d 100%);`;
@@ -248,6 +253,8 @@
 	class="relative w-screen h-screen overflow-hidden font-sans select-none {
 		rigging.uiTheme === 'light'
 			? 'theme-light'
+			: rigging.uiTheme === 'light-cyan-sea'
+			? 'theme-light-cyan-sea'
 			: rigging.uiTheme === 'cyan'
 			? 'theme-cyan'
 			: rigging.uiTheme === 'pink'
