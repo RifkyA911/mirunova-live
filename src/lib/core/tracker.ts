@@ -313,16 +313,53 @@ export class FaceTracker {
 		return true;
 	}
 
-	async getAvailableVideoDevices(): Promise<Array<{ deviceId: string; label: string }>> {
+	async switchCamera(deviceId?: string, resolution?: '1080p' | '720p' | '480p'): Promise<boolean> {
+		if (deviceId !== undefined) rigging.cameraDeviceId = deviceId;
+		if (resolution !== undefined) rigging.cameraResolution = resolution;
+		rigging.persist();
+
+		if (!this.isRunning) return true;
+
+		const prevVid = this.previewVideo;
+		const prevCanvas = this.canvasOverlay;
+
+		if (this.stream) {
+			this.stream.getTracks().forEach((track) => track.stop());
+			this.stream = null;
+		}
+
+		try {
+			await this.startCamera(prevVid, prevCanvas);
+			rigging.showToast('✓ Kamera berhasil dialihkan');
+			return true;
+		} catch (err: any) {
+			console.error('Failed to switch camera:', err);
+			rigging.showToast(`Gagal mengganti kamera: ${err.message || err.name}`);
+			return false;
+		}
+	}
+
+	async getAvailableVideoDevices(requestPermissionIfEmpty: boolean = false): Promise<Array<{ deviceId: string; label: string }>> {
 		if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) return [];
 		try {
-			const devices = await navigator.mediaDevices.enumerateDevices();
-			return devices
-				.filter((d) => d.kind === 'videoinput')
-				.map((d, idx) => ({
-					deviceId: d.deviceId,
-					label: d.label || `Camera ${idx + 1}`
-				}));
+			let devices = await navigator.mediaDevices.enumerateDevices();
+			let videoDevices = devices.filter((d) => d.kind === 'videoinput');
+
+			if (requestPermissionIfEmpty && videoDevices.length > 0 && !videoDevices[0].label) {
+				try {
+					const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+					tempStream.getTracks().forEach((t) => t.stop());
+					devices = await navigator.mediaDevices.enumerateDevices();
+					videoDevices = devices.filter((d) => d.kind === 'videoinput');
+				} catch {
+					// Fallback to existing devices
+				}
+			}
+
+			return videoDevices.map((d, idx) => ({
+				deviceId: d.deviceId,
+				label: d.label || `Camera ${idx + 1} (${d.deviceId.slice(0, 6)}...)`
+			}));
 		} catch {
 			return [];
 		}

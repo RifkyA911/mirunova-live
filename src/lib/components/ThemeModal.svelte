@@ -113,7 +113,7 @@
 					<div class="grid grid-cols-2 gap-2">
 						{#each uiThemes as theme}
 							<button
-								onclick={() => (rigging.uiTheme = theme.id)}
+								onclick={() => rigging.setUITheme(theme.id)}
 								class="flex items-center justify-between p-2.5 rounded-xl border text-left transition-all {
 									rigging.uiTheme === theme.id
 										? `bg-zinc-900 ${theme.border} text-white shadow-sm ring-1 ring-cyan-500/30`

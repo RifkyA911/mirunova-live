@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.10.0] - 2026-10-10
+
+### Added
+- **Live Camera & Microphone Input Hardware Selectors:**
+  - Dynamic hardware device enumeration with fallback permission handshake to retrieve accurate device names (OBS Virtual Camera, Logitech C920, USB Mics, etc.).
+  - Real-time device switching without page reloads across 3 locations:
+    - **Settings Modal (`Device` Tab):** Full configuration with resolution profiles (1080p, 720p, 480p), mic volume gain, monitor toggle, and DSP presets.
+    - **Camera PIP Viewer:** Integrated compact dropdown and rescan button right on the floating camera window.
+    - **Control Dock Quick Popover:** Accessible via the dock slider icon with live audio VU meter and immediate hot-swapping.
+  - Automatic peripheral re-scan with native `devicechange` listener when USB cameras/microphones are plugged in or disconnected.
+  - Global hotkey `V` to quickly toggle microphone mute/active state.
+- **Full Visual UI Color Theme System:**
+  - Fixed theme application bug where themes were not altering Tailwind component classes.
+  - Added comprehensive CSS theme overrides for `.theme-cyber`, `.theme-midnight`, `.theme-synthwave`, and `.theme-monochrome` transforming navigation bars, control docks, modals, cards, borders, buttons, and glowing accents.
+  - Connected canvas backdrop color dynamically to the selected UI theme palette.
+  - Hotkeys `1`–`4` for instant theme cycling with persistent storage.
+
+---
+
 ## [0.9.0] - 2026-10-10
 
 ### Added

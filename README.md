@@ -132,6 +132,7 @@ Open **`http://localhost:5173/`** in your browser.
 | **`,` / `F2`** | Open Settings | Buka menu spesifikasi sistem & benchmark |
 | **`?` / `F1`** | Shortcut Guide Cheatsheet | Tampilkan panduan lengkap seluruh tombol shortcut |
 | **`P`** | Toggle PIP Camera | Sembunyikan / tampilkan preview webcam PIP |
+| **`V`** | Toggle Microphone | Aktifkan atau matikan input mikrofon |
 | **`B`** | Toggle Eye Blink Sync | Sinkronisasi kedipan mata kiri dan kanan |
 | **`1` – `4`** | Switch UI Themes | Ganti tema cepat (Cyber, Midnight, Synth, Mono) |
 | **`Escape`** | Close Modals / Exit OBS | Dismiss open modals, drawers, or exit OBS view |

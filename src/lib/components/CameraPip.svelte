@@ -3,16 +3,39 @@
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { i18n } from '#lib/i18n/index.svelte';
-	import { Camera, CameraOff, Eye, EyeOff, Minimize2, Maximize2 } from 'lucide-svelte';
+	import { Camera, CameraOff, Eye, EyeOff, Minimize2, Maximize2, RefreshCw } from 'lucide-svelte';
 
 	let videoElement = $state<HTMLVideoElement>();
 	let canvasElement = $state<HTMLCanvasElement>();
 	let isMinimized = $state<boolean>(false);
+	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
+
+	async function refreshCameras(requestPermission = false) {
+		try {
+			availableCameras = await tracker.getAvailableVideoDevices(requestPermission);
+		} catch {
+			availableCameras = [];
+		}
+	}
+
+	onMount(() => {
+		refreshCameras(false);
+		const onDeviceChange = () => refreshCameras(false);
+		if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+			navigator.mediaDevices.addEventListener('devicechange', onDeviceChange);
+		}
+		return () => {
+			if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+				navigator.mediaDevices.removeEventListener('devicechange', onDeviceChange);
+			}
+		};
+	});
 
 	$effect(() => {
 		// When camera active state changes, sync preview element with tracker
 		if (rigging.isCameraActive && videoElement) {
 			tracker.setPreviewElements(videoElement, canvasElement);
+			refreshCameras(false);
 		}
 	});
 
@@ -22,6 +45,7 @@
 		} else {
 			try {
 				await tracker.startCamera(videoElement, canvasElement);
+				refreshCameras(false);
 			} catch (err) {
 				alert((err as Error).message);
 			}
@@ -119,6 +143,32 @@
 						</button>
 					</div>
 				{/if}
+			</div>
+
+			<!-- Quick Camera Selector Bar -->
+			<div class="px-2 py-1.5 bg-zinc-950/95 border-t border-zinc-800/80 flex items-center gap-1.5 text-[11px]">
+				<Camera class="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+				<select
+					bind:value={rigging.cameraDeviceId}
+					onchange={async (e) => {
+						const target = e.target as HTMLSelectElement;
+						await tracker.switchCamera(target.value);
+					}}
+					class="w-full bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 text-[10px] focus:outline-none focus:border-cyan-500 truncate"
+					aria-label={i18n.t('camera_device')}
+				>
+					<option value="">Default Webcam</option>
+					{#each availableCameras as cam}
+						<option value={cam.deviceId}>{cam.label}</option>
+					{/each}
+				</select>
+				<button
+					onclick={() => refreshCameras(true)}
+					class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-cyan-300 transition-colors shrink-0"
+					title={i18n.t('refresh_devices')}
+				>
+					<RefreshCw class="w-3 h-3" />
+				</button>
 			</div>
 
 			<!-- Metrics Footer -->

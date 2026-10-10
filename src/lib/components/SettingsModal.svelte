@@ -32,7 +32,8 @@
 		Layers,
 		Square,
 		ExternalLink,
-		HelpCircle
+		HelpCircle,
+		RefreshCw
 	} from 'lucide-svelte';
 
 	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'appearance' | 'storage' | 'about'>('perf');
@@ -56,24 +57,34 @@
 		{ code: 'ja', label: '日本語' }
 	];
 
-	async function refreshDevices() {
+	async function refreshDevices(requestPermission = false) {
 		try {
-			availableCameras = await tracker.getAvailableVideoDevices();
+			availableCameras = await tracker.getAvailableVideoDevices(requestPermission);
 		} catch {
 			availableCameras = [];
 		}
 		try {
-			availableMics = await voice.getAudioInputDevices();
+			availableMics = await voice.getAudioInputDevices(requestPermission);
 		} catch {
 			availableMics = [];
 		}
 		if (typeof window !== 'undefined' && window.localStorage) {
 			storageUsageBytes = new Blob([JSON.stringify(window.localStorage)]).size;
 		}
+		if (requestPermission) {
+			rigging.showToast('✓ ' + i18n.t('refresh_devices'));
+		}
 	}
 
 	onMount(() => {
-		refreshDevices();
+		refreshDevices(false);
+
+		const onDeviceChange = () => {
+			refreshDevices(false);
+		};
+		if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+			navigator.mediaDevices.addEventListener('devicechange', onDeviceChange);
+		}
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape' && rigging.isSettingsModalOpen) {
@@ -83,6 +94,9 @@
 		window.addEventListener('keydown', handleKeyDown);
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
+			if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+				navigator.mediaDevices.removeEventListener('devicechange', onDeviceChange);
+			}
 		};
 	});
 
@@ -109,18 +123,34 @@
 		rigging.persist();
 	}
 
-	function handleMicDeviceChange(e: Event) {
+	async function handleCameraDeviceChange(e: Event) {
+		const target = e.target as HTMLSelectElement;
+		rigging.cameraDeviceId = target.value;
+		rigging.persist();
+		if (rigging.isCameraActive) {
+			await tracker.switchCamera(rigging.cameraDeviceId);
+		}
+	}
+
+	async function handleResolutionChange(e: Event) {
+		const target = e.target as HTMLSelectElement;
+		rigging.cameraResolution = target.value as '1080p' | '720p' | '480p';
+		rigging.persist();
+		if (rigging.isCameraActive) {
+			await tracker.switchCamera(undefined, rigging.cameraResolution);
+		}
+	}
+
+	async function handleMicDeviceChange(e: Event) {
 		const target = e.target as HTMLSelectElement;
 		rigging.audioDeviceId = target.value;
 		rigging.persist();
 		if (rigging.isMicActive) {
-			voice.start(rigging.audioDeviceId, (vol) => {
-				rigging.micVolumeLevel = vol;
-			}).then(() => {
-				voice.setGain(rigging.micGain);
-				voice.setMonitor(rigging.isMicMonitorActive);
-				voice.setFilter(rigging.voiceFilter);
-			});
+			await voice.switchDevice(rigging.audioDeviceId);
+			voice.setGain(rigging.micGain);
+			voice.setMonitor(rigging.isMicMonitorActive);
+			voice.setFilter(rigging.voiceFilter);
+			rigging.showToast('✓ ' + i18n.t('mic_switched'));
 		}
 	}
 
@@ -486,11 +516,21 @@
 							<div class="space-y-3 text-xs">
 								<!-- Camera Picker -->
 								<div>
-									<label for="cam-select" class="block text-zinc-400 font-medium mb-1">{i18n.t('camera_device')}</label>
+									<div class="flex items-center justify-between mb-1">
+										<label for="cam-select" class="block text-zinc-400 font-medium">{i18n.t('camera_device')}</label>
+										<button
+											onclick={() => refreshDevices(true)}
+											class="flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors"
+											title={i18n.t('refresh_devices')}
+										>
+											<RefreshCw class="w-3 h-3" />
+											<span>{i18n.t('refresh_devices')}</span>
+										</button>
+									</div>
 									<select
 										id="cam-select"
 										bind:value={rigging.cameraDeviceId}
-										onchange={() => rigging.persist()}
+										onchange={handleCameraDeviceChange}
 										class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 focus:outline-none focus:border-indigo-500"
 									>
 										<option value="">Default Webcam</option>
@@ -506,7 +546,7 @@
 									<select
 										id="res-select"
 										bind:value={rigging.cameraResolution}
-										onchange={() => rigging.persist()}
+										onchange={handleResolutionChange}
 										class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 focus:outline-none focus:border-indigo-500"
 									>
 										<option value="480p">480p (640x480 — Ultra Ringan)</option>
@@ -682,7 +722,17 @@
 
 							<!-- Device Selector -->
 							<div class="space-y-1">
-								<label for="mic-select" class="block text-xs text-zinc-400 font-medium">{i18n.t('mic_input_label')}</label>
+								<div class="flex items-center justify-between">
+									<label for="mic-select" class="block text-xs text-zinc-400 font-medium">{i18n.t('mic_input_label')}</label>
+									<button
+										onclick={() => refreshDevices(true)}
+										class="flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors"
+										title={i18n.t('refresh_devices')}
+									>
+										<RefreshCw class="w-3 h-3" />
+										<span>{i18n.t('refresh_devices')}</span>
+									</button>
+								</div>
 								<select
 									id="mic-select"
 									bind:value={rigging.audioDeviceId}
@@ -830,8 +880,7 @@
 								{#each themes as t}
 									<button
 										onclick={() => {
-											rigging.uiTheme = t.id;
-											rigging.persist();
+											rigging.setUITheme(t.id);
 										}}
 										class="p-3 rounded-xl border text-left transition-all relative {
 											rigging.uiTheme === t.id

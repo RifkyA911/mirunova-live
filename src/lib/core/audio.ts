@@ -14,25 +14,45 @@ class VoiceEngine {
 	private monitorNode: GainNode | null = null;
 	private animFrameId: number | null = null;
 	private dataArray: Uint8Array | null = null;
+	private lastGain: number = 1.0;
+	private lastMonitor: boolean = false;
+	private lastFilter: VoiceFilterType = 'none';
+	private lastOnVolumeChange?: (vol: number) => void;
 
 	public isRunning: boolean = false;
 	public currentVolume: number = 0; // 0.0 to 1.0
 
-	async getAudioInputDevices(): Promise<Array<{ deviceId: string; label: string }>> {
+	async getAudioInputDevices(requestPermissionIfEmpty: boolean = false): Promise<Array<{ deviceId: string; label: string }>> {
 		if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
 			return [];
 		}
 		try {
-			const devices = await navigator.mediaDevices.enumerateDevices();
-			return devices
-				.filter((d) => d.kind === 'audioinput')
-				.map((d, i) => ({
-					deviceId: d.deviceId,
-					label: d.label || `Microphone ${i + 1}`
-				}));
+			let devices = await navigator.mediaDevices.enumerateDevices();
+			let audioDevices = devices.filter((d) => d.kind === 'audioinput');
+
+			if (requestPermissionIfEmpty && audioDevices.length > 0 && !audioDevices[0].label) {
+				try {
+					const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+					tempStream.getTracks().forEach((t) => t.stop());
+					devices = await navigator.mediaDevices.enumerateDevices();
+					audioDevices = devices.filter((d) => d.kind === 'audioinput');
+				} catch {
+					// User denied or cancelled
+				}
+			}
+
+			return audioDevices.map((d, i) => ({
+				deviceId: d.deviceId,
+				label: d.label || `Microphone ${i + 1} (${d.deviceId.slice(0, 6)}...)`
+			}));
 		} catch {
 			return [];
 		}
+	}
+
+	async switchDevice(deviceId?: string): Promise<boolean> {
+		if (!this.isRunning) return true;
+		return this.start(deviceId, this.lastOnVolumeChange);
 	}
 
 	async start(deviceId?: string, onVolumeChange?: (vol: number) => void): Promise<boolean> {
@@ -81,6 +101,9 @@ class VoiceEngine {
 			this.monitorNode.connect(this.audioCtx.destination);
 
 			this.isRunning = true;
+			this.setGain(this.lastGain);
+			this.setMonitor(this.lastMonitor);
+			this.setFilter(this.lastFilter);
 
 			// Metering loop
 			const updateMeter = () => {
@@ -133,18 +156,21 @@ class VoiceEngine {
 	}
 
 	setGain(gain: number) {
+		this.lastGain = gain;
 		if (this.gainNode && this.audioCtx) {
 			this.gainNode.gain.setValueAtTime(Math.max(0, Math.min(3, gain)), this.audioCtx.currentTime);
 		}
 	}
 
 	setMonitor(enabled: boolean) {
+		this.lastMonitor = enabled;
 		if (this.monitorNode && this.audioCtx) {
 			this.monitorNode.gain.setValueAtTime(enabled ? 0.9 : 0.0, this.audioCtx.currentTime);
 		}
 	}
 
 	setFilter(type: VoiceFilterType) {
+		this.lastFilter = type;
 		if (!this.filterNode || !this.audioCtx) return;
 		const now = this.audioCtx.currentTime;
 

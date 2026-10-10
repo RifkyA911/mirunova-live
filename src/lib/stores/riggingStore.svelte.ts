@@ -382,6 +382,20 @@ export class RiggingStore {
 		this.persist();
 	}
 
+	setUITheme(theme: UITheme) {
+		this.uiTheme = theme;
+		if (theme === 'midnight') {
+			this.backgroundColor = '#030718';
+		} else if (theme === 'synthwave') {
+			this.backgroundColor = '#18042b';
+		} else if (theme === 'monochrome') {
+			this.backgroundColor = '#000000';
+		} else if (theme === 'cyber-dark') {
+			this.backgroundColor = '#09090b';
+		}
+		this.persist();
+	}
+
 	setFramingMode(mode: AvatarFramingMode) {
 		this.framingMode = mode;
 		this.persist();

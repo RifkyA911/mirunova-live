@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
+	import { voice } from '#lib/core/audio';
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
 	import {
 		Camera,
@@ -18,10 +20,18 @@
 		Keyboard,
 		Lock,
 		ChevronDown,
-		ChevronUp
+		ChevronUp,
+		Mic,
+		MicOff,
+		Video,
+		RefreshCw,
+		SlidersHorizontal
 	} from 'lucide-svelte';
 
 	let isLangMenuOpen = $state<boolean>(false);
+	let isDeviceMenuOpen = $state<boolean>(false);
+	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
+	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 
 	const languages: Array<{ code: Locale; label: string }> = [
 		{ code: 'en', label: 'English' },
@@ -29,16 +39,67 @@
 		{ code: 'ja', label: '日本語' }
 	];
 
+	async function refreshDevices(requestPermission = false) {
+		try {
+			availableCameras = await tracker.getAvailableVideoDevices(requestPermission);
+		} catch {
+			availableCameras = [];
+		}
+		try {
+			availableMics = await voice.getAudioInputDevices(requestPermission);
+		} catch {
+			availableMics = [];
+		}
+	}
+
+	onMount(() => {
+		refreshDevices(false);
+		const onDeviceChange = () => refreshDevices(false);
+		if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+			navigator.mediaDevices.addEventListener('devicechange', onDeviceChange);
+		}
+		return () => {
+			if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+				navigator.mediaDevices.removeEventListener('devicechange', onDeviceChange);
+			}
+		};
+	});
+
 	async function toggleCamera() {
 		if (rigging.isCameraActive) {
 			tracker.stopCamera();
 		} else {
 			try {
 				await tracker.startCamera();
+				refreshDevices(false);
 			} catch (e: any) {
 				alert(e?.message || 'Error activating camera');
 			}
 		}
+	}
+
+	async function toggleMicrophone() {
+		rigging.isMicActive = !rigging.isMicActive;
+		if (rigging.isMicActive) {
+			const ok = await voice.start(rigging.audioDeviceId, (vol) => {
+				rigging.micVolumeLevel = vol;
+			});
+			if (ok) {
+				voice.setGain(rigging.micGain);
+				voice.setMonitor(rigging.isMicMonitorActive);
+				voice.setFilter(rigging.voiceFilter);
+				refreshDevices(false);
+				rigging.showToast('✓ ' + i18n.t('mic_active'));
+			} else {
+				rigging.isMicActive = false;
+				rigging.showToast('Gagal mengakses mikrofon');
+			}
+		} else {
+			voice.stop();
+			rigging.micVolumeLevel = 0;
+			rigging.showToast(i18n.t('mic_muted'));
+		}
+		rigging.persist();
 	}
 
 	function handleCalibrate() {
@@ -85,6 +146,140 @@
 			>
 				{rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
 			</div>
+		</div>
+
+		<!-- 2. Microphone Toggle -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={toggleMicrophone}
+				class="p-2.5 rounded-xl transition-all duration-150 {
+					rigging.isMicActive
+						? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 shadow-md shadow-emerald-500/10'
+						: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+				} active:scale-95"
+				aria-label={rigging.isMicActive ? i18n.t('mic_active') : i18n.t('mic_muted')}
+			>
+				{#if rigging.isMicActive}
+					<Mic class="w-5 h-5 text-emerald-400" />
+				{:else}
+					<MicOff class="w-5 h-5" />
+				{/if}
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{rigging.isMicActive ? i18n.t('mic_active') : i18n.t('mic_muted')}
+			</div>
+		</div>
+
+		<!-- 3. Quick Device Selector Popover -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					isDeviceMenuOpen = !isDeviceMenuOpen;
+					if (isDeviceMenuOpen) refreshDevices(false);
+				}}
+				class="p-2.5 rounded-xl transition-all {
+					isDeviceMenuOpen
+						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-md'
+						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
+				} active:scale-95"
+				aria-label={i18n.t('devices_menu_title')}
+			>
+				<SlidersHorizontal class="w-5 h-5 {isDeviceMenuOpen ? 'text-indigo-300' : 'text-zinc-400'}" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-9 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-50"
+			>
+				{i18n.t('devices_menu_title')}
+			</div>
+
+			<!-- Quick Device Selector Popover Card -->
+			{#if isDeviceMenuOpen}
+				<div
+					class="absolute bottom-14 left-1/2 -translate-x-1/2 w-80 bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800 rounded-2xl shadow-2xl p-4 z-50 space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left"
+				>
+					<div class="flex items-center justify-between pb-2 border-b border-zinc-800/80">
+						<span class="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
+							<Video class="w-3.5 h-3.5 text-cyan-400" />
+							{i18n.t('devices_menu_title')}
+						</span>
+						<button
+							onclick={() => refreshDevices(true)}
+							class="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-cyan-300 transition-colors"
+							title={i18n.t('refresh_devices')}
+						>
+							<RefreshCw class="w-3 h-3" />
+							<span>{i18n.t('refresh_devices')}</span>
+						</button>
+					</div>
+
+					<!-- Camera Section -->
+					<div class="space-y-1.5 text-xs">
+						<label for="dock-cam-select" class="block text-[11px] font-medium text-zinc-400 flex items-center gap-1.5">
+							<Camera class="w-3 h-3 text-cyan-400" />
+							{i18n.t('camera_device')}
+						</label>
+						<select
+							id="dock-cam-select"
+							bind:value={rigging.cameraDeviceId}
+							onchange={async (e) => {
+								const target = e.target as HTMLSelectElement;
+								await tracker.switchCamera(target.value);
+							}}
+							class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500"
+						>
+							<option value="">Default Webcam</option>
+							{#each availableCameras as cam}
+								<option value={cam.deviceId}>{cam.label}</option>
+							{/each}
+						</select>
+					</div>
+
+					<!-- Microphone Section -->
+					<div class="space-y-1.5 text-xs">
+						<div class="flex items-center justify-between">
+							<label for="dock-mic-select" class="text-[11px] font-medium text-zinc-400 flex items-center gap-1.5">
+								<Mic class="w-3 h-3 text-emerald-400" />
+								{i18n.t('mic_input_label')}
+							</label>
+							<span class="text-[10px] font-mono {rigging.isMicActive ? 'text-emerald-400' : 'text-zinc-500'}">
+								{rigging.isMicActive ? Math.round(rigging.micVolumeLevel * 100) + '%' : 'Off'}
+							</span>
+						</div>
+						<select
+							id="dock-mic-select"
+							bind:value={rigging.audioDeviceId}
+							onchange={async (e) => {
+								const target = e.target as HTMLSelectElement;
+								rigging.audioDeviceId = target.value;
+								rigging.persist();
+								if (rigging.isMicActive) {
+									await voice.switchDevice(rigging.audioDeviceId);
+									voice.setGain(rigging.micGain);
+									voice.setMonitor(rigging.isMicMonitorActive);
+									voice.setFilter(rigging.voiceFilter);
+									rigging.showToast('✓ ' + i18n.t('mic_switched'));
+								}
+							}}
+							class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+						>
+							<option value="">Default Microphone</option>
+							{#each availableMics as mic}
+								<option value={mic.deviceId}>{mic.label}</option>
+							{/each}
+						</select>
+						{#if rigging.isMicActive}
+							<div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+								<div
+									class="h-full bg-emerald-500 transition-all duration-75"
+									style="width: {Math.max(2, Math.min(100, rigging.micVolumeLevel * 100))}%"
+								></div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
 		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>

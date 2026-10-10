@@ -24,8 +24,9 @@
 	}
 
 	const shortcuts: ShortcutItem[] = [
-		// Vision Tracking
+		// Vision Tracking & Audio
 		{ key: 'Space', description: 'Mulai / Hentikan Webcam & Vision Tracking', category: 'tracking' },
+		{ key: 'V', description: 'Mulai / Matikan Mikrofon (Web Audio DSP)', category: 'tracking' },
 		{ key: 'C', description: 'Kalibrasi Posisi Netral Wajah (Center Pose)', category: 'tracking' },
 		{ key: 'P', description: 'Tampilkan / Sembunyikan PIP Kamera & Mesh', category: 'tracking' },
 		{ key: 'B', description: 'Kunci / Sinkronkan Kedipan Kedua Mata', category: 'tracking' },

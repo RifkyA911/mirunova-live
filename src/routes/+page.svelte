@@ -12,6 +12,7 @@
 	import ShortcutGuideModal from '#lib/components/ShortcutGuideModal.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
+	import { voice } from '#lib/core/audio';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import { Radio, X, Sparkles, Check, Lock } from 'lucide-svelte';
 
@@ -102,20 +103,41 @@
 				rigging.toggleShortcutModal();
 			} else if (e.key === 'p' || e.key === 'P') {
 				rigging.showCameraPip = !rigging.showCameraPip;
+			} else if (e.key === 'v' || e.key === 'V') {
+				rigging.isMicActive = !rigging.isMicActive;
+				if (rigging.isMicActive) {
+					voice.start(rigging.audioDeviceId, (vol) => {
+						rigging.micVolumeLevel = vol;
+					}).then((ok) => {
+						if (ok) {
+							voice.setGain(rigging.micGain);
+							voice.setMonitor(rigging.isMicMonitorActive);
+							voice.setFilter(rigging.voiceFilter);
+							rigging.showToast('✓ ' + i18n.t('mic_active'));
+						} else {
+							rigging.isMicActive = false;
+						}
+					});
+				} else {
+					voice.stop();
+					rigging.micVolumeLevel = 0;
+					rigging.showToast(i18n.t('mic_muted'));
+				}
+				rigging.persist();
 			} else if (e.key === 'b' || e.key === 'B') {
 				rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked;
 				rigging.showToast(`Sinkronisasi mata: ${rigging.eyeBlinkLinked ? 'Aktif' : 'Nonaktif'}`);
 			} else if (e.key === '1') {
-				rigging.uiTheme = 'cyber-dark';
+				rigging.setUITheme('cyber-dark');
 				rigging.showToast('Tema: Cyber Dark');
 			} else if (e.key === '2') {
-				rigging.uiTheme = 'midnight';
+				rigging.setUITheme('midnight');
 				rigging.showToast('Tema: Midnight Blue');
 			} else if (e.key === '3') {
-				rigging.uiTheme = 'synthwave';
+				rigging.setUITheme('synthwave');
 				rigging.showToast('Tema: Synthwave');
 			} else if (e.key === '4') {
-				rigging.uiTheme = 'monochrome';
+				rigging.setUITheme('monochrome');
 				rigging.showToast('Tema: Monochrome');
 			}
 		};
@@ -130,12 +152,25 @@
 	// Computed dynamic background style (supports mesh kotak2, cosmic, chroma, solid, etc.)
 	let dynamicBgStyle = $derived.by(() => {
 		const style = rigging.backgroundStyle;
-		const color = rigging.backgroundColor || '#09090b';
+		let color = rigging.backgroundColor || '#09090b';
+
+		const isDefaultHex = ['#09090b', '#030718', '#030712', '#18042b', '#130324', '#000000'].includes(color);
+		if (isDefaultHex) {
+			if (rigging.uiTheme === 'midnight') color = '#030718';
+			else if (rigging.uiTheme === 'synthwave') color = '#18042b';
+			else if (rigging.uiTheme === 'monochrome') color = '#000000';
+			else color = '#09090b';
+		}
 
 		if (style === 'transparent') return 'background: transparent;';
 		if (style === 'chroma') return 'background-color: #00ff00;';
 		if (style === 'solid') return `background-color: ${color};`;
-		if (style === 'gradient') return `background: linear-gradient(135deg, ${color} 0%, #111827 100%);`;
+		if (style === 'gradient') {
+			if (rigging.uiTheme === 'midnight') return `background: linear-gradient(135deg, ${color} 0%, #0c1a40 100%);`;
+			if (rigging.uiTheme === 'synthwave') return `background: linear-gradient(135deg, ${color} 0%, #4a044e 100%);`;
+			if (rigging.uiTheme === 'monochrome') return `background: linear-gradient(135deg, ${color} 0%, #1c1917 100%);`;
+			return `background: linear-gradient(135deg, ${color} 0%, #111827 100%);`;
+		}
 		if (style === 'mesh')
 			return `background-color: ${color}; background-image: linear-gradient(to right, rgba(255,255,255,0.18) 1.5px, transparent 1.5px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1.5px, transparent 1.5px), linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 64px 64px, 64px 64px, 16px 16px, 16px 16px;`;
 		if (style === 'dots')
