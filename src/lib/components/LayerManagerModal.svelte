@@ -817,12 +817,15 @@
 										<div class="text-[9.5px] mt-0.5 space-y-0.5 font-mono {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 											{#if layer.type === 'model-host'}
 												<div class="flex items-center gap-1.5 flex-wrap">
-													<span class="text-cyan-500 font-semibold">{hostModelItem?.version || 'Cubism 4'}</span>
-													{#if hostModelItem?.author}
-														<span class="opacity-80">• {hostModelItem.author}</span>
+													{#if hostModelItem && 'version' in hostModelItem}
+														<span class="text-cyan-500 font-semibold">{hostModelItem.version || 'Cubism 4'}</span>
+														{#if hostModelItem.author}
+															<span class="opacity-80">• {hostModelItem.author}</span>
+														{/if}
+													{:else}
+														<span class="text-cyan-500 font-semibold">{rigging.avatarEngine === '3d' ? 'Three.js 3D' : 'Cubism 4'}</span>
 													{/if}
-													<span class="opacity-80">• Pos ({Math.round(rigging.modelOffsetX || 0)}, {Math.round(rigging.modelOffsetY || 0)})</span>
-													<span class="opacity-80">• Scale {(rigging.modelScale || 1.0).toFixed(2)}x</span>
+													<span class="opacity-80">• Zoom {rigging.zoomLevel.toFixed(2)}x</span>
 												</div>
 												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
 													<span>{rigging.isCameraActive ? `Tracking Kamera (${rigging.fps || 60} FPS)` : 'Manual Rig'}</span>
@@ -863,7 +866,6 @@
 											{:else if layer.type === 'shader-fx'}
 												<div class="flex items-center gap-1.5 flex-wrap">
 													<span class="text-emerald-400 font-semibold">Shader: {rigging.screenEffect.toUpperCase()}</span>
-													<span class="opacity-80">• Vig: {rigging.vignetteIntensity.toFixed(2)}</span>
 													<span class="opacity-80">• Opacity: {Math.round(layer.opacity * 100)}%</span>
 												</div>
 											{:else if layer.type === 'background'}

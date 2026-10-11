@@ -62,6 +62,7 @@
 					liveFps = Math.max(1, Math.min(240, calculated));
 					liveFrameMs = Number((1000 / liveFps).toFixed(1));
 					rigging.fps = liveFps;
+					rigging.latencyMs = liveFrameMs;
 					fpsFrameCounter = 0;
 					lastFpsSampleTime = now;
 				}
@@ -1481,20 +1482,7 @@
 		</div>
 	{/if}
 
-	<!-- Real-Time HUD FPS Counter (Configurable Toggle) -->
-	{#if rigging.showFpsCounter}
-		<div
-			class="absolute top-4 left-4 z-30 pointer-events-none select-none flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 shadow-lg text-xs font-mono transition-all animate-in fade-in"
-		>
-			<span
-				class="w-2 h-2 rounded-full {liveFps >= 50 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : liveFps >= 30 ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' : 'bg-rose-400 shadow-[0_0_8px_#f87171]'}"
-			></span>
-			<span class="font-bold {liveFps >= 50 ? 'text-emerald-300' : liveFps >= 30 ? 'text-amber-300' : 'text-rose-300'}">
-				{liveFps} FPS
-			</span>
-			<span class="text-zinc-500 text-[10px]">({liveFrameMs}ms)</span>
-		</div>
-	{/if}
+
 
 	<!-- Cursor Tool Mode Active Interactive HUD Pill (Select & Move Layer with Apply & Cancel) -->
 	{#if rigging.cursorToolMode === 'select-layer'}

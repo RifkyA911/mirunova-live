@@ -33,6 +33,32 @@
 
 ---
 
+## 🔥 Keunggulan Utama (Pros vs. Software VTuber Konvensional)
+
+MiruNova Live dibangun dari nol untuk mengatasi kelemahan mendasar software VTuber desktop konvensional (VTube Studio, Warudo, Animaze, 3Tene):
+
+| Fitur / Parameter | MiruNova Live (Melihat Nova) 🌟 | Software Desktop Konvensional (VTS / Warudo) 📦 |
+| :--- | :--- | :--- |
+| **Ukuran Instalasi** | **0 MB (Instant Web / PWA Desktop)** | 1.5 GB – 5.0 GB installer berat di Steam / Windows |
+| **Voice Changer** | **Bawaan Browser Real-Time (Web Audio DSP)** | Perlu software pihak ketiga terpisah (Clownfish, VoicemeMod, RVC) |
+| **Kebutuhan Hardware** | **Webcam Biasa Laptop / USB (720p/1080p)** | Sering membutuhkan iPhone TrueDepth kamera ($500+) |
+| **Collab Multi-Avatar** | **Hingga 3 Streamer dalam 1 Tab Browser** | Harus membuka multiple instance aplikasi (RAM boros) |
+| **Multi-Camera Device Routing** | **Bebas pilih kamera per avatar (Host vs Tamu)** | Terkunci pada 1 device kamera global |
+| **Impor Model BOOTH** | **Drag & Drop .ZIP langsung ekstrak di RAM (<200ms)** | Ekstrak manual folder dan copy-paste ke directory disk |
+| **Privasi & Keamanan** | **100% Client-Side On-Device (Zero Telemetry)** | Beberapa memicu koneksi analitik server jarak jauh |
+| **Biaya & Lisensi** | **100% Bebas & Gratis (MIT / Bebas Royalti)** | Berbayar, sistem langganan DLC, atau watermark pro |
+| **Performa Render** | **60 FPS Real-Time dengan HUD Telemetry** | Beban background service native Windows tinggi |
+
+### 💎 Ringkasan Keunggulan Kompetitif (Pros)
+1. 🚀 **Nol Instalasi (Zero Friction):** Cukup buka URL di browser atau install sebagai PWA desktop via 1-klik. Tidak memerlukan akun Steam, registrasi akun, maupun download bergiga-giga.
+2. 🎙️ **Voice Changer DSP Real-Time Terintegrasi:** Langsung ubah karakter suara streamer (Anime Girl, Ikemen, Robot, Walkie-Talkie, Reverb Echo) di dalam tab tanpa perlu Virtual Audio Cable (VAC) atau software berbayar.
+3. ⚡ **Ultra-Smooth 60 FPS Telemetry:** Render canvas 60 FPS stabil dengan HUD counter FPS dan latensi milidetik (`ms`) di sudut kanan atas layar, didukung optimalisasi WebGL dan GPU Diskrit (NVIDIA/AMD).
+4. 👥 **Studio Collab Hingga 3 Streamer Mandiri:** Buka kolaborasi siaran langsung hingga 3 avatar secara simultan dalam satu kanvas, masing-masing terhubung ke webcam mandiri.
+5. 📂 **Pemasangan Model Instan (In-Memory ZIP Parser):** Unduh avatar dari BOOTH.pm lalu cukup drag-and-drop file `.zip` ke jendela aplikasi; sistem `fflate` mengekstrak langsung ke RAM tanpa mengotori penyimpanan lokal.
+6. 🔒 **Privasi 100% Terjamin:** Pemrosesan visi MediaPipe dan audio DSP dieksekusi murni di mesin lokal Anda menggunakan WebAssembly (WASM). Rekaman kamera dan suara tidak pernah diunggah ke server manapun.
+
+---
+
 ## ✨ Features
 
 ### 👁️ 1. Full-Body, Face & Hand Recognition
@@ -40,20 +66,34 @@
 * **Eye & Gaze Tracking (Independent Wink):** Independent left & right eye blink with asymmetric wink isolation (`ParamEyeLOpen`, `ParamEyeROpen`), anti-flutter eyelid hysteresis, and 2D iris gaze deflection (`ParamEyeBallX`, `ParamEyeBallY`).
   * **Wink Sebelah Mata (Independent Wink):** Asymmetric wink logic isolates single-eye winks cleanly (`blinkDiff >= 0.12`), locks the opposite eye wide open (`1.0`) to prevent drooping, triggers an anime-accurate wink smile (`ParamEyeSmile = 1.0`), and automatically pauses Cubism auto-blink during active tracking.
   * **Cermin Mata VTuber (Mirror Eyes):** Physical left eye winks the left eye of the avatar on screen for natural mirrored streaming.
-* **Eyebrows & Expressions:** Brow elevation/furrowing (`ParamBrowLY`, `ParamBrowRY`), cheek puff (`ParamCheek`), smile/frown curve (`ParamMouthForm`), and sadness/frown recognition via geometric corner droop.
+* **Eyebrows & Expressions:** Dual-source brow tracking (`ParamBrowLY`, `ParamBrowRY`, `ParamBrowLAngle`, `ParamBrowLForm`), cheek puff (`ParamCheek`), smile/frown curve (`ParamMouthForm`), and sadness/frown recognition via geometric corner droop. Compatible with Vivian model specific eyebrow parameters (`Param`, `Param4`, `Param2`, `Param5`).
 * **Mouth Tracking Sensitivity & Speech Boost:** Real-time jaw displacement (`ParamMouthOpenY`) and mouth skew (`ParamMouthX`) with adjustable sensitivity (0.5x–2.5x) and a dedicated **Speech Boost** mode (1.65x multiplier + geometric lip separation fallback) ensuring responsive lip-sync during fast speaking or whispering.
 * **Hand Tracking & Gestures:** 21-keypoint MediaPipe hand landmark detection mapping arm angles (`ParamArmLA/RA`) and high-five gesture detection.
 
-### ⚡ 2. Real-Time On-Screen FPS & Telemetry HUD
-* **Live HUD FPS Badge:** Sleek floating pill in the top-right corner displaying smoothed frames per second (`FPS`) and millisecond frame interval (`ms`).
-* **Hardware Telemetry Integration:** Color-coded status indicator (Emerald >= 55 FPS, Amber 30–54 FPS, Rose < 30 FPS).
-* **Toggleable in Settings:** Can be shown or hidden at any time via Settings > Hardware & Telemetry > Tampilkan FPS Counter HUD di Layar.
+### 🎙️ 2. Real-Time In-Browser Voice Changer & Audio DSP Studio
+MiruNova Live menghadirkan mesin pengubah suara digital (DSP) berbasis **Web Audio API** berlatensi nol yang berjalan sepenuhnya di browser:
+* **8 Model Suara Karakter (DSP Presets):**
+  1. 🎀 **Kawaii Anime Girl:** Menaikkan nada suara (+4.5 semitone) dengan penyesuaian formant resonansi vokal cerah, manis, dan jernih khas karakter anime moe.
+  2. 🎙️ **Ikemen Deep Voice:** Menurunkan nada (-4.0 semitone) dengan penguatan chest resonance untuk karakter pria bersuara maskulin, berat, dan tenang.
+  3. 🐿️ **Chipmunk Helium:** Pitch-shifter tinggi (+8.0 semitone) dengan kompresi frekuensi vokal jenaka ala kartun.
+  4. 🤖 **Cyber Robot:** Modulasi frekuensi cincin (Ring Modulator), distorsi bitcrush, dan filter sisir (Comb Filter) untuk efek vokal robotik futuristik sci-fi.
+  5. 📻 **Vintage Walkie-Talkie:** Bandpass filter radio komunikasi (300 Hz – 3.000 Hz) dengan simulasi distorsi tabung dan noise gate untuk atmosfer taktis / gaming milsim.
+  6. 🏛️ **Concert Hall Echo:** Efek spatial reverb multi-tap stereo dengan delay umpan balik halus untuk suasana panggung konser megah.
+  7. 🎧 **Studio Broadcast Vocal:** Pengolahan audio studio broadcast profesional dengan kompresi dinamis, presence boost kejelasan artikulasi, dan de-esser.
+  8. 🎵 **Natural Passthrough:** Suara asli jernih transparan tanpa efek pewarnaan, lengkap dengan VU meter dan visualizer equalizer real-time.
+* **Interactive Mic & Voice Conversion Test Widget:**
+  * Rekam buffer suara 4 detik langsung di dalam Settings [F2] untuk menguji kejernihan mikrofon.
+  * Preview perbandingan tombol **Raw Mic Voice** (suara asli) vs. **Converted DSP Voice** (hasil pengubah suara) secara instan **tanpa loop feedback** dan tanpa dengungan memekakkan telinga (zero audio screeching).
+* **Integrasi Streaming OBS Studio:** Audio yang diproses dapat disalurkan langsung ke OBS Studio melalui Virtual Audio Cable (VB-Cable) atau ditangkap bersamaan via Window Audio Capture.
 
-### 🌸 3. Fluid Animated Loading Screen & Procedural Audio Chimes
-* **Fluid Anime Loading Card:** Replaces generic spinners with a glowing, bouncy anime orb card with floating sparkle stars, pulsing audio equalizer bars, and dynamic status messages.
-* **Satisfying Fluffy Sound Effects:** Synthesized mathematically via Web Audio API:
-  * `loadingStart`: Dreamy harmonic ascending arpeggio on model load initialization.
-  * `loadingSuccess`: Crystalline sparkle chime upon complete texture binding and canvas attachment.
+### ⚡ 3. Real-Time On-Screen 60 FPS Telemetry HUD
+* **Live HUD FPS Badge:** Tampilan badge floating elegan di sudut kanan atas layar (`top-4 right-4`) tepat di samping judul studio, menampilkan perhitungan FPS rendering real-time dan interval latensi milidetik (`ms`).
+* **Indikator Status Warna Adaptif:**
+  * 🟢 **Emerald (>= 50 FPS):** Performa pipeline rendering prima dan responsif.
+  * 🟡 **Amber (30 – 49 FPS):** Frame rate menengah dengan pelacakan stabil.
+  * 🔴 **Rose (< 30 FPS):** Frame drop terdeteksi (sistem akan merekomendasikan penyesuaian resolusi webcam).
+* **Sampling Rate 500ms Cerdas:** Menghitung rata-rata frame setiap 500ms untuk mencegah getaran angka (anti-thrashing) dengan akurasi matematis tinggi.
+* **Dapat Dikonfigurasi di Pengaturan:** Streamer dapat mengaktifkan atau menyembunyikan HUD counter ini kapan saja via **Settings [F2] > Hardware & Telemetry > Indikator FPS Layar (HUD Telemetry)**.
 
 ### 🎮 4. Discrete GPU Acceleration (NVIDIA / AMD) & WebGL Optimization
 * **High-Performance Context Request:** WebGL contexts explicitly request `powerPreference: 'high-performance'` to ensure modern graphics engines prefer dedicated hardware over integrated graphics.
@@ -62,12 +102,11 @@
   * **NVIDIA Control Panel:** Assign "High-performance NVIDIA processor" in Manage 3D Settings > Program Settings.
 * **Live Hardware Telemetry:** Dynamic 0–100 benchmark scoring, actual rendering FPS, millisecond frame latency, WebGL unmasked GPU renderer info, and CPU thread concurrency.
 
-### 🎙️ 5. Web Audio DSP Engine, Mic Test & Voice Conversion Test
-* **Client-Side DSP Voice Models:** 8 local Web Audio filters (Kawaii Anime Girl, Ikemen Deep Voice, Chipmunk Helium, Cyber Robot, Vintage Walkie-Talkie, Concert Hall Echo, Studio Broadcast Vocal, Natural Passthrough).
-* **Interactive Mic & DSP Conversion Test Widget:**
-  * Record a 4-second voice buffer in Settings to test hardware microphone clarity.
-  * Preview "Raw Mic Voice" (direct recording) or "Converted DSP Voice" (active voice changer effect) with **zero feedback loops** and zero screeching.
-* **External Neural AI Voice Conversion:** Architectural blueprint for W-Okada AI Voice Changer (RVC v2 + CUDA) routed into OBS Studio via VB-Cable virtual audio cable.
+### 🌸 5. Fluid Animated Loading Screen & Procedural Audio Chimes
+* **Fluid Anime Loading Card:** Replaces generic spinners with a glowing, bouncy anime orb card with floating sparkle stars, pulsing audio equalizer bars, and dynamic status messages.
+* **Satisfying Fluffy Sound Effects:** Synthesized mathematically via Web Audio API:
+  * `loadingStart`: Dreamy harmonic ascending arpeggio on model load initialization.
+  * `loadingSuccess`: Crystalline sparkle chime upon complete texture binding and canvas attachment.
 
 ### 🔔 6. Zero-Latency Procedural UI Sound Effects (SFX)
 * **Web Audio Synthesis:** Zero external audio files required; all sound effects are synthesized mathematically in real-time via Web Audio API oscillators, bandpass filters, and exponential gain ramps.

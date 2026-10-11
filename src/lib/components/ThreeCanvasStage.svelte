@@ -14,8 +14,22 @@
 		// Pre-allocated parameter buffer to prevent GC pauses (Anti-slop rule)
 		const activeParamsBuffer: Record<string, number> = {};
 
+		let frameCount = 0;
+		let lastSampleTime = performance.now();
+
 		// Realtime render loop driving 3D model with vision tracking values
 		const loop = () => {
+			frameCount++;
+			const now = performance.now();
+			const elapsed = now - lastSampleTime;
+			if (elapsed >= 500) {
+				const calculated = Math.round((frameCount * 1000) / elapsed);
+				rigging.fps = Math.max(1, Math.min(240, calculated));
+				rigging.latencyMs = Number((1000 / rigging.fps).toFixed(1));
+				frameCount = 0;
+				lastSampleTime = now;
+			}
+
 			for (let i = 0; i < rigging.parameters.length; i++) {
 				const id = rigging.parameters[i].id;
 				activeParamsBuffer[id] = rigging.getActiveValue(id);

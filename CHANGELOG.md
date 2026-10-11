@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.20.1-beta] - 2026-10-11
 
 ### Added & Enhanced
+- **Real-Time On-Screen 60 FPS Telemetry HUD (`+page.svelte`, `CanvasStage.svelte`, `ThreeCanvasStage.svelte`):**
+  - Relocated live FPS badge to top-right persistent header adjacent to the MiruNova Live badge, eliminating obstruction by the camera picture-in-picture window.
+  - Added color-coded health status (Emerald $\ge$ 50 FPS, Amber $\ge$ 30 FPS, Rose < 30 FPS) and latency calculation `(Xms)`.
+  - Unified 60 FPS calculation across both 2D Live2D and 3D Cat Three.js rendering loops with 500ms rolling window averaging.
+- **README.md Overhaul & Competitive Pros Matrix (`README.md`):**
+  - Added comprehensive comparison table ("🔥 Keunggulan Utama (Pros vs. Software VTuber Konvensional)") comparing MiruNova Live with VTube Studio, Warudo, and Animaze.
+  - Spotlights zero-install lightweight browser access, 100% on-device privacy, built-in Web Audio DSP voice changer, multi-camera collab studio, and MIT open-source licensing.
+- **Voice Changer & Audio DSP Studio Prominence (`README.md`):**
+  - Elevated and detailed the real-time in-browser voice changer with 8 vocal presets, 4-second zero-feedback mic test buffer, live VU meter, and OBS Virtual Cable routing guide.
 - **Runtime Error Resolution & Clean Event Handlers (`ControlDock.svelte`, `SettingsModal.svelte`):**
   - Tailed dev logs and resolved runtime `ReferenceError: isLangMenuOpen is not defined` across dock button click handlers.
   - Resolved `ReferenceError: Tv is not defined` in `SettingsModal.svelte`.

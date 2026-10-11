@@ -432,22 +432,54 @@
 
 	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode or when GUI is locked) -->
 	{#if !rigging.isObsMode && !rigging.isGuiLocked}
-		<!-- Header Brand Watermark (Subtle & Non-intrusive) -->
+		<!-- Header Brand Watermark & Real-Time FPS Telemetry HUD -->
 		<header class="absolute top-4 right-4 z-40 flex items-center gap-2 pointer-events-auto select-none">
+			<!-- Live HUD FPS Counter Badge -->
+			{#if rigging.showFpsCounter}
+				<div
+					class="px-3 py-1.5 rounded-xl border flex items-center gap-2 font-mono text-xs shadow-xl backdrop-blur-xl select-none animate-in fade-in transition-all {
+						isLightTheme
+							? 'bg-white/95 border-zinc-200 text-zinc-800 shadow-sm'
+							: 'bg-zinc-950/85 border-zinc-800/80 text-zinc-100 shadow-2xl'
+					}"
+					title="Real-Time 60 FPS Telemetry HUD (Atur di Settings [F2])"
+				>
+					<span
+						class="w-2 h-2 rounded-full {
+							(rigging.fps || 60) >= 50
+								? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+								: (rigging.fps || 60) >= 30
+									? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'
+									: 'bg-rose-400 shadow-[0_0_8px_#f87171]'
+						}"
+					></span>
+					<span class="font-bold {(rigging.fps || 60) >= 50 ? 'text-emerald-500 dark:text-emerald-300' : (rigging.fps || 60) >= 30 ? 'text-amber-500 dark:text-amber-300' : 'text-rose-500 dark:text-rose-300'}">
+						{rigging.fps || 60} FPS
+					</span>
+					<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+						({rigging.latencyMs || 16}ms)
+					</span>
+				</div>
+			{/if}
+
 			<button
 				type="button"
 				onclick={() => {
 					playSfx('modal');
 					rigging.toggleAboutModal(true);
 				}}
-				class="px-3.5 py-1.5 bg-zinc-950/85 backdrop-blur-xl border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-2xl hover:scale-105 hover:border-cyan-500/50 active:scale-95 transition-all cursor-pointer group text-left"
+				class="px-3.5 py-1.5 bg-zinc-950/85 backdrop-blur-xl border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-2xl hover:scale-105 hover:border-cyan-500/50 active:scale-95 transition-all cursor-pointer group text-left {
+					isLightTheme ? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-sm' : ''
+				}"
 				title="{i18n.t('about_title')} • MiruNova Live"
 			>
 				<div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse group-hover:scale-125 transition-transform"></div>
-				<span class="text-xs font-bold tracking-wider text-zinc-100">
+				<span class="text-xs font-bold tracking-wider {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 					MIRUNOVA <span class="text-cyan-400 font-extrabold">LIVE</span>
 				</span>
-				<span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono group-hover:text-cyan-300 transition-colors">
+				<span class="text-[10px] px-1.5 py-0.5 rounded font-mono group-hover:text-cyan-300 transition-colors {
+					isLightTheme ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-800 text-zinc-400'
+				}">
 					{rigging.avatarEngine === '3d' ? rigging.selected3DModelId : rigging.modelName}
 				</span>
 			</button>
