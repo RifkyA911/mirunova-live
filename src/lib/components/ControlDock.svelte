@@ -13,7 +13,6 @@
 		Sliders,
 		Palette,
 		Layers,
-		Languages,
 		Radio,
 		Tv,
 		Hand,
@@ -21,7 +20,6 @@
 		MousePointer,
 		Settings,
 		Aperture,
-		Keyboard,
 		Lock,
 		ChevronDown,
 		ChevronUp,
@@ -37,7 +35,6 @@
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
-	let isLangMenuOpen = $state<boolean>(false);
 	let isDeviceMenuOpen = $state<boolean>(false);
 	let isExpressionMenuOpen = $state<boolean>(false);
 	let isCursorToolMenuOpen = $state<boolean>(false);
@@ -47,19 +44,14 @@
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 
-	const languages: Array<{ code: Locale; label: string; flag: string }> = [
-		{ code: 'id', label: 'Bahasa Indonesia', flag: '🇮🇩' },
-		{ code: 'en', label: 'English', flag: '🇬🇧' },
-		{ code: 'ja', label: '日本語', flag: '🇯🇵' }
-	];
-
 	async function refreshDevices(requestPermission = false) {
 		try {
 			availableCameras = await tracker.getAvailableVideoDevices(requestPermission);
 			if (availableCameras.length > 0) {
 				const hasCurrent = availableCameras.some((c) => c.deviceId === rigging.cameraDeviceId);
-				if (!hasCurrent) {
-					const integrated = availableCameras.find((c) => /integrated|internal|built-in/i.test(c.label));
+				const integrated = availableCameras.find((c) => /integrated|internal|built-in/i.test(c.label));
+				// Prioritize physical integrated laptop camera if current selection is missing or empty
+				if (!hasCurrent || !rigging.cameraDeviceId) {
 					if (integrated) {
 						rigging.cameraDeviceId = integrated.deviceId;
 						rigging.activeCameraLabel = integrated.label;
@@ -79,12 +71,18 @@
 
 	function formatCameraBadge(label: string): string {
 		if (/integrated|internal|built-in/i.test(label)) {
-			return `📸 ${label} (Hardware Laptop)`;
+			return `📸 ${label} (Hardware Laptop Lenovo)`;
 		}
-		if (/iriun|poco|droidcam/i.test(label)) {
-			return `📱 ${label} (Smartphone Poco / Virtual)`;
+		if (/iriun|poco/i.test(label)) {
+			return `📱 ${label} (HP Poco F7 / Virtual)`;
 		}
-		return label;
+		if (/nizima/i.test(label)) {
+			return `🎭 ${label} (nizima LIVE Virtual)`;
+		}
+		if (/droidcam|obs|virtual/i.test(label)) {
+			return `📡 ${label} (Virtual Driver)`;
+		}
+		return `📷 ${label}`;
 	}
 
 	onMount(() => {
@@ -291,7 +289,7 @@
 								isLightTheme ? 'bg-zinc-50 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-800 text-zinc-200'
 							}"
 						>
-							<option value="">Pilih Kamera (Auto Deteksi Integrated)</option>
+							<option value="">📸 Auto Deteksi Kamera Hardware Laptop</option>
 							{#each availableCameras as cam}
 								<option value={cam.deviceId}>
 									{formatCameraBadge(cam.label)}
@@ -390,7 +388,6 @@
 					playSfx('click');
 					isCursorToolMenuOpen = !isCursorToolMenuOpen;
 					isDeviceMenuOpen = false;
-					isLangMenuOpen = false;
 					isExpressionMenuOpen = false;
 				}}
 				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
@@ -869,127 +866,7 @@
 			</div>
 		</div>
 
-		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
-
-		<!-- 12. Language Switcher Dropdown (Floating Above Dock) -->
-		<div class="group relative flex items-center justify-center">
-			<button
-				onclick={() => {
-					isLangMenuOpen = !isLangMenuOpen;
-					isDeviceMenuOpen = false;
-				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95 {
-					isLangMenuOpen ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : ''
-				}"
-				aria-label="Language"
-			>
-				<Languages class="w-5 h-5" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
-					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
-				} {isLangMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
-			>
-				{i18n.t('language')}: {i18n.currentLocale.toUpperCase()}
-			</div>
-
-			<!-- Language Dropdown Menu (Floating Above Dock with Backdrop Closer) -->
-			{#if isLangMenuOpen}
-				<!-- Click outside backdrop closer -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div
-					class="fixed inset-0 z-[80]"
-					onclick={() => (isLangMenuOpen = false)}
-				></div>
-
-				<div
-					class="absolute bottom-full mb-3 right-0 w-48 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-1.5 z-[85] space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
-						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
-					}"
-				>
-					<div class="px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase border-b mb-1 {
-						isLightTheme ? 'text-zinc-500 border-zinc-200' : 'text-zinc-400 border-zinc-800/60'
-					}">
-						{i18n.t('language')}
-					</div>
-					{#each languages as lang}
-						<button
-							onclick={() => {
-								i18n.setLocale(lang.code);
-								isLangMenuOpen = false;
-								rigging.persist();
-							}}
-							class="w-full px-3 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
-								i18n.currentLocale === lang.code
-									? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
-									: isLightTheme
-										? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
-										: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white'
-							}"
-						>
-							<span class="flex items-center gap-2">
-								<span class="text-sm">{lang.flag}</span>
-								<span>{lang.label}</span>
-							</span>
-							{#if i18n.currentLocale === lang.code}
-								<span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-							{/if}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-
-		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
-
-		<!-- 13. Keyboard Shortcuts Guide Button -->
-		<div class="group relative flex items-center justify-center">
-			<button
-				onclick={() => {
-					playSfx('modal');
-					rigging.toggleShortcutModal();
-					isLangMenuOpen = false;
-					isDeviceMenuOpen = false;
-				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label={i18n.t('shortcuts_title')}
-			>
-				<Keyboard class="w-5 h-5 text-zinc-300" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('shortcuts_title')} [F1 / ?]
-			</div>
-		</div>
-
-		<!-- 14. Dedicated Studio About & Creator Credits Modal Button -->
-		<div class="group relative flex items-center justify-center">
-			<button
-				onclick={() => {
-					playSfx('modal');
-					rigging.toggleAboutModal();
-					rigging.isThemeModalOpen = false;
-					rigging.isModelModalOpen = false;
-					rigging.isObsModalOpen = false;
-					rigging.isSettingsModalOpen = false;
-					isLangMenuOpen = false;
-					isDeviceMenuOpen = false;
-				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label={i18n.t('about_title')}
-			>
-				<Info class="w-5 h-5 text-cyan-400" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('about_title')} • Rifky (@RifkyA911)
-			</div>
-		</div>
-
-		<!-- 14. Sembunyikan Panel Dock Button -->
+		<!-- 12. Sembunyikan Panel Dock Button -->
 		<div class="group relative flex items-center justify-center">
 			<button
 				onclick={() => rigging.toggleDock(true)}

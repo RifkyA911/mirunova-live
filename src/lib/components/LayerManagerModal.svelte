@@ -51,35 +51,64 @@
 		rigging.activeAccessories.filter((a) => a.visible).length
 	);
 
-	function getLayerThumbnail(type: string): { bgClass: string; icon: any; label: string } {
+	const hostModelItem = $derived(
+		MODEL_CATALOG.find((m) => m.id === rigging.selectedModelId || m.url === rigging.modelUrl) ||
+		MODEL_3D_CATALOG.find((m) => m.id === rigging.selectedModelId)
+	);
+
+	const collabModelItem = $derived(
+		MODEL_CATALOG.find((m) => m.id === rigging.collabModelId || m.url === rigging.collabModelUrl)
+	);
+
+	function getLayerThumbnail(type: string): { bgClass: string; icon?: any; label: string; avatarUrl?: string; style?: string } {
 		if (type === 'background') {
 			if (rigging.backgroundStyle === 'solid') {
-				return { bgClass: 'border-zinc-700', icon: Palette, label: rigging.backgroundColor };
+				return { bgClass: 'border-zinc-700', style: `background-color: ${rigging.backgroundColor};`, label: rigging.backgroundColor };
 			}
 			if (rigging.backgroundStyle === 'chroma') {
-				return { bgClass: 'bg-[#00FF00]', icon: Palette, label: 'Chroma' };
+				return { bgClass: 'bg-[#00FF00] border-emerald-500', style: 'background-color: #00FF00;', label: 'Chroma' };
 			}
 			if (rigging.backgroundStyle === 'transparent') {
-				return { bgClass: 'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:8px_8px]', icon: Palette, label: 'Alpha' };
+				return { bgClass: 'bg-[repeating-conic-gradient(#3f3f46_0%_25%,#18181b_0%_50%)] bg-[size:6px_6px] border-zinc-700', label: 'Alpha' };
 			}
 			if (rigging.backgroundStyle === 'mesh') {
-				return { bgClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:8px_8px]', icon: Palette, label: 'Mesh' };
+				return { bgClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d444_1px,transparent_1px),linear-gradient(to_bottom,#06b6d444_1px,transparent_1px)] bg-[size:6px_6px] border-cyan-800', label: 'Mesh' };
 			}
-			return { bgClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950', icon: Palette, label: 'Cosmic' };
+			if (rigging.backgroundStyle === 'grid') {
+				return { bgClass: 'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4650_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4650_1px,transparent_1px)] bg-[size:6px_6px] border-zinc-700', label: 'Grid' };
+			}
+			if (rigging.backgroundStyle === 'dots') {
+				return { bgClass: 'bg-zinc-950 bg-[radial-gradient(#38bdf860_1.5px,transparent_1.5px)] bg-[size:6px_6px] border-sky-800', label: 'Dots' };
+			}
+			return { bgClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950 border-purple-800', label: 'Cosmic' };
 		}
 		if (type === 'model-host') {
-			return { bgClass: 'bg-pink-500/20 border-pink-500/40 text-pink-300', icon: Smile, label: rigging.modelName.slice(0, 10) };
+			return {
+				bgClass: 'bg-pink-500/20 border-pink-500/40 text-pink-300',
+				icon: Smile,
+				label: rigging.modelName,
+				avatarUrl: hostModelItem?.avatarUrl
+			};
 		}
 		if (type === 'model-collab') {
-			return { bgClass: 'bg-purple-500/20 border-purple-500/40 text-purple-300', icon: Users, label: rigging.collabModelName.slice(0, 10) };
+			return {
+				bgClass: 'bg-purple-500/20 border-purple-500/40 text-purple-300',
+				icon: Users,
+				label: rigging.isCollabModeActive ? rigging.collabModelName : 'Partner (Nonaktif)',
+				avatarUrl: rigging.isCollabModeActive ? collabModelItem?.avatarUrl : undefined
+			};
 		}
 		if (type === 'accessories') {
 			return { bgClass: 'bg-amber-500/20 border-amber-500/40 text-amber-300', icon: Sparkles, label: `${activeAccCount} Aktif` };
 		}
-		return { bgClass: 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300', icon: Tv, label: rigging.screenEffect };
+		// shader-fx
+		let shaderBg = 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300';
+		if (rigging.screenEffect === 'vignette') shaderBg = 'bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.9)_100%)] border-zinc-700 bg-zinc-900';
+		else if (rigging.screenEffect === 'scanlines') shaderBg = 'bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.8)_51%)] bg-[size:100%_4px] border-zinc-700 bg-zinc-900';
+		else if (rigging.screenEffect === 'crt') shaderBg = 'bg-cyan-950/80 border-cyan-500 shadow-[inset_0_0_8px_rgba(6,182,212,0.6)]';
+		else if (rigging.screenEffect === 'blur') shaderBg = 'backdrop-blur-sm bg-zinc-800/80 border-zinc-600';
+		return { bgClass: shaderBg, icon: Tv, label: rigging.screenEffect };
 	}
-
-	let rafWindowId: number | null = null;
 
 	function handleHeaderPointerDown(e: PointerEvent) {
 		if (rigging.layerManagerViewMode !== 'windowed') return;
@@ -92,25 +121,26 @@
 			y: e.clientY - rigging.layerWindowY
 		};
 
+		const headerEl = e.currentTarget as HTMLElement;
+		try {
+			headerEl.setPointerCapture(e.pointerId);
+		} catch {}
+
 		const onPointerMove = (ev: PointerEvent) => {
 			if (!isDraggingWindow) return;
-			if (rafWindowId) cancelAnimationFrame(rafWindowId);
-			rafWindowId = requestAnimationFrame(() => {
-				const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
-				const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
-				const newX = Math.max(8, Math.min(maxW - 200, ev.clientX - windowDragOffset.x));
-				const newY = Math.max(8, Math.min(maxH - 60, ev.clientY - windowDragOffset.y));
-				rigging.layerWindowX = newX;
-				rigging.layerWindowY = newY;
-			});
+			const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+			const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+			const newX = Math.max(8, Math.min(maxW - 160, ev.clientX - windowDragOffset.x));
+			const newY = Math.max(8, Math.min(maxH - 50, ev.clientY - windowDragOffset.y));
+			rigging.layerWindowX = newX;
+			rigging.layerWindowY = newY;
 		};
 
-		const onPointerUp = () => {
+		const onPointerUp = (ev: PointerEvent) => {
 			isDraggingWindow = false;
-			if (rafWindowId) {
-				cancelAnimationFrame(rafWindowId);
-				rafWindowId = null;
-			}
+			try {
+				headerEl.releasePointerCapture(ev.pointerId);
+			} catch {}
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('pointerup', onPointerUp);
 			window.removeEventListener('pointercancel', onPointerUp);
@@ -133,25 +163,26 @@
 			h: rigging.layerWindowHeight
 		};
 
+		const resizeEl = e.currentTarget as HTMLElement;
+		try {
+			resizeEl.setPointerCapture(e.pointerId);
+		} catch {}
+
 		const onResizeMove = (ev: PointerEvent) => {
 			if (!isResizingWindow) return;
-			if (rafWindowId) cancelAnimationFrame(rafWindowId);
-			rafWindowId = requestAnimationFrame(() => {
-				const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
-				const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
-				const dw = ev.clientX - resizeStart.x;
-				const dh = ev.clientY - resizeStart.y;
-				rigging.layerWindowWidth = Math.max(320, Math.min(maxW - 40, resizeStart.w + dw));
-				rigging.layerWindowHeight = Math.max(260, Math.min(maxH - 40, resizeStart.h + dh));
-			});
+			const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+			const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+			const dw = ev.clientX - resizeStart.x;
+			const dh = ev.clientY - resizeStart.y;
+			rigging.layerWindowWidth = Math.max(340, Math.min(maxW - 40, resizeStart.w + dw));
+			rigging.layerWindowHeight = Math.max(260, Math.min(maxH - 40, resizeStart.h + dh));
 		};
 
-		const onResizeUp = () => {
+		const onResizeUp = (ev: PointerEvent) => {
 			isResizingWindow = false;
-			if (rafWindowId) {
-				cancelAnimationFrame(rafWindowId);
-				rafWindowId = null;
-			}
+			try {
+				resizeEl.releasePointerCapture(ev.pointerId);
+			} catch {}
 			window.removeEventListener('pointermove', onResizeMove);
 			window.removeEventListener('pointerup', onResizeUp);
 			window.removeEventListener('pointercancel', onResizeUp);
@@ -410,10 +441,18 @@
 
 										<!-- Live Thumbnail -->
 										<div
-											class="w-8 h-8 rounded-lg border overflow-hidden shrink-0 relative flex items-center justify-center shadow-inner {thumb.bgClass}"
-											style={layer.type === 'background' && rigging.backgroundStyle === 'solid' ? `background-color: ${rigging.backgroundColor};` : ''}
+											class="w-9 h-9 rounded-xl border overflow-hidden shrink-0 relative flex items-center justify-center shadow-inner {thumb.bgClass}"
+											style={thumb.style || ''}
 										>
-											<ThumbIcon class="w-3.5 h-3.5 opacity-70" />
+											{#if thumb.avatarUrl}
+												<img
+													src={thumb.avatarUrl}
+													alt={layer.name}
+													class="w-full h-full object-cover object-top"
+												/>
+											{:else if ThumbIcon}
+												<ThumbIcon class="w-4 h-4 opacity-75" />
+											{/if}
 										</div>
 
 										<!-- Clickable text to select layer -->
@@ -535,6 +574,210 @@
 										</div>
 									</div>
 								</div>
+
+								<!-- Dynamic Nested Sub-List for Accessories, Collab, and Host -->
+								{#if layer.type === 'accessories'}
+									<div class="ml-5 pl-3 border-l-2 border-amber-500/40 space-y-1.5 py-1">
+										{#if rigging.activeAccessories.filter((a) => a.visible).length > 0}
+											{#each rigging.activeAccessories.filter((a) => a.visible) as acc (acc.id)}
+												{@const isAccSelected = rigging.cursorToolMode === 'select-layer' && rigging.selectedLayerElementId === acc.id}
+												<div
+													class="p-2 rounded-xl border flex items-center justify-between gap-2 transition-all {
+														isAccSelected
+															? 'bg-amber-500/15 border-amber-400 ring-1 ring-amber-400/50 shadow-xs'
+															: isLightTheme
+																? 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
+																: 'bg-zinc-950/70 border-zinc-800/80 hover:border-zinc-700'
+													}"
+												>
+													<!-- Click to select accessory on stage -->
+													<!-- svelte-ignore a11y_click_events_have_key_events -->
+													<!-- svelte-ignore a11y_no_static_element_interactions -->
+													<div
+														onclick={() => {
+															playSfx('click');
+															rigging.setCursorToolMode('select-layer');
+															rigging.selectLayerElement(acc.id);
+														}}
+														class="flex items-center gap-2 truncate flex-1 cursor-pointer"
+													>
+														<span class="text-base shrink-0 p-1 rounded-lg bg-zinc-800/80 border border-zinc-700/60 leading-none">
+															{acc.emoji}
+														</span>
+														<div class="truncate">
+															<span class="text-xs font-semibold block truncate {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
+																{acc.name}
+															</span>
+															<span class="text-[9px] text-zinc-400 font-mono">
+																Offset: ({acc.offsetX}, {acc.offsetY}) • Scale: {acc.scale}x
+															</span>
+														</div>
+													</div>
+
+													<!-- Accessory quick controls -->
+													<div class="flex items-center gap-1 shrink-0">
+														<button
+															type="button"
+															onclick={() => {
+																playSfx('click');
+																rigging.setCursorToolMode('select-layer');
+																rigging.selectLayerElement(acc.id);
+															}}
+															title="Pilih & Drag di Kanvas (Cursor Move Mode)"
+															class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer {
+																isAccSelected
+																	? 'bg-amber-500 text-zinc-950 shadow-xs'
+																	: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+															}"
+														>
+															{isAccSelected ? '🎯 Aktif' : 'Pilih'}
+														</button>
+
+														<button
+															type="button"
+															onclick={() => {
+																playSfx('toggle');
+																acc.visible = !acc.visible;
+																rigging.stageLayers = [...rigging.stageLayers];
+																rigging.persist();
+															}}
+															title="Sembunyikan aksesoris ini"
+															class="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
+														>
+															{#if acc.visible}
+																<Eye class="w-3 h-3 text-amber-400" />
+															{:else}
+																<EyeOff class="w-3 h-3 text-zinc-500" />
+															{/if}
+														</button>
+
+														<button
+															type="button"
+															onclick={() => {
+																playSfx('click');
+																rigging.toggleAccessory(acc.id);
+																rigging.stageLayers = [...rigging.stageLayers];
+															}}
+															title="Copot aksesoris dari panggung"
+															class="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 transition-colors cursor-pointer"
+														>
+															<X class="w-3 h-3" />
+														</button>
+													</div>
+												</div>
+											{/each}
+										{:else}
+											<div class="p-2.5 rounded-xl border border-dashed border-zinc-800 text-center space-y-1.5">
+												<p class="text-[10px] text-zinc-400">
+													Belum ada aksesoris aktif di panggung
+												</p>
+												<button
+													type="button"
+													onclick={() => {
+														playSfx('click');
+														activeSubTab = 'accessories';
+													}}
+													class="px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold transition-all cursor-pointer"
+												>
+													+ Pasang Aksesoris &amp; Props
+												</button>
+											</div>
+										{/if}
+
+										{#if rigging.activeAccessories.filter((a) => a.visible).length > 0}
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													activeSubTab = 'accessories';
+												}}
+												class="w-full py-1 rounded-xl border border-dashed border-amber-500/30 hover:border-amber-500/60 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 text-[10px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
+											>
+												<Plus class="w-3 h-3" />
+												<span>Tambah Props Lainnya</span>
+											</button>
+										{/if}
+									</div>
+								{:else if layer.type === 'model-collab'}
+									<div class="ml-5 pl-3 border-l-2 border-purple-500/40 space-y-1.5 py-1">
+										{#if rigging.isCollabModeActive}
+											<div class="p-2 rounded-xl border border-purple-500/30 bg-purple-950/20 flex items-center justify-between text-xs">
+												<div class="flex items-center gap-2 truncate">
+													<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+													<span class="font-bold text-purple-300 truncate">Partner: {rigging.collabModelName}</span>
+												</div>
+												<div class="flex items-center gap-1">
+													<button
+														type="button"
+														onclick={() => {
+															playSfx('click');
+															rigging.setCursorToolMode('select-layer');
+															rigging.selectLayerElement('collab');
+														}}
+														class="px-2 py-0.5 rounded-lg text-[10px] font-bold {
+															rigging.selectedLayerElementId === 'collab'
+																? 'bg-purple-600 text-white'
+																: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+														}"
+													>
+														{rigging.selectedLayerElementId === 'collab' ? '🎯 Terpilih' : 'Pilih'}
+													</button>
+													<button
+														type="button"
+														onclick={() => {
+															playSfx('click');
+															activeSubTab = 'collab';
+														}}
+														class="px-2 py-0.5 rounded-lg text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 font-semibold"
+													>
+														Ganti Partner
+													</button>
+												</div>
+											</div>
+										{:else}
+											<div class="p-2 rounded-xl border border-dashed border-zinc-800 text-center flex items-center justify-between text-[11px]">
+												<span class="text-zinc-500">Collab streamer nonaktif</span>
+												<button
+													type="button"
+													onclick={() => {
+														playSfx('toggle');
+														rigging.toggleCollabMode();
+													}}
+													class="px-2.5 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-[10px] font-bold cursor-pointer transition-all"
+												>
+													+ Aktifkan Collab
+												</button>
+											</div>
+										{/if}
+									</div>
+								{:else if layer.type === 'model-host'}
+									<div class="ml-5 pl-3 border-l-2 border-pink-500/40 space-y-1 py-1">
+										<div class="p-2 rounded-xl border border-pink-500/20 bg-pink-950/10 flex items-center justify-between text-xs">
+											<div class="flex items-center gap-2 truncate">
+												<span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+												<span class="font-bold text-pink-200 truncate">{rigging.modelName}</span>
+												<span class="text-[9px] px-1.5 py-0.2 rounded-full bg-zinc-800 text-zinc-400 font-mono">
+													{rigging.avatarEngine === '3d' ? 'Three.js 3D' : 'Live2D Cubism'}
+												</span>
+											</div>
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.setCursorToolMode('select-layer');
+													rigging.selectLayerElement('host');
+												}}
+												class="px-2 py-0.5 rounded-lg text-[10px] font-bold {
+													rigging.selectedLayerElementId === 'host' || !rigging.selectedLayerElementId
+														? 'bg-pink-600 text-white'
+														: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+												}"
+											>
+												{rigging.selectedLayerElementId === 'host' || !rigging.selectedLayerElementId ? '🎯 Terpilih' : 'Pilih'}
+											</button>
+										</div>
+									</div>
+								{/if}
 							{/each}
 						</div>
 					</div>

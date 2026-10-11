@@ -40,7 +40,8 @@
 		Play,
 		Square as StopSquare,
 		Volume1,
-		Bell
+		Bell,
+		Keyboard
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
@@ -275,8 +276,9 @@
 			availableCameras = await tracker.getAvailableVideoDevices(requestPermission);
 			if (availableCameras.length > 0) {
 				const hasCurrent = availableCameras.some((c) => c.deviceId === rigging.cameraDeviceId);
-				if (!hasCurrent) {
-					const integrated = availableCameras.find((c) => /integrated|internal|built-in/i.test(c.label));
+				const integrated = availableCameras.find((c) => /integrated|internal|built-in/i.test(c.label));
+				// Prioritize physical integrated laptop camera if current selection is missing or empty
+				if (!hasCurrent || !rigging.cameraDeviceId) {
 					if (integrated) {
 						rigging.cameraDeviceId = integrated.deviceId;
 						rigging.activeCameraLabel = integrated.label;
@@ -302,12 +304,18 @@
 
 	function formatCameraBadge(label: string): string {
 		if (/integrated|internal|built-in/i.test(label)) {
-			return `📸 ${label} (Hardware Laptop)`;
+			return `📸 ${label} (Hardware Laptop Lenovo)`;
 		}
-		if (/iriun|poco|droidcam/i.test(label)) {
-			return `📱 ${label} (Smartphone Poco / Virtual)`;
+		if (/iriun|poco/i.test(label)) {
+			return `📱 ${label} (HP Poco F7 / Virtual)`;
 		}
-		return label;
+		if (/nizima/i.test(label)) {
+			return `🎭 ${label} (nizima LIVE Virtual)`;
+		}
+		if (/droidcam|obs|virtual/i.test(label)) {
+			return `📡 ${label} (Virtual Driver)`;
+		}
+		return `📷 ${label}`;
 	}
 
 	onMount(() => {
@@ -875,7 +883,7 @@
 										onchange={handleCameraDeviceChange}
 										class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 focus:outline-none focus:border-indigo-500"
 									>
-										<option value="">Pilih Kamera (Auto Deteksi Integrated)</option>
+										<option value="">📸 Auto Deteksi Kamera Hardware Laptop</option>
 										{#each availableCameras as cam}
 											<option value={cam.deviceId}>
 												{formatCameraBadge(cam.label)}
@@ -2374,6 +2382,55 @@
 								<div class="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-2">
 									<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
 									<span>Hak Streaming YouTube / Twitch 100% Bebas</span>
+								</div>
+							</div>
+						</div>
+
+						<!-- Keyboard Shortcuts Guide Launch Card -->
+						<div class="p-5 rounded-2xl bg-zinc-950/80 border border-violet-500/30 shadow-lg space-y-4">
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+								<div class="flex items-center gap-3">
+									<div class="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400">
+										<Keyboard class="w-5 h-5" />
+									</div>
+									<div>
+										<h4 class="text-sm font-bold text-violet-300">
+											{i18n.t('shortcuts_title')} [F1 / ?]
+										</h4>
+										<p class="text-[11px] text-zinc-400 mt-0.5">
+											Daftar lengkap tombol pintasan keyboard cepat untuk live streaming &amp; kontrol stage
+										</p>
+									</div>
+								</div>
+
+								<button
+									onclick={() => {
+										playSfx('modal');
+										rigging.isSettingsModalOpen = false;
+										rigging.toggleShortcutModal(true);
+									}}
+									class="px-4 py-2 bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/40 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+								>
+									Buka Panduan Pintasan [F1] &rarr;
+								</button>
+							</div>
+
+							<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px] text-zinc-400 font-mono">
+								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
+									<span class="text-zinc-200 font-bold block">Space</span>
+									<span class="text-[10px] text-zinc-500">Kalibrasi Wajah</span>
+								</div>
+								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
+									<span class="text-zinc-200 font-bold block">C</span>
+									<span class="text-[10px] text-zinc-500">Toggle Kamera</span>
+								</div>
+								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
+									<span class="text-zinc-200 font-bold block">H</span>
+									<span class="text-[10px] text-zinc-500">Sembunyi Dock</span>
+								</div>
+								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
+									<span class="text-zinc-200 font-bold block">F1</span>
+									<span class="text-[10px] text-zinc-500">Bantuan Pintasan</span>
 								</div>
 							</div>
 						</div>

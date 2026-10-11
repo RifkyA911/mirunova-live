@@ -668,6 +668,7 @@ export class RiggingStore {
 		if (layer) {
 			layer.visible = !layer.visible;
 			if (layer.type === 'model-collab') this.collabVisible = layer.visible;
+			this.stageLayers = [...this.stageLayers];
 			this.showToast(`${layer.visible ? '👁️ Menampilkan' : '🙈 Menyembunyikan'} layer: ${layer.name}`);
 			this.persist();
 		}
@@ -678,6 +679,7 @@ export class RiggingStore {
 		if (layer) {
 			layer.opacity = Math.max(0, Math.min(1, opacity));
 			if (layer.type === 'model-collab') this.collabOpacity = layer.opacity;
+			this.stageLayers = [...this.stageLayers];
 			this.persist();
 		}
 	}
@@ -686,6 +688,7 @@ export class RiggingStore {
 		const layer = this.stageLayers.find((l) => l.id === layerId);
 		if (layer) {
 			layer.locked = locked !== undefined ? locked : !layer.locked;
+			this.stageLayers = [...this.stageLayers];
 			this.showToast(`${layer.locked ? '🔒 Mengunci' : '🔓 Membuka kunci'} layer: ${layer.name}`);
 			this.persist();
 		}
@@ -698,6 +701,7 @@ export class RiggingStore {
 		if (targetIdx < 0 || targetIdx >= this.stageLayers.length) return;
 		const item = this.stageLayers.splice(index, 1)[0];
 		this.stageLayers.splice(targetIdx, 0, item);
+		this.stageLayers = [...this.stageLayers];
 		this.persist();
 	}
 
@@ -706,6 +710,7 @@ export class RiggingStore {
 		if (toIndex < 0 || toIndex >= this.stageLayers.length) return;
 		const item = this.stageLayers.splice(fromIndex, 1)[0];
 		this.stageLayers.splice(toIndex, 0, item);
+		this.stageLayers = [...this.stageLayers];
 		this.persist();
 	}
 

@@ -494,11 +494,14 @@
 
 	// Reactively manage Host Model opacity & layer visibility
 	$effect(() => {
+		const layers = rigging.stageLayers;
 		if (currentModel) {
-			const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+			const hostLayer = layers.find((l) => l.type === 'model-host');
 			const isLayerVisible = hostLayer ? hostLayer.visible : true;
 			const layerOpacity = hostLayer ? hostLayer.opacity : 1.0;
-			currentModel.visible = isLayerVisible && layerOpacity > 0;
+			const shouldShow = Boolean(isLayerVisible && layerOpacity > 0);
+			currentModel.visible = shouldShow;
+			currentModel.renderable = shouldShow;
 			currentModel.alpha = isLayerVisible ? layerOpacity : 0;
 		}
 	});
@@ -693,7 +696,18 @@
 		const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories');
 
 		if (rigging.cursorToolMode === 'select-layer') {
-			const targetId = rigging.selectedLayerElementId;
+			let targetId = rigging.selectedLayerElementId;
+
+			// If collab model is active and target isn't an accessory, smartly select either collab or host based on click location
+			if (rigging.isCollabModeActive && collabModel && (!targetId || targetId === 'host' || targetId === 'collab')) {
+				const isRightSide = e.clientX > (window.innerWidth / 2);
+				const clickedCollab = (rigging.collabPosition === 'right' && isRightSide) ||
+					(rigging.collabPosition === 'left' && !isRightSide) ||
+					(rigging.collabPosition === 'pip' && isRightSide);
+				targetId = clickedCollab ? 'collab' : 'host';
+				rigging.selectLayerElement(targetId);
+			}
+
 			if (targetId === 'collab') {
 				if (collabLayer?.locked) {
 					rigging.showToast('🔒 Layer Avatar Collab terkunci');
@@ -887,6 +901,21 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
+					onmousedown={(e) => {
+						if (rigging.cursorToolMode === 'select-layer') {
+							e.stopPropagation();
+							e.preventDefault();
+							if (accLayer?.locked) {
+								rigging.showToast('🔒 Layer Props / Aksesoris terkunci');
+								return;
+							}
+							playSfx('click');
+							rigging.selectLayerElement(acc.id);
+							isDragging = true;
+							lastPointerX = e.clientX;
+							lastPointerY = e.clientY;
+						}
+					}}
 					onclick={(e) => {
 						if (rigging.cursorToolMode === 'select-layer') {
 							e.stopPropagation();
