@@ -481,7 +481,11 @@
 			} else if (!active && collabModel) {
 				collabModel.visible = false;
 			} else if (active && collabModel) {
-				collabModel.visible = true;
+				const collabLayer = rigging.stageLayers.find((l) => l.type === 'model-collab');
+				const isLayerVisible = collabLayer ? collabLayer.visible : true;
+				const layerOpacity = collabLayer ? collabLayer.opacity : 1.0;
+				collabModel.visible = Boolean(rigging.collabVisible && isLayerVisible && layerOpacity > 0);
+				collabModel.alpha = collabModel.visible ? ((rigging.collabOpacity ?? 1.0) * layerOpacity) : 0;
 				updateCollabTransform();
 			}
 			updateLayerZIndices();
@@ -494,6 +498,7 @@
 			const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
 			const isLayerVisible = hostLayer ? hostLayer.visible : true;
 			const layerOpacity = hostLayer ? hostLayer.opacity : 1.0;
+			currentModel.visible = isLayerVisible && layerOpacity > 0;
 			currentModel.alpha = isLayerVisible ? layerOpacity : 0;
 		}
 	});
@@ -682,6 +687,44 @@
 	function handleMouseDown(e: MouseEvent) {
 		if (rigging.isGuiLocked) return;
 		if (e.button !== 0 && e.button !== 1) return;
+
+		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+		const collabLayer = rigging.stageLayers.find((l) => l.type === 'model-collab');
+		const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories');
+
+		if (rigging.cursorToolMode === 'select-layer') {
+			const targetId = rigging.selectedLayerElementId;
+			if (targetId === 'collab') {
+				if (collabLayer?.locked) {
+					rigging.showToast('🔒 Layer Avatar Collab terkunci');
+					return;
+				}
+				if (!collabLayer?.visible) return;
+			}
+			if (targetId === 'host' || !targetId) {
+				if (hostLayer?.locked) {
+					rigging.showToast('🔒 Layer Avatar Utama terkunci');
+					return;
+				}
+				if (!hostLayer?.visible) return;
+			}
+			const targetAcc = rigging.activeAccessories.find((a) => a.id === targetId);
+			if (targetAcc) {
+				if (accLayer?.locked) {
+					rigging.showToast('🔒 Layer Props / Aksesoris terkunci');
+					return;
+				}
+				if (!accLayer?.visible) return;
+			}
+		} else {
+			// Mode 'pan': panning host model
+			if (hostLayer?.locked) {
+				rigging.showToast('🔒 Layer Avatar Utama terkunci');
+				return;
+			}
+			if (!hostLayer?.visible) return;
+		}
+
 		isDragging = true;
 		lastPointerX = e.clientX;
 		lastPointerY = e.clientY;
@@ -697,19 +740,26 @@
 		lastPointerX = e.clientX;
 		lastPointerY = e.clientY;
 
+		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+		const collabLayer = rigging.stageLayers.find((l) => l.type === 'model-collab');
+		const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories');
+
 		if (rigging.cursorToolMode === 'select-layer') {
 			const targetId = rigging.selectedLayerElementId;
 			if (targetId === 'collab' && collabModel) {
+				if (collabLayer?.locked || !collabLayer?.visible) return;
 				rigging.collabOffsetX = (rigging.collabOffsetX || 0) + dx;
 				rigging.collabOffsetY = (rigging.collabOffsetY || 0) + dy;
 				updateCollabTransform();
 			} else {
 				const acc = rigging.activeAccessories.find((a) => a.id === targetId);
 				if (acc) {
+					if (accLayer?.locked || !accLayer?.visible) return;
 					const scaleRatio = (modelScale / 0.25) || 1;
 					acc.offsetX += Math.round(dx / scaleRatio);
 					acc.offsetY += Math.round(dy / scaleRatio);
 				} else if (currentModel) {
+					if (hostLayer?.locked || !hostLayer?.visible) return;
 					// Default to moving host model
 					modelPosition = {
 						x: modelPosition.x + dx,
@@ -720,7 +770,7 @@
 			}
 		} else {
 			// Mode 'pan': move host model
-			if (!currentModel) return;
+			if (!currentModel || hostLayer?.locked || !hostLayer?.visible) return;
 			modelPosition = {
 				x: e.clientX - dragStart.x,
 				y: e.clientY - dragStart.y
@@ -740,6 +790,8 @@
 
 	function handleWheel(e: WheelEvent) {
 		if (rigging.isGuiLocked) return;
+		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+		if (hostLayer?.locked || !hostLayer?.visible) return;
 		if (!currentModel || !app) return;
 		e.preventDefault();
 		const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
@@ -754,6 +806,12 @@
 			rigging.toggleGuiLock(false);
 			return;
 		}
+		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+		if (hostLayer?.locked) {
+			rigging.showToast('🔒 Layer Avatar Utama terkunci');
+			return;
+		}
+		if (!hostLayer?.visible) return;
 		if (!currentModel || !app) return;
 		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
 		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);

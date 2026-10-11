@@ -79,6 +79,8 @@
 		return { bgClass: 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300', icon: Tv, label: rigging.screenEffect };
 	}
 
+	let rafWindowId: number | null = null;
+
 	function handleHeaderPointerDown(e: PointerEvent) {
 		if (rigging.layerManagerViewMode !== 'windowed') return;
 		const target = e.target as HTMLElement;
@@ -89,29 +91,35 @@
 			x: e.clientX - rigging.layerWindowX,
 			y: e.clientY - rigging.layerWindowY
 		};
-		try {
-			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-		} catch {}
-	}
 
-	function handleHeaderPointerMove(e: PointerEvent) {
-		if (!isDraggingWindow) return;
-		const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
-		const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
-		const newX = Math.max(8, Math.min(maxW - 200, e.clientX - windowDragOffset.x));
-		const newY = Math.max(8, Math.min(maxH - 60, e.clientY - windowDragOffset.y));
-		rigging.layerWindowX = newX;
-		rigging.layerWindowY = newY;
-	}
+		const onPointerMove = (ev: PointerEvent) => {
+			if (!isDraggingWindow) return;
+			if (rafWindowId) cancelAnimationFrame(rafWindowId);
+			rafWindowId = requestAnimationFrame(() => {
+				const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+				const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+				const newX = Math.max(8, Math.min(maxW - 200, ev.clientX - windowDragOffset.x));
+				const newY = Math.max(8, Math.min(maxH - 60, ev.clientY - windowDragOffset.y));
+				rigging.layerWindowX = newX;
+				rigging.layerWindowY = newY;
+			});
+		};
 
-	function handleHeaderPointerUp(e: PointerEvent) {
-		if (isDraggingWindow) {
+		const onPointerUp = () => {
 			isDraggingWindow = false;
-			try {
-				(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-			} catch {}
+			if (rafWindowId) {
+				cancelAnimationFrame(rafWindowId);
+				rafWindowId = null;
+			}
+			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('pointerup', onPointerUp);
+			window.removeEventListener('pointercancel', onPointerUp);
 			rigging.persist();
-		}
+		};
+
+		window.addEventListener('pointermove', onPointerMove, { passive: true });
+		window.addEventListener('pointerup', onPointerUp, { once: true });
+		window.addEventListener('pointercancel', onPointerUp, { once: true });
 	}
 
 	function handleResizePointerDown(e: PointerEvent) {
@@ -124,29 +132,35 @@
 			w: rigging.layerWindowWidth,
 			h: rigging.layerWindowHeight
 		};
-		try {
-			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-		} catch {}
-	}
 
-	function handleResizePointerMove(e: PointerEvent) {
-		if (!isResizingWindow) return;
-		const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
-		const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
-		const dw = e.clientX - resizeStart.x;
-		const dh = e.clientY - resizeStart.y;
-		rigging.layerWindowWidth = Math.max(320, Math.min(maxW - 40, resizeStart.w + dw));
-		rigging.layerWindowHeight = Math.max(260, Math.min(maxH - 40, resizeStart.h + dh));
-	}
+		const onResizeMove = (ev: PointerEvent) => {
+			if (!isResizingWindow) return;
+			if (rafWindowId) cancelAnimationFrame(rafWindowId);
+			rafWindowId = requestAnimationFrame(() => {
+				const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+				const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+				const dw = ev.clientX - resizeStart.x;
+				const dh = ev.clientY - resizeStart.y;
+				rigging.layerWindowWidth = Math.max(320, Math.min(maxW - 40, resizeStart.w + dw));
+				rigging.layerWindowHeight = Math.max(260, Math.min(maxH - 40, resizeStart.h + dh));
+			});
+		};
 
-	function handleResizePointerUp(e: PointerEvent) {
-		if (isResizingWindow) {
+		const onResizeUp = () => {
 			isResizingWindow = false;
-			try {
-				(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-			} catch {}
+			if (rafWindowId) {
+				cancelAnimationFrame(rafWindowId);
+				rafWindowId = null;
+			}
+			window.removeEventListener('pointermove', onResizeMove);
+			window.removeEventListener('pointerup', onResizeUp);
+			window.removeEventListener('pointercancel', onResizeUp);
 			rigging.persist();
-		}
+		};
+
+		window.addEventListener('pointermove', onResizeMove, { passive: true });
+		window.addEventListener('pointerup', onResizeUp, { once: true });
+		window.addEventListener('pointercancel', onResizeUp, { once: true });
 	}
 
 	function onLayerDragStart(idx: number, e: DragEvent) {
@@ -184,7 +198,11 @@
 	<aside
 		aria-label="Layer Manager Studio"
 		transition:fly={{ y: 20, duration: 200, easing: cubicOut }}
-		class="z-40 shadow-2xl flex flex-col overflow-hidden border backdrop-blur-2xl transition-all duration-150 select-none {
+		class="z-40 shadow-2xl flex flex-col overflow-hidden border backdrop-blur-2xl select-none {
+			isDraggingWindow || isResizingWindow || rigging.layerManagerViewMode === 'windowed'
+				? 'transition-none'
+				: 'transition-all duration-150'
+		} {
 			rigging.layerManagerViewMode === 'windowed'
 				? 'fixed rounded-3xl'
 				: 'fixed top-0 right-0 h-screen w-96 max-w-[95vw] rounded-l-3xl rounded-r-none border-r-0 border-y-0'
@@ -201,9 +219,6 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			onpointerdown={handleHeaderPointerDown}
-			onpointermove={handleHeaderPointerMove}
-			onpointerup={handleHeaderPointerUp}
-			onpointercancel={handleHeaderPointerUp}
 			class="px-4 py-3 border-b flex items-center justify-between select-none shrink-0 {
 				rigging.layerManagerViewMode === 'windowed' ? 'cursor-grab active:cursor-grabbing' : ''
 			} {
@@ -448,7 +463,8 @@
 										<!-- Visibility Eye Toggle -->
 										<button
 											type="button"
-											onclick={() => {
+											onclick={(e) => {
+												e.stopPropagation();
 												playSfx('toggle');
 												rigging.toggleLayer(layer.id);
 											}}
@@ -469,7 +485,8 @@
 										<!-- Lock Toggle -->
 										<button
 											type="button"
-											onclick={() => {
+											onclick={(e) => {
+												e.stopPropagation();
 												playSfx('click');
 												rigging.setLayerLock(layer.id);
 											}}
@@ -492,7 +509,8 @@
 											<button
 												type="button"
 												disabled={idx === 0}
-												onclick={() => {
+												onclick={(e) => {
+													e.stopPropagation();
 													playSfx('click');
 													rigging.moveLayer(layer.id, 'up');
 												}}
@@ -504,7 +522,8 @@
 											<button
 												type="button"
 												disabled={idx === rigging.stageLayers.length - 1}
-												onclick={() => {
+												onclick={(e) => {
+													e.stopPropagation();
 													playSfx('click');
 													rigging.moveLayer(layer.id, 'down');
 												}}
@@ -789,9 +808,6 @@
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
 				onpointerdown={handleResizePointerDown}
-				onpointermove={handleResizePointerMove}
-				onpointerup={handleResizePointerUp}
-				onpointercancel={handleResizePointerUp}
 				class="absolute bottom-1 right-1 w-5 h-5 cursor-nwse-resize text-zinc-500 hover:text-cyan-400 flex items-center justify-center z-50 select-none p-0.5"
 				title="Tarik untuk ubah ukuran (Resize Window)"
 			>

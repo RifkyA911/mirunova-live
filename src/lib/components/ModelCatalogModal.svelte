@@ -1061,10 +1061,10 @@
 												type="button"
 												onclick={() => triggerInstallModel(item)}
 												class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-pink-300 hover:text-white border border-pink-500/40 rounded-xl text-[11px] font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
-												title="Pasang folder model hasil download dari BOOTH"
+												title="Unduh gratis di BOOTH lalu pasang file ZIP untuk {item.name}"
 											>
 												<UploadCloud class="w-3.5 h-3.5 text-pink-400" />
-												<span>Pasang Model Ini</span>
+												<span>Pasang ZIP Model Ini</span>
 											</button>
 
 											<a

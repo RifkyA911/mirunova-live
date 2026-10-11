@@ -64,6 +64,7 @@ export interface SavedUserConfig {
 	layerWindowX?: number;
 	layerWindowY?: number;
 	cursorToolMode?: 'pan' | 'select-layer' | 'hand-tracking';
+	stageLayers?: Array<{ id: string; visible: boolean; opacity: number; locked: boolean }>;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

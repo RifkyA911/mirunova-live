@@ -318,6 +318,12 @@ export class RiggingStore {
 			layerWindowX: this.layerWindowX,
 			layerWindowY: this.layerWindowY,
 			cursorToolMode: this.cursorToolMode,
+			stageLayers: this.stageLayers.map((l) => ({
+				id: l.id,
+				visible: l.visible,
+				opacity: l.opacity,
+				locked: l.locked
+			})),
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -394,6 +400,16 @@ export class RiggingStore {
 		if (saved.layerWindowX !== undefined) this.layerWindowX = saved.layerWindowX;
 		if (saved.layerWindowY !== undefined) this.layerWindowY = saved.layerWindowY;
 		if (saved.cursorToolMode) this.cursorToolMode = saved.cursorToolMode as any;
+		if (Array.isArray(saved.stageLayers)) {
+			for (const savedL of saved.stageLayers) {
+				const target = this.stageLayers.find((l) => l.id === savedL.id);
+				if (target) {
+					if (typeof savedL.visible === 'boolean') target.visible = savedL.visible;
+					if (typeof savedL.opacity === 'number') target.opacity = savedL.opacity;
+					if (typeof savedL.locked === 'boolean') target.locked = savedL.locked;
+				}
+			}
+		}
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 
@@ -477,6 +493,11 @@ export class RiggingStore {
 	}
 
 	resetAvatarTransform() {
+		const hostLayer = this.stageLayers.find((l) => l.type === 'model-host');
+		if (hostLayer?.locked) {
+			this.showToast('🔒 Layer Avatar Utama sedang terkunci');
+			return;
+		}
 		this.resetTransformSignal = performance.now();
 		this.showToast('Posisi & skala avatar di-reset ke tengah');
 	}
@@ -647,6 +668,7 @@ export class RiggingStore {
 		if (layer) {
 			layer.visible = !layer.visible;
 			if (layer.type === 'model-collab') this.collabVisible = layer.visible;
+			this.showToast(`${layer.visible ? '👁️ Menampilkan' : '🙈 Menyembunyikan'} layer: ${layer.name}`);
 			this.persist();
 		}
 	}
@@ -664,6 +686,7 @@ export class RiggingStore {
 		const layer = this.stageLayers.find((l) => l.id === layerId);
 		if (layer) {
 			layer.locked = locked !== undefined ? locked : !layer.locked;
+			this.showToast(`${layer.locked ? '🔒 Mengunci' : '🔓 Membuka kunci'} layer: ${layer.name}`);
 			this.persist();
 		}
 	}

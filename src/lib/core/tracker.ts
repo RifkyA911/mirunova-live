@@ -178,114 +178,143 @@ export class FaceTracker {
 			);
 		}
 
-		// Validate requested camera device ID against currently enumerated devices
-		// This prevents "NotFoundError" when deviceId hash changes across GPU or browser sessions
-		const availableDevices = await this.getAvailableVideoDevices(false);
-		if (rigging.cameraDeviceId && availableDevices.length > 0) {
-			const exists = availableDevices.some((d) => d.deviceId === rigging.cameraDeviceId);
+		// Always fetch current devices with real hardware labels
+		const availableDevices = await this.getAvailableVideoDevices(true);
+
+		// Determine target device and label
+		let targetDeviceId = rigging.cameraDeviceId;
+		let targetLabel = rigging.activeCameraLabel;
+
+		// If user explicitly chose or previously had a camera, try resolving its current deviceId
+		if (targetDeviceId && availableDevices.length > 0) {
+			const exists = availableDevices.some((d) => d.deviceId === targetDeviceId);
 			if (!exists) {
-				// Try matching by previous label if available
-				const byLabel = rigging.activeCameraLabel
-					? availableDevices.find((d) => d.label === rigging.activeCameraLabel)
+				// DeviceId hash changed in this session; match by label!
+				const byLabel = targetLabel
+					? availableDevices.find((d) => d.label === targetLabel)
 					: null;
 				if (byLabel) {
-					rigging.cameraDeviceId = byLabel.deviceId;
-				} else {
-					console.warn('[FaceTracker] Stale camera deviceId detected; resetting to default available device');
-					rigging.cameraDeviceId = '';
+					targetDeviceId = byLabel.deviceId;
+					rigging.cameraDeviceId = targetDeviceId;
 				}
+			}
+		}
+
+		// Check if user specifically requested an Integrated / Hardware webcam or has no preference
+		const isIntegratedRequested =
+			(targetLabel && /integrated|internal|built-in/i.test(targetLabel)) ||
+			(!targetDeviceId && availableDevices.some((d) => /integrated|internal|built-in/i.test(d.label))) ||
+			(availableDevices.some((d) => d.deviceId === targetDeviceId && /integrated|internal|built-in/i.test(d.label)));
+
+		if (isIntegratedRequested || !targetDeviceId) {
+			const integratedDev =
+				availableDevices.find((d) => /integrated|internal|built-in/i.test(d.label)) ||
+				availableDevices.find((d) => !/iriun|poco|virtual|obs|droidcam/i.test(d.label));
+			if (integratedDev) {
+				targetDeviceId = integratedDev.deviceId;
+				targetLabel = integratedDev.label;
+				rigging.cameraDeviceId = targetDeviceId;
+				rigging.activeCameraLabel = targetLabel;
 			}
 		}
 
 		const targetWidth = rigging.cameraResolution === '1080p' ? 1920 : rigging.cameraResolution === '480p' ? 640 : 1280;
 		const targetHeight = rigging.cameraResolution === '1080p' ? 1080 : rigging.cameraResolution === '480p' ? 480 : 720;
-		const targetFps = rigging.cameraResolution === '480p' ? 30 : 60;
+		// Keep frameRate ideal at 30fps with max 60fps so Realtek / laptop internal USB webcams never fail with OverconstrainedError on Windows discrete GPU mode!
+		const frameRateConstraint = { ideal: 30, max: 60 };
 
 		let lastError: any = null;
 
-		// Tier 1: If user specified an explicit deviceId, strictly enforce { exact: deviceId } so browser doesn't hijack to other webcams
-		if (rigging.cameraDeviceId) {
-			// Tier 1a: Exact deviceId with target resolution
+		// 1. Try Target Device (with flexible fallback levels)
+		if (targetDeviceId) {
+			// Tier 1a: Target device with ideal resolution
 			try {
 				this.stream = await navigator.mediaDevices.getUserMedia({
 					video: {
-						deviceId: { exact: rigging.cameraDeviceId },
+						deviceId: { exact: targetDeviceId },
 						width: { ideal: targetWidth },
 						height: { ideal: targetHeight },
-						frameRate: { ideal: targetFps }
+						frameRate: frameRateConstraint
 					},
 					audio: false
 				});
-				console.log('[FaceTracker] Tier 1a exact camera deviceId succeeded:', rigging.cameraDeviceId);
+				console.log('[FaceTracker] Tier 1a exact camera succeeded:', targetDeviceId);
 			} catch (errExact1: any) {
 				lastError = errExact1;
-				console.warn('[FaceTracker] Tier 1a exact camera with resolution failed, trying Tier 1b exact deviceId unconstrained:', errExact1);
-				// Tier 1b: Exact deviceId without resolution constraints
+				console.warn('[FaceTracker] Tier 1a exact failed, trying Tier 1b exact without resolution:', errExact1);
+				// Tier 1b: Exact deviceId without resolution
 				try {
 					this.stream = await navigator.mediaDevices.getUserMedia({
-						video: { deviceId: { exact: rigging.cameraDeviceId } },
+						video: { deviceId: { exact: targetDeviceId } },
 						audio: false
 					});
-					console.log('[FaceTracker] Tier 1b exact camera deviceId without resolution succeeded');
+					console.log('[FaceTracker] Tier 1b exact camera without resolution succeeded');
 				} catch (errExact2: any) {
 					lastError = errExact2;
-					console.warn('[FaceTracker] Tier 1b exact camera failed:', errExact2);
+					console.warn('[FaceTracker] Tier 1b exact failed, trying Tier 1c loose deviceId:', errExact2);
+					// Tier 1c: Loose deviceId constraint (some DirectShow drivers refuse { exact })
+					try {
+						this.stream = await navigator.mediaDevices.getUserMedia({
+							video: { deviceId: targetDeviceId },
+							audio: false
+						});
+						console.log('[FaceTracker] Tier 1c loose deviceId succeeded');
+					} catch (errLoose: any) {
+						lastError = errLoose;
+					}
 				}
 			}
 		}
 
-		// Tier 2: If no explicit camera specified or exact failed, try ideal constraints
-		if (!this.stream) {
-			try {
-				const fallbackConstraints: MediaTrackConstraints = {
-					width: { ideal: targetWidth },
-					height: { ideal: targetHeight },
-					frameRate: { ideal: targetFps }
-				};
-				if (rigging.cameraDeviceId) {
-					fallbackConstraints.deviceId = { ideal: rigging.cameraDeviceId };
-				}
-				this.stream = await navigator.mediaDevices.getUserMedia({
-					video: fallbackConstraints,
-					audio: false
-				});
-				console.log('[FaceTracker] Tier 2 ideal camera succeeded');
-			} catch (err2: any) {
-				lastError = err2;
-				console.warn('[FaceTracker] Tier 2 ideal camera request failed, attempting Tier 3:', err2);
+		// 2. If target device failed or not specified, and integrated was requested: try finding any non-virtual hardware camera
+		if (!this.stream && isIntegratedRequested && availableDevices.length > 0) {
+			const physicalDevices = availableDevices.filter((d) => !/iriun|poco|virtual|obs|droidcam/i.test(d.label));
+			for (const dev of physicalDevices) {
+				if (!dev.deviceId) continue;
+				try {
+					this.stream = await navigator.mediaDevices.getUserMedia({
+						video: { deviceId: dev.deviceId },
+						audio: false
+					});
+					if (this.stream) {
+						console.log('[FaceTracker] Physical hardware camera selected:', dev.label);
+						rigging.cameraDeviceId = dev.deviceId;
+						rigging.activeCameraLabel = dev.label;
+						break;
+					}
+				} catch {}
 			}
 		}
 
-		// Tier 3: Universal constraint (works with any active integrated/discrete webcam driver)
+		// 3. Fallback: Sweep all available devices
+		if (!this.stream && availableDevices.length > 0) {
+			for (const dev of availableDevices) {
+				if (!dev.deviceId) continue;
+				try {
+					this.stream = await navigator.mediaDevices.getUserMedia({
+						video: { deviceId: dev.deviceId },
+						audio: false
+					});
+					if (this.stream) {
+						console.log('[FaceTracker] Available device fallback succeeded:', dev.label);
+						rigging.cameraDeviceId = dev.deviceId;
+						rigging.activeCameraLabel = dev.label;
+						break;
+					}
+				} catch {}
+			}
+		}
+
+		// 4. Ultimate fallback: navigator.mediaDevices.getUserMedia({ video: true })
 		if (!this.stream) {
 			try {
 				this.stream = await navigator.mediaDevices.getUserMedia({
 					video: true,
 					audio: false
 				});
-				console.log('[FaceTracker] Tier 3 universal video:true succeeded');
-			} catch (err3: any) {
-				lastError = err3;
-				console.warn('[FaceTracker] Tier 3 camera request failed, attempting Tier 4 device sweep:', err3);
-			}
-		}
-
-		// Tier 4: Sweep all available enumerated videoinput devices
-		if (!this.stream && availableDevices.length > 0) {
-			for (const dev of availableDevices) {
-				if (!dev.deviceId) continue;
-				try {
-					this.stream = await navigator.mediaDevices.getUserMedia({
-						video: { deviceId: { exact: dev.deviceId } },
-						audio: false
-					});
-					if (this.stream) {
-						console.log('[FaceTracker] Tier 4 device sweep succeeded on device:', dev.label);
-						break;
-					}
-				} catch {
-					// Continue to next available device
-				}
+				console.log('[FaceTracker] General video:true fallback succeeded');
+			} catch (errGen: any) {
+				lastError = errGen;
 			}
 		}
 
@@ -308,12 +337,35 @@ export class FaceTracker {
 		const activeTrack = this.stream.getVideoTracks()[0];
 		if (activeTrack) {
 			const settings = activeTrack.getSettings();
-			if (settings.deviceId && !rigging.cameraDeviceId) {
-				rigging.cameraDeviceId = settings.deviceId;
+			// Verify if user requested integrated camera, but Windows gave Iriun / Poco:
+			if (isIntegratedRequested && /iriun|poco|virtual/i.test(activeTrack.label)) {
+				const realHardware = availableDevices.find((d) => /integrated|internal|built-in/i.test(d.label));
+				if (realHardware && realHardware.deviceId !== settings.deviceId) {
+					try {
+						activeTrack.stop();
+						const forcedStream = await navigator.mediaDevices.getUserMedia({
+							video: { deviceId: realHardware.deviceId },
+							audio: false
+						});
+						this.stream = forcedStream;
+						const forcedTrack = forcedStream.getVideoTracks()[0];
+						rigging.cameraDeviceId = realHardware.deviceId;
+						rigging.activeCameraLabel = forcedTrack?.label || realHardware.label;
+					} catch (forceErr) {
+						console.warn('[FaceTracker] Forcing hardware failed, using active stream:', forceErr);
+						rigging.cameraDeviceId = settings.deviceId || '';
+						rigging.activeCameraLabel = activeTrack.label || 'Webcam';
+					}
+				} else {
+					rigging.cameraDeviceId = settings.deviceId || '';
+					rigging.activeCameraLabel = activeTrack.label || 'Webcam';
+				}
+			} else {
+				rigging.cameraDeviceId = settings.deviceId || rigging.cameraDeviceId;
+				rigging.activeCameraLabel = activeTrack.label || 'Webcam';
 			}
-			rigging.activeCameraLabel = activeTrack.label || 'Webcam';
 			rigging.persist();
-			console.log('[FaceTracker] Active camera stream initialized:', activeTrack.label);
+			console.log('[FaceTracker] Active camera stream initialized:', rigging.activeCameraLabel);
 		}
 
 		const trackerVid = this.getOrCreateTrackingVideo();
@@ -451,14 +503,26 @@ export class FaceTracker {
 			let devices = await navigator.mediaDevices.enumerateDevices();
 			let videoDevices = devices.filter((d) => d.kind === 'videoinput');
 
-			if (requestPermissionIfEmpty && videoDevices.length > 0 && !videoDevices[0].label) {
+			if (requestPermissionIfEmpty && videoDevices.length > 0 && !videoDevices.some((d) => Boolean(d.label))) {
+				let tempStream: MediaStream | null = null;
 				try {
-					const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+					tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+				} catch {
+					// Fallback: probe specific enumerated devices if default virtual camera failed
+					for (const dev of videoDevices) {
+						if (!dev.deviceId) continue;
+						try {
+							tempStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: dev.deviceId }, audio: false });
+							break;
+						} catch {}
+					}
+				}
+				if (tempStream) {
 					tempStream.getTracks().forEach((t) => t.stop());
+					// Allow 150ms for Windows DirectShow driver to fully close the camera handle
+					await new Promise((r) => setTimeout(r, 150));
 					devices = await navigator.mediaDevices.enumerateDevices();
 					videoDevices = devices.filter((d) => d.kind === 'videoinput');
-				} catch {
-					// Fallback to existing devices
 				}
 			}
 

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-mark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-mark)"/>
+  <!-- Hair back -->
+  <path d="M26 48 C20 75 25 105 35 112 L85 112 C95 105 100 75 94 48 Z" fill="#1e293b"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="62" rx="26" ry="28" fill="#fef3c7"/>
+  <!-- Eyes -->
+  <ellipse cx="48" cy="58" rx="4.5" ry="6.5" fill="#0f172a"/>
+  <circle cx="50" cy="56" r="2" fill="#ffffff"/>
+  <ellipse cx="72" cy="58" rx="4.5" ry="6.5" fill="#0f172a"/>
+  <circle cx="74" cy="56" r="2" fill="#ffffff"/>
+  <!-- Cool smile -->
+  <path d="M55 74 Q60 78 65 74" stroke="#334155" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Glasses / Highlights -->
+  <path d="M42 54 L54 54 M66 54 L78 54" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+  <!-- Bangs -->
+  <path d="M28 46 C35 25 85 25 92 46 C80 38 68 50 60 42 C52 50 40 38 28 46 Z" fill="#2563eb"/>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-ren" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="50%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-ren)"/>
+  <!-- Hair back -->
+  <path d="M26 48 C20 75 25 105 35 112 L85 112 C95 105 100 75 94 48 Z" fill="#064e3b"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="62" rx="26" ry="28" fill="#fef3c7"/>
+  <!-- Eyes -->
+  <ellipse cx="48" cy="58" rx="4.5" ry="6.5" fill="#022c22"/>
+  <circle cx="50" cy="56" r="2" fill="#ffffff"/>
+  <ellipse cx="72" cy="58" rx="4.5" ry="6.5" fill="#022c22"/>
+  <circle cx="74" cy="56" r="2" fill="#ffffff"/>
+  <!-- Gentle smile -->
+  <path d="M54 74 Q60 79 66 74" stroke="#047857" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="43" cy="68" r="4.5" fill="#a7f3d0" opacity="0.6"/>
+  <circle cx="77" cy="68" r="4.5" fill="#a7f3d0" opacity="0.6"/>
+  <!-- Bangs -->
+  <path d="M28 46 C35 25 85 25 92 46 C82 40 70 52 60 44 C50 52 38 40 28 46 Z" fill="#10b981"/>
+</svg>

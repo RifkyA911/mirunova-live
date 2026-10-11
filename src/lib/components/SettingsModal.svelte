@@ -273,6 +273,17 @@
 	async function refreshDevices(requestPermission = false) {
 		try {
 			availableCameras = await tracker.getAvailableVideoDevices(requestPermission);
+			if (availableCameras.length > 0) {
+				const hasCurrent = availableCameras.some((c) => c.deviceId === rigging.cameraDeviceId);
+				if (!hasCurrent) {
+					const integrated = availableCameras.find((c) => /integrated|internal|built-in/i.test(c.label));
+					if (integrated) {
+						rigging.cameraDeviceId = integrated.deviceId;
+						rigging.activeCameraLabel = integrated.label;
+						rigging.persist();
+					}
+				}
+			}
 		} catch {
 			availableCameras = [];
 		}
@@ -287,6 +298,16 @@
 		if (requestPermission) {
 			rigging.showToast('✓ ' + i18n.t('refresh_devices'));
 		}
+	}
+
+	function formatCameraBadge(label: string): string {
+		if (/integrated|internal|built-in/i.test(label)) {
+			return `📸 ${label} (Hardware Laptop)`;
+		}
+		if (/iriun|poco|droidcam/i.test(label)) {
+			return `📱 ${label} (Smartphone Poco / Virtual)`;
+		}
+		return label;
 	}
 
 	onMount(() => {
@@ -854,9 +875,11 @@
 										onchange={handleCameraDeviceChange}
 										class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 focus:outline-none focus:border-indigo-500"
 									>
-										<option value="">Default Webcam</option>
+										<option value="">Pilih Kamera (Auto Deteksi Integrated)</option>
 										{#each availableCameras as cam}
-											<option value={cam.deviceId}>{cam.label}</option>
+											<option value={cam.deviceId}>
+												{formatCameraBadge(cam.label)}
+											</option>
 										{/each}
 									</select>
 									{#if rigging.activeCameraLabel}

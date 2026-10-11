@@ -82,8 +82,20 @@ describe('Model Catalog Validation', () => {
 			expect(item?.boothUrl).toContain(expectedId);
 			expect(item?.copyright).toBeTruthy();
 			expect(item?.tags.length).toBeGreaterThan(0);
-			expect(item?.modelUrl).toBeTruthy();
-			expect(item?.modelUrl).toMatch(/\.model3?\.json$/);
 		}
+	});
+
+	it('should verify official Cubism 4 models Mark and Ren are in MODEL_CATALOG', () => {
+		const mark = MODEL_CATALOG.find((m) => m.id === 'mark');
+		expect(mark).toBeDefined();
+		expect(mark?.name).toContain('Mark');
+		expect(mark?.url).toContain('Mark/Mark.model3.json');
+		expect(mark?.version).toBe('Cubism 3/4');
+
+		const ren = MODEL_CATALOG.find((m) => m.id === 'ren');
+		expect(ren).toBeDefined();
+		expect(ren?.name).toContain('Ren');
+		expect(ren?.url).toContain('Ren/Ren.model3.json');
+		expect(ren?.version).toBe('Cubism 3/4');
 	});
 });

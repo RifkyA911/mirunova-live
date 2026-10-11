@@ -130,4 +130,24 @@ describe('Photoshop Layer Manager, Accessories & Collab System', () => {
 		rigging.toggleLayerManagerViewMode();
 		expect(rigging.layerManagerViewMode).toBe('windowed');
 	});
+
+	it('should support locking layers and guard avatar transform reset', () => {
+		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+		expect(hostLayer).toBeDefined();
+		expect(hostLayer!.locked).toBe(false);
+
+		rigging.setLayerLock(hostLayer!.id, true);
+		expect(hostLayer!.locked).toBe(true);
+
+		const beforeSig = rigging.resetTransformSignal;
+		rigging.resetAvatarTransform();
+		// Signal should not change because host layer is locked
+		expect(rigging.resetTransformSignal).toBe(beforeSig);
+
+		rigging.setLayerLock(hostLayer!.id, false);
+		expect(hostLayer!.locked).toBe(false);
+
+		rigging.resetAvatarTransform();
+		expect(rigging.resetTransformSignal).toBeGreaterThan(0);
+	});
 });

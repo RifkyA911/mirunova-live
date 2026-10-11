@@ -95,8 +95,13 @@
 		}
 	});
 
+	const hostLayer = $derived(rigging.stageLayers.find((l) => l.type === 'model-host'));
+	const isHostLayerVisible = $derived(hostLayer ? hostLayer.visible : true);
+	const hostLayerOpacity = $derived(hostLayer ? hostLayer.opacity : 1.0);
+	const isHostLayerLocked = $derived(hostLayer ? hostLayer.locked : false);
+
 	function handleWheel(e: WheelEvent) {
-		if (rigging.isGuiLocked) return;
+		if (rigging.isGuiLocked || isHostLayerLocked) return;
 		e.preventDefault();
 		const factor = e.deltaY < 0 ? 1.08 : 0.92;
 		threeStage.zoomBy(factor);
@@ -118,5 +123,6 @@
 	tabindex="0"
 	bind:this={containerEl}
 	onwheel={handleWheel}
+	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"
 	class="absolute inset-0 w-full h-full overflow-hidden select-none cursor-grab active:cursor-grabbing z-0"
 ></div>
