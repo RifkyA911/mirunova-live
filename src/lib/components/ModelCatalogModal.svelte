@@ -49,6 +49,8 @@
 	let boothCategoryFilter = $state<'all' | 'hoyoverse-kuro' | 'original-anime' | 'vts-popular'>('all');
 	let activeTargetModelName = $state<string>('');
 	let activeTargetModelId = $state<string>('');
+	let isDownloadingModel = $state<boolean>(false);
+	let downloadProgressText = $state<string>('');
 
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
@@ -96,22 +98,82 @@
 		rigging.showToast(`Memuat avatar 3D: ${m.name}`);
 	}
 
-	function handleLoadCustomUrl() {
-		if (!customUrlInput.trim()) return;
-		rigging.avatarEngine = 'live2d';
-		rigging.setModel('custom', 'Custom Model', customUrlInput.trim());
-		rigging.showToast('Memuat model Live2D dari URL...');
-		customUrlInput = '';
+	async function downloadAndInstallFromUrl(url: string, name?: string, id?: string) {
+		if (!url || !url.trim()) return;
+		const cleanUrl = url.trim();
+		playSfx('click');
+		isDownloadingModel = true;
+		const displayName = name || 'Model Live2D';
+		downloadProgressText = `Mengunduh & memasang ${displayName}...`;
+		rigging.showToast(`Memasang model: ${displayName}`);
+
+		try {
+			// If URL is direct .model3.json or .model.json
+			if (
+				cleanUrl.toLowerCase().endsWith('.model3.json') ||
+				cleanUrl.toLowerCase().endsWith('.model.json')
+			) {
+				rigging.avatarEngine = 'live2d';
+				rigging.setModel(id || 'url-model-' + Date.now(), displayName, cleanUrl);
+				playSfx('success');
+				rigging.showToast(`✓ Model Live2D aktif: ${displayName}`);
+				isDownloadingModel = false;
+				return;
+			}
+
+			// Download file (e.g. ZIP archive or bundle)
+			downloadProgressText = `Mengunduh paket model ${displayName}...`;
+			const res = await fetch(cleanUrl);
+			if (!res.ok) {
+				throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+			}
+
+			downloadProgressText = 'Mengekstrak file model di memori...';
+			const blob = await res.blob();
+			const filename =
+				cleanUrl.split('/').pop()?.split('?')[0] ||
+				(name ? `${name}.zip` : 'model.zip');
+			const zipFile = new File([blob], filename, {
+				type: blob.type || 'application/zip'
+			});
+
+			activeTargetModelName = displayName;
+			activeTargetModelId = id || '';
+			await processLive2DFiles([zipFile]);
+		} catch (err: any) {
+			console.warn('Auto download & install error:', err);
+			// Fallback: if network or CORS error, let the user pick the file manually
+			rigging.showToast(
+				`⚠️ Server unduh dibatasi CORS atau offline. Silakan pilih file ZIP hasil unduh manual.`
+			);
+			activeTargetModelName = displayName;
+			activeTargetModelId = id || '';
+			zipInputEl?.click();
+		} finally {
+			isDownloadingModel = false;
+			downloadProgressText = '';
+		}
 	}
 
-	function triggerInstallModel(item: { id: string; name: string; modelUrl?: string }) {
-		playSfx('click');
+	async function handleLoadCustomUrl() {
+		if (!customUrlInput.trim()) return;
+		const url = customUrlInput.trim();
+		customUrlInput = '';
+		await downloadAndInstallFromUrl(url);
+	}
+
+	async function triggerInstallModel(item: {
+		id: string;
+		name: string;
+		modelUrl?: string;
+		boothUrl?: string;
+		sampleUrl?: string;
+	}) {
 		if (item.modelUrl) {
-			rigging.avatarEngine = 'live2d';
-			rigging.setModel(item.id, item.name, item.modelUrl);
-			rigging.showToast(`✓ Memasang model: ${item.name}`);
+			await downloadAndInstallFromUrl(item.modelUrl, item.name, item.id);
 			return;
 		}
+		playSfx('click');
 		activeTargetModelName = item.name;
 		activeTargetModelId = item.id;
 		rigging.showToast(`Pilih file ZIP atau folder hasil unduh untuk: ${item.name}`);
@@ -406,6 +468,19 @@
 					</span>
 				</div>
 			</div>
+
+			<!-- Live Model Download & Extract Progress Banner -->
+			{#if isDownloadingModel}
+				<div class="px-6 py-2.5 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 border-b border-pink-500/30 flex items-center justify-between text-xs text-pink-300 animate-pulse shadow-inner">
+					<div class="flex items-center gap-2.5">
+						<Sparkles class="w-4 h-4 text-pink-400 animate-spin" />
+						<span class="font-semibold text-zinc-100">{downloadProgressText || 'Sedang memproses model...'}</span>
+					</div>
+					<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-medium">
+						Auto-Installer In-Memory
+					</span>
+				</div>
+			{/if}
 
 			<!-- Body Content (Scrollable with Drag & Drop ZIP support) -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -706,12 +781,12 @@
 							{/each}
 						</div>
 
-						<!-- Section 4: Muat Model Live2D Sendiri (Folder / Multi-File / URL) -->
+						<!-- Section 4: Muat Model Live2D Sendiri (Folder / Multi-File / Unduh Otomatis URL) -->
 						<div class="mt-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800 space-y-3">
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 								<span class="text-xs font-semibold text-zinc-200 flex items-center gap-2">
 									<FolderOpen class="w-4 h-4 text-pink-400" />
-									Muat Model Live2D Lokal Anda (Folder / Multi-File / URL)
+									Muat Model Live2D Sendiri (Folder / Multi-File / Unduh Otomatis URL)
 								</span>
 								<div class="flex items-center gap-2">
 									<button
@@ -737,14 +812,16 @@
 								<input
 									type="text"
 									bind:value={customUrlInput}
-									placeholder="Muat Live2D Kustom dari URL: https://.../model.model3.json"
+									placeholder="Unduh & Pasang Otomatis dari URL (.zip atau .model3.json): https://..."
 									class="flex-1 bg-zinc-950/80 px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-pink-500"
 								/>
 								<button
 									onclick={handleLoadCustomUrl}
-									class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold rounded-lg text-xs transition-colors border border-zinc-700 cursor-pointer"
+									disabled={isDownloadingModel}
+									class="px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-lg text-xs transition-colors border border-pink-500/50 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
 								>
-									Muat URL
+									<Download class="w-3.5 h-3.5" />
+									<span>Unduh & Pasang Auto</span>
 								</button>
 							</div>
 						</div>
@@ -1002,6 +1079,51 @@
 										</div>
 									</div>
 								{/each}
+							</div>
+						</div>
+
+						<!-- Section: Pasang Model BOOTH Anda Sendiri (Folder / Multi-File / Unduh Otomatis URL) -->
+						<div class="mt-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800 space-y-3">
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+								<span class="text-xs font-semibold text-zinc-200 flex items-center gap-2">
+									<FolderOpen class="w-4 h-4 text-purple-400" />
+									Pasang Model BOOTH Anda Sendiri (Folder / Multi-File / Unduh Otomatis URL)
+								</span>
+								<div class="flex items-center gap-2">
+									<button
+										onclick={() => folderInputEl?.click()}
+										class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+										title="Pilih folder model unzipped yang berisi .model3.json dan folder tekstur"
+									>
+										<FolderOpen class="w-3.5 h-3.5" />
+										<span>Pilih Folder Model</span>
+									</button>
+									<button
+										onclick={() => multiFileInputEl?.click()}
+										class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium flex items-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
+										title="Pilih semua file di dalam folder (.model3.json, .moc3, .png)"
+									>
+										<FileCode class="w-3.5 h-3.5 text-cyan-400" />
+										<span>Pilih Multi-File</span>
+									</button>
+								</div>
+							</div>
+							<div class="flex items-center gap-2">
+								<Link class="w-4 h-4 text-purple-400 shrink-0 ml-1" />
+								<input
+									type="text"
+									bind:value={customUrlInput}
+									placeholder="Unduh & Pasang Otomatis dari URL (.zip atau .model3.json): https://..."
+									class="flex-1 bg-zinc-950/80 px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+								/>
+								<button
+									onclick={handleLoadCustomUrl}
+									disabled={isDownloadingModel}
+									class="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg text-xs transition-colors border border-purple-500/50 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+								>
+									<Download class="w-3.5 h-3.5" />
+									<span>Unduh & Pasang Auto</span>
+								</button>
 							</div>
 						</div>
 					</div>

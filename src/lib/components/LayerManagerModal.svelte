@@ -38,6 +38,8 @@
 	let activeSubTab = $state<'layers' | 'accessories' | 'collab'>('layers');
 	let isDraggingWindow = $state<boolean>(false);
 	let windowDragOffset = { x: 0, y: 0 };
+	let isResizingWindow = $state<boolean>(false);
+	let resizeStart = { x: 0, y: 0, w: 0, h: 0 };
 	let draggedLayerIdx = $state<number | null>(null);
 	let dragOverIdx = $state<number | null>(null);
 
@@ -112,6 +114,41 @@
 		}
 	}
 
+	function handleResizePointerDown(e: PointerEvent) {
+		if (rigging.layerManagerViewMode !== 'windowed' || rigging.isLayerMinimized) return;
+		e.stopPropagation();
+		isResizingWindow = true;
+		resizeStart = {
+			x: e.clientX,
+			y: e.clientY,
+			w: rigging.layerWindowWidth,
+			h: rigging.layerWindowHeight
+		};
+		try {
+			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+		} catch {}
+	}
+
+	function handleResizePointerMove(e: PointerEvent) {
+		if (!isResizingWindow) return;
+		const maxW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+		const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+		const dw = e.clientX - resizeStart.x;
+		const dh = e.clientY - resizeStart.y;
+		rigging.layerWindowWidth = Math.max(320, Math.min(maxW - 40, resizeStart.w + dw));
+		rigging.layerWindowHeight = Math.max(260, Math.min(maxH - 40, resizeStart.h + dh));
+	}
+
+	function handleResizePointerUp(e: PointerEvent) {
+		if (isResizingWindow) {
+			isResizingWindow = false;
+			try {
+				(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+			} catch {}
+			rigging.persist();
+		}
+	}
+
 	function onLayerDragStart(idx: number, e: DragEvent) {
 		draggedLayerIdx = idx;
 		if (e.dataTransfer) {
@@ -143,20 +180,22 @@
 </script>
 
 {#if rigging.isLayerManagerOpen}
-	<!-- Windowed Floating Window or Sticky Panel (NO backdrop overlay so user sees stage live) -->
+	<!-- Windowed Floating Window or Sticky Full-Height Panel (NO backdrop overlay so stage is visible) -->
 	<aside
 		aria-label="Layer Manager Studio"
 		transition:fly={{ y: 20, duration: 200, easing: cubicOut }}
-		class="z-40 rounded-3xl shadow-2xl flex flex-col overflow-hidden border backdrop-blur-2xl transition-all duration-150 select-none {
-			rigging.layerManagerViewMode === 'windowed' ? 'fixed' : 'fixed top-14 right-4'
+		class="z-40 shadow-2xl flex flex-col overflow-hidden border backdrop-blur-2xl transition-all duration-150 select-none {
+			rigging.layerManagerViewMode === 'windowed'
+				? 'fixed rounded-3xl'
+				: 'fixed top-0 right-0 h-screen w-96 max-w-[95vw] rounded-l-3xl rounded-r-none border-r-0 border-y-0'
 		} {
 			isLightTheme
 				? 'bg-white/95 text-zinc-900 border-zinc-200/90 shadow-xl'
 				: 'bg-zinc-950/95 text-zinc-100 border-zinc-800/90 shadow-2xl shadow-cyan-950/20'
 		}"
 		style={rigging.layerManagerViewMode === 'windowed'
-			? `left: ${rigging.layerWindowX}px; top: ${rigging.layerWindowY}px; width: ${rigging.layerWindowWidth}px; max-height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`};`
-			: `width: ${rigging.layerWindowWidth}px; max-height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`};`}
+			? `left: ${rigging.layerWindowX}px; top: ${rigging.layerWindowY}px; width: ${rigging.layerWindowWidth}px; height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`}; min-width: 320px; min-height: 240px; max-width: 95vw; max-height: 95vh;`
+			: `width: ${rigging.layerWindowWidth}px; height: 100vh;`}
 	>
 		<!-- Window Header (Drag Handle in Windowed mode) -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -165,7 +204,7 @@
 			onpointermove={handleHeaderPointerMove}
 			onpointerup={handleHeaderPointerUp}
 			onpointercancel={handleHeaderPointerUp}
-			class="px-4 py-3 border-b flex items-center justify-between select-none {
+			class="px-4 py-3 border-b flex items-center justify-between select-none shrink-0 {
 				rigging.layerManagerViewMode === 'windowed' ? 'cursor-grab active:cursor-grabbing' : ''
 			} {
 				isLightTheme ? 'bg-zinc-50/90 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/80'
@@ -190,7 +229,7 @@
 						{/if}
 					</div>
 					<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} truncate">
-						{rigging.layerManagerViewMode === 'windowed' ? 'Drag header untuk geser window' : 'Mode Sticky Panel Kanan'}
+						{rigging.layerManagerViewMode === 'windowed' ? 'Drag header untuk geser • Tarik sudut untuk resize' : 'Mode Sticky (Full Height Sisi Kanan)'}
 					</p>
 				</div>
 			</div>
@@ -201,7 +240,7 @@
 				<button
 					type="button"
 					onclick={() => rigging.toggleLayerManagerViewMode()}
-					title={rigging.layerManagerViewMode === 'sticky' ? 'Ganti ke Window Bebas (Windowed)' : 'Tempelkan ke Kanan (Sticky)'}
+					title={rigging.layerManagerViewMode === 'sticky' ? 'Ganti ke Window Bebas (Windowed Resizable)' : 'Tempelkan ke Sisi Kanan (Sticky Full Height)'}
 					class="p-1.5 rounded-xl transition-colors cursor-pointer {
 						rigging.layerManagerViewMode === 'sticky'
 							? 'text-cyan-400 bg-cyan-500/15 border border-cyan-500/30'
@@ -302,12 +341,12 @@
 			</div>
 
 			<!-- Tab Body Content -->
-			<div class="p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar flex-1 min-h-[220px]">
-				<!-- TAB 1: LAYERS WITH DRAG & DROP REORDERING -->
+			<div class="p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar flex-1 min-h-0">
+				<!-- TAB 1: LAYERS WITH CLEAN DRAG-HANDLE DND (NO SLIDER CONFLICT) -->
 				{#if activeSubTab === 'layers'}
 					<div class="space-y-2">
 						<div class="flex items-center justify-between text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-							<span>Drag baris untuk atur urutan Z-Index:</span>
+							<span>Tarik ikon grip untuk atur urutan Z-Index:</span>
 							<span class="font-mono text-[10px]">Atas = Paling Depan</span>
 						</div>
 
@@ -318,14 +357,12 @@
 								{@const isSelected = rigging.selectedLayerElementId === layer.id ||
 									(rigging.selectedLayerElementId === 'host' && layer.type === 'model-host') ||
 									(rigging.selectedLayerElementId === 'collab' && layer.type === 'model-collab')}
+								<!-- Row is drop target only, not whole-draggable -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<div
 									role="listitem"
-									draggable={!layer.locked}
-									ondragstart={(e) => onLayerDragStart(idx, e)}
 									ondragover={(e) => onLayerDragOver(idx, e)}
 									ondrop={(e) => onLayerDrop(idx, e)}
-									ondragend={onLayerDragEnd}
 									class="p-2.5 rounded-2xl border transition-all duration-150 flex items-center justify-between gap-2.5 {
 										dragOverIdx === idx ? 'border-cyan-400 ring-2 ring-cyan-500/40' : ''
 									} {
@@ -338,22 +375,20 @@
 												: 'opacity-50 bg-zinc-950/40 border-dashed border-zinc-800'
 									}"
 								>
-									<!-- Left: Drag Handle & Thumbnail Preview & Meta -->
-									<!-- svelte-ignore a11y_click_events_have_key_events -->
-									<!-- svelte-ignore a11y_no_static_element_interactions -->
-									<div
-										onclick={() => {
-											playSfx('click');
-											if (layer.type === 'model-host') rigging.selectLayerElement('host');
-											else if (layer.type === 'model-collab') rigging.selectLayerElement('collab');
-											else rigging.selectLayerElement(layer.id);
-										}}
-										class="flex items-center gap-2 cursor-pointer truncate flex-1"
-									>
-										<!-- Drag Grip Handle -->
+									<!-- Left: Drag Grip Handle (ONLY draggable item) & Thumbnail & Meta -->
+									<div class="flex items-center gap-2 truncate flex-1">
+										<!-- Dedicated Drag Grip Handle -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<div
-											title="Drag untuk susun urutan"
-											class="text-zinc-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing shrink-0"
+											role="button"
+											tabindex="0"
+											draggable={!layer.locked}
+											ondragstart={(e) => onLayerDragStart(idx, e)}
+											ondragend={onLayerDragEnd}
+											title={layer.locked ? 'Layer terkunci' : 'Tarik ikon ini untuk atur urutan'}
+											class="p-1 text-zinc-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing shrink-0 select-none {
+												layer.locked ? 'opacity-30 cursor-not-allowed' : ''
+											}"
 										>
 											<GripVertical class="w-3.5 h-3.5" />
 										</div>
@@ -366,7 +401,18 @@
 											<ThumbIcon class="w-3.5 h-3.5 opacity-70" />
 										</div>
 
-										<div class="truncate">
+										<!-- Clickable text to select layer -->
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+										<div
+											onclick={() => {
+												playSfx('click');
+												if (layer.type === 'model-host') rigging.selectLayerElement('host');
+												else if (layer.type === 'model-collab') rigging.selectLayerElement('collab');
+												else rigging.selectLayerElement(layer.id);
+											}}
+											class="truncate cursor-pointer flex-1"
+										>
 											<div class="flex items-center gap-1.5 truncate">
 												<span class="text-xs font-bold truncate {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 													{layer.name}
@@ -381,19 +427,22 @@
 										</div>
 									</div>
 
-									<!-- Right: Controls (Visibility, Lock, Reorder Up/Down) -->
+									<!-- Right: Controls (Slider, Visibility, Lock, Reorder Up/Down) -->
 									<div class="flex items-center gap-1.5 shrink-0">
-										<!-- Opacity Slider Mini -->
+										<!-- Opacity Slider with explicit event isolation -->
 										<input
 											type="range"
+											draggable={false}
+											onpointerdown={(e) => e.stopPropagation()}
+											onmousedown={(e) => e.stopPropagation()}
 											min="0"
 											max="1"
 											step="0.05"
 											value={layer.opacity}
 											disabled={layer.locked}
 											oninput={(e) => rigging.setLayerOpacity(layer.id, parseFloat((e.target as HTMLInputElement).value))}
-											class="w-14 h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-cyan-400 disabled:opacity-30"
-											title="Opacity Slider"
+											class="w-14 h-1.5 bg-zinc-800 rounded appearance-none cursor-pointer accent-cyan-400 disabled:opacity-30"
+											title="Geser transparansi"
 										/>
 
 										<!-- Visibility Eye Toggle -->
@@ -533,7 +582,7 @@
 									</div>
 
 									{#if item.visible}
-										<!-- Fine Position & Scale Adjustments -->
+										<!-- Fine Position & Scale Adjustments (Isolated from DnD) -->
 										<div class="space-y-1.5 pt-2 mt-2 border-t border-zinc-800/60 text-[10px]">
 											<div class="flex items-center justify-between">
 												<span class="text-zinc-400">Ukuran Scale:</span>
@@ -541,6 +590,9 @@
 											</div>
 											<input
 												type="range"
+												draggable={false}
+												onpointerdown={(e) => e.stopPropagation()}
+												onmousedown={(e) => e.stopPropagation()}
 												min="0.5"
 												max="2.0"
 												step="0.05"
@@ -557,6 +609,9 @@
 													</div>
 													<input
 														type="range"
+														draggable={false}
+														onpointerdown={(e) => e.stopPropagation()}
+														onmousedown={(e) => e.stopPropagation()}
 														min="-200"
 														max="200"
 														step="5"
@@ -572,6 +627,9 @@
 													</div>
 													<input
 														type="range"
+														draggable={false}
+														onpointerdown={(e) => e.stopPropagation()}
+														onmousedown={(e) => e.stopPropagation()}
 														min="-350"
 														max="150"
 														step="5"
@@ -692,6 +750,9 @@
 									</div>
 									<input
 										type="range"
+										draggable={false}
+										onpointerdown={(e) => e.stopPropagation()}
+										onmousedown={(e) => e.stopPropagation()}
 										min="0.4"
 										max="1.5"
 										step="0.05"
@@ -720,6 +781,23 @@
 						{/if}
 					</div>
 				{/if}
+			</div>
+		{/if}
+
+		<!-- Window Resize Grip Handle (Corner in Windowed Mode) -->
+		{#if rigging.layerManagerViewMode === 'windowed' && !rigging.isLayerMinimized}
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				onpointerdown={handleResizePointerDown}
+				onpointermove={handleResizePointerMove}
+				onpointerup={handleResizePointerUp}
+				onpointercancel={handleResizePointerUp}
+				class="absolute bottom-1 right-1 w-5 h-5 cursor-nwse-resize text-zinc-500 hover:text-cyan-400 flex items-center justify-center z-50 select-none p-0.5"
+				title="Tarik untuk ubah ukuran (Resize Window)"
+			>
+				<svg viewBox="0 0 16 16" class="w-3.5 h-3.5 fill-current opacity-70">
+					<path d="M14 14H12V12H14V14ZM14 10H12V8H14V10ZM10 14H8V12H10V14ZM14 6H12V4H14V6ZM6 14H4V12H6V14ZM10 10H8V8H10V10Z" />
+				</svg>
 			</div>
 		{/if}
 	</aside>

@@ -82,6 +82,8 @@ describe('Model Catalog Validation', () => {
 			expect(item?.boothUrl).toContain(expectedId);
 			expect(item?.copyright).toBeTruthy();
 			expect(item?.tags.length).toBeGreaterThan(0);
+			expect(item?.modelUrl).toBeTruthy();
+			expect(item?.modelUrl).toMatch(/\.model3?\.json$/);
 		}
 	});
 });

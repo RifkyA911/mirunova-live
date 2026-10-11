@@ -97,6 +97,52 @@
 		}
 	});
 
+	const EXPRESSION_PRESETS: Record<string, Record<string, number>> = {
+		smile: {
+			ParamEyeLSmile: 1.0,
+			ParamEyeRSmile: 1.0,
+			ParamMouthForm: 1.0,
+			ParamCheek: 0.8
+		},
+		wink: {
+			ParamEyeLOpen: 0.0,
+			ParamEyeLSmile: 1.0,
+			ParamEyeROpen: 1.0
+		},
+		surprise: {
+			ParamEyeLOpen: 1.3,
+			ParamEyeROpen: 1.3,
+			ParamBrowLY: 0.8,
+			ParamBrowRY: 0.8,
+			ParamMouthOpenY: 0.85
+		},
+		pout: {
+			ParamCheek: 1.0,
+			ParamMouthForm: -0.6,
+			ParamBrowLY: -0.2,
+			ParamBrowRY: -0.2
+		},
+		sad: {
+			ParamBrowLY: -0.8,
+			ParamBrowRY: -0.8,
+			ParamMouthForm: -1.0,
+			ParamEyeLSmile: 0.0,
+			ParamEyeRSmile: 0.0
+		},
+		blush: {
+			ParamCheek: 1.0,
+			ParamEyeLSmile: 0.6,
+			ParamEyeRSmile: 0.6
+		},
+		angry: {
+			ParamBrowLAngle: -0.8,
+			ParamBrowRAngle: -0.8,
+			ParamMouthForm: -0.5,
+			ParamEyeLOpen: 0.8,
+			ParamEyeROpen: 0.8
+		}
+	};
+
 	// Reactively trigger expressions
 	let lastAppliedExpression = '';
 	$effect(() => {
@@ -110,37 +156,26 @@
 	function applyExpression(expName: string) {
 		if (!currentModel) return;
 		try {
+			const expMgr = currentModel.internalModel?.motionManager?.expressionManager;
 			if (!expName || expName === 'normal' || expName === 'reset') {
-				if (typeof currentModel.expression === 'function') {
+				if (expMgr && typeof expMgr.resetExpression === 'function') {
+					expMgr.resetExpression();
+				} else if (typeof currentModel.expression === 'function') {
 					currentModel.expression('');
 				}
-				// Also reset procedural facial parameters if they were applied
-				rigging.setManualValue('ParamEyeLSmile', 0);
-				rigging.setManualValue('ParamEyeRSmile', 0);
-				rigging.setManualValue('ParamCheek', 0);
-				rigging.setManualValue('ParamMouthForm', 0);
-			} else if (typeof currentModel.expression === 'function') {
-				currentModel.expression(expName);
 			} else {
-				// Procedural fallbacks
-				if (expName === 'smile') {
-					rigging.setManualValue('ParamEyeLSmile', 1);
-					rigging.setManualValue('ParamEyeRSmile', 1);
-					rigging.setManualValue('ParamMouthForm', 1);
-				} else if (expName === 'wink') {
-					rigging.setManualValue('ParamEyeLOpen', 0);
-					rigging.setManualValue('ParamEyeLSmile', 1);
-				} else if (expName === 'surprise') {
-					rigging.setManualValue('ParamEyeLOpen', 1.2);
-					rigging.setManualValue('ParamEyeROpen', 1.2);
-					rigging.setManualValue('ParamMouthOpenY', 0.8);
-				} else if (expName === 'pout') {
-					rigging.setManualValue('ParamCheek', 1);
-					rigging.setManualValue('ParamMouthForm', -0.5);
-				} else if (expName === 'sad') {
-					rigging.setManualValue('ParamMouthForm', -1);
-					rigging.setManualValue('ParamBrowLY', -0.8);
-					rigging.setManualValue('ParamBrowRY', -0.8);
+				// 1. Try invoking Pixi-Live2D built-in expression manager if model has Cubism expressions
+				if (typeof currentModel.expression === 'function') {
+					currentModel.expression(expName).catch(() => {});
+				}
+				// 2. Also try index-based matching in definitions
+				if (expMgr?.definitions && Array.isArray(expMgr.definitions)) {
+					const idx = expMgr.definitions.findIndex(
+						(d: any) => d.name === expName || d.file === expName || d.Name === expName
+					);
+					if (idx >= 0 && typeof currentModel.expression === 'function') {
+						currentModel.expression(idx).catch(() => {});
+					}
 				}
 			}
 		} catch (err) {
@@ -268,8 +303,16 @@
 						(model.internalModel as any).eyeBlink.enabled = !rigging.isCameraActive;
 					}
 
+					const activeExp = rigging.activeExpression;
+					const expPreset = activeExp ? EXPRESSION_PRESETS[activeExp] : null;
+
 					for (const param of rigging.parameters) {
 						let val = rigging.getActiveValue(param.id);
+
+						// If active expression overrides this parameter, apply the expression preset value
+						if (expPreset && param.id in expPreset) {
+							val = expPreset[param.id];
+						}
 
 						// Apply Pose Looping if active
 						if (rigging.poseLoopMode !== 'none') {
@@ -552,7 +595,9 @@
 						{ id: 'wink', name: 'wink', label: '😉 Wink' },
 						{ id: 'surprise', name: 'surprise', label: '😲 Shock' },
 						{ id: 'pout', name: 'pout', label: '😤 Pout' },
-						{ id: 'sad', name: 'sad', label: '🥺 Sad' }
+						{ id: 'sad', name: 'sad', label: '🥺 Sad' },
+						{ id: 'blush', name: 'blush', label: '😳 Blush' },
+						{ id: 'angry', name: 'angry', label: '😡 Angry' }
 					);
 				}
 
@@ -563,7 +608,10 @@
 					{ id: 'smile', name: 'smile', label: '😊 Smile' },
 					{ id: 'wink', name: 'wink', label: '😉 Wink' },
 					{ id: 'surprise', name: 'surprise', label: '😲 Shock' },
-					{ id: 'pout', name: 'pout', label: '😤 Pout' }
+					{ id: 'pout', name: 'pout', label: '😤 Pout' },
+					{ id: 'sad', name: 'sad', label: '🥺 Sad' },
+					{ id: 'blush', name: 'blush', label: '😳 Blush' },
+					{ id: 'angry', name: 'angry', label: '😡 Angry' }
 				];
 			}
 		} catch (e) {

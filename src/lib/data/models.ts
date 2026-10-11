@@ -144,6 +144,7 @@ export interface BoothShowcaseItem {
 	authorUrl?: string;
 	avatarUrl: string;
 	boothUrl: string;
+	modelUrl?: string;
 	category: BoothCategory;
 	categoryLabel: string;
 	description: string;
@@ -159,6 +160,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'koiyume',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/18b5da43-8450-4455-bc2c-9d3156a4f5ed/i/5408293/486ea3dd-0205-4b1a-ac4a-eb253d55d873_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/5408293',
+		modelUrl: '/models/vivian/薇薇安.model3.json',
 		category: 'original-anime',
 		categoryLabel: 'Original Anime & Kawaii Girls',
 		description: 'Model Live2D gratis berkarakter anime girl imut dengan fisika rambut halus dan kostum modis.',
@@ -172,6 +174,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'koiyume',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/18b5da43-8450-4455-bc2c-9d3156a4f5ed/i/5411426/1d481ff7-08cd-4701-b626-bdc7a4bf4bb6_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/5411426',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Hiyori/Hiyori.model3.json',
 		category: 'original-anime',
 		categoryLabel: 'Original Anime & Kawaii Girls',
 		description: 'Model Live2D anime girl bertopi penyihir kawaii dengan fisika jubah & rambut melambai.',
@@ -185,6 +188,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'TianYeLuLu',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/7852de40-0e15-4aaa-a153-c87a69b871e1/i/5975192/560ba409-48c6-492e-b6aa-9c364cc3dffa_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/5975192',
+		modelUrl: '/models/vivian/薇薇安.model3.json',
 		category: 'original-anime',
 		categoryLabel: 'Original Anime & Kawaii Girls',
 		description: 'Model Live2D original bertema es kristal anggun dengan fisika gaun transparan dan ekspresi kaya.',
@@ -198,6 +202,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'pbsddy (Rigging) / shinan (Art)',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/7ab816c3-bd68-4ea3-b099-c540787eb395/i/5399636/b067cfb9-9459-402f-988a-d5ae6e3924ea_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/5399636',
+		modelUrl: '/models/haru/Haru.model3.json',
 		category: 'hoyoverse-kuro',
 		categoryLabel: 'HoYoverse & Kuro Games Fanmade',
 		description: 'Fan-made Live2D model Belle (リン) dari Zenless Zone Zero (ZZZ) dengan rigging ekspresi lengkap.',
@@ -211,6 +216,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'SnowBear Project',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/12bc9ed4-4f56-4b8f-9741-772cab0a5540/i/8034348/6725e3ac-ff17-4f84-add2-dfd81d69ddc2_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/8034348',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Rice/Rice.model3.json',
 		category: 'original-anime',
 		categoryLabel: 'Original Anime & Kawaii Girls',
 		description: 'Fan-made Live2D model Tsukimi Yachiyo dari "Chou Kaguya-hime!" dengan fisika kelinci dan telinga kawaii.',
@@ -224,6 +230,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'Sennyu',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/eb1fdd19-80b3-4024-b9f3-133daa459953/i/7654174/c570cef8-b93f-4755-9c69-65e911909b71_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/7654174',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Mao/Mao.model3.json',
 		category: 'vts-popular',
 		categoryLabel: 'VTube Studio Community',
 		description: 'Model Live2D gratis berkualitas tinggi siap pakai di VTube Studio dengan fisika dinamis.',
@@ -237,6 +244,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'skiyoshi (Rigging) / サッカウキツ (Art)',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/2e3badde-5e2f-4dca-bf64-24099f76db47/i/3988142/61950053-3496-4149-a705-04451750efa4_base_resized.jpg',
 		boothUrl: 'https://booth.pm/en/items/3988142',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Rice/Rice.model3.json',
 		category: 'vts-popular',
 		categoryLabel: 'VTube Studio Community',
 		description: 'Model avatar VTuber Neko Chibi super populer dari VTube Studio Workshop dengan telinga kucing dan senyum gemas.',
@@ -250,6 +258,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'shibutani',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/1c46376d-1906-4f8e-9888-35e1d61384b3/i/7483530/b3fc6574-6706-4c7e-aecb-efebff2968c8_base_resized.jpg',
 		boothUrl: 'https://shibutani.booth.pm/items/7483530',
+		modelUrl: '/models/vivian/薇薇安.model3.json',
 		category: 'hoyoverse-kuro',
 		categoryLabel: 'HoYoverse & Kuro Games Fanmade',
 		description: 'Fan-made Live2D model Changli dari Wuthering Waves dengan fisika rambut panjang api dan detail kostum anggun.',
@@ -263,6 +272,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'shibutani',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/1c46376d-1906-4f8e-9888-35e1d61384b3/i/6360847/f8ff267e-fece-4f2d-aec4-cc9df6d13be5_base_resized.jpg',
 		boothUrl: 'https://shibutani.booth.pm/items/6360847',
+		modelUrl: '/models/mihari/Mihari_V1.model3.json',
 		category: 'hoyoverse-kuro',
 		categoryLabel: 'HoYoverse & Kuro Games Fanmade',
 		description: 'Fan-made Live2D model Fugue (Tingyun SP) dari Honkai: Star Rail dengan fisika ekor rubah dan ornamen sutra.',
@@ -276,6 +286,7 @@ export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
 		author: 'shibutani',
 		avatarUrl: 'https://booth.pximg.net/c/620x620/1c46376d-1906-4f8e-9888-35e1d61384b3/i/6313490/743f82a1-dd6f-4497-914d-ced923e40106_base_resized.jpg',
 		boothUrl: 'https://shibutani.booth.pm/items/6313490',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Hiyori/Hiyori.model3.json',
 		category: 'hoyoverse-kuro',
 		categoryLabel: 'HoYoverse & Kuro Games Fanmade',
 		description: 'Fan-made Live2D model Camellya dari Wuthering Waves dengan fisika sulur bunga merah dan rambut pirang dinamis.',

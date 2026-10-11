@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.19.0] - 2026-10-11
+
+### Fixed & Enhanced
+- **Camera Device Lock & Auto-Revert Prevention (`tracker.ts`):**
+  - Resolved issue where switching camera device repeatedly reverted or fell back to virtual/default webcams (such as Poco F7).
+  - Enforced `{ exact: deviceId }` constraint on preferred hardware selection; guarded internal track settings listener to prevent overriding explicitly selected camera devices.
+  - Synchronized immediate camera label resolution upon selection.
+- **Layer Manager Sticky Full-Height Dock & Windowed Corner Resizer (`LayerManagerModal.svelte`):**
+  - When in `sticky` mode: Now renders full-height (`h-screen`) docked flush to the right edge (`top-0 right-0`) with clean border integration.
+  - When in `windowed` mode: Features interactive pointer drag resizing handle on bottom-right corner (`rigging.layerWindowWidth`, `rigging.layerWindowHeight`).
+  - Solved Drag-and-Drop vs Slider conflict: Isolated HTML5 `draggable` attribute strictly to the `GripVertical` icon, preventing range slider thumbs (opacity & accessory offsets) from triggering drag-and-drop.
+- **Facial Expressions 60 FPS Tracking Injection (`CanvasStage.svelte`):**
+  - Fixed expression variations (Smile, Wink, Surprise, Pout, Sad, Blush, Angry) being overwritten by 0 values in the 60 FPS tracking loop.
+  - Injected `EXPRESSION_PRESETS` parameter overrides into `applyModelTracking()` before `core.setParameterValueById()`.
+  - Added native fallback handling for `blush` and `angry` expression parameters.
+- **1-Click Auto-Download & Web Model Auto-Installer (`ModelCatalogModal.svelte` & `models.ts`):**
+  - Mapped valid `modelUrl` configurations to all 10 items in `BOOTH_SHOWCASE_CATALOG`.
+  - Added in-memory `downloadAndInstallFromUrl()` using `fetch` and `fflate` to unpack and mount Live2D models directly from web links without opening manual file pickers.
+  - Added 1-click Web URL auto-installer bar with real-time download and extraction progress banner.
+
+---
+
 ## [0.18.0] - 2026-10-11
 
 ### Added & Enhanced

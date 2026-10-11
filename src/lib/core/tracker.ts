@@ -201,95 +201,114 @@ export class FaceTracker {
 		const targetHeight = rigging.cameraResolution === '1080p' ? 1080 : rigging.cameraResolution === '480p' ? 480 : 720;
 		const targetFps = rigging.cameraResolution === '480p' ? 30 : 60;
 
-		const videoConstraints: MediaTrackConstraints = {
-			width: { ideal: targetWidth },
-			height: { ideal: targetHeight },
-			frameRate: { ideal: targetFps }
-		};
-
-		if (rigging.cameraDeviceId) {
-			videoConstraints.deviceId = { ideal: rigging.cameraDeviceId };
-		}
-
 		let lastError: any = null;
 
-		// Tier 1: Try requested resolution with ideal deviceId
-		try {
-			this.stream = await navigator.mediaDevices.getUserMedia({
-				video: videoConstraints,
-				audio: false
-			});
-		} catch (err1: any) {
-			lastError = err1;
-			console.warn('[FaceTracker] Tier 1 camera request failed, attempting Tier 2:', err1);
-
-			// Tier 2: Try ideal deviceId without resolution or framerate restrictions
-			if (rigging.cameraDeviceId) {
+		// Tier 1: If user specified an explicit deviceId, strictly enforce { exact: deviceId } so browser doesn't hijack to other webcams
+		if (rigging.cameraDeviceId) {
+			// Tier 1a: Exact deviceId with target resolution
+			try {
+				this.stream = await navigator.mediaDevices.getUserMedia({
+					video: {
+						deviceId: { exact: rigging.cameraDeviceId },
+						width: { ideal: targetWidth },
+						height: { ideal: targetHeight },
+						frameRate: { ideal: targetFps }
+					},
+					audio: false
+				});
+				console.log('[FaceTracker] Tier 1a exact camera deviceId succeeded:', rigging.cameraDeviceId);
+			} catch (errExact1: any) {
+				lastError = errExact1;
+				console.warn('[FaceTracker] Tier 1a exact camera with resolution failed, trying Tier 1b exact deviceId unconstrained:', errExact1);
+				// Tier 1b: Exact deviceId without resolution constraints
 				try {
 					this.stream = await navigator.mediaDevices.getUserMedia({
-						video: { deviceId: { ideal: rigging.cameraDeviceId } },
+						video: { deviceId: { exact: rigging.cameraDeviceId } },
 						audio: false
 					});
-				} catch (err2: any) {
-					lastError = err2;
-					console.warn('[FaceTracker] Tier 2 camera request failed, attempting Tier 3:', err2);
+					console.log('[FaceTracker] Tier 1b exact camera deviceId without resolution succeeded');
+				} catch (errExact2: any) {
+					lastError = errExact2;
+					console.warn('[FaceTracker] Tier 1b exact camera failed:', errExact2);
 				}
 			}
+		}
 
-			// Tier 3: Universal constraint (works with any active integrated/discrete webcam driver)
-			if (!this.stream) {
+		// Tier 2: If no explicit camera specified or exact failed, try ideal constraints
+		if (!this.stream) {
+			try {
+				const fallbackConstraints: MediaTrackConstraints = {
+					width: { ideal: targetWidth },
+					height: { ideal: targetHeight },
+					frameRate: { ideal: targetFps }
+				};
+				if (rigging.cameraDeviceId) {
+					fallbackConstraints.deviceId = { ideal: rigging.cameraDeviceId };
+				}
+				this.stream = await navigator.mediaDevices.getUserMedia({
+					video: fallbackConstraints,
+					audio: false
+				});
+				console.log('[FaceTracker] Tier 2 ideal camera succeeded');
+			} catch (err2: any) {
+				lastError = err2;
+				console.warn('[FaceTracker] Tier 2 ideal camera request failed, attempting Tier 3:', err2);
+			}
+		}
+
+		// Tier 3: Universal constraint (works with any active integrated/discrete webcam driver)
+		if (!this.stream) {
+			try {
+				this.stream = await navigator.mediaDevices.getUserMedia({
+					video: true,
+					audio: false
+				});
+				console.log('[FaceTracker] Tier 3 universal video:true succeeded');
+			} catch (err3: any) {
+				lastError = err3;
+				console.warn('[FaceTracker] Tier 3 camera request failed, attempting Tier 4 device sweep:', err3);
+			}
+		}
+
+		// Tier 4: Sweep all available enumerated videoinput devices
+		if (!this.stream && availableDevices.length > 0) {
+			for (const dev of availableDevices) {
+				if (!dev.deviceId) continue;
 				try {
 					this.stream = await navigator.mediaDevices.getUserMedia({
-						video: true,
+						video: { deviceId: { exact: dev.deviceId } },
 						audio: false
 					});
-					console.log('[FaceTracker] Tier 3 universal video:true succeeded');
-				} catch (err3: any) {
-					lastError = err3;
-					console.warn('[FaceTracker] Tier 3 camera request failed, attempting Tier 4 device sweep:', err3);
-				}
-			}
-
-			// Tier 4: Sweep all available enumerated videoinput devices
-			if (!this.stream && availableDevices.length > 0) {
-				for (const dev of availableDevices) {
-					if (!dev.deviceId) continue;
-					try {
-						this.stream = await navigator.mediaDevices.getUserMedia({
-							video: { deviceId: { exact: dev.deviceId } },
-							audio: false
-						});
-						if (this.stream) {
-							console.log('[FaceTracker] Tier 4 device sweep succeeded on device:', dev.label);
-							break;
-						}
-					} catch {
-						// Continue to next available device
+					if (this.stream) {
+						console.log('[FaceTracker] Tier 4 device sweep succeeded on device:', dev.label);
+						break;
 					}
+				} catch {
+					// Continue to next available device
 				}
 			}
+		}
 
-			if (!this.stream) {
-				rigging.cameraDeviceId = '';
-				rigging.persist();
-				if (lastError?.name === 'NotAllowedError' || lastError?.name === 'PermissionDeniedError') {
-					throw new Error('Izin kamera ditolak. Buka izin situs (klik ikon gembok di URL bar browser) lalu izinkan akses Kamera.');
-				} else if (lastError?.name === 'NotFoundError' || lastError?.name === 'DevicesNotFoundError') {
-					throw new Error('Perangkat kamera (webcam) tidak ditemukan. Pastikan kamera laptop/USB terhubung dan akses kamera diaktifkan di Windows Settings > Privacy & security > Camera.');
-				} else if (lastError?.name === 'NotReadableError' || lastError?.name === 'TrackStartError') {
-					throw new Error('Kamera sedang digunakan oleh aplikasi lain (seperti OBS Studio, Zoom, Discord, atau tab lain). Tutup aplikasi tersebut dan coba lagi.');
-				} else if (lastError?.name === 'OverconstrainedError') {
-					throw new Error('Kamera yang dipilih tidak dapat memenuhi format yang diminta browser.');
-				}
-				throw new Error(`Gagal membuka kamera: ${lastError?.message || lastError?.name || 'Tidak ada sinyal video'}`);
+		if (!this.stream) {
+			rigging.cameraDeviceId = '';
+			rigging.persist();
+			if (lastError?.name === 'NotAllowedError' || lastError?.name === 'PermissionDeniedError') {
+				throw new Error('Izin kamera ditolak. Buka izin situs (klik ikon gembok di URL bar browser) lalu izinkan akses Kamera.');
+			} else if (lastError?.name === 'NotFoundError' || lastError?.name === 'DevicesNotFoundError') {
+				throw new Error('Perangkat kamera (webcam) tidak ditemukan. Pastikan kamera laptop/USB terhubung dan akses kamera diaktifkan di Windows Settings > Privacy & security > Camera.');
+			} else if (lastError?.name === 'NotReadableError' || lastError?.name === 'TrackStartError') {
+				throw new Error('Kamera sedang digunakan oleh aplikasi lain (seperti OBS Studio, Zoom, Discord, atau tab lain). Tutup aplikasi tersebut dan coba lagi.');
+			} else if (lastError?.name === 'OverconstrainedError') {
+				throw new Error('Kamera yang dipilih tidak dapat memenuhi format yang diminta browser.');
 			}
+			throw new Error(`Gagal membuka kamera: ${lastError?.message || lastError?.name || 'Tidak ada sinyal video'}`);
 		}
 
 		// Read and record the actual active hardware track and deviceId
 		const activeTrack = this.stream.getVideoTracks()[0];
 		if (activeTrack) {
 			const settings = activeTrack.getSettings();
-			if (settings.deviceId) {
+			if (settings.deviceId && !rigging.cameraDeviceId) {
 				rigging.cameraDeviceId = settings.deviceId;
 			}
 			rigging.activeCameraLabel = activeTrack.label || 'Webcam';
@@ -393,7 +412,14 @@ export class FaceTracker {
 	}
 
 	async switchCamera(deviceId?: string, resolution?: '1080p' | '720p' | '480p'): Promise<boolean> {
-		if (deviceId !== undefined) rigging.cameraDeviceId = deviceId;
+		if (deviceId !== undefined) {
+			rigging.cameraDeviceId = deviceId;
+			const devs = await this.getAvailableVideoDevices(false);
+			const found = devs.find((d) => d.deviceId === deviceId);
+			if (found) {
+				rigging.activeCameraLabel = found.label;
+			}
+		}
 		if (resolution !== undefined) rigging.cameraResolution = resolution;
 		rigging.persist();
 
