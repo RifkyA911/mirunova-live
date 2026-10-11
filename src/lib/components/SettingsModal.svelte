@@ -44,11 +44,12 @@
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
-	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'appearance' | 'storage' | 'about'>('perf');
+	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'theme' | 'stage' | 'storage' | 'about'>('perf');
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 	let storageUsageBytes = $state<number>(0);
-	let appearanceThemeCategory = $state<'light' | 'dark' | 'custom'>('light');
+	let appearanceThemeCategory = $state<'all' | 'light' | 'dark' | 'custom'>('all');
+	const allSelectableThemes = $derived(UI_THEMES.filter((t) => t.id !== 'custom'));
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
@@ -560,9 +561,9 @@
 				</button>
 
 				<button
-					onclick={() => (activeTab = 'appearance')}
+					onclick={() => (activeTab = 'theme')}
 					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
-						activeTab === 'appearance'
+						activeTab === 'theme'
 							? isLightTheme
 								? 'bg-pink-100 text-pink-800 border border-pink-400 shadow-sm'
 								: 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
@@ -572,7 +573,23 @@
 					}"
 				>
 					<Palette class="w-4 h-4" />
-					<span>{i18n.t('tab_appearance')}</span>
+					<span>{i18n.t('tab_theme')}</span>
+				</button>
+
+				<button
+					onclick={() => (activeTab = 'stage')}
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+						activeTab === 'stage'
+							? isLightTheme
+								? 'bg-sky-100 text-sky-800 border border-sky-400 shadow-sm'
+								: 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+					}"
+				>
+					<Layers class="w-4 h-4" />
+					<span>{i18n.t('tab_stage')}</span>
 				</button>
 
 				<button
@@ -1270,155 +1287,231 @@
 						</div>
 					</div>
 
-				<!-- TAB 4: THEME & STAGE -->
-				{:else if activeTab === 'appearance'}
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
-						<!-- Theme Customizer Section (Categorized) -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-									<Palette class="w-4 h-4 text-pink-400" />
-									<span>{i18n.t('theme_selector_title')}</span>
-								</h3>
-
-								<!-- Category Pill Selector -->
-								<div class="flex items-center gap-1 p-1 bg-zinc-950/90 border border-zinc-800 rounded-xl">
-									<button
-										type="button"
-										onclick={() => (appearanceThemeCategory = 'light')}
-										class="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
-											appearanceThemeCategory === 'light'
-												? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm'
-												: 'text-zinc-400 hover:text-zinc-200'
-										}"
-									>
-										<Sun class="w-3.5 h-3.5" />
-										<span>{i18n.t('theme_category_light')}</span>
-									</button>
-									<button
-										type="button"
-										onclick={() => (appearanceThemeCategory = 'dark')}
-										class="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
-											appearanceThemeCategory === 'dark'
-												? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-												: 'text-zinc-400 hover:text-zinc-200'
-										}"
-									>
-										<Moon class="w-3.5 h-3.5" />
-										<span>{i18n.t('theme_category_dark')}</span>
-									</button>
-									<button
-										type="button"
-										onclick={() => (appearanceThemeCategory = 'custom')}
-										class="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
-											appearanceThemeCategory === 'custom'
-												? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
-												: 'text-zinc-400 hover:text-zinc-200'
-										}"
-									>
-										<Wand2 class="w-3.5 h-3.5" />
-										<span>{i18n.t('theme_category_custom')}</span>
-									</button>
+				<!-- TAB 4: THEME SELECTOR & PALETTE STUDIO -->
+				{:else if activeTab === 'theme'}
+					<div class="space-y-5 animate-in fade-in duration-150">
+						<!-- Theme Header & Category Filter Bar -->
+						<div class="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+						}">
+							<div class="flex items-center gap-3">
+								<div class="p-2.5 rounded-xl bg-pink-500/20 text-pink-500 border border-pink-500/30 shrink-0">
+									<Palette class="w-5 h-5" />
+								</div>
+								<div>
+									<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+										Katalog Palet Warna Antarmuka
+										<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold bg-pink-500/15 text-pink-500 border border-pink-500/30">
+											{UI_THEMES.length} Tema Tersedia
+										</span>
+									</h3>
+									<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5">
+										Pilih skema warna studio untuk tombol, menu, dock, dan dialog dengan kontras tinggi & palet harmonis
+									</p>
 								</div>
 							</div>
 
-							<!-- Light Themes -->
-							{#if appearanceThemeCategory === 'light'}
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-in fade-in duration-150">
-									{#each lightThemes as t}
-										<button
-											type="button"
-											onclick={() => rigging.setUITheme(t.id)}
-											class="p-3 rounded-xl border text-left transition-all relative cursor-pointer hover:scale-[1.01] active:scale-[0.99] {
-												rigging.uiTheme === t.id
-													? 'bg-zinc-900 border-cyan-400 shadow-lg ring-1 ring-cyan-400/30'
-													: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
-											}"
-										>
-											<div class="flex items-center gap-2 mb-1">
-												<div class="w-3.5 h-3.5 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};"></div>
-												<span class="font-bold text-xs text-zinc-200">{t.name}</span>
-												<span class="text-[9px] px-1 py-0.2 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">{t.badge}</span>
-												{#if rigging.uiTheme === t.id}
-													<Check class="w-3.5 h-3.5 text-cyan-400 ml-auto" />
-												{/if}
-											</div>
-											<p class="text-[10px] text-zinc-400 leading-tight mb-2 line-clamp-1">{t.desc}</p>
-											<!-- Palette Swatches -->
-											<div class="flex items-center gap-1.5 pt-1.5 border-t border-zinc-800/60">
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.bg};" title="Bg"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.surface};" title="Surface"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};" title="Accent"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.border};" title="Border"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.text};" title="Text"></div>
-												<span class="text-[9px] font-mono text-zinc-500 ml-auto">{t.bgHex}</span>
-											</div>
-										</button>
-									{/each}
-								</div>
+							<!-- Category Filter Pills -->
+							<div class="flex items-center gap-1 p-1 rounded-xl border shrink-0 {
+								isLightTheme ? 'bg-zinc-200/60 border-zinc-300' : 'bg-zinc-950 border-zinc-800'
+							}">
+								<button
+									type="button"
+									onclick={() => (appearanceThemeCategory = 'all')}
+									class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+										appearanceThemeCategory === 'all'
+											? 'bg-cyan-500 text-zinc-950 font-bold shadow-sm'
+											: isLightTheme ? 'text-zinc-700 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<span>Semua</span>
+									<span class="text-[10px] px-1 rounded font-mono {appearanceThemeCategory === 'all' ? 'bg-zinc-950/20 text-zinc-950 font-bold' : 'bg-zinc-800/80 text-zinc-400'}">{allSelectableThemes.length}</span>
+								</button>
+								<button
+									type="button"
+									onclick={() => (appearanceThemeCategory = 'light')}
+									class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+										appearanceThemeCategory === 'light'
+											? 'bg-amber-400 text-amber-950 font-bold shadow-sm'
+											: isLightTheme ? 'text-zinc-700 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<Sun class="w-3.5 h-3.5" />
+									<span>Daylight</span>
+									<span class="text-[10px] px-1 rounded font-mono {appearanceThemeCategory === 'light' ? 'bg-amber-950/20 text-amber-950 font-bold' : 'bg-zinc-800/80 text-zinc-400'}">{lightThemes.length}</span>
+								</button>
+								<button
+									type="button"
+									onclick={() => (appearanceThemeCategory = 'dark')}
+									class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+										appearanceThemeCategory === 'dark'
+											? 'bg-indigo-500 text-white font-bold shadow-sm'
+											: isLightTheme ? 'text-zinc-700 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<Moon class="w-3.5 h-3.5" />
+									<span>Dark</span>
+									<span class="text-[10px] px-1 rounded font-mono {appearanceThemeCategory === 'dark' ? 'bg-white/20 text-white font-bold' : 'bg-zinc-800/80 text-zinc-400'}">{darkThemes.length}</span>
+								</button>
+								<button
+									type="button"
+									onclick={() => (appearanceThemeCategory = 'custom')}
+									class="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer {
+										appearanceThemeCategory === 'custom'
+											? 'bg-pink-500 text-white font-bold shadow-sm'
+											: isLightTheme ? 'text-zinc-700 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<Wand2 class="w-3.5 h-3.5" />
+									<span>Custom Studio</span>
+								</button>
+							</div>
+						</div>
 
-							<!-- Dark Themes -->
-							{:else if appearanceThemeCategory === 'dark'}
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-in fade-in duration-150">
-									{#each darkThemes as t}
-										<button
-											type="button"
-											onclick={() => rigging.setUITheme(t.id)}
-											class="p-3 rounded-xl border text-left transition-all relative cursor-pointer hover:scale-[1.01] active:scale-[0.99] {
-												rigging.uiTheme === t.id
-													? 'bg-zinc-900 border-cyan-500 shadow-lg ring-1 ring-cyan-500/30'
-													: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
-											}"
+						<!-- THEMES GRID (ALL / LIGHT / DARK) -->
+						{#if appearanceThemeCategory !== 'custom'}
+							{@const displayList = appearanceThemeCategory === 'all' ? allSelectableThemes : (appearanceThemeCategory === 'light' ? lightThemes : darkThemes)}
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-150">
+								{#each displayList as theme}
+									{@const isSelected = rigging.uiTheme === theme.id}
+									<button
+										type="button"
+										onclick={() => {
+											playSfx('theme');
+											rigging.setUITheme(theme.id);
+										}}
+										class="flex flex-col p-3.5 rounded-2xl border text-left transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] group relative overflow-hidden {
+											isSelected
+												? 'ring-2 ring-cyan-400 shadow-xl border-cyan-400'
+												: isLightTheme
+												? 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 shadow-sm'
+												: 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/90 shadow-md'
+										}"
+									>
+										<!-- Realistic Mini UI Preview Box -->
+										<div
+											class="w-full h-22 rounded-xl border p-2 flex flex-col justify-between mb-3 shadow-inner relative overflow-hidden transition-transform group-hover:scale-[1.01]"
+											style="background-color: {theme.palette.bg}; border-color: {theme.palette.border}; color: {theme.palette.text};"
 										>
-											<div class="flex items-center gap-2 mb-1">
-												<div class="w-3.5 h-3.5 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};"></div>
-												<span class="font-bold text-xs text-zinc-200">{t.name}</span>
-												<span class="text-[9px] px-1 py-0.2 rounded font-mono bg-zinc-800 text-zinc-400">{t.badge}</span>
-												{#if rigging.uiTheme === t.id}
-													<Check class="w-3.5 h-3.5 text-cyan-400 ml-auto" />
-												{/if}
-											</div>
-											<p class="text-[10px] text-zinc-400 leading-tight mb-2 line-clamp-1">{t.desc}</p>
-											<!-- Palette Swatches -->
-											<div class="flex items-center gap-1.5 pt-1.5 border-t border-zinc-800/60">
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.bg};" title="Bg"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.surface};" title="Surface"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.accent};" title="Accent"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.border};" title="Border"></div>
-												<div class="w-3 h-3 rounded-full border border-zinc-700" style="background-color: {t.palette.text};" title="Text"></div>
-												<span class="text-[9px] font-mono text-zinc-500 ml-auto">{t.bgHex}</span>
-											</div>
-										</button>
-									{/each}
-								</div>
-
-							<!-- Custom Theme Studio -->
-							{:else if appearanceThemeCategory === 'custom'}
-								<div class="p-3.5 rounded-xl bg-zinc-950/90 border border-zinc-800/90 space-y-3 animate-in fade-in duration-150">
-									<!-- Presets -->
-									<div>
-										<span class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1.5">
-											{i18n.t('custom_presets_title')}
-										</span>
-										<div class="grid grid-cols-3 gap-1.5">
-											{#each customPresets as preset}
-												<button
-													type="button"
-													onclick={() => applyCustomPreset(preset)}
-													class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 hover:border-zinc-700 transition-all text-left flex items-center justify-between cursor-pointer"
+											<!-- Mini Mockup Top Bar -->
+											<div class="flex items-center justify-between">
+												<div class="flex items-center gap-1.5">
+													<div class="w-2.5 h-2.5 rounded-full" style="background-color: {theme.palette.accent};"></div>
+													<span class="text-[10px] font-bold font-mono tracking-wider opacity-90 truncate max-w-[110px]" style="color: {theme.palette.text};">
+														{theme.name}
+													</span>
+												</div>
+												<span
+													class="text-[8px] px-1.5 py-0.5 rounded font-mono font-semibold"
+													style="background-color: {theme.palette.surface}; color: {theme.palette.accent}; border: 1px solid {theme.palette.border};"
 												>
-													<span class="font-bold text-[10px] text-zinc-200 truncate">{preset.name}</span>
-													<div class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {preset.accent};"></div>
-												</button>
-											{/each}
-										</div>
-									</div>
+													{theme.badge}
+												</span>
+											</div>
 
-									<!-- Live Pickers -->
-									<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
-											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_bg')}</span>
-											<div class="flex items-center gap-1.5">
+											<!-- Mini Mockup Center Surface Card -->
+											<div
+												class="p-1.5 rounded-lg border flex items-center justify-between shadow-xs"
+												style="background-color: {theme.palette.surface}; border-color: {theme.palette.border};"
+											>
+												<div class="flex items-center gap-1.5">
+													<div class="w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-bold" style="background-color: {theme.palette.accent}; color: {theme.palette.bg};">
+														★
+													</div>
+													<span class="text-[9px] font-semibold" style="color: {theme.palette.text};">MiruNova Rig</span>
+												</div>
+												<!-- Mini active toggle -->
+												<div class="w-4.5 h-2.5 rounded-full flex items-center px-0.5" style="background-color: {theme.palette.accent};">
+													<div class="w-1.5 h-1.5 rounded-full ml-auto" style="background-color: {theme.palette.bg};"></div>
+												</div>
+											</div>
+
+											<!-- Mini Mockup Bottom Dock Strip -->
+											<div class="flex items-center gap-1">
+												<div class="w-4 h-2 rounded" style="background-color: {theme.palette.accent};"></div>
+												<div class="w-4 h-2 rounded opacity-70" style="background-color: {theme.palette.border};"></div>
+												<div class="w-4 h-2 rounded opacity-90" style="background-color: {theme.palette.surface};"></div>
+											</div>
+										</div>
+
+										<!-- Theme Info Row -->
+										<div class="flex items-center justify-between w-full mb-1">
+											<span class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+												{theme.name}
+											</span>
+											{#if isSelected}
+												<div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-cyan-400 text-zinc-950 font-bold text-[9px] shadow-sm">
+													<Check class="w-3 h-3 stroke-[3]" />
+													<span>AKTIF</span>
+												</div>
+											{/if}
+										</div>
+
+										<p class="text-[10px] leading-relaxed mb-2.5 {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+											{theme.desc}
+										</p>
+
+										<!-- Palette Swatches Bottom Bar -->
+										<div class="mt-auto pt-2 border-t flex items-center gap-1.5 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+											<div class="w-3 h-3 rounded-full border border-zinc-500/40" style="background-color: {theme.palette.bg};" title="Background"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-500/40" style="background-color: {theme.palette.surface};" title="Surface Card"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-500/40" style="background-color: {theme.palette.accent};" title="Accent Highlight"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-500/40" style="background-color: {theme.palette.border};" title="Border"></div>
+											<div class="w-3 h-3 rounded-full border border-zinc-500/40" style="background-color: {theme.palette.text};" title="Text Color"></div>
+											<span class="text-[9px] font-mono ml-auto {isLightTheme ? 'text-zinc-500 font-semibold' : 'text-zinc-500'}">
+												{theme.bgHex}
+											</span>
+										</div>
+									</button>
+								{/each}
+							</div>
+
+						<!-- CUSTOM THEME STUDIO -->
+						{:else}
+							<div class="p-5 rounded-2xl border space-y-5 animate-in fade-in duration-150 {
+								isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+							}">
+								<!-- One-Click Presets -->
+								<div>
+									<div class="flex items-center justify-between mb-2">
+										<span class="text-xs font-bold uppercase tracking-wider {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
+											Preset Warna Cepat
+										</span>
+										<span class="text-[10px] text-zinc-500">Klik salah satu untuk memuat palet harmonis</span>
+									</div>
+									<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+										{#each customPresets as preset}
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('theme');
+													applyCustomPreset(preset);
+												}}
+												class="p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer hover:scale-102 active:scale-98 shadow-sm {
+													isLightTheme
+														? 'bg-white hover:bg-zinc-100 border-zinc-300 text-zinc-800'
+														: 'bg-zinc-950 hover:bg-zinc-850 border-zinc-800 text-zinc-200'
+												}"
+											>
+												<span class="font-bold text-[11px] truncate mb-2">{preset.name}</span>
+												<div class="flex items-center gap-1">
+													<div class="w-3 h-3 rounded-full border border-zinc-400/40" style="background-color: {preset.bg};"></div>
+													<div class="w-3 h-3 rounded-full border border-zinc-400/40" style="background-color: {preset.accent};"></div>
+													<div class="w-3 h-3 rounded-full border border-zinc-400/40 ml-auto" style="background-color: {preset.text};"></div>
+												</div>
+											</button>
+										{/each}
+									</div>
+								</div>
+
+								<!-- Live Custom Color Pickers & Live Preview Split -->
+								<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-3 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+									<!-- Pickers (2 Cols) -->
+									<div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+										<!-- Background -->
+										<div class="p-3 rounded-xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+											<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">{i18n.t('theme_custom_bg')}</span>
+											<div class="flex items-center gap-2">
 												<input
 													type="color"
 													bind:value={rigging.customThemeConfig.bg}
@@ -1426,15 +1519,24 @@
 														rigging.setCustomThemeColors({ bg: rigging.customThemeConfig.bg });
 														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
 													}}
-													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+													class="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
 												/>
-												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.bg}</span>
+												<input
+													type="text"
+													bind:value={rigging.customThemeConfig.bg}
+													onchange={() => {
+														rigging.setCustomThemeColors({ bg: rigging.customThemeConfig.bg });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="flex-1 px-2 py-1 rounded-lg border text-xs font-mono uppercase {isLightTheme ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}"
+												/>
 											</div>
 										</div>
 
-										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
-											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_surface')}</span>
-											<div class="flex items-center gap-1.5">
+										<!-- Surface -->
+										<div class="p-3 rounded-xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+											<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">{i18n.t('theme_custom_surface')}</span>
+											<div class="flex items-center gap-2">
 												<input
 													type="color"
 													bind:value={rigging.customThemeConfig.surface}
@@ -1442,15 +1544,24 @@
 														rigging.setCustomThemeColors({ surface: rigging.customThemeConfig.surface });
 														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
 													}}
-													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+													class="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
 												/>
-												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.surface}</span>
+												<input
+													type="text"
+													bind:value={rigging.customThemeConfig.surface}
+													onchange={() => {
+														rigging.setCustomThemeColors({ surface: rigging.customThemeConfig.surface });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="flex-1 px-2 py-1 rounded-lg border text-xs font-mono uppercase {isLightTheme ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}"
+												/>
 											</div>
 										</div>
 
-										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
-											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_accent')}</span>
-											<div class="flex items-center gap-1.5">
+										<!-- Accent -->
+										<div class="p-3 rounded-xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+											<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">{i18n.t('theme_custom_accent')}</span>
+											<div class="flex items-center gap-2">
 												<input
 													type="color"
 													bind:value={rigging.customThemeConfig.accent}
@@ -1458,15 +1569,24 @@
 														rigging.setCustomThemeColors({ accent: rigging.customThemeConfig.accent });
 														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
 													}}
-													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+													class="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
 												/>
-												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.accent}</span>
+												<input
+													type="text"
+													bind:value={rigging.customThemeConfig.accent}
+													onchange={() => {
+														rigging.setCustomThemeColors({ accent: rigging.customThemeConfig.accent });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="flex-1 px-2 py-1 rounded-lg border text-xs font-mono uppercase {isLightTheme ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}"
+												/>
 											</div>
 										</div>
 
-										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
-											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_border')}</span>
-											<div class="flex items-center gap-1.5">
+										<!-- Border -->
+										<div class="p-3 rounded-xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+											<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">{i18n.t('theme_custom_border')}</span>
+											<div class="flex items-center gap-2">
 												<input
 													type="color"
 													bind:value={rigging.customThemeConfig.border}
@@ -1474,15 +1594,24 @@
 														rigging.setCustomThemeColors({ border: rigging.customThemeConfig.border });
 														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
 													}}
-													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+													class="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
 												/>
-												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.border}</span>
+												<input
+													type="text"
+													bind:value={rigging.customThemeConfig.border}
+													onchange={() => {
+														rigging.setCustomThemeColors({ border: rigging.customThemeConfig.border });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="flex-1 px-2 py-1 rounded-lg border text-xs font-mono uppercase {isLightTheme ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}"
+												/>
 											</div>
 										</div>
 
-										<div class="p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80 space-y-1">
-											<span class="text-[10px] text-zinc-400 block">{i18n.t('theme_custom_text')}</span>
-											<div class="flex items-center gap-1.5">
+										<!-- Text -->
+										<div class="p-3 rounded-xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+											<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">{i18n.t('theme_custom_text')}</span>
+											<div class="flex items-center gap-2">
 												<input
 													type="color"
 													bind:value={rigging.customThemeConfig.text}
@@ -1490,93 +1619,254 @@
 														rigging.setCustomThemeColors({ text: rigging.customThemeConfig.text });
 														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
 													}}
-													class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"
+													class="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
 												/>
-												<span class="font-mono text-[10px] text-zinc-200 uppercase">{rigging.customThemeConfig.text}</span>
+												<input
+													type="text"
+													bind:value={rigging.customThemeConfig.text}
+													onchange={() => {
+														rigging.setCustomThemeColors({ text: rigging.customThemeConfig.text });
+														if (rigging.uiTheme !== 'custom') rigging.setUITheme('custom');
+													}}
+													class="flex-1 px-2 py-1 rounded-lg border text-xs font-mono uppercase {isLightTheme ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}"
+												/>
 											</div>
 										</div>
 
-										<!-- Activate Button -->
+										<!-- Action Button -->
 										<div class="flex items-end">
 											<button
 												type="button"
-												onclick={() => rigging.setUITheme('custom')}
-												class="w-full py-2 px-2.5 rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 {
+												onclick={() => {
+													playSfx('theme');
+													rigging.setUITheme('custom');
+												}}
+												class="w-full py-2.5 px-3 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 {
 													rigging.uiTheme === 'custom'
 														? 'bg-pink-500 text-white'
-														: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+														: isLightTheme ? 'bg-zinc-900 text-white hover:bg-zinc-800' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
 												}"
 											>
 												{#if rigging.uiTheme === 'custom'}
-													<Check class="w-3.5 h-3.5 stroke-[3]" />
-													<span>Aktif</span>
+													<Check class="w-4 h-4 stroke-[3]" />
+													<span>Tema Kustom Aktif</span>
 												{:else}
-													<Wand2 class="w-3.5 h-3.5" />
-													<span>Terapkan</span>
+													<Wand2 class="w-4 h-4" />
+													<span>Terapkan Kustom</span>
 												{/if}
 											</button>
 										</div>
 									</div>
-								</div>
-							{/if}
 
-							<!-- Background Style -->
-							<div class="pt-3 border-t border-zinc-800/60 space-y-2">
-								<label for="bg-style-select" class="block text-xs text-zinc-400 font-medium">{i18n.t('bg_mode')}</label>
+									<!-- Live Custom Preview Card (1 Col) -->
+									<div
+										class="p-4 rounded-2xl border flex flex-col justify-between shadow-xl"
+										style="background-color: {rigging.customThemeConfig.bg}; border-color: {rigging.customThemeConfig.border}; color: {rigging.customThemeConfig.text};"
+									>
+										<div class="flex items-center justify-between border-b pb-2 mb-3" style="border-color: {rigging.customThemeConfig.border};">
+											<div class="flex items-center gap-2">
+												<div class="w-3 h-3 rounded-full" style="background-color: {rigging.customThemeConfig.accent};"></div>
+												<span class="font-bold text-xs font-mono" style="color: {rigging.customThemeConfig.text};">Live Theme Preview</span>
+											</div>
+											<span class="text-[9px] px-2 py-0.5 rounded-full font-mono font-bold" style="background-color: {rigging.customThemeConfig.surface}; color: {rigging.customThemeConfig.accent}; border: 1px solid {rigging.customThemeConfig.border};">
+												CUSTOM
+											</span>
+										</div>
+
+										<!-- Mock Surface Box -->
+										<div
+											class="p-3 rounded-xl border space-y-2 mb-3 shadow-sm"
+											style="background-color: {rigging.customThemeConfig.surface}; border-color: {rigging.customThemeConfig.border};"
+										>
+											<div class="flex items-center justify-between">
+												<span class="text-xs font-semibold" style="color: {rigging.customThemeConfig.text};">Surface Panel Card</span>
+												<div class="w-5 h-2.5 rounded-full flex items-center px-0.5" style="background-color: {rigging.customThemeConfig.accent};">
+													<div class="w-1.5 h-1.5 rounded-full ml-auto" style="background-color: {rigging.customThemeConfig.bg};"></div>
+												</div>
+											</div>
+											<p class="text-[10px] opacity-80 leading-relaxed" style="color: {rigging.customThemeConfig.text};">
+												Ini adalah pratinjau tampilan dialog dan kartu dengan warna yang Anda atur.
+											</p>
+										</div>
+
+										<!-- Mock Buttons -->
+										<div class="flex items-center gap-2">
+											<div class="flex-1 py-1.5 rounded-lg text-center text-xs font-bold" style="background-color: {rigging.customThemeConfig.accent}; color: {rigging.customThemeConfig.bg};">
+												Tombol Aksi
+											</div>
+											<div class="py-1.5 px-3 rounded-lg border text-center text-xs" style="background-color: {rigging.customThemeConfig.surface}; border-color: {rigging.customThemeConfig.border}; color: {rigging.customThemeConfig.text};">
+												Batal
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						{/if}
+					</div>
+
+				<!-- TAB 5: STAGE & EFFECTS (PANGGUNG & KANVAS) -->
+				{:else if activeTab === 'stage'}
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
+						<!-- Card 1: Latar Belakang & Efek Layar -->
+						<div class="p-5 rounded-2xl border space-y-4 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
+						}">
+							<div class="flex items-center gap-2.5">
+								<div class="p-2 bg-sky-500/10 border border-sky-500/30 rounded-xl text-sky-500">
+									<Layers class="w-4 h-4" />
+								</div>
+								<div>
+									<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+										Latar Belakang Panggung
+									</h3>
+									<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+										Mode tampilan kanvas untuk streaming OBS, preview, atau green screen
+									</p>
+								</div>
+							</div>
+
+							<!-- Background Style Select -->
+							<div class="space-y-1.5">
+								<label for="bg-style-select" class="block text-xs font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+									{i18n.t('bg_mode')}
+								</label>
 								<select
 									id="bg-style-select"
 									bind:value={rigging.backgroundStyle}
 									onchange={() => rigging.persist()}
-									class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-200 focus:outline-none focus:border-pink-500"
+									class="w-full p-2.5 rounded-xl text-xs border focus:outline-none focus:border-sky-500 cursor-pointer {
+										isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-100'
+									}"
 								>
-									<option value="solid">Solid Color (Custom Hex)</option>
+									<option value="solid">Solid Color (Custom Hex Color)</option>
 									<option value="mesh">Mesh Kotak-kotak (Wireframe Grid)</option>
 									<option value="grid">Clean Studio Grid</option>
 									<option value="dots">Dot Matrix</option>
 									<option value="cosmic">Cosmic Space Flow</option>
-									<option value="transparent">Transparent Alpha (OBS)</option>
-									<option value="chroma">Chroma Green (#00FF00)</option>
+									<option value="transparent">Transparent Alpha (OBS Streaming)</option>
+									<option value="chroma">Chroma Key Green (#00FF00)</option>
+								</select>
+							</div>
+
+							<!-- Solid Background Color Picker (If solid selected) -->
+							{#if rigging.backgroundStyle === 'solid'}
+								<div class="p-3 rounded-xl border space-y-2 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+									<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+										Warna Background Solid (Hex)
+									</span>
+									<div class="flex items-center gap-2">
+										<input
+											type="color"
+											bind:value={rigging.backgroundColor}
+											oninput={() => rigging.persist()}
+											class="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
+										/>
+										<input
+											type="text"
+											bind:value={rigging.backgroundColor}
+											onchange={() => rigging.persist()}
+											class="flex-1 px-3 py-1.5 rounded-lg border text-xs font-mono uppercase {isLightTheme ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}"
+										/>
+									</div>
+								</div>
+							{/if}
+
+							<!-- Screen Effects Selector -->
+							<div class="space-y-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
+								<label for="screen-effect-select" class="block text-xs font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+									Efek Layar Visual (Shader / Post-Processing)
+								</label>
+								<select
+									id="screen-effect-select"
+									bind:value={rigging.screenEffect}
+									onchange={() => rigging.persist()}
+									class="w-full p-2.5 rounded-xl text-xs border focus:outline-none focus:border-sky-500 cursor-pointer {
+										isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-100'
+									}"
+								>
+									<option value="none">Tanpa Efek (Normal)</option>
+									<option value="vignette">Vignette (Bayangan Tepi Layar)</option>
+									<option value="scanlines">Scanlines (Garis TV Retro)</option>
+									<option value="crt">CRT Monitor Glow</option>
+									<option value="blur">Subtle Background Blur</option>
 								</select>
 							</div>
 						</div>
 
-						<!-- Framing & Language Settings -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-								<Layers class="w-4 h-4 text-violet-400" />
-								<span>Framing & Bahasa</span>
-							</h3>
+						<!-- Card 2: Framing, Sound Effects & Bahasa -->
+						<div class="p-5 rounded-2xl border space-y-4 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
+						}">
+							<div class="flex items-center gap-2.5">
+								<div class="p-2 bg-violet-500/10 border border-violet-500/30 rounded-xl text-violet-500">
+									<SlidersHorizontal class="w-4 h-4" />
+								</div>
+								<div>
+									<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+										Framing & Pengaturan Suara
+									</h3>
+									<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+										Preset framing kamera avatar, rasio 1:1, dan sound effect studio
+									</p>
+								</div>
+							</div>
 
 							<!-- Framing Preset -->
 							<div class="space-y-1.5">
-								<span class="text-xs text-zinc-400 font-medium block">{i18n.t('framing_mode_label')}</span>
+								<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+									{i18n.t('framing_mode_label')}
+								</span>
 								<div class="grid grid-cols-3 gap-2">
 									<button
-										onclick={() => rigging.setFramingMode('full')}
-										class="px-2 py-2 rounded-xl text-xs font-semibold border transition-colors {
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											rigging.setFramingMode('full');
+										}}
+										class="px-2 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
 											rigging.framingMode === 'full'
-												? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-												: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
+												? isLightTheme
+													? 'bg-sky-100 text-sky-800 border-sky-400 font-bold shadow-sm'
+													: 'bg-sky-500/20 text-sky-300 border-sky-500/50 font-bold'
+												: isLightTheme
+												? 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+												: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
 										}"
 									>
 										{i18n.t('framing_full')}
 									</button>
 									<button
-										onclick={() => rigging.setFramingMode('half')}
-										class="px-2 py-2 rounded-xl text-xs font-semibold border transition-colors {
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											rigging.setFramingMode('half');
+										}}
+										class="px-2 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
 											rigging.framingMode === 'half'
-												? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-												: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
+												? isLightTheme
+													? 'bg-sky-100 text-sky-800 border-sky-400 font-bold shadow-sm'
+													: 'bg-sky-500/20 text-sky-300 border-sky-500/50 font-bold'
+												: isLightTheme
+												? 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+												: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
 										}"
 									>
 										{i18n.t('framing_half')}
 									</button>
 									<button
-										onclick={() => rigging.setFramingMode('closeup')}
-										class="px-2 py-2 rounded-xl text-xs font-semibold border transition-colors {
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											rigging.setFramingMode('closeup');
+										}}
+										class="px-2 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
 											rigging.framingMode === 'closeup'
-												? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-												: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
+												? isLightTheme
+													? 'bg-sky-100 text-sky-800 border-sky-400 font-bold shadow-sm'
+													: 'bg-sky-500/20 text-sky-300 border-sky-500/50 font-bold'
+												: isLightTheme
+												? 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+												: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
 										}"
 									>
 										{i18n.t('framing_closeup')}
@@ -1585,14 +1875,17 @@
 							</div>
 
 							<!-- Square Frame Toggle -->
-							<div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/70 space-y-2">
+							<div class="p-3 rounded-xl border space-y-2 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
 								<div class="flex items-center justify-between">
-									<span class="text-xs font-semibold text-zinc-200">{i18n.t('square_frame_toggle')}</span>
+									<span class="text-xs font-semibold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
+										{i18n.t('square_frame_toggle')}
+									</span>
 									<button
+										type="button"
 										onclick={() => rigging.toggleSquareFrame()}
 										aria-label={i18n.t('square_frame_toggle')}
-										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-											rigging.isSquareFrameActive ? 'bg-pink-500' : 'bg-zinc-700'
+										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+											rigging.isSquareFrameActive ? 'bg-pink-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
 										}"
 									>
 										<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
@@ -1601,17 +1894,20 @@
 									</button>
 								</div>
 								{#if rigging.isSquareFrameActive}
-									<div class="flex items-center justify-between pt-1 border-t border-zinc-800/60">
-										<span class="text-[11px] text-zinc-400">{i18n.t('square_frame_fade_label')}</span>
+									<div class="flex items-center justify-between pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
+										<span class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+											{i18n.t('square_frame_fade_label')}
+										</span>
 										<button
+											type="button"
 											onclick={() => {
 												rigging.squareFrameFade = !rigging.squareFrameFade;
 												rigging.persist();
 											}}
-											class="px-2 py-0.5 rounded text-[10px] font-medium border {
+											class="px-2 py-0.5 rounded text-[10px] font-medium border cursor-pointer {
 												rigging.squareFrameFade
-													? 'bg-pink-500/20 text-pink-300 border-pink-500/40'
-													: 'bg-zinc-800 text-zinc-400 border-zinc-700'
+													? 'bg-pink-500/20 text-pink-500 border-pink-500/40 font-bold'
+													: isLightTheme ? 'bg-zinc-100 text-zinc-600 border-zinc-300' : 'bg-zinc-800 text-zinc-400 border-zinc-700'
 											}"
 										>
 											{rigging.squareFrameFade ? 'Fade On' : 'Off'}
@@ -1621,21 +1917,24 @@
 							</div>
 
 							<!-- Studio Sound Effects (Procedural SFX) Section -->
-							<div class="p-3.5 bg-zinc-950/80 rounded-2xl border border-cyan-500/30 space-y-3">
+							<div class="p-3.5 rounded-xl border space-y-3 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
 								<div class="flex items-center justify-between">
 									<div class="flex items-center gap-2">
-										<Bell class="w-4 h-4 text-cyan-400" />
-										<span class="text-xs font-semibold text-zinc-200">{i18n.t('sfx_toggle_title')}</span>
+										<Bell class="w-4 h-4 text-cyan-500" />
+										<span class="text-xs font-semibold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
+											{i18n.t('sfx_toggle_title')}
+										</span>
 									</div>
 									<button
+										type="button"
 										onclick={() => {
 											rigging.isSfxEnabled = !rigging.isSfxEnabled;
 											rigging.persist();
 											if (rigging.isSfxEnabled) playSfx('toggle');
 										}}
 										aria-label={i18n.t('sfx_toggle_title')}
-										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-											rigging.isSfxEnabled ? 'bg-cyan-500' : 'bg-zinc-700'
+										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+											rigging.isSfxEnabled ? 'bg-cyan-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
 										}"
 									>
 										<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
@@ -1644,15 +1943,15 @@
 									</button>
 								</div>
 
-								<p class="text-[10px] text-zinc-400 leading-relaxed">
+								<p class="text-[10px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'} leading-relaxed">
 									{i18n.t('sfx_desc')}
 								</p>
 
 								{#if rigging.isSfxEnabled}
-									<div class="space-y-2 pt-1 border-t border-zinc-800/60">
+									<div class="space-y-2 pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
 										<div class="flex items-center justify-between text-xs">
-											<span class="text-zinc-400">{i18n.t('sfx_volume')}</span>
-											<span class="font-mono text-cyan-400 font-bold">{Math.round(rigging.sfxVolume * 100)}%</span>
+											<span class="{isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">{i18n.t('sfx_volume')}</span>
+											<span class="font-mono text-cyan-500 font-bold">{Math.round(rigging.sfxVolume * 100)}%</span>
 										</div>
 										<input
 											type="range"
@@ -1661,13 +1960,17 @@
 											step="0.05"
 											bind:value={rigging.sfxVolume}
 											oninput={() => rigging.persist()}
-											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+											class="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-cyan-500 {isLightTheme ? 'bg-zinc-200' : 'bg-zinc-800'}"
 										/>
 										<div class="flex justify-end pt-0.5">
 											<button
 												type="button"
 												onclick={() => playSfx('click')}
-												class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-cyan-300 border border-zinc-700/80 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer"
+												class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer border {
+													isLightTheme
+														? 'bg-zinc-100 hover:bg-zinc-200 text-cyan-700 border-zinc-300'
+														: 'bg-zinc-900 hover:bg-zinc-800 text-cyan-300 border-zinc-700/80'
+												}"
 											>
 												🔊 {i18n.t('sfx_test_btn')}
 											</button>
@@ -1677,21 +1980,26 @@
 							</div>
 
 							<!-- Language Selection -->
-							<div class="space-y-1.5 pt-2 border-t border-zinc-800/60">
-								<span class="text-xs text-zinc-400 font-medium block flex items-center gap-1.5">
-									<Languages class="w-3.5 h-3.5 text-cyan-400" />
+							<div class="space-y-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
+								<span class="text-xs font-semibold block flex items-center gap-1.5 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+									<Languages class="w-3.5 h-3.5 text-cyan-500" />
 									{i18n.t('language')}
 								</span>
 								<div class="grid grid-cols-3 gap-2">
 									{#each languages as lang}
 										<button
+											type="button"
 											onclick={() => {
 												i18n.setLocale(lang.code);
 												rigging.persist();
 											}}
-											class="py-2 px-1 text-center rounded-xl text-xs font-semibold border transition-all {
+											class="py-2 px-1 text-center rounded-xl text-xs font-semibold border transition-all cursor-pointer {
 												i18n.currentLocale === lang.code
-													? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+													? isLightTheme
+														? 'bg-cyan-100 text-cyan-800 border-cyan-400 font-bold shadow-sm'
+														: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 font-bold'
+													: isLightTheme
+													? 'bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-100'
 													: 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
 											}"
 										>

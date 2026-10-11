@@ -55,33 +55,35 @@
 </script>
 
 {#if !rigging.isObsMode && !rigging.isGuiLocked}
-	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge) -->
+	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge with 20% Peeking) -->
 	<aside
 		aria-label={i18n.t('assist_button_title')}
-		class="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-40 select-none flex items-center"
+		class="fixed right-0 top-1/2 -translate-y-1/2 z-40 select-none flex items-center transition-transform duration-200 ease-out {
+			isVisible ? 'translate-x-0' : 'translate-x-[20%] hover:translate-x-0'
+		}"
 	>
-		<!-- 1. Floating Circular Assist Icon (Apple AssistiveTouch Style) -->
+		<!-- 1. Floating Circular Assist Icon (Apple AssistiveTouch Style - Strictly Circular) -->
 		<button
 			type="button"
 			onclick={toggleOpen}
 			aria-label={i18n.t('assist_button_title')}
 			title="{i18n.t('assist_button_title')} (Apple AssistiveTouch)"
-			class="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center backdrop-blur-xl border shadow-xl transition-all duration-200 cursor-pointer group active:scale-90 {
+			class="relative w-12 h-12 rounded-full aspect-square flex items-center justify-center backdrop-blur-xl border shadow-xl transition-all duration-200 cursor-pointer group active:scale-95 shrink-0 {
 				isVisible
-					? 'ring-2 ring-cyan-400/80 scale-105 opacity-100 shadow-cyan-500/30'
-					: 'opacity-75 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/20'
+					? 'ring-2 ring-cyan-400/90 scale-105 opacity-100 shadow-cyan-500/40'
+					: 'opacity-80 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/25'
 			} {
 				isLightTheme
-					? 'bg-white/90 border-zinc-300 text-zinc-800 shadow-zinc-400/30'
-					: 'bg-zinc-950/85 border-zinc-700/80 text-zinc-100 shadow-black/60'
+					? 'bg-white/95 border-zinc-300 text-zinc-800 shadow-zinc-400/30'
+					: 'bg-zinc-950/90 border-zinc-700/80 text-zinc-100 shadow-black/70'
 			}"
 		>
-			<!-- Concentric Apple AssistiveTouch Rings -->
+			<!-- Concentric Circular Apple AssistiveTouch Rings -->
 			<div class="absolute inset-1.5 rounded-full border border-dashed transition-all duration-300 {
 				isVisible
 					? 'border-cyan-400/70 rotate-45'
 					: isLightTheme
-					? 'border-zinc-400/60 group-hover:border-cyan-500/60'
+					? 'border-zinc-400/60 group-hover:border-cyan-500/70'
 					: 'border-zinc-600/70 group-hover:border-cyan-400/70'
 			}"></div>
 
@@ -111,9 +113,9 @@
 			{/if}
 
 			<div
-				class="absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 w-56 p-3 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-150 {
+				class="absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 w-60 p-3.5 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-150 {
 					isLightTheme
-						? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl'
+						? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl'
 						: 'bg-zinc-950/95 border-zinc-800/90 text-zinc-200 shadow-2xl'
 				}"
 			>
@@ -156,14 +158,37 @@
 					</div>
 				</div>
 
-				<!-- Zoom Controls Row -->
-				<div class="space-y-1 mb-2.5">
-					<div class="flex items-center justify-between text-[10px] font-medium {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
-						<span>{i18n.t('assist_zoom_stage')}</span>
-						<span class="font-mono {isLightTheme ? 'text-cyan-600 font-bold' : 'text-cyan-300'}">{displayZoomPercent}%</span>
+				<!-- Continuous Interactive Zoom Slider + Value -->
+				<div class="space-y-2 mb-3 p-2.5 rounded-xl border {isLightTheme ? 'bg-zinc-50/80 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/80'}">
+					<div class="flex items-center justify-between text-[11px] font-medium {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+						<span class="flex items-center gap-1">
+							<ZoomIn class="w-3 h-3 text-cyan-500" />
+							<span>{i18n.t('assist_zoom_stage')}</span>
+						</span>
+						<span class="font-mono text-xs font-bold {isLightTheme ? 'text-cyan-600' : 'text-cyan-400'}">{displayZoomPercent}%</span>
 					</div>
-					<div class="flex items-center gap-1 p-1 rounded-xl border {isLightTheme ? 'bg-zinc-100/80 border-zinc-200' : 'bg-zinc-900/80 border-zinc-800/80'}">
-						<!-- Zoom Out -->
+
+					<!-- Continuous Slider Input -->
+					<div class="space-y-1">
+						<input
+							type="range"
+							min="0.3"
+							max="2.5"
+							step="0.05"
+							value={rigging.zoomLevel || 1.0}
+							oninput={(e) => rigging.setZoom(parseFloat((e.target as HTMLInputElement).value))}
+							class="w-full h-1.5 bg-zinc-700/60 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+							aria-label="Zoom Level Slider"
+						/>
+						<div class="flex justify-between text-[9px] font-mono text-zinc-500 px-0.5">
+							<span>30%</span>
+							<span>100%</span>
+							<span>250%</span>
+						</div>
+					</div>
+
+					<!-- Quick Zoom Buttons Row -->
+					<div class="flex items-center gap-1 pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<button
 							type="button"
 							onclick={() => {
@@ -171,15 +196,14 @@
 								rigging.zoomOut();
 							}}
 							title="Zoom Out [-]"
-							class="flex-1 py-1.5 flex items-center justify-center rounded-lg transition-all cursor-pointer {
-								isLightTheme ? 'text-zinc-700 hover:text-cyan-600 hover:bg-white' : 'text-zinc-300 hover:text-cyan-300 hover:bg-zinc-800'
+							class="flex-1 py-1 flex items-center justify-center rounded-lg text-xs transition-all cursor-pointer {
+								isLightTheme ? 'text-zinc-700 hover:text-cyan-600 hover:bg-zinc-200/70' : 'text-zinc-300 hover:text-cyan-300 hover:bg-zinc-800'
 							}"
 							aria-label="Zoom Out"
 						>
 							<ZoomOut class="w-3.5 h-3.5" />
 						</button>
 
-						<!-- Reset Zoom 100% -->
 						<button
 							type="button"
 							onclick={() => {
@@ -187,15 +211,14 @@
 								rigging.resetZoom();
 							}}
 							title="Reset Zoom 100% [0]"
-							class="px-2 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer {
-								isLightTheme ? 'text-zinc-700 hover:text-cyan-600 hover:bg-white' : 'text-zinc-300 hover:text-cyan-300 hover:bg-zinc-800'
+							class="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer {
+								isLightTheme ? 'bg-zinc-200 text-zinc-800 hover:bg-cyan-100 hover:text-cyan-800' : 'bg-zinc-800 text-zinc-200 hover:bg-cyan-500/20 hover:text-cyan-300'
 							}"
 							aria-label="Reset Zoom to 100%"
 						>
 							100%
 						</button>
 
-						<!-- Zoom In -->
 						<button
 							type="button"
 							onclick={() => {
@@ -203,8 +226,8 @@
 								rigging.zoomIn();
 							}}
 							title="Zoom In [+]"
-							class="flex-1 py-1.5 flex items-center justify-center rounded-lg transition-all cursor-pointer {
-								isLightTheme ? 'text-zinc-700 hover:text-cyan-600 hover:bg-white' : 'text-zinc-300 hover:text-cyan-300 hover:bg-zinc-800'
+							class="flex-1 py-1 flex items-center justify-center rounded-lg text-xs transition-all cursor-pointer {
+								isLightTheme ? 'text-zinc-700 hover:text-cyan-600 hover:bg-zinc-200/70' : 'text-zinc-300 hover:text-cyan-300 hover:bg-zinc-800'
 							}"
 							aria-label="Zoom In"
 						>

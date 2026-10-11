@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.0] - 2026-10-11
+
+### Fixed
+- **Live2D Face Tracking Event Hook Restoration:**
+  - Fixed an issue where Live2D face tracking appeared stopped after updating model loop handlers.
+  - Restored `model.internalModel.on('beforeModelUpdate', applyModelTracking)` in `CanvasStage.svelte`. In the Cubism 4 runtime, parameters must be injected before `coreModel.update()` computes vertex transforms, ensuring seamless, zero-lag facial tracking.
+
+### Added & Enhanced
+- **Categorized BOOTH.pm Model Catalog & Direct Installer Integration:**
+  - Grouped the 10 curated BOOTH models in `ModelCatalogModal.svelte` into distinct category clusters:
+    - **HoYoverse & Kuro Games Fanmade:** Belle / Rin (ZZZ), Changli (Wuthering Waves), Fugue / Tingyun SP (Honkai: Star Rail), Camellya (Wuthering Waves).
+    - **Original Anime & Kawaii Girls:** Villhaze, Roxy, Ice Girl, Tsukimi Yachiyo.
+    - **VTube Studio Community Favorites:** Hoshino Nya, KE.
+  - Added filter pills for instant category filtering.
+  - Added direct **"Pasang Model Ini"** button on every card, guiding users to select their extracted `.model3.json` file with full character metadata preservation and active slot indication.
+- **Apple iPhone AssistiveTouch Peeking & Interactive Continuous Zoom Slider:**
+  - Redesigned `AssistButton.svelte` to feature authentic edge-docking:
+    - Anchored against the right screen edge with ~20% of its circular body peeking off-screen when idle (`translate-x-[20%]`), sliding smoothly into full view on hover (`hover:translate-x-0`).
+    - Strictly circular geometry (`rounded-full aspect-square w-12 h-12`) with concentric AssistiveTouch rings and no boxy artifacts.
+    - Added an interactive continuous zoom range slider (`30%` to `250%`) with live percentage readout, plus quick `-`, `100%`, `+` step buttons.
+- **SettingsModal Tab Separation & Modern Theme UI/UX Revamp:**
+  - Separated **Theme (`tab_theme`)** and **Stage (`tab_stage`)** into distinct tabs in `SettingsModal.svelte`.
+  - Removed duplicate icons across all tabs and header sections.
+  - Completely revamped the Theme Selector UI/UX:
+    - Realistic mini UI mockups for all 13 color palettes showing real-time background, surface cards, accent stars, active toggles, and dock strips.
+    - Full contrast adaptation for light and dark modes with high-legibility typography.
+    - Palette swatches with hex readouts for Background, Surface, Accent, Border, and Text.
+    - Dedicated Custom Studio with 6 one-click presets (🌸 Sakura Bloom, 🍵 Matcha Zen, ⚡ Cyber Neon, 🌌 Cosmic Violet, 🍊 Sunset Amber, 💎 Arctic Ice) and live color pickers.
+  - Enhanced Stage tab with background style selection, solid color picker, shader screen effects, camera framing, square framing, studio SFX volume, and language selector.
+
+---
+
 ## [0.14.0] - 2026-10-11
 
 ### Added

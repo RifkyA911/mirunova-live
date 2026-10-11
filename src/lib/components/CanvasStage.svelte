@@ -272,8 +272,8 @@
 					}
 				};
 
-				// Hook exclusively into afterModelUpdate to override motions/physics cleanly without 2x double call overhead
-				model.internalModel.on('afterModelUpdate', applyModelTracking);
+				// Hook into beforeModelUpdate so face tracking parameters are applied right before coreModel.update() renders
+				model.internalModel.on('beforeModelUpdate', applyModelTracking);
 			}
 
 			inspectModelParameters(model);

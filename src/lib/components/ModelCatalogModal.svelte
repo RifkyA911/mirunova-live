@@ -30,6 +30,8 @@
 	let localModelFileInput = $state<HTMLInputElement>();
 	let catalogTab = $state<'2d' | 'booth' | '3d'>('2d');
 	let model2DFilter = $state<'all' | 'booth' | 'official'>('all');
+	let boothCategoryFilter = $state<'all' | 'hoyoverse-kuro' | 'original-anime' | 'vts-popular'>('all');
+	let activeInstallBoothItem = $state<(typeof BOOTH_SHOWCASE_CATALOG)[0] | null>(null);
 
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
@@ -43,6 +45,12 @@
 				model2DFilter === 'all' ||
 				(model2DFilter === 'booth' && m.source === 'booth') ||
 				(model2DFilter === 'official' && m.source === 'official')
+		)
+	);
+
+	let displayedBoothModels = $derived(
+		BOOTH_SHOWCASE_CATALOG.filter(
+			(b) => boothCategoryFilter === 'all' || b.category === boothCategoryFilter
 		)
 	);
 
@@ -86,14 +94,24 @@
 		customUrlInput = '';
 	}
 
+	function handleInstallBoothModel(item: (typeof BOOTH_SHOWCASE_CATALOG)[0]) {
+		playSfx('click');
+		activeInstallBoothItem = item;
+		rigging.showToast(`Pilih file .model3.json hasil unduh untuk: ${item.name}`);
+		localModelFileInput?.click();
+	}
+
 	function handleLocalModelSelect(e: Event) {
 		const target = e.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (!file) return;
 		const url = URL.createObjectURL(file);
 		rigging.avatarEngine = 'live2d';
-		rigging.setModel('custom-local', file.name.replace(/\.[^/.]+$/, ''), url);
-		rigging.showToast(`Memuat model Live2D lokal: ${file.name}`);
+		const name = activeInstallBoothItem ? activeInstallBoothItem.name : file.name.replace(/\.[^/.]+$/, '');
+		const modelId = activeInstallBoothItem ? activeInstallBoothItem.id : 'custom-local';
+		rigging.setModel(modelId, name, url);
+		rigging.showToast(`✓ Model Live2D aktif: ${name}`);
+		activeInstallBoothItem = null;
 	}
 
 	function handleGlbUpload(e: Event) {
@@ -450,41 +468,119 @@
 								</div>
 								<div>
 									<h3 class="text-sm font-bold text-pink-200 flex items-center gap-2">
-										Koleksi Model Unggulan BOOTH.pm
+										Koleksi Model Unggulan BOOTH.pm Terkategori
 										<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-semibold">
 											{BOOTH_SHOWCASE_CATALOG.length} Model Terkurasi
 										</span>
 									</h3>
 									<p class="text-xs text-zinc-300 mt-0.5 leading-relaxed">
-										Koleksi avatar Live2D anime & VTuber resmi dari kreator BOOTH.pm. Klik <strong>Buka di BOOTH</strong> untuk mengunduh paket resmi kreator, lalu gunakan tombol <strong>Pasang File Model</strong> di bawah.
+										Koleksi avatar Live2D resmi & fanmade dari kreator BOOTH.pm. Klik <strong>Pasang Model (.json)</strong> untuk langsung mengaktifkan file model yang telah diunduh, atau <strong>Buka di BOOTH</strong> untuk mengunduh paket resmi.
 									</p>
 								</div>
 							</div>
 							<div class="flex items-center gap-2 shrink-0">
 								<button
-									onclick={() => localModelFileInput?.click()}
+									onclick={() => {
+										activeInstallBoothItem = null;
+										localModelFileInput?.click();
+									}}
 									class="px-3.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
 								>
 									<FolderOpen class="w-3.5 h-3.5" />
-									<span>Pasang Model Lokal (.json)</span>
+									<span>Pasang Model Bebas (.json)</span>
 								</button>
 							</div>
 						</div>
 
-						<!-- Grid of 10 BOOTH Models -->
+						<!-- Category Group Filter Pills -->
+						<div class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
+							<span class="text-zinc-400 font-medium text-[11px] mr-1">Kelompok:</span>
+							<button
+								type="button"
+								onclick={() => (boothCategoryFilter = 'all')}
+								class="px-3 py-1.5 rounded-lg border font-semibold transition-all cursor-pointer {
+									boothCategoryFilter === 'all'
+										? 'bg-pink-500/25 border-pink-500 text-pink-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+								}"
+							>
+								Semua BOOTH ({BOOTH_SHOWCASE_CATALOG.length})
+							</button>
+							<button
+								type="button"
+								onclick={() => (boothCategoryFilter = 'hoyoverse-kuro')}
+								class="px-3 py-1.5 rounded-lg border font-semibold transition-all cursor-pointer flex items-center gap-1.5 {
+									boothCategoryFilter === 'hoyoverse-kuro'
+										? 'bg-amber-500/25 border-amber-500 text-amber-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-amber-300'
+								}"
+							>
+								<span>🌟 HoYoverse & Kuro Games</span>
+								<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">4</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => (boothCategoryFilter = 'original-anime')}
+								class="px-3 py-1.5 rounded-lg border font-semibold transition-all cursor-pointer flex items-center gap-1.5 {
+									boothCategoryFilter === 'original-anime'
+										? 'bg-pink-500/25 border-pink-500 text-pink-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-pink-300'
+								}"
+							>
+								<span>🌸 Original Anime Girls</span>
+								<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">4</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => (boothCategoryFilter = 'vts-popular')}
+								class="px-3 py-1.5 rounded-lg border font-semibold transition-all cursor-pointer flex items-center gap-1.5 {
+									boothCategoryFilter === 'vts-popular'
+										? 'bg-cyan-500/25 border-cyan-500 text-cyan-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-cyan-300'
+								}"
+							>
+								<span>🐱 VTube Studio Favorites</span>
+								<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">2</span>
+							</button>
+						</div>
+
+						<!-- Grid of Filtered BOOTH Models -->
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-							{#each BOOTH_SHOWCASE_CATALOG as item}
-								<div class="flex flex-col p-3.5 rounded-2xl border text-left transition-all bg-zinc-900/60 border-zinc-800/80 hover:border-pink-500/50 hover:bg-zinc-900 group shadow-md">
+							{#each displayedBoothModels as item}
+								{@const isActive = rigging.selectedModelId === item.id}
+								<div class="flex flex-col p-3.5 rounded-2xl border text-left transition-all bg-zinc-900/60 border-zinc-800/80 hover:border-pink-500/50 hover:bg-zinc-900 group shadow-md relative {
+									isActive ? 'ring-2 ring-pink-500/50 border-pink-500' : ''
+								}">
+									{#if isActive}
+										<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
+											<Check class="w-3 h-3 stroke-[3]" />
+											AKTIF
+										</div>
+									{/if}
+
 									<!-- Top Row: Thumbnail + Info -->
 									<div class="flex items-start gap-3 mb-2.5">
 										<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 											<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover" loading="lazy" />
 										</div>
 										<div class="flex flex-col min-w-0 flex-1 pt-0.5">
-											<span class="font-bold text-xs text-zinc-100 truncate group-hover:text-pink-300 transition-colors" title={item.name}>
-												{item.name}
-											</span>
-											<span class="text-[10px] text-zinc-400 mt-0.5 truncate">
+											<div class="flex items-center gap-1.5 mb-0.5">
+												<span class="font-bold text-xs text-zinc-100 truncate group-hover:text-pink-300 transition-colors" title={item.name}>
+													{item.name}
+												</span>
+											</div>
+											<div class="flex items-center gap-1.5 mb-1">
+												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-semibold {
+													item.category === 'hoyoverse-kuro'
+														? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+														: item.category === 'vts-popular'
+														? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+														: 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
+												}">
+													{item.categoryLabel}
+												</span>
+											</div>
+											<span class="text-[10px] text-zinc-400 truncate">
 												Kreator: <strong class="text-pink-400 font-semibold">{item.author}</strong>
 											</span>
 											<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed mt-1">
@@ -508,17 +604,26 @@
 										{/each}
 									</div>
 
-									<!-- Action Buttons -->
+									<!-- Action Buttons: Pasang Model Ini + Buka di BOOTH -->
 									<div class="mt-auto pt-2 border-t border-zinc-800/60 flex items-center justify-between gap-2">
-										<span class="text-[9px] font-mono text-zinc-500">ID #{item.itemId}</span>
+										<button
+											type="button"
+											onclick={() => handleInstallBoothModel(item)}
+											class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-pink-300 hover:text-white border border-pink-500/40 rounded-xl text-[11px] font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
+											title="Pasang file model Live2D (.model3.json) dari ZIP yang telah diunduh"
+										>
+											<UploadCloud class="w-3.5 h-3.5 text-pink-400" />
+											<span>Pasang Model Ini</span>
+										</button>
+
 										<a
 											href={item.boothUrl}
 											target="_blank"
 											rel="noopener noreferrer"
-											class="flex items-center gap-1.5 px-3 py-1 bg-pink-600/90 hover:bg-pink-500 text-white rounded-lg text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
+											class="flex items-center gap-1.5 px-3 py-1.5 bg-pink-600/90 hover:bg-pink-500 text-white rounded-xl text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
 										>
 											<ExternalLink class="w-3 h-3" />
-											<span>Buka di BOOTH</span>
+											<span>Unduh BOOTH</span>
 										</a>
 									</div>
 								</div>
