@@ -89,4 +89,45 @@ describe('Photoshop Layer Manager, Accessories & Collab System', () => {
 		rigging.collabSyncTracking = false;
 		expect(rigging.collabSyncTracking).toBe(false);
 	});
+
+	it('should support drag-and-drop layer reordering', () => {
+		const originalOrder = rigging.stageLayers.map((l) => l.id);
+		// Move layer from index 0 to index 3
+		rigging.reorderLayers(0, 3);
+		expect(rigging.stageLayers[3].id).toBe(originalOrder[0]);
+		expect(rigging.stageLayers[0].id).toBe(originalOrder[1]);
+
+		// Reorder back
+		rigging.reorderLayers(3, 0);
+		expect(rigging.stageLayers[0].id).toBe(originalOrder[0]);
+	});
+
+	it('should support switching cursor tool mode and selecting canvas elements', () => {
+		expect(rigging.cursorToolMode).toBe('pan');
+
+		rigging.setCursorToolMode('select-layer');
+		expect(rigging.cursorToolMode).toBe('select-layer');
+
+		rigging.selectLayerElement('cat-ears');
+		expect(rigging.selectedLayerElementId).toBe('cat-ears');
+
+		rigging.selectLayerElement('collab');
+		expect(rigging.selectedLayerElementId).toBe('collab');
+
+		rigging.setCursorToolMode('hand-tracking');
+		expect(rigging.cursorToolMode).toBe('hand-tracking');
+
+		rigging.setCursorToolMode('pan');
+		expect(rigging.cursorToolMode).toBe('pan');
+	});
+
+	it('should support toggling Layer Manager between windowed and sticky view modes', () => {
+		expect(rigging.layerManagerViewMode).toBe('windowed');
+
+		rigging.toggleLayerManagerViewMode();
+		expect(rigging.layerManagerViewMode).toBe('sticky');
+
+		rigging.toggleLayerManagerViewMode();
+		expect(rigging.layerManagerViewMode).toBe('windowed');
+	});
 });

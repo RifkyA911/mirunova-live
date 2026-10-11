@@ -157,6 +157,18 @@ export class RiggingStore {
 		{ id: 'layer-background', name: 'Latar Belakang Panggung', type: 'background', visible: true, opacity: 1.0, locked: false, badge: 'Background', description: 'Solid, Mesh Grid, Blueprint, Wallpaper' }
 	]);
 
+	// Layer Manager Floating & Windowed Geometry (Sticky vs Windowed Card)
+	layerManagerViewMode = $state<'windowed' | 'sticky'>('windowed');
+	layerWindowX = $state<number>(24);
+	layerWindowY = $state<number>(72);
+	layerWindowWidth = $state<number>(440);
+	layerWindowHeight = $state<number>(580);
+	isLayerMinimized = $state<boolean>(false);
+	selectedLayerElementId = $state<string | null>('host'); // 'host' | 'collab' | accessory id
+
+	// Interactive Canvas Cursor / Tool Mode ('pan' | 'select-layer' | 'hand-tracking')
+	cursorToolMode = $state<'pan' | 'select-layer' | 'hand-tracking'>('pan');
+
 	// Floating / Windowed Rigging Panel Geometry (Draggable & Resizable)
 	riggingWindowX = $state<number>(0);
 	riggingWindowY = $state<number>(72);
@@ -302,6 +314,10 @@ export class RiggingStore {
 			sfxVolume: this.sfxVolume,
 			mirrorEyes: this.mirrorEyes,
 			showFpsCounter: this.showFpsCounter,
+			layerManagerViewMode: this.layerManagerViewMode,
+			layerWindowX: this.layerWindowX,
+			layerWindowY: this.layerWindowY,
+			cursorToolMode: this.cursorToolMode,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -374,6 +390,10 @@ export class RiggingStore {
 		if (saved.sfxVolume !== undefined) this.sfxVolume = saved.sfxVolume;
 		if (saved.mirrorEyes !== undefined) this.mirrorEyes = saved.mirrorEyes;
 		if (saved.showFpsCounter !== undefined) this.showFpsCounter = saved.showFpsCounter;
+		if (saved.layerManagerViewMode) this.layerManagerViewMode = saved.layerManagerViewMode as any;
+		if (saved.layerWindowX !== undefined) this.layerWindowX = saved.layerWindowX;
+		if (saved.layerWindowY !== undefined) this.layerWindowY = saved.layerWindowY;
+		if (saved.cursorToolMode) this.cursorToolMode = saved.cursorToolMode as any;
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 
@@ -655,6 +675,35 @@ export class RiggingStore {
 		if (targetIdx < 0 || targetIdx >= this.stageLayers.length) return;
 		const item = this.stageLayers.splice(index, 1)[0];
 		this.stageLayers.splice(targetIdx, 0, item);
+		this.persist();
+	}
+
+	reorderLayers(fromIndex: number, toIndex: number) {
+		if (fromIndex < 0 || fromIndex >= this.stageLayers.length) return;
+		if (toIndex < 0 || toIndex >= this.stageLayers.length) return;
+		const item = this.stageLayers.splice(fromIndex, 1)[0];
+		this.stageLayers.splice(toIndex, 0, item);
+		this.persist();
+	}
+
+	setCursorToolMode(mode: 'pan' | 'select-layer' | 'hand-tracking') {
+		this.cursorToolMode = mode;
+		this.enableHandTracking = mode === 'hand-tracking';
+		const modeLabels: Record<string, string> = {
+			'pan': 'Mode Pan: Geser & Zoom Avatar di Panggung',
+			'select-layer': 'Mode Layer Move: Klik & Drag Elemen/Props Bebas di Panggung',
+			'hand-tracking': 'Mode Hand Tracking: Deteksi Gerakan Tangan MediaPipe'
+		};
+		this.showToast(modeLabels[mode] || mode);
+		this.persist();
+	}
+
+	selectLayerElement(id: string | null) {
+		this.selectedLayerElementId = id;
+	}
+
+	toggleLayerManagerViewMode() {
+		this.layerManagerViewMode = this.layerManagerViewMode === 'windowed' ? 'sticky' : 'windowed';
 		this.persist();
 	}
 }

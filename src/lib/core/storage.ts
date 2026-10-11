@@ -60,6 +60,10 @@ export interface SavedUserConfig {
 	sfxVolume?: number;
 	mirrorEyes?: boolean;
 	showFpsCounter?: boolean;
+	layerManagerViewMode?: 'windowed' | 'sticky';
+	layerWindowX?: number;
+	layerWindowY?: number;
+	cursorToolMode?: 'pan' | 'select-layer' | 'hand-tracking';
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.18.0] - 2026-10-11
+
+### Added & Enhanced
+- **Floating Windowed & Sticky Layer Manager Studio (Non-Modal UX):**
+  - Removed full-screen backdrop overlay completely, allowing streamers to manipulate layers, accessories, and collab models live with an unobstructed canvas stage.
+  - Dual view modes: freely draggable floating card (`windowed`) with pointer capture header dragging, and docked right-sidebar panel (`sticky`).
+  - Header controls for minimize/expand (`rigging.isLayerMinimized`) and sticky/windowed toggle (`rigging.toggleLayerManagerViewMode()`).
+  - Native HTML5 drag-and-drop layer reordering with `GripVertical` handle and drop target highlighting.
+  - Layer row selection (`rigging.selectLayerElement(id)`) synchronized with canvas interactions.
+- **Cursor Tool Mode Selector in Control Dock:**
+  - Replaced static hand tracking toggle with a 3-mode tool selector (`pan`, `select-layer`, `hand-tracking`).
+  - **Mode Pan (`pan`):** Smooth canvas stage and avatar panning with center-anchored scroll zoom.
+  - **Mode Move Layer & Props (`select-layer`):** Click and drag any element directly on the canvas—Host avatar, Collab partner (`collabOffsetX`/`collabOffsetY`), or Wearable Accessories (`offsetX`/`offsetY`).
+  - **Mode Hand Tracking (`hand-tracking`):** MediaPipe AI gesture and arm tracking.
+  - Floating canvas HUD banner displaying the currently selected active element.
+- **Assist Button Geometry Tuning (30% Body Peek & 8px Margin):**
+  - Adjusted idle peeking geometry to show exactly 30% of the button body (`translate-x-[70%]`).
+  - Set margin right on hover/active to 8px (`hover:-translate-x-2` / `-translate-x-2`).
+- **Smooth Menu Hiding & Restoring Transitions:**
+  - Applied Svelte transition animations (`transition:fly` and `transition:fade` with `cubicOut` easing) for dock hiding (`H`), restore pill expansion, assist popovers, and tool menus.
+- **Test Suite Expansion:**
+  - Added unit tests for drag-and-drop layer reordering, cursor tool mode switching, element selection, and view mode toggling in `tests/layers.test.ts` (56/56 tests passing across 11 files).
+
+---
+
 ## [0.17.0] - 2026-10-11
 
 ### Added & Enhanced

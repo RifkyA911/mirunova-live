@@ -628,25 +628,66 @@
 		}
 	});
 
+	let lastPointerX = 0;
+	let lastPointerY = 0;
+
 	function handleMouseDown(e: MouseEvent) {
 		if (rigging.isGuiLocked) return;
 		if (e.button !== 0 && e.button !== 1) return;
 		isDragging = true;
+		lastPointerX = e.clientX;
+		lastPointerY = e.clientY;
 		dragStart = { x: e.clientX - modelPosition.x, y: e.clientY - modelPosition.y };
 	}
 
 	function handleMouseMove(e: MouseEvent) {
 		if (rigging.isGuiLocked) return;
-		if (!isDragging || !currentModel) return;
-		modelPosition = {
-			x: e.clientX - dragStart.x,
-			y: e.clientY - dragStart.y
-		};
-		currentModel.position.set(modelPosition.x, modelPosition.y);
+		if (!isDragging) return;
+
+		const dx = e.clientX - lastPointerX;
+		const dy = e.clientY - lastPointerY;
+		lastPointerX = e.clientX;
+		lastPointerY = e.clientY;
+
+		if (rigging.cursorToolMode === 'select-layer') {
+			const targetId = rigging.selectedLayerElementId;
+			if (targetId === 'collab' && collabModel) {
+				rigging.collabOffsetX = (rigging.collabOffsetX || 0) + dx;
+				rigging.collabOffsetY = (rigging.collabOffsetY || 0) + dy;
+				updateCollabTransform();
+			} else {
+				const acc = rigging.activeAccessories.find((a) => a.id === targetId);
+				if (acc) {
+					const scaleRatio = (modelScale / 0.25) || 1;
+					acc.offsetX += Math.round(dx / scaleRatio);
+					acc.offsetY += Math.round(dy / scaleRatio);
+				} else if (currentModel) {
+					// Default to moving host model
+					modelPosition = {
+						x: modelPosition.x + dx,
+						y: modelPosition.y + dy
+					};
+					currentModel.position.set(modelPosition.x, modelPosition.y);
+				}
+			}
+		} else {
+			// Mode 'pan': move host model
+			if (!currentModel) return;
+			modelPosition = {
+				x: e.clientX - dragStart.x,
+				y: e.clientY - dragStart.y
+			};
+			currentModel.position.set(modelPosition.x, modelPosition.y);
+		}
 	}
 
 	function handleMouseUp() {
-		isDragging = false;
+		if (isDragging) {
+			isDragging = false;
+			if (rigging.cursorToolMode === 'select-layer') {
+				rigging.persist();
+			}
+		}
 	}
 
 	function handleWheel(e: WheelEvent) {
@@ -702,7 +743,13 @@
 	aria-label="Live2D Stage Canvas"
 	tabindex="0"
 	bind:this={containerEl}
-	class="absolute inset-0 w-full h-full overflow-hidden select-none cursor-grab active:cursor-grabbing z-0"
+	class="absolute inset-0 w-full h-full overflow-hidden select-none z-0 {
+		rigging.cursorToolMode === 'select-layer'
+			? 'cursor-move'
+			: rigging.cursorToolMode === 'hand-tracking'
+				? 'cursor-crosshair'
+				: 'cursor-grab active:cursor-grabbing'
+	}"
 	onmousedown={handleMouseDown}
 	onmousemove={handleMouseMove}
 	onmouseup={handleMouseUp}
@@ -715,7 +762,7 @@
 		{@const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories')}
 		{@const accLayerOpacity = accLayer ? accLayer.opacity : 1.0}
 		<div
-			class="absolute inset-0 pointer-events-none select-none overflow-hidden z-20"
+			class="absolute inset-0 select-none overflow-hidden z-20 {rigging.cursorToolMode === 'select-layer' ? 'pointer-events-auto' : 'pointer-events-none'}"
 			style="opacity: {accLayerOpacity};"
 		>
 			{#each rigging.activeAccessories.filter((a) => a.visible) as acc (acc.id)}
@@ -729,12 +776,31 @@
 				{@const posY = modelPosition.y + (acc.offsetY * scaleRatio) + headShiftY}
 				{@const rot = (acc.rotation || 0) + (headAngleZ * 0.9)}
 				{@const finalScale = (acc.scale || 1.0) * scaleRatio}
+				{@const isSelected = rigging.cursorToolMode === 'select-layer' && rigging.selectedLayerElementId === acc.id}
 
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="absolute pointer-events-none select-none transition-transform duration-75 origin-center will-change-transform"
+					onclick={(e) => {
+						if (rigging.cursorToolMode === 'select-layer') {
+							e.stopPropagation();
+							playSfx('click');
+							rigging.selectLayerElement(acc.id);
+						}
+					}}
+					class="absolute select-none transition-transform duration-75 origin-center will-change-transform {
+						rigging.cursorToolMode === 'select-layer' ? 'pointer-events-auto cursor-move' : 'pointer-events-none'
+					}"
 					style="left: 0; top: 0; transform: translate3d({posX}px, {posY}px, 0) rotate({rot}deg) scale({finalScale}); opacity: {acc.opacity || 1.0};"
 				>
-					<div class="-translate-x-1/2 -translate-y-1/2 flex items-center justify-center filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+					<div class="relative -translate-x-1/2 -translate-y-1/2 flex items-center justify-center filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] {
+						isSelected ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-black/50 rounded-2xl' : ''
+					}">
+						{#if isSelected}
+							<div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-amber-500 text-zinc-950 font-bold font-mono text-[9px] whitespace-nowrap shadow-md pointer-events-none z-30">
+								🎯 {acc.name} (Drag untuk geser)
+							</div>
+						{/if}
 						{#if acc.id === 'sunglasses'}
 							<!-- Cool Dark Sunglasses / Shades -->
 							<svg viewBox="0 0 160 50" class="w-36 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -860,6 +926,16 @@
 				{liveFps} FPS
 			</span>
 			<span class="text-zinc-500 text-[10px]">({liveFrameMs}ms)</span>
+		</div>
+	{/if}
+
+	<!-- Cursor Tool Mode Active HUD Pill (Select & Move Layer) -->
+	{#if rigging.cursorToolMode === 'select-layer'}
+		<div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none select-none flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/90 text-zinc-950 font-bold text-xs shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-2 border border-amber-300">
+			<span>🎯 Mode Geser Elemen:</span>
+			<span class="font-mono text-[11px] underline">
+				{rigging.selectedLayerElementId ? `Aktif: ${rigging.selectedLayerElementId}` : 'Klik avatar/aksesoris'}
+			</span>
 		</div>
 	{/if}
 

@@ -4,6 +4,8 @@
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
+	import { fly, fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import {
 		Camera,
 		CameraOff,
@@ -15,6 +17,8 @@
 		Radio,
 		Tv,
 		Hand,
+		Move,
+		MousePointer,
 		Settings,
 		Aperture,
 		Keyboard,
@@ -36,6 +40,7 @@
 	let isLangMenuOpen = $state<boolean>(false);
 	let isDeviceMenuOpen = $state<boolean>(false);
 	let isExpressionMenuOpen = $state<boolean>(false);
+	let isCursorToolMenuOpen = $state<boolean>(false);
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
@@ -122,7 +127,10 @@
 
 {#if rigging.isDockHidden}
 	<!-- Collapsed Floating Pill to Restore Menu Dock -->
-	<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center select-none animate-in fade-in slide-in-from-bottom-2 duration-150">
+	<div
+		transition:fly={{ y: 24, duration: 220, easing: cubicOut }}
+		class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center select-none"
+	>
 		<button
 			onclick={() => rigging.toggleDock(false)}
 			class="flex items-center gap-2 px-3.5 py-1.5 bg-zinc-950/85 hover:bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 rounded-full text-zinc-300 hover:text-cyan-300 text-xs shadow-2xl backdrop-blur-md transition-all active:scale-95 group"
@@ -132,7 +140,10 @@
 		</button>
 	</div>
 {:else}
-	<div class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 select-none animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-[98vw]">
+	<div
+		transition:fly={{ y: 60, duration: 260, easing: cubicOut }}
+		class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 select-none max-w-[98vw]"
+	>
 		<nav
 			aria-label="Main Dock Controls"
 			class="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl relative overflow-visible max-w-full"
@@ -349,24 +360,179 @@
 			</div>
 		</div>
 
-		<!-- 3. Hand Tracking Toggle -->
+		<!-- 3. Cursor Tool Mode Selector (Pan / Move Layer & Props / Hand Tracking) -->
 		<div class="group relative flex items-center justify-center">
 			<button
-				onclick={() => (rigging.enableHandTracking = !rigging.enableHandTracking)}
-				class="p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
-					rigging.enableHandTracking
-						? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 shadow-sm'
-						: 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
+				onclick={() => {
+					playSfx('click');
+					isCursorToolMenuOpen = !isCursorToolMenuOpen;
+					isDeviceMenuOpen = false;
+					isLangMenuOpen = false;
+					isExpressionMenuOpen = false;
+				}}
+				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+					rigging.cursorToolMode === 'select-layer'
+						? 'text-amber-400 bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/20'
+						: rigging.cursorToolMode === 'hand-tracking'
+							? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
+							: isCursorToolMenuOpen
+								? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+								: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
 				}"
-				aria-label={i18n.t('hands_toggle')}
+				aria-label={i18n.t('cursor_mode_title')}
 			>
-				<Hand class="w-5 h-5" />
+				{#if rigging.cursorToolMode === 'select-layer'}
+					<MousePointer class="w-5 h-5 text-amber-400" />
+				{:else if rigging.cursorToolMode === 'hand-tracking'}
+					<Hand class="w-5 h-5 text-emerald-400" />
+				{:else}
+					<Move class="w-5 h-5 text-cyan-400" />
+				{/if}
+
+				{#if rigging.cursorToolMode !== 'pan'}
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full {rigging.cursorToolMode === 'select-layer' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse"></span>
+				{/if}
 			</button>
+
 			<div
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
-				{i18n.t('hands_toggle')} ({rigging.enableHandTracking ? 'Active' : 'Off'})
+				{i18n.t('cursor_mode_title')}: {
+					rigging.cursorToolMode === 'select-layer'
+						? i18n.t('cursor_mode_select_layer')
+						: rigging.cursorToolMode === 'hand-tracking'
+							? i18n.t('cursor_mode_hand_tracking')
+							: i18n.t('cursor_mode_pan')
+				}
 			</div>
+
+			<!-- Floating Cursor Tool Mode Selector Popover -->
+			{#if isCursorToolMenuOpen}
+				<!-- Click-outside backdrop closer -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					transition:fade={{ duration: 120 }}
+					class="fixed inset-0 z-[80]"
+					onclick={() => (isCursorToolMenuOpen = false)}
+				></div>
+
+				<div
+					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-1.5 cursor-default text-left {
+						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
+					}"
+				>
+					<div class="flex items-center justify-between pb-1.5 border-b px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+						<span class="text-xs font-bold flex items-center gap-1.5 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+							<MousePointer class="w-3.5 h-3.5 text-cyan-500" />
+							{i18n.t('cursor_mode_title')}
+						</span>
+						<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+							Tools
+						</span>
+					</div>
+
+					<!-- Option 1: Pan Stage & Avatar -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.setCursorToolMode('pan');
+							rigging.enableHandTracking = false;
+							isCursorToolMenuOpen = false;
+						}}
+						class="w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
+							rigging.cursorToolMode === 'pan'
+								? isLightTheme
+									? 'bg-cyan-50 border border-cyan-400 text-cyan-900 font-bold'
+									: 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold'
+								: isLightTheme
+									? 'hover:bg-zinc-100 text-zinc-700'
+									: 'hover:bg-zinc-900 text-zinc-300'
+						}"
+					>
+						<div class="flex items-center gap-2">
+							<div class="p-1.5 rounded-lg {rigging.cursorToolMode === 'pan' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-zinc-800 text-zinc-400'}">
+								<Move class="w-3.5 h-3.5" />
+							</div>
+							<div>
+								<div class="font-bold text-xs">{i18n.t('cursor_mode_pan')}</div>
+								<div class="text-[10px] text-zinc-400">Geser kanvas panggung & zoom</div>
+							</div>
+						</div>
+						{#if rigging.cursorToolMode === 'pan'}
+							<span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+						{/if}
+					</button>
+
+					<!-- Option 2: Select & Move Layer / Props -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.setCursorToolMode('select-layer');
+							rigging.enableHandTracking = false;
+							isCursorToolMenuOpen = false;
+						}}
+						class="w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
+							rigging.cursorToolMode === 'select-layer'
+								? isLightTheme
+									? 'bg-amber-50 border border-amber-400 text-amber-900 font-bold'
+									: 'bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold'
+								: isLightTheme
+									? 'hover:bg-zinc-100 text-zinc-700'
+									: 'hover:bg-zinc-900 text-zinc-300'
+						}"
+					>
+						<div class="flex items-center gap-2">
+							<div class="p-1.5 rounded-lg {rigging.cursorToolMode === 'select-layer' ? 'bg-amber-500/20 text-amber-400' : 'bg-zinc-800 text-zinc-400'}">
+								<MousePointer class="w-3.5 h-3.5" />
+							</div>
+							<div>
+								<div class="font-bold text-xs">{i18n.t('cursor_mode_select_layer')}</div>
+								<div class="text-[10px] text-zinc-400">Pilih & drag elemen, collab, aksesoris</div>
+							</div>
+						</div>
+						{#if rigging.cursorToolMode === 'select-layer'}
+							<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+						{/if}
+					</button>
+
+					<!-- Option 3: MediaPipe Hand Tracking -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.setCursorToolMode('hand-tracking');
+							rigging.enableHandTracking = true;
+							isCursorToolMenuOpen = false;
+						}}
+						class="w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
+							rigging.cursorToolMode === 'hand-tracking'
+								? isLightTheme
+									? 'bg-emerald-50 border border-emerald-400 text-emerald-900 font-bold'
+									: 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold'
+								: isLightTheme
+									? 'hover:bg-zinc-100 text-zinc-700'
+									: 'hover:bg-zinc-900 text-zinc-300'
+						}"
+					>
+						<div class="flex items-center gap-2">
+							<div class="p-1.5 rounded-lg {rigging.cursorToolMode === 'hand-tracking' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-zinc-400'}">
+								<Hand class="w-3.5 h-3.5" />
+							</div>
+							<div>
+								<div class="font-bold text-xs">{i18n.t('cursor_mode_hand_tracking')}</div>
+								<div class="text-[10px] text-zinc-400">Pelacakan pose tangan MediaPipe AI</div>
+							</div>
+						</div>
+						{#if rigging.cursorToolMode === 'hand-tracking'}
+							<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+						{/if}
+					</button>
+				</div>
+			{/if}
 		</div>
 
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>

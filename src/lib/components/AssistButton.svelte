@@ -19,6 +19,8 @@
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { tracker } from '#lib/core/tracker';
+	import { fly, fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	let isOpen = $state<boolean>(false);
 	let isPinned = $state<boolean>(false);
@@ -56,11 +58,11 @@
 </script>
 
 {#if !rigging.isObsMode && !rigging.isGuiLocked}
-	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge with 10% Peeking, 16px margin on hover) -->
+	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge with 30% Show, 8px margin on hover/active) -->
 	<aside
 		aria-label={i18n.t('assist_button_title')}
 		class="fixed right-0 top-1/2 -translate-y-1/2 z-40 select-none flex items-center transition-all duration-300 ease-out {
-			isVisible ? '-translate-x-4' : 'translate-x-[90%] hover:-translate-x-4'
+			isVisible ? '-translate-x-2' : 'translate-x-[70%] hover:-translate-x-2'
 		}"
 	>
 		<!-- 1. Floating Circular Assist Icon (Strictly Circular with overflow-hidden & concentric rings) -->
@@ -101,12 +103,13 @@
 			</div>
 		</button>
 
-		<!-- 2. Floating Assistive Menu Popover (Anchored to the left of the button) -->
+		<!-- 2. Floating Assistive Menu Popover (Anchored to the left of the button with smooth in/out animations) -->
 		{#if isVisible}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			{#if !isPinned}
 				<div
+					transition:fade={{ duration: 150 }}
 					onclick={closeMenu}
 					class="fixed inset-0 z-[-1]"
 					aria-hidden="true"
@@ -114,7 +117,8 @@
 			{/if}
 
 			<div
-				class="absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 w-60 p-3.5 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-150 {
+				transition:fly={{ x: 24, duration: 220, easing: cubicOut }}
+				class="absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 w-60 p-3.5 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-colors duration-150 {
 					isLightTheme
 						? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl'
 						: 'bg-zinc-950/95 border-zinc-800/90 text-zinc-200 shadow-2xl'
