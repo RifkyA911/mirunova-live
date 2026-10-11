@@ -146,7 +146,7 @@ export class RiggingStore {
 	collab2ModelName = $state<string>('Mihari (Collab Partner 2)');
 	collab2CameraDeviceId = $state<string>('');
 	collab2CameraLabel = $state<string>('');
-	collab2Position = $state<'left' | 'right' | 'pip'>('left');
+	collab2Position = $state<'left' | 'right' | 'center' | 'pip'>('left');
 	collab2Scale = $state<number>(0.85);
 	collab2OffsetX = $state<number>(-280);
 	collab2OffsetY = $state<number>(0);

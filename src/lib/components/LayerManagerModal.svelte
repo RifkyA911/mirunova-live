@@ -421,10 +421,10 @@
 						isAddPropDrawerOpen = !isAddPropDrawerOpen;
 						if (isAddPropDrawerOpen) isCollabDrawerOpen = false;
 					}}
-					class="flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border {
+					class="flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95 border {
 						isAddPropDrawerOpen
-							? 'bg-amber-500 text-zinc-950 border-amber-400 shadow-sm'
-							: 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+							? 'bg-amber-400 text-zinc-950 border-amber-300 ring-2 ring-amber-400/40'
+							: 'bg-amber-500 hover:bg-amber-400 text-zinc-950 border-amber-400'
 					}"
 				>
 					<Sparkles class="w-3.5 h-3.5" />
@@ -444,10 +444,10 @@
 						isCollabDrawerOpen = !isCollabDrawerOpen;
 						if (isCollabDrawerOpen) isAddPropDrawerOpen = false;
 					}}
-					class="flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border {
+					class="flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95 border {
 						isCollabDrawerOpen
-							? 'bg-purple-600 text-white border-purple-500 shadow-sm'
-							: 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30'
+							? 'bg-purple-600 text-white border-purple-400 ring-2 ring-purple-500/40'
+							: 'bg-purple-600 hover:bg-purple-500 text-white border-purple-500'
 					}"
 				>
 					<Users class="w-3.5 h-3.5" />
@@ -814,15 +814,70 @@
 												{layer.badge}
 											</span>
 										</div>
-										<div class="text-[9px] text-zinc-400 font-mono truncate">
+										<div class="text-[9.5px] mt-0.5 space-y-0.5 font-mono {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 											{#if layer.type === 'model-host'}
-												Live2D Host Avatar • Transparansi: {Math.round(layer.opacity * 100)}%
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-cyan-500 font-semibold">{hostModelItem?.version || 'Cubism 4'}</span>
+													{#if hostModelItem?.author}
+														<span class="opacity-80">• {hostModelItem.author}</span>
+													{/if}
+													<span class="opacity-80">• Pos ({Math.round(rigging.modelOffsetX || 0)}, {Math.round(rigging.modelOffsetY || 0)})</span>
+													<span class="opacity-80">• Scale {(rigging.modelScale || 1.0).toFixed(2)}x</span>
+												</div>
+												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
+													<span>{rigging.isCameraActive ? `Tracking Kamera (${rigging.fps || 60} FPS)` : 'Manual Rig'}</span>
+													<span>• Opacity: {Math.round(layer.opacity * 100)}%</span>
+												</div>
 											{:else if layer.type === 'model-collab'}
-												Kamera: {rigging.collabCameraLabel || 'Default'} • {Math.round(layer.opacity * 100)}%
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-purple-400 font-semibold">{rigging.isCollabModeActive ? rigging.collabModelName : 'Guest 1 (Nonaktif)'}</span>
+													{#if rigging.isCollabModeActive}
+														<span class="opacity-80">• Pos: {rigging.collabPosition.toUpperCase()}</span>
+														<span class="opacity-80">• Cam: {rigging.collabCameraLabel || 'Webcam Utama'}</span>
+													{/if}
+												</div>
+												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
+													<span>{rigging.isCollabModeActive ? (rigging.collabSyncTracking ? 'Sync Tracking: On' : 'Idle Motion') : 'Buka Collab Studio untuk pasang'}</span>
+													<span>• Opacity: {Math.round(layer.opacity * 100)}%</span>
+												</div>
 											{:else if layer.type === 'model-collab-2'}
-												Kamera: {rigging.collab2CameraLabel || 'Default'} • {Math.round(layer.opacity * 100)}%
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-indigo-400 font-semibold">{rigging.isCollab2Active ? rigging.collab2ModelName : 'Guest 2 (Nonaktif)'}</span>
+													{#if rigging.isCollab2Active}
+														<span class="opacity-80">• Pos: {rigging.collab2Position.toUpperCase()}</span>
+														<span class="opacity-80">• Cam: {rigging.collab2CameraLabel || 'Webcam Utama'}</span>
+													{/if}
+												</div>
+												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
+													<span>{rigging.isCollab2Active ? (rigging.collab2SyncTracking ? 'Sync Tracking: On' : 'Idle Motion') : 'Buka Collab Studio untuk pasang'}</span>
+													<span>• Opacity: {Math.round(layer.opacity * 100)}%</span>
+												</div>
+											{:else if layer.type === 'accessories'}
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-amber-500 font-semibold">{activeAccCount} Prop Terpasang</span>
+													<span class="opacity-80">• Total {rigging.activeAccessories.length} Koleksi</span>
+												</div>
+												<div class="opacity-80 truncate">
+													{activeAccCount > 0 ? rigging.activeAccessories.filter(a => a.visible).map(a => a.name).join(', ') : 'Klik + Upload / Pasang Prop'}
+												</div>
+											{:else if layer.type === 'shader-fx'}
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-emerald-400 font-semibold">Shader: {rigging.screenEffect.toUpperCase()}</span>
+													<span class="opacity-80">• Vig: {rigging.vignetteIntensity.toFixed(2)}</span>
+													<span class="opacity-80">• Opacity: {Math.round(layer.opacity * 100)}%</span>
+												</div>
+											{:else if layer.type === 'background'}
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-sky-400 font-semibold">BG: {rigging.backgroundStyle.toUpperCase()}</span>
+													{#if rigging.backgroundStyle === 'solid'}
+														<span class="opacity-80">• {rigging.backgroundColor}</span>
+													{:else if rigging.backgroundStyle === 'chroma'}
+														<span class="opacity-80">• #00FF00 Green Screen</span>
+													{/if}
+													<span class="opacity-80">• Opacity: {Math.round(layer.opacity * 100)}%</span>
+												</div>
 											{:else}
-												Transparansi: {Math.round(layer.opacity * 100)}%
+												<div>Transparansi: {Math.round(layer.opacity * 100)}%</div>
 											{/if}
 										</div>
 									</div>

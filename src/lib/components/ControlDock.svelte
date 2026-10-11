@@ -220,7 +220,6 @@
 			<button
 				onclick={() => {
 					isDeviceMenuOpen = !isDeviceMenuOpen;
-					isLangMenuOpen = false;
 					if (isDeviceMenuOpen) refreshDevices(false);
 				}}
 				class="p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
@@ -606,7 +605,6 @@
 					rigging.isThemeModalOpen = false;
 					rigging.isModelModalOpen = false;
 					rigging.isDrawerOpen = false;
-					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
 				}}
 				class="p-2.5 rounded-xl text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
@@ -630,7 +628,6 @@
 					rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
 					rigging.isModelModalOpen = false;
 					rigging.isObsModalOpen = false;
-					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
 				}}
 				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
@@ -652,7 +649,6 @@
 					rigging.isModelModalOpen = !rigging.isModelModalOpen;
 					rigging.isThemeModalOpen = false;
 					rigging.isObsModalOpen = false;
-					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
 				}}
 				class="p-2.5 rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
@@ -673,7 +669,6 @@
 				onclick={() => {
 					playSfx('click');
 					isExpressionMenuOpen = !isExpressionMenuOpen;
-					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
 				}}
 				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
@@ -790,7 +785,6 @@
 					rigging.isModelModalOpen = false;
 					rigging.isObsModalOpen = false;
 					rigging.isSettingsModalOpen = false;
-					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
 					isExpressionMenuOpen = false;
 				}}
@@ -835,7 +829,6 @@
 					rigging.isModelModalOpen = false;
 					rigging.isObsModalOpen = false;
 					rigging.isDrawerOpen = false;
-					isLangMenuOpen = false;
 					isDeviceMenuOpen = false;
 				}}
 				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"

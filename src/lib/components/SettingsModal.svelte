@@ -11,6 +11,7 @@
 	import {
 		Users,
 		Smile,
+		Tv,
 		Settings,
 		X,
 		Cpu,
@@ -731,7 +732,7 @@
 			<div class="flex-1 overflow-y-auto p-6 space-y-6">
 				<!-- TAB 1: HARDWARE & PERF -->
 				{#if activeTab === 'perf'}
-					<div class="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-150">
+					<div class="space-y-6 w-full animate-in fade-in duration-150">
 						<!-- Live Telemetry Card (Single Column Flow) -->
 						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme
@@ -2523,55 +2524,77 @@
 
 				<!-- TAB 5: STORAGE & BACKUP -->
 				{:else if activeTab === 'storage'}
-					<div class="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-6 max-w-2xl mx-auto animate-in fade-in duration-150">
-						<div class="flex items-center justify-between">
-							<div>
-								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-									<Database class="w-4 h-4 text-amber-400" />
-									<span>{i18n.t('auto_save_title')}</span>
-								</h3>
-								<p class="text-xs text-zinc-400 mt-1">
-									{i18n.t('auto_save_desc')}
-								</p>
+					<div class="space-y-6 w-full animate-in fade-in duration-150">
+						<div class="p-6 rounded-2xl border space-y-6 shadow-sm {
+							isLightTheme
+								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
+								: 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
+						}">
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+								<div>
+									<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+										<Database class="w-4 h-4 text-amber-500" />
+										<span>{i18n.t('auto_save_title')}</span>
+									</h3>
+									<p class="text-xs mt-1 {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+										{i18n.t('auto_save_desc')}
+									</p>
+								</div>
+								<span class="text-xs font-mono px-3 py-1 rounded-xl font-bold {
+									isLightTheme
+										? 'bg-zinc-200 text-zinc-800 border border-zinc-300'
+										: 'bg-zinc-800 text-zinc-200 border border-zinc-700'
+								}">
+									{(storageUsageBytes / 1024).toFixed(1)} KB Disimpan
+								</span>
 							</div>
-							<span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300">
-								{(storageUsageBytes / 1024).toFixed(1)} KB
-							</span>
-						</div>
 
-						<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-							<button
-								onclick={handleExport}
-								class="flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 rounded-xl text-xs font-semibold text-zinc-200 transition-colors"
-							>
-								<Download class="w-4 h-4 text-cyan-400" />
-								<span>{i18n.t('export_config')}</span>
-							</button>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+								<button
+									onclick={handleExport}
+									class="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs font-bold transition-all border cursor-pointer {
+										isLightTheme
+											? 'bg-white hover:bg-zinc-100 text-zinc-800 border-zinc-300 shadow-sm'
+											: 'bg-zinc-950 hover:bg-zinc-800 text-zinc-100 border-zinc-700/80'
+									}"
+								>
+									<Download class="w-4 h-4 text-cyan-400" />
+									<span>{i18n.t('export_config')}</span>
+								</button>
 
-							<label
-								class="flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 rounded-xl text-xs font-semibold text-zinc-200 transition-colors cursor-pointer"
-							>
-								<Upload class="w-4 h-4 text-emerald-400" />
-								<span>{i18n.t('import_config')}</span>
-								<input type="file" accept=".json" onchange={handleImport} class="hidden" />
-							</label>
-						</div>
+								<label
+									class="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-xs font-bold transition-all border cursor-pointer {
+										isLightTheme
+											? 'bg-white hover:bg-zinc-100 text-zinc-800 border-zinc-300 shadow-sm'
+											: 'bg-zinc-950 hover:bg-zinc-800 text-zinc-100 border-zinc-700/80'
+									}"
+								>
+									<Upload class="w-4 h-4 text-emerald-400" />
+									<span>{i18n.t('import_config')}</span>
+									<input type="file" accept=".json" onchange={handleImport} class="hidden" />
+								</label>
+							</div>
 
-						<div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between">
-							<span class="text-xs text-zinc-400">Kembalikan semua preferensi ke awal</span>
-							<button
-								onclick={handleResetDefaults}
-								class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-semibold transition-colors"
-							>
-								<RotateCcw class="w-3.5 h-3.5" />
-								<span>{i18n.t('reset_defaults')}</span>
-							</button>
+							<div class="pt-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 {
+								isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'
+							}">
+								<span class="text-xs {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+									Kembalikan semua preferensi studio ke konfigurasi awal
+								</span>
+								<button
+									onclick={handleResetDefaults}
+									class="flex items-center gap-1.5 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+								>
+									<RotateCcw class="w-3.5 h-3.5" />
+									<span>{i18n.t('reset_defaults')}</span>
+								</button>
+							</div>
 						</div>
 					</div>
 
 				<!-- TAB 6: ABOUT STUDIO & SPECIFICATIONS -->
 				{:else if activeTab === 'about'}
-					<div class="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-150">
+					<div class="space-y-6 w-full animate-in fade-in duration-150">
 						<!-- Studio Hero Banner -->
 						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme

@@ -113,7 +113,11 @@
 			ParamMouthForm: 1.0,
 			PARAM_MOUTH_FORM: 1.0,
 			ParamCheek: 0.8,
-			PARAM_CHEEK: 0.8
+			PARAM_CHEEK: 0.8,
+			ParamEyeLOpen: 0.85,
+			ParamEyeROpen: 0.85,
+			PARAM_EYE_L_OPEN: 0.85,
+			PARAM_EYE_R_OPEN: 0.85
 		},
 		wink: {
 			ParamEyeLOpen: 0.0,
@@ -121,73 +125,126 @@
 			ParamEyeLSmile: 1.0,
 			PARAM_EYE_L_SMILE: 1.0,
 			ParamEyeROpen: 1.0,
-			PARAM_EYE_R_OPEN: 1.0
+			PARAM_EYE_R_OPEN: 1.0,
+			ParamMouthForm: 0.8,
+			PARAM_MOUTH_FORM: 0.8
 		},
 		surprise: {
-			ParamEyeLOpen: 1.3,
-			PARAM_EYE_L_OPEN: 1.3,
-			ParamEyeROpen: 1.3,
-			PARAM_EYE_R_OPEN: 1.3,
-			ParamBrowLY: 0.8,
-			ParamBrowRY: 0.8,
-			PARAM_BROW_L_Y: 0.8,
-			PARAM_BROW_R_Y: 0.8,
-			Param: 0.8,
-			Param4: 0.8,
-			ParamMouthOpenY: 0.85,
-			PARAM_MOUTH_OPEN_Y: 0.85
+			ParamEyeLOpen: 1.35,
+			PARAM_EYE_L_OPEN: 1.35,
+			ParamEyeROpen: 1.35,
+			PARAM_EYE_R_OPEN: 1.35,
+			ParamBrowLY: 0.9,
+			ParamBrowRY: 0.9,
+			PARAM_BROW_L_Y: 0.9,
+			PARAM_BROW_R_Y: 0.9,
+			Param: 0.9,
+			Param4: 0.9,
+			ParamMouthOpenY: 0.9,
+			PARAM_MOUTH_OPEN_Y: 0.9,
+			ParamMouthForm: 0.0,
+			PARAM_MOUTH_FORM: 0.0
+		},
+		surprised: {
+			ParamEyeLOpen: 1.35,
+			PARAM_EYE_L_OPEN: 1.35,
+			ParamEyeROpen: 1.35,
+			PARAM_EYE_R_OPEN: 1.35,
+			ParamBrowLY: 0.9,
+			ParamBrowRY: 0.9,
+			PARAM_BROW_L_Y: 0.9,
+			PARAM_BROW_R_Y: 0.9,
+			Param: 0.9,
+			Param4: 0.9,
+			ParamMouthOpenY: 0.9,
+			PARAM_MOUTH_OPEN_Y: 0.9,
+			ParamMouthForm: 0.0,
+			PARAM_MOUTH_FORM: 0.0
 		},
 		pout: {
 			ParamCheek: 1.0,
 			PARAM_CHEEK: 1.0,
-			ParamMouthForm: -0.6,
-			PARAM_MOUTH_FORM: -0.6,
-			ParamBrowLY: -0.2,
-			ParamBrowRY: -0.2,
-			PARAM_BROW_L_Y: -0.2,
-			PARAM_BROW_R_Y: -0.2,
-			Param: -0.2,
-			Param4: -0.2
+			ParamMouthForm: -0.65,
+			PARAM_MOUTH_FORM: -0.65,
+			ParamBrowLY: -0.25,
+			ParamBrowRY: -0.25,
+			PARAM_BROW_L_Y: -0.25,
+			PARAM_BROW_R_Y: -0.25,
+			Param: -0.25,
+			Param4: -0.25
 		},
 		sad: {
-			ParamBrowLY: -0.8,
-			ParamBrowRY: -0.8,
-			PARAM_BROW_L_Y: -0.8,
-			PARAM_BROW_R_Y: -0.8,
-			Param: -0.8,
-			Param4: -0.8,
+			ParamBrowLY: -0.85,
+			ParamBrowRY: -0.85,
+			PARAM_BROW_L_Y: -0.85,
+			PARAM_BROW_R_Y: -0.85,
+			Param: -0.85,
+			Param4: -0.85,
+			ParamBrowLAngle: 0.7,
+			ParamBrowRAngle: 0.7,
+			PARAM_BROW_L_ANGLE: 0.7,
+			PARAM_BROW_R_ANGLE: 0.7,
 			ParamMouthForm: -1.0,
 			PARAM_MOUTH_FORM: -1.0,
 			ParamEyeLSmile: 0.0,
 			ParamEyeRSmile: 0.0,
+			ParamEyeLOpen: 0.65,
+			ParamEyeROpen: 0.65,
+			Param144: 1.0 // Vivian tear/cry
+		},
+		cry: {
+			ParamBrowLY: -0.85,
+			ParamBrowRY: -0.85,
+			PARAM_BROW_L_Y: -0.85,
+			PARAM_BROW_R_Y: -0.85,
+			Param: -0.85,
+			Param4: -0.85,
+			ParamBrowLAngle: 0.7,
+			ParamBrowRAngle: 0.7,
+			PARAM_BROW_L_ANGLE: 0.7,
+			PARAM_BROW_R_ANGLE: 0.7,
+			ParamMouthForm: -1.0,
+			PARAM_MOUTH_FORM: -1.0,
+			ParamEyeLSmile: 0.0,
+			ParamEyeRSmile: 0.0,
+			ParamEyeLOpen: 0.65,
+			ParamEyeROpen: 0.65,
 			Param144: 1.0 // Vivian tear/cry
 		},
 		blush: {
 			ParamCheek: 1.0,
 			PARAM_CHEEK: 1.0,
-			ParamEyeLSmile: 0.7,
-			ParamEyeRSmile: 0.7,
-			PARAM_EYE_L_SMILE: 0.7,
-			PARAM_EYE_R_SMILE: 0.7,
+			ParamEyeLSmile: 0.8,
+			ParamEyeRSmile: 0.8,
+			PARAM_EYE_L_SMILE: 0.8,
+			PARAM_EYE_R_SMILE: 0.8,
+			ParamMouthForm: 0.6,
+			PARAM_MOUTH_FORM: 0.6,
 			Param149: 1.0 // Vivian blush
 		},
 		angry: {
-			ParamBrowLAngle: -0.8,
-			ParamBrowRAngle: -0.8,
-			PARAM_BROW_L_ANGLE: -0.8,
-			PARAM_BROW_R_ANGLE: -0.8,
-			Param2: -0.8,
-			Param5: -0.8,
-			ParamBrowLY: -0.4,
-			ParamBrowRY: -0.4,
-			PARAM_BROW_L_Y: -0.4,
-			PARAM_BROW_R_Y: -0.4,
-			Param: -0.4,
-			Param4: -0.4,
-			ParamMouthForm: -0.6,
-			PARAM_MOUTH_FORM: -0.6,
-			ParamEyeLOpen: 0.8,
-			ParamEyeROpen: 0.8
+			ParamBrowLAngle: -0.85,
+			ParamBrowRAngle: -0.85,
+			PARAM_BROW_L_ANGLE: -0.85,
+			PARAM_BROW_R_ANGLE: -0.85,
+			Param2: -0.85,
+			Param5: -0.85,
+			ParamBrowLY: -0.5,
+			ParamBrowRY: -0.5,
+			PARAM_BROW_L_Y: -0.5,
+			PARAM_BROW_R_Y: -0.5,
+			Param: -0.5,
+			Param4: -0.5,
+			ParamBrowLForm: -1.0,
+			ParamBrowRForm: -1.0,
+			PARAM_BROW_L_FORM: -1.0,
+			PARAM_BROW_R_FORM: -1.0,
+			ParamMouthForm: -0.7,
+			PARAM_MOUTH_FORM: -0.7,
+			ParamEyeLOpen: 0.75,
+			ParamEyeROpen: 0.75,
+			PARAM_EYE_L_OPEN: 0.75,
+			PARAM_EYE_R_OPEN: 0.75
 		}
 	};
 
@@ -208,22 +265,36 @@
 			if (!expName || expName === 'normal' || expName === 'reset') {
 				if (expMgr && typeof expMgr.resetExpression === 'function') {
 					expMgr.resetExpression();
-				} else if (typeof currentModel.expression === 'function') {
-					currentModel.expression('');
+				}
+				if (expMgr && typeof expMgr.stopAllExpressions === 'function') {
+					expMgr.stopAllExpressions();
+				}
+				if (typeof currentModel.expression === 'function') {
+					currentModel.expression('').catch(() => {});
 				}
 			} else {
-				// 1. Try invoking Pixi-Live2D built-in expression manager if model has Cubism expressions
-				if (typeof currentModel.expression === 'function') {
-					currentModel.expression(expName).catch(() => {});
-				}
-				// 2. Also try index-based matching in definitions
+				// 1. Try matching by index in definitions first (handles Cubism 3/4 & 2 safely)
+				let matchedNative = false;
 				if (expMgr?.definitions && Array.isArray(expMgr.definitions)) {
 					const idx = expMgr.definitions.findIndex(
-						(d: any) => d.name === expName || d.file === expName || d.Name === expName
+						(d: any) =>
+							d.Name === expName ||
+							d.name === expName ||
+							d.File === expName ||
+							d.file === expName ||
+							(typeof d.Name === 'string' && d.Name.toLowerCase() === expName.toLowerCase()) ||
+							(typeof d.name === 'string' && d.name.toLowerCase() === expName.toLowerCase()) ||
+							(typeof d.File === 'string' && d.File.toLowerCase().includes(expName.toLowerCase())) ||
+							(typeof d.file === 'string' && d.file.toLowerCase().includes(expName.toLowerCase()))
 					);
 					if (idx >= 0 && typeof currentModel.expression === 'function') {
 						currentModel.expression(idx).catch(() => {});
+						matchedNative = true;
 					}
+				}
+				// 2. If not found by index, try invoking Pixi-Live2D expression directly by name
+				if (!matchedNative && typeof currentModel.expression === 'function') {
+					currentModel.expression(expName).catch(() => {});
 				}
 			}
 		} catch (err) {
@@ -372,6 +443,19 @@
 						'ParamArmLA', 'ParamArmRA', 'ParamArmLB', 'ParamArmRB', 'ParamHandAngleL', 'ParamHandAngleR'
 					]);
 
+					const setParam = (id: string, val: number) => {
+						try {
+							if (typeof core.setParameterValueById === 'function') {
+								core.setParameterValueById(id, val);
+							}
+						} catch {}
+						try {
+							if (typeof core.setParamFloat === 'function') {
+								core.setParamFloat(id, val);
+							}
+						} catch {}
+					};
+
 					for (const param of rigging.parameters) {
 						// In live mode, only set tracked parameters or active expression overrides to preserve model built-in animations/expressions
 						if (rigging.riggingMode === 'live' && !TRACKING_ID_SET.has(param.id) && (!expPreset || !(param.id in expPreset))) {
@@ -397,11 +481,7 @@
 							}
 						}
 
-						try {
-							core.setParameterValueById(param.id, val);
-						} catch {
-							// Parameter not present in model
-						}
+						setParam(param.id, val);
 					}
 
 					// High-Responsiveness Eyebrows & Linked Model Parameters (Vivian, Mihari, Hiyori, etc.)
@@ -412,33 +492,29 @@
 					const browLForm = expPreset?.ParamBrowLForm ?? rigging.getActiveValue('ParamBrowLForm');
 					const browRForm = expPreset?.ParamBrowRForm ?? rigging.getActiveValue('ParamBrowRForm');
 
-					try {
-						core.setParameterValueById('ParamBrowLY', browLY);
-						core.setParameterValueById('ParamBrowRY', browRY);
-						core.setParameterValueById('PARAM_BROW_L_Y', browLY);
-						core.setParameterValueById('PARAM_BROW_R_Y', browRY);
-						core.setParameterValueById('Param', browLY);
-						core.setParameterValueById('Param4', browRY);
+					setParam('ParamBrowLY', browLY);
+					setParam('ParamBrowRY', browRY);
+					setParam('PARAM_BROW_L_Y', browLY);
+					setParam('PARAM_BROW_R_Y', browRY);
+					setParam('Param', browLY);
+					setParam('Param4', browRY);
 
-						core.setParameterValueById('ParamBrowLAngle', browLAngle);
-						core.setParameterValueById('ParamBrowRAngle', browRAngle);
-						core.setParameterValueById('PARAM_BROW_L_ANGLE', browLAngle);
-						core.setParameterValueById('PARAM_BROW_R_ANGLE', browRAngle);
-						core.setParameterValueById('Param2', browLAngle);
-						core.setParameterValueById('Param5', browRAngle);
+					setParam('ParamBrowLAngle', browLAngle);
+					setParam('ParamBrowRAngle', browRAngle);
+					setParam('PARAM_BROW_L_ANGLE', browLAngle);
+					setParam('PARAM_BROW_R_ANGLE', browRAngle);
+					setParam('Param2', browLAngle);
+					setParam('Param5', browRAngle);
 
-						core.setParameterValueById('ParamBrowLForm', browLForm);
-						core.setParameterValueById('ParamBrowRForm', browRForm);
-						core.setParameterValueById('PARAM_BROW_L_FORM', browLForm);
-						core.setParameterValueById('PARAM_BROW_R_FORM', browRForm);
-					} catch {}
+					setParam('ParamBrowLForm', browLForm);
+					setParam('ParamBrowRForm', browRForm);
+					setParam('PARAM_BROW_L_FORM', browLForm);
+					setParam('PARAM_BROW_R_FORM', browRForm);
 
-					// Apply custom expression preset overrides directly (e.g. Param144 for cry, Param149 for blush)
+					// Apply custom expression preset overrides directly (e.g. Param144 for cry, Param149 for blush, ParamEyeLSmile for smile)
 					if (expPreset) {
 						for (const k in expPreset) {
-							try {
-								core.setParameterValueById(k, expPreset[k]);
-							} catch {}
+							setParam(k, expPreset[k]);
 						}
 					}
 
@@ -810,25 +886,25 @@
 
 				if (Array.isArray(expDefs) && expDefs.length > 0) {
 					expDefs.forEach((def: any, idx: number) => {
-						const name = def.name || def.file || `exp_${idx}`;
-						const cleanLabel = name.replace(/\.(exp3?|json)$/i, '').replace(/^.*\//, '');
-						expressionsList.push({ id: name, name, label: cleanLabel });
+						const name = def.Name || def.name || def.File || def.file || `exp_${idx}`;
+						const cleanLabel = (def.Name || def.name || name).replace(/\.(exp3?|json)$/i, '').replace(/^.*\//, '');
+						expressionsList.push({ id: name, name, label: `✨ ${cleanLabel}` });
 					});
 				} else if (model.internalModel?.settings?.expressions && model.internalModel.settings.expressions.length > 0) {
 					const rawExps = model.internalModel.settings.expressions;
 					rawExps.forEach((exp: any, idx: number) => {
-						const name = exp.Name || exp.name || exp.File || `exp_${idx}`;
+						const name = exp.Name || exp.name || exp.File || exp.file || `exp_${idx}`;
 						const cleanLabel = (exp.Name || exp.name || name).replace(/\.(exp3?|json)$/i, '').replace(/^.*\//, '');
-						expressionsList.push({ id: name, name, label: cleanLabel });
+						expressionsList.push({ id: name, name, label: `✨ ${cleanLabel}` });
 					});
 				}
 
 				const universalPresets = [
 					{ id: 'smile', name: 'smile', label: '😊 Senyum (Smile)' },
 					{ id: 'wink', name: 'wink', label: '😉 Kedip (Wink)' },
-					{ id: 'surprise', name: 'surprise', label: '😲 Kaget (Shock)' },
+					{ id: 'surprised', name: 'surprised', label: '😲 Kaget (Shock)' },
 					{ id: 'pout', name: 'pout', label: '😤 Ngambek (Pout)' },
-					{ id: 'sad', name: 'sad', label: '🥺 Sedih (Sad)' },
+					{ id: 'cry', name: 'cry', label: '😢 Menangis (Cry)' },
 					{ id: 'blush', name: 'blush', label: '😳 Merona (Blush)' },
 					{ id: 'angry', name: 'angry', label: '😡 Marah (Angry)' }
 				];
@@ -845,11 +921,10 @@
 				rigging.availableExpressions = [
 					{ id: 'smile', name: 'smile', label: '😊 Senyum (Smile)' },
 					{ id: 'wink', name: 'wink', label: '😉 Kedip (Wink)' },
-					{ id: 'surprise', name: 'surprise', label: '😲 Kaget (Shock)' },
+					{ id: 'surprised', name: 'surprised', label: '😲 Kaget (Shock)' },
 					{ id: 'pout', name: 'pout', label: '😤 Ngambek (Pout)' },
-					{ id: 'sad', name: 'sad', label: '🥺 Sedih (Sad)' },
+					{ id: 'cry', name: 'cry', label: '😢 Menangis (Cry)' },
 					{ id: 'blush', name: 'blush', label: '😳 Merona (Blush)' },
-					{ id: 'angry', name: 'angry', label: '😡 Marah (Angry)' }
 				];
 			}
 		} catch (e) {

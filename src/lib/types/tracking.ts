@@ -17,6 +17,8 @@ export interface TrackingResults {
 	eyeBallY: number;      // -1 to 1
 	browL: number;         // -1 to 1
 	browR: number;         // -1 to 1
+	browFormL?: number;    // -1 to 1 (brow form / anger vs raised)
+	browFormR?: number;    // -1 to 1
 	mouthOpen: number;     // 0 to 1
 	mouthForm: number;     // -1 to 1 (frown to smile)
 	mouthX: number;        // -1 to 1 (mouth/jaw horizontal skew)

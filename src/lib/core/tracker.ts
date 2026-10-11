@@ -326,7 +326,8 @@ export class FaceTracker {
 		}
 
 		// Read and record the actual active hardware track and deviceId
-		const activeTrack = this.stream.getVideoTracks()[0];
+		const activeStream = this.stream as MediaStream | null;
+		const activeTrack = activeStream ? activeStream.getVideoTracks()[0] : null;
 		if (activeTrack) {
 			const settings = activeTrack.getSettings();
 			// Verify if user requested integrated camera, but Windows gave Iriun / Poco:

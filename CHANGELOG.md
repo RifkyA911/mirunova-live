@@ -10,25 +10,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.20.1-beta] - 2026-10-11
 
 ### Added & Enhanced
+- **Runtime Error Resolution & Clean Event Handlers (`ControlDock.svelte`, `SettingsModal.svelte`):**
+  - Tailed dev logs and resolved runtime `ReferenceError: isLangMenuOpen is not defined` across dock button click handlers.
+  - Resolved `ReferenceError: Tv is not defined` in `SettingsModal.svelte`.
+- **Comprehensive Facial Expression Engine (`CanvasStage.svelte`, `tracking.ts`, `riggingStore.svelte.ts`):**
+  - Fixed Live2D expression discovery supporting both Cubism 3/4 (`def.Name`, `def.File`) and Cubism 2 (`def.name`, `def.file`) definitions.
+  - Added index-based expression triggering (`currentModel.expression(idx)`) to ensure robust dispatching regardless of filename casing differences.
+  - Implemented `setParam` helper supporting both Cubism 3/4 `core.setParameterValueById` and Cubism 2 `core.setParamFloat`.
+  - Added alias mapping for universal expression presets (`smile`, `wink`, `surprise`/`surprised`, `pout`, `sad`/`cry`, `blush`, `angry`) with Vivian model triggers (`Param149` blush, `Param144` tears).
+  - Expression preset overrides are applied in `beforeModelUpdate` after motion evaluation, preventing the 60 FPS tracking loop or idle motions from wiping facial expressions.
+- **Full-Width Cards in Settings Modal (`SettingsModal.svelte`):**
+  - Removed restrictive `max-w-4xl` and `max-w-2xl` constraints on Hardware & Perf, Storage & Backup, and About tabs, allowing cards to utilize the full width of the widescreen modal (`max-w-6xl xl:max-w-7xl`).
+  - Added full light/dark theme-aware styling to the Storage & Backup configuration card.
+- **Layer Manager Rich Sub-Metadata & High-Contrast Buttons (`LayerManagerModal.svelte`):**
+  - Enriched layer rows with detailed sub-metadata: Cubism version, author attribution, stage coordinates `(X, Y)`, scale factor, bound camera device label, sync tracking status, and active props summary.
+  - Redesigned amber (`+ Upload / Pasang Prop`) and purple (`Collab Studio`) toolbar buttons with solid, vibrant, WCAG AAA high-contrast styling for instant visibility in all themes.
 - **Unified Flat Layer Manager & Far-Right Aligned Controls (`LayerManagerModal.svelte`):**
   - Unification of all scene elements (Host Avatar, Collab Guest 1, Collab Guest 2, Props, Shaders, Background) into a cohesive single layer stack with clear identifying names, thumbnails, and badges.
-  - Eliminated duplicate icon buttons (`+ Pasang Props` and `+ Collab Studio`) and confusing tab switching.
-  - All action controls (Opacity slider, Eye visibility, Lock toggle, Reorder Up/Down, and Delete button) are now pinned strictly flush to the far right edge (`ml-auto flex items-center gap-1.5 shrink-0`).
+  - All action controls (Opacity slider, Eye visibility, Lock toggle, Reorder Up/Down, and Delete button) are pinned strictly flush to the far right edge.
   - Sticky mode renders full-height (`100vh`) docked to the right edge with spacious width (`w-[540px] max-w-[95vw]`).
 - **Unrestricted Custom Prop Upload & Body Attachment (`LayerManagerModal.svelte`, `tracking.ts`, `riggingStore.svelte.ts`, `CanvasStage.svelte`):**
-  - Added support for uploading custom image props (PNG, WebP, SVG, GIF, JPEG) without restrictive size limits via local file upload.
-  - Added body attachment system (`head` - follows head rotation & pitch, `body` - follows chest/body tilt & breath, `screen` - fixed floating HUD on stage).
-  - Each active prop in the layer stack features an inline attachment selector dropdown to adjust anchor points on the fly.
-  - Added interactive on-canvas HUD for `select-layer` cursor mode with "✓ Terapkan" (Apply) and "✕ Batal" (Cancel) buttons to confirm or revert layer transforms.
+  - Added support for uploading custom image props (PNG, WebP, SVG, GIF, JPEG) without size limits.
+  - Added body attachment system (`head` - follows head rotation & pitch, `body` - follows chest tilt & breath, `screen` - fixed floating HUD on stage).
+  - Added on-canvas HUD for `select-layer` cursor mode with "✓ Terapkan" (Apply) and "✕ Batal" (Cancel) buttons.
 - **Dual-Source Eyebrow Tracking & Live2D Parameter Preservation (`solver.ts`, `CanvasStage.svelte`):**
   - Enhanced eyebrow solver combining blendshapes and normalized geometric displacement with sensitivity scaling.
   - Added Vivian model linked eyebrow parameters (`Param`, `Param4`, `Param2`, `Param5`) to live update loop.
-  - Solved facial expression bug by preventing the 60 FPS tracking loop from wiping non-tracked model parameters to 0, ensuring expressions and presets (Smile, Wink, Surprise, Pout, Sad, Blush, Angry) remain active.
-- **Settings Modal Overhaul & Multi-Participant Camera Routing (`SettingsModal.svelte`):**
-  - Widened modal dialog to `max-w-6xl xl:max-w-7xl` and expanded tab menu vertical padding by 2px (`py-2.5 sm:py-3`).
-  - Converted Hardware & Perf tab from cramped 2-column grid to a single-column layout with high contrast across all themes.
-  - Added participant switcher (Streamer 1 Host, Streamer 2 Guest 1, Streamer 3 Guest 2) in Kamera & Orientasi Sumbu so camera hardware and axis orientation follow the selected participant.
-  - Overhauled About tab into a clean, self-contained overview displaying `v0.20.1-beta (Beta)`, creator credits, privacy charter, and keyboard shortcuts cheat sheet.
 - **Theme-Aware High-Contrast Toast Notifications (`+page.svelte`):**
   - Updated toast notifications to dynamically adapt to light vs. dark themes with high-contrast background and glowing status indicator.
 - **Beta Versioning:**
