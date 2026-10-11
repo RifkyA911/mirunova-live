@@ -35,6 +35,9 @@
 	let isLangMenuOpen = $state<boolean>(false);
 	let isDeviceMenuOpen = $state<boolean>(false);
 	let isExpressionMenuOpen = $state<boolean>(false);
+	const isLightTheme = $derived(
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+	);
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 
@@ -199,7 +202,9 @@
 				<SlidersHorizontal class="w-5 h-5 {isDeviceMenuOpen ? 'text-indigo-300' : 'text-zinc-400'}" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
+					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
+				} {isDeviceMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
 			>
 				{i18n.t('devices_menu_title')}
 			</div>
@@ -210,21 +215,25 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="fixed inset-0 z-[65]"
+					class="fixed inset-0 z-[80]"
 					onclick={() => (isDeviceMenuOpen = false)}
 				></div>
 
 				<div
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-84 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-700/80 rounded-2xl shadow-2xl p-4 z-[70] space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left"
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-84 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-4 z-[85] space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
+						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
+					}"
 				>
-					<div class="flex items-center justify-between pb-2 border-b border-zinc-800/80">
-						<span class="text-xs font-bold text-zinc-100 flex items-center gap-1.5">
-							<Video class="w-3.5 h-3.5 text-cyan-400" />
+					<div class="flex items-center justify-between pb-2 border-b {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+						<span class="text-xs font-bold flex items-center gap-1.5 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+							<Video class="w-3.5 h-3.5 text-cyan-500" />
 							{i18n.t('devices_menu_title')}
 						</span>
 						<button
 							onclick={() => refreshDevices(true)}
-							class="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-cyan-300 transition-colors cursor-pointer"
+							class="flex items-center gap-1 text-[10px] transition-colors cursor-pointer {
+								isLightTheme ? 'text-zinc-500 hover:text-cyan-600' : 'text-zinc-400 hover:text-cyan-300'
+							}"
 							title={i18n.t('refresh_devices')}
 						>
 							<RefreshCw class="w-3 h-3" />
@@ -234,8 +243,8 @@
 
 					<!-- Camera Section -->
 					<div class="space-y-1.5 text-xs">
-						<label for="dock-cam-select" class="block text-[11px] font-medium text-zinc-400 flex items-center gap-1.5">
-							<Camera class="w-3 h-3 text-cyan-400" />
+						<label for="dock-cam-select" class="block text-[11px] font-medium flex items-center gap-1.5 {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+							<Camera class="w-3 h-3 text-cyan-500" />
 							{i18n.t('camera_device')}
 						</label>
 						<select
@@ -245,7 +254,9 @@
 								const target = e.target as HTMLSelectElement;
 								await tracker.switchCamera(target.value);
 							}}
-							class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500 cursor-pointer"
+							class="w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer {
+								isLightTheme ? 'bg-zinc-50 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-800 text-zinc-200'
+							}"
 						>
 							<option value="">Default Webcam / Integrated</option>
 							{#each availableCameras as cam}
@@ -254,14 +265,18 @@
 						</select>
 
 						{#if rigging.activeCameraLabel}
-							<div class="px-2 py-1 bg-emerald-950/30 border border-emerald-800/40 rounded-lg text-[10px] text-emerald-300 flex items-center gap-1.5 font-mono">
-								<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+							<div class="px-2 py-1 border rounded-lg text-[10px] flex items-center gap-1.5 font-mono {
+								isLightTheme ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300'
+							}">
+								<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
 								<span class="truncate"><strong>Hardware:</strong> {rigging.activeCameraLabel}</span>
 							</div>
 						{/if}
 
-						<div class="p-2 bg-cyan-950/30 border border-cyan-800/30 rounded-xl text-[10px] text-cyan-300/90 flex items-start gap-1.5 leading-relaxed">
-							<Info class="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+						<div class="p-2 border rounded-xl text-[10px] flex items-start gap-1.5 leading-relaxed {
+							isLightTheme ? 'bg-cyan-50 border-cyan-200 text-zinc-700' : 'bg-cyan-950/30 border-cyan-800/30 text-cyan-300/90'
+						}">
+							<Info class="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
 							<span><strong>Iriun / DroidCam / Phone:</strong> {i18n.t('phone_webcam_tip')}</span>
 						</div>
 					</div>
@@ -269,11 +284,11 @@
 					<!-- Microphone Section -->
 					<div class="space-y-1.5 text-xs">
 						<div class="flex items-center justify-between">
-							<label for="dock-mic-select" class="text-[11px] font-medium text-zinc-400 flex items-center gap-1.5">
-								<Mic class="w-3 h-3 text-emerald-400" />
+							<label for="dock-mic-select" class="text-[11px] font-medium flex items-center gap-1.5 {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+								<Mic class="w-3 h-3 text-emerald-500" />
 								{i18n.t('mic_input_label')}
 							</label>
-							<span class="text-[10px] font-mono {rigging.isMicActive ? 'text-emerald-400' : 'text-zinc-500'}">
+							<span class="text-[10px] font-mono {rigging.isMicActive ? 'text-emerald-500 font-bold' : isLightTheme ? 'text-zinc-400' : 'text-zinc-500'}">
 								{rigging.isMicActive ? Math.round(rigging.micVolumeLevel * 100) + '%' : 'Off'}
 							</span>
 						</div>
@@ -292,7 +307,9 @@
 									rigging.showToast('✓ ' + i18n.t('mic_switched'));
 								}
 							}}
-							class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
+							class="w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer {
+								isLightTheme ? 'bg-zinc-50 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-800 text-zinc-200'
+							}"
 						>
 							<option value="">Default Microphone</option>
 							{#each availableMics as mic}
@@ -300,7 +317,7 @@
 							{/each}
 						</select>
 						{#if rigging.isMicActive}
-							<div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+							<div class="w-full h-1.5 rounded-full overflow-hidden border {isLightTheme ? 'bg-zinc-200 border-zinc-300' : 'bg-zinc-900 border-zinc-800'}">
 								<div
 									class="h-full bg-emerald-500 transition-all duration-75"
 									style="width: {Math.max(2, Math.min(100, rigging.micVolumeLevel * 100))}%"
@@ -485,9 +502,11 @@
 				{/if}
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
+					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
+				} {isExpressionMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
 			>
-				Ekspresi Model ({rigging.availableExpressions.length}) [E]
+				{i18n.t('expressions_title')} ({rigging.availableExpressions.length}) [E]
 			</div>
 
 			<!-- Floating Expression Popover -->
@@ -496,21 +515,25 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="fixed inset-0 z-[65]"
+					class="fixed inset-0 z-[80]"
 					onclick={() => (isExpressionMenuOpen = false)}
 				></div>
 
 				<div
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-700/80 rounded-2xl shadow-2xl p-2.5 z-[70] space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left"
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
+						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
+					}"
 				>
 					<!-- Header -->
-					<div class="flex items-center justify-between border-b border-zinc-800/80 pb-2 px-1">
+					<div class="flex items-center justify-between border-b pb-2 px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<div class="flex items-center gap-1.5">
-							<Sparkles class="w-4 h-4 text-pink-400" />
-							<span class="font-bold text-xs text-zinc-100 tracking-wide">Ekspresi Wajah</span>
+							<Sparkles class="w-4 h-4 text-pink-500" />
+							<span class="font-bold text-xs tracking-wide {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+								{i18n.t('expressions_title')}
+							</span>
 						</div>
-						<span class="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono border border-pink-500/30">
-							{rigging.availableExpressions.length} Variasi
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono border border-pink-500/30">
+							{rigging.availableExpressions.length} {i18n.t('expressions_variations')}
 						</span>
 					</div>
 
@@ -523,11 +546,15 @@
 						}}
 						class="w-full px-3 py-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
 							!rigging.activeExpression
-								? 'bg-zinc-800/90 text-cyan-300 font-semibold border border-cyan-500/30'
-								: 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent'
+								? isLightTheme
+									? 'bg-zinc-100 text-cyan-700 font-semibold border border-cyan-500/30'
+									: 'bg-zinc-800/90 text-cyan-300 font-semibold border border-cyan-500/30'
+								: isLightTheme
+									? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border border-transparent'
+									: 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent'
 						}"
 					>
-						<span>⚪ Netral / Reset</span>
+						<span>{i18n.t('expressions_reset')}</span>
 						{#if !rigging.activeExpression}
 							<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
 						{/if}
@@ -536,8 +563,8 @@
 					<!-- Expressions List -->
 					<div class="max-h-56 overflow-y-auto space-y-1 custom-scrollbar pr-1">
 						{#if rigging.availableExpressions.length === 0}
-							<div class="p-3 text-center text-[11px] text-zinc-500">
-								Tidak ada file ekspresi terdaftar pada model ini
+							<div class="p-3 text-center text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-500'}">
+								{i18n.t('expressions_empty')}
 							</div>
 						{:else}
 							{#each rigging.availableExpressions as exp}
@@ -549,8 +576,10 @@
 									}}
 									class="w-full px-3 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
 										rigging.activeExpression === exp.name
-											? 'bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/40 shadow-sm'
-											: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white border border-transparent'
+											? 'bg-pink-500/20 text-pink-600 dark:text-pink-300 font-semibold border border-pink-500/40 shadow-sm'
+											: isLightTheme
+												? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 border border-transparent'
+												: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white border border-transparent'
 									}"
 								>
 									<span class="truncate">{exp.label}</span>
@@ -638,9 +667,11 @@
 				<Languages class="w-5 h-5" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
+					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
+				} {isLangMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
 			>
-				Language: {i18n.currentLocale.toUpperCase()}
+				{i18n.t('language')}: {i18n.currentLocale.toUpperCase()}
 			</div>
 
 			<!-- Language Dropdown Menu (Floating Above Dock with Backdrop Closer) -->
@@ -649,14 +680,18 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="fixed inset-0 z-[65]"
+					class="fixed inset-0 z-[80]"
 					onclick={() => (isLangMenuOpen = false)}
 				></div>
 
 				<div
-					class="absolute bottom-full mb-3 right-0 w-48 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-700/80 rounded-2xl shadow-2xl p-1.5 z-[70] space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left"
+					class="absolute bottom-full mb-3 right-0 w-48 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-1.5 z-[85] space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
+						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
+					}"
 				>
-					<div class="px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase text-zinc-400 border-b border-zinc-800/60 mb-1">
+					<div class="px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase border-b mb-1 {
+						isLightTheme ? 'text-zinc-500 border-zinc-200' : 'text-zinc-400 border-zinc-800/60'
+					}">
 						{i18n.t('language')}
 					</div>
 					{#each languages as lang}
@@ -668,8 +703,10 @@
 							}}
 							class="w-full px-3 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
 								i18n.currentLocale === lang.code
-									? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
-									: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white'
+									? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
+									: isLightTheme
+										? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+										: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white'
 							}"
 						>
 							<span class="flex items-center gap-2">

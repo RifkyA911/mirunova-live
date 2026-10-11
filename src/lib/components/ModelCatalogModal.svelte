@@ -31,6 +31,10 @@
 	let catalogTab = $state<'2d' | '3d'>('2d');
 	let model2DFilter = $state<'all' | 'booth' | 'official'>('all');
 
+	const isLightTheme = $derived(
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+	);
+
 	let boothCount = $derived(MODEL_CATALOG.filter((m) => m.source === 'booth').length);
 	let officialCount = $derived(MODEL_CATALOG.filter((m) => m.source === 'official').length);
 	let displayed2DModels = $derived(
@@ -117,22 +121,28 @@
 	>
 		<!-- 2X WIDER CONTAINER (max-w-5xl) -->
 		<div
-			class="w-full max-w-5xl bg-zinc-950/98 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden text-zinc-100"
+			class="w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border transition-colors duration-200 {
+				isLightTheme
+					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
+					: 'bg-zinc-950/98 text-zinc-100 border-zinc-800 shadow-2xl'
+			}"
 		>
 			<!-- Header -->
-			<div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
+			<div class="p-4 border-b flex items-center justify-between {
+				isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+			}">
 				<div class="flex items-center gap-3">
-					<div class="p-2 bg-pink-500/10 border border-pink-500/30 rounded-xl text-pink-400 shadow-sm">
+					<div class="p-2 bg-pink-500/10 border border-pink-500/30 rounded-xl text-pink-500 shadow-sm">
 						<Layers class="w-5 h-5" />
 					</div>
 					<div>
-						<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2">
+						<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 							{i18n.t('models')} & Katalog Avatar
-							<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono">
+							<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono font-bold">
 								{catalogTab === '2d' ? `${MODEL_CATALOG.length} Live2D` : `${MODEL_3D_CATALOG.length} 3D Mesh`}
 							</span>
 						</h2>
-						<p class="text-xs text-zinc-400">
+						<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
 							Pilih model avatar 2D/3D dengan visual preview lengkap, pose looping, dan kontrol gerakan
 						</p>
 					</div>
@@ -142,16 +152,22 @@
 					<!-- Reset Position & Scale Button -->
 					<button
 						onclick={() => rigging.resetAvatarTransform()}
-						class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded-lg text-xs font-medium transition-colors border border-zinc-700/80 active:scale-95 shadow-sm"
+						class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border active:scale-95 shadow-sm {
+							isLightTheme
+								? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
+								: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700/80'
+						}"
 						title="Posisikan ulang avatar ke tengah layar"
 					>
-						<RotateCcw class="w-3.5 h-3.5 text-cyan-400" />
+						<RotateCcw class="w-3.5 h-3.5 text-cyan-500" />
 						<span>Reset Posisi Avatar</span>
 					</button>
 
 					<button
 						onclick={() => (rigging.isModelModalOpen = false)}
-						class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors"
+						class="p-1.5 rounded-md transition-colors cursor-pointer {
+							isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+						}"
 						aria-label="Close"
 					>
 						<X class="w-4 h-4" />
@@ -160,28 +176,34 @@
 			</div>
 
 			<!-- Tab Selector: 2D Live2D vs 3D Avatars -->
-			<div class="px-6 pt-3 border-b border-zinc-800/80 bg-zinc-900/40 flex items-center justify-between">
+			<div class="px-6 pt-3 border-b flex items-center justify-between {
+				isLightTheme ? 'bg-zinc-100/60 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800/80'
+			}">
 				<div class="flex items-center gap-3">
 					<button
 						onclick={() => (catalogTab = '2d')}
 						class="flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs transition-all {
 							catalogTab === '2d'
-								? 'border-pink-500 text-pink-300 font-semibold shadow-sm'
-								: 'border-transparent text-zinc-400 hover:text-zinc-200'
+								? 'border-pink-500 text-pink-600 dark:text-pink-300 font-semibold shadow-sm'
+								: isLightTheme
+									? 'border-transparent text-zinc-500 hover:text-zinc-900'
+									: 'border-transparent text-zinc-400 hover:text-zinc-200'
 						}"
 					>
-						<Layers class="w-4 h-4" />
+						<Layers class="w-4 h-4 text-pink-500" />
 						<span>2D Live2D & Reactive Avatars ({MODEL_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = '3d')}
 						class="flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs transition-all {
 							catalogTab === '3d'
-								? 'border-cyan-500 text-cyan-300 font-semibold shadow-sm'
-								: 'border-transparent text-zinc-400 hover:text-zinc-200'
+								? 'border-cyan-500 text-cyan-600 dark:text-cyan-300 font-semibold shadow-sm'
+								: isLightTheme
+									? 'border-transparent text-zinc-500 hover:text-zinc-900'
+									: 'border-transparent text-zinc-400 hover:text-zinc-200'
 						}"
 					>
-						<Box class="w-4 h-4" />
+						<Box class="w-4 h-4 text-cyan-500" />
 						<span>3D Procedural WebGL Cats ({MODEL_3D_CATALOG.length})</span>
 					</button>
 				</div>

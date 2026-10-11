@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.13.0] - 2026-10-11
+
+### Added
+- **Full Internationalization (i18n) Parity & Locales:**
+  - Added full translation key parity across English (`en`), Indonesian (`id`), and Japanese (`ja`) for all keyboard shortcut titles (`shortcut_title_*`), category badges (`badge_*`), Assist Button controls (`assist_*`), and Expression selector labels (`expressions_*`).
+  - Added dedicated test suite `tests/i18n.test.ts` verifying 100% dictionary key coverage and translation resolution across all supported locales (123 test assertions).
+- **Universal Daylight (Light) Theme Adaptation Across All Studio Modals & Drawers:**
+  - Integrated dynamic `$derived(isLightTheme)` theming across all remaining dialogs and panels:
+    - `ShortcutGuideModal.svelte` — daylight card surfaces, light keyboard cap keys (`kbd`), and high-contrast typography.
+    - `SettingsModal.svelte` — daylight container shell, tabs, headers, and form controls.
+    - `ModelCatalogModal.svelte` — daylight dialog shell, tabs, BOOTH showcase banner, and model selection cards.
+    - `ObsModal.svelte` — daylight transparency picker, direct URL bar, and OBS setup instructions card.
+    - `RiggingPreviewPanel.svelte` — daylight drawer and windowed mode headers, borders, and parameter cards.
+    - `AssistButton.svelte` — daylight slide-out dock, zoom buttons, framing presets, and peeking tab handle.
+    - `CameraPip.svelte` — daylight picture-in-picture stream header, camera switcher dropdown, and FPS/latency metrics footer.
+    - `ControlDock.svelte` — daylight dock bar, dividers, and floating popover menus.
+
+### Fixed
+- **Popover Stacking & Hover Tooltip Obscuring Bug in Control Dock:**
+  - Resolved menu obscuring bug where button hover tooltips at `-top-10` rendered on top of open dropdown menus (Language Switcher, Device Selector, Expression Selector).
+  - Hover tooltips now immediately hide (`opacity-0`) whenever their corresponding popovers are active.
+  - Raised popover dropdown z-index to `z-[85]` and clamped widths to `max-w-[calc(100vw-1.5rem)]` with `z-[80]` backdrop click-closers to prevent off-screen clipping.
+
+---
+
 ## [0.12.0] - 2026-10-11
 
 ### Added

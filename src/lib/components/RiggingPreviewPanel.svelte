@@ -36,6 +36,10 @@
 	let windowDragOffset = { x: 0, y: 0 };
 	let panelEl = $state<HTMLElement | null>(null);
 
+	const isLightTheme = $derived(
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+	);
+
 	onMount(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape' && rigging.isDrawerOpen) {
@@ -180,8 +184,12 @@
 		bind:this={panelEl}
 		class="{
 			rigging.riggingViewMode === 'windowed'
-				? 'fixed z-40 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-800/90 rounded-2xl shadow-2xl flex flex-col text-zinc-100 select-none animate-in zoom-in-95 duration-200 resize overflow-hidden'
-				: 'fixed top-0 right-0 h-full w-[410px] max-w-[92vw] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-800/80 shadow-2xl flex flex-col z-40 transition-all text-zinc-100 select-none animate-in slide-in-from-right duration-200'
+				? `fixed z-40 backdrop-blur-2xl rounded-2xl shadow-2xl flex flex-col select-none animate-in zoom-in-95 duration-200 resize overflow-hidden border transition-colors ${
+						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-800/90 text-zinc-100 shadow-2xl'
+				  }`
+				: `fixed top-0 right-0 h-full w-[410px] max-w-[92vw] backdrop-blur-2xl shadow-2xl flex flex-col z-40 transition-all select-none animate-in slide-in-from-right duration-200 border-l ${
+						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900' : 'bg-zinc-950/98 border-zinc-800/80 text-zinc-100'
+				  }`
 		}"
 		style="{
 			rigging.riggingViewMode === 'windowed'
@@ -195,19 +203,21 @@
 			onpointerdown={handleHeaderPointerDown}
 			onpointermove={handleHeaderPointerMove}
 			onpointerup={handleHeaderPointerUp}
-			class="p-3.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60 touch-none {
+			class="p-3.5 border-b flex items-center justify-between touch-none {
+				isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-800' : 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
+			} {
 				rigging.riggingViewMode === 'windowed' ? 'cursor-grab active:cursor-grabbing' : ''
 			}"
 		>
 			<div class="flex items-center gap-2.5">
-				<div class="p-2 bg-violet-500/10 border border-violet-500/30 rounded-lg text-violet-400">
+				<div class="p-2 bg-violet-500/10 border border-violet-500/30 rounded-lg text-violet-500">
 					<Sliders class="w-4 h-4" />
 				</div>
 				<div>
-					<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2">
+					<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 						{i18n.t('rigging_title')}
 					</h2>
-					<p class="text-[11px] text-zinc-400">
+					<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
 						{rigging.parameters.length} {i18n.t('detected_params')} • {rigging.riggingViewMode === 'windowed' ? i18n.t('rigging_windowed') : rigging.riggingViewMode === 'stay' ? i18n.t('rigging_stay') : i18n.t('rigging_drawer')}
 					</p>
 				</div>

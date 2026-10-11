@@ -49,6 +49,9 @@
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 	let storageUsageBytes = $state<number>(0);
 	let appearanceThemeCategory = $state<'light' | 'dark' | 'custom'>('light');
+	const isLightTheme = $derived(
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+	);
 
 	// Interactive Mic & Voice Conversion Test states
 	let isRecordingTest = $state<boolean>(false);
@@ -464,22 +467,30 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-5xl xl:max-w-6xl max-h-[88vh] bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-zinc-100 animate-in zoom-in-95 duration-200"
+			class="w-full max-w-5xl xl:max-w-6xl max-h-[88vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 transition-colors border {
+				isLightTheme
+					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
+					: 'bg-zinc-950 text-zinc-100 border-zinc-800 shadow-2xl'
+			}"
 		>
 			<!-- Modal Header -->
-			<div class="px-6 py-5 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/50">
+			<div class="px-6 py-5 border-b flex items-center justify-between {
+				isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/80'
+			}">
 				<div class="flex items-center gap-3">
-					<div class="p-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400">
+					<div class="p-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-500">
 						<Settings class="w-5 h-5" />
 					</div>
 					<div>
-						<h2 class="text-base sm:text-lg font-bold tracking-wide flex items-center gap-2">
+						<h2 class="text-base sm:text-lg font-bold tracking-wide flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 							{i18n.t('settings_title')}
-							<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/80 font-mono">
+							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono {
+								isLightTheme ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : 'bg-cyan-950 text-cyan-400 border border-cyan-800/80'
+							}">
 								v0.9.0 FOSS
 							</span>
 						</h2>
-						<p class="text-xs text-zinc-400">
+						<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
 							{i18n.t('settings_subtitle')}
 						</p>
 					</div>
@@ -487,7 +498,9 @@
 
 				<button
 					onclick={() => (rigging.isSettingsModalOpen = false)}
-					class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+					class="p-2 rounded-xl transition-colors cursor-pointer {
+						isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+					}"
 					aria-label="Tutup"
 				>
 					<X class="w-5 h-5" />
@@ -495,13 +508,19 @@
 			</div>
 
 			<!-- Expansive Navigation Tabs (Scrollable on mobile) -->
-			<div class="px-6 border-b border-zinc-800/80 bg-zinc-900/30 flex items-center gap-1 overflow-x-auto py-2">
+			<div class="px-6 border-b flex items-center gap-1 overflow-x-auto py-2 {
+				isLightTheme ? 'bg-zinc-100/50 border-zinc-200' : 'bg-zinc-900/30 border-zinc-800/80'
+			}">
 				<button
 					onclick={() => (activeTab = 'perf')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'perf'
-							? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+							? isLightTheme
+								? 'bg-cyan-100 text-cyan-800 border border-cyan-400 shadow-sm'
+								: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
 				>
 					<Cpu class="w-4 h-4" />
@@ -510,10 +529,14 @@
 
 				<button
 					onclick={() => (activeTab = 'tracking')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'tracking'
-							? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm'
-							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+							? isLightTheme
+								? 'bg-indigo-100 text-indigo-800 border border-indigo-400 shadow-sm'
+								: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
 				>
 					<SlidersHorizontal class="w-4 h-4" />
@@ -522,10 +545,14 @@
 
 				<button
 					onclick={() => (activeTab = 'voice')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'voice'
-							? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+							? isLightTheme
+								? 'bg-emerald-100 text-emerald-800 border border-emerald-400 shadow-sm'
+								: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
 				>
 					<Mic class="w-4 h-4" />
@@ -534,10 +561,14 @@
 
 				<button
 					onclick={() => (activeTab = 'appearance')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'appearance'
-							? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
-							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+							? isLightTheme
+								? 'bg-pink-100 text-pink-800 border border-pink-400 shadow-sm'
+								: 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
 				>
 					<Palette class="w-4 h-4" />
@@ -546,10 +577,14 @@
 
 				<button
 					onclick={() => (activeTab = 'storage')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'storage'
-							? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+							? isLightTheme
+								? 'bg-amber-100 text-amber-800 border border-amber-400 shadow-sm'
+								: 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
 				>
 					<Database class="w-4 h-4" />
@@ -558,10 +593,14 @@
 
 				<button
 					onclick={() => (activeTab = 'about')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all {
+					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'about'
-							? 'bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm'
-							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+							? isLightTheme
+								? 'bg-violet-100 text-violet-800 border border-violet-400 shadow-sm'
+								: 'bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm'
+							: isLightTheme
+								? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60'
+								: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
 				>
 					<Info class="w-4 h-4" />
