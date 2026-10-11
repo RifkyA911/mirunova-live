@@ -137,12 +137,32 @@ export interface AccessoryItem {
 export interface StageLayer {
 	id: string;
 	name: string;
-	type: 'shader-fx' | 'accessories' | 'model-collab' | 'model-host' | 'background';
+	type: 'shader-fx' | 'accessories' | 'model-collab' | 'model-collab-2' | 'model-host' | 'background';
 	visible: boolean;
 	opacity: number;
 	locked: boolean;
 	badge: string;
 	description: string;
+}
+
+export interface CollabStreamer {
+	id: 'host' | 'guest1' | 'guest2';
+	name: string;
+	role: 'host' | 'guest';
+	modelId: string;
+	modelName: string;
+	modelUrl: string;
+	avatarUrl?: string;
+	cameraDeviceId: string;
+	cameraLabel: string;
+	position: 'left' | 'center' | 'right' | 'pip';
+	scale: number;
+	offsetX: number;
+	offsetY: number;
+	opacity: number;
+	visible: boolean;
+	active: boolean;
+	syncTracking: boolean;
 }
 
 export interface CollabConfig {
@@ -151,6 +171,8 @@ export interface CollabConfig {
 	modelUrl: string;
 	modelName: string;
 	avatarUrl?: string;
+	cameraDeviceId?: string;
+	cameraLabel?: string;
 	position: 'left' | 'right' | 'pip' | 'center';
 	scale: number;
 	offsetX: number;
@@ -159,4 +181,5 @@ export interface CollabConfig {
 	visible: boolean;
 	syncTracking: boolean;
 }
+
 

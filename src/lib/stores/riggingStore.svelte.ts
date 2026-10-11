@@ -29,9 +29,12 @@ export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	{ id: 'ParamEyeLSmile', label: 'Eye Left Smile (^.^)', min: 0, max: 1, defaultValue: 0, group: 'eyes' },
 	{ id: 'ParamEyeRSmile', label: 'Eye Right Smile (^.^)', min: 0, max: 1, defaultValue: 0, group: 'eyes' },
 	{ id: 'ParamEyeBallX', label: 'Eye Ball X (Pandangan X)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
-	{ id: 'ParamEyeBallY', label: 'Eye Ball Y (Pandangan Y)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
-	{ id: 'ParamBrowLY', label: 'Brow Left Y (Alis Kiri)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
-	{ id: 'ParamBrowRY', label: 'Brow Right Y (Alis Kanan)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamBrowLY', label: 'Brow Left Y (Tinggi Alis Kiri)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamBrowRY', label: 'Brow Right Y (Tinggi Alis Kanan)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamBrowLForm', label: 'Brow Left Form (Bentuk Alis Kiri)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamBrowRForm', label: 'Brow Right Form (Bentuk Alis Kanan)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamBrowLAngle', label: 'Brow Left Angle (Sudut Alis Kiri)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
+	{ id: 'ParamBrowRAngle', label: 'Brow Right Angle (Sudut Alis Kanan)', min: -1, max: 1, defaultValue: 0, group: 'eyes' },
 	// Mouth & Cheeks
 	{ id: 'ParamMouthOpenY', label: 'Mouth Open (Bicara)', min: 0, max: 1, defaultValue: 0, group: 'mouth' },
 	{ id: 'ParamMouthForm', label: 'Mouth Form (Senyum/Bibir)', min: -1, max: 1, defaultValue: 0, group: 'mouth' },
@@ -121,11 +124,13 @@ export class RiggingStore {
 	hiddenPartIds = $state<Record<string, boolean>>({}); // Model part visibility overrides
 	availableParts = $state<Array<{ id: string; name: string; opacity: number }>>([]); // Discovered live parts
 
-	// Collab Mode System (Dual Avatar Streaming)
+	// Collab Mode System (Multi-Streamer: Host + Up to 2 Guests, Max 3 Streamers with Multi-Camera Selection)
 	isCollabModeActive = $state<boolean>(false);
 	collabModelId = $state<string>('haru');
 	collabModelUrl = $state<string>('/models/haru/Haru.model3.json');
-	collabModelName = $state<string>('Haru (Collab Partner)');
+	collabModelName = $state<string>('Haru (Collab Partner 1)');
+	collabCameraDeviceId = $state<string>('');
+	collabCameraLabel = $state<string>('');
 	collabPosition = $state<'left' | 'right' | 'pip'>('right');
 	collabScale = $state<number>(0.85);
 	collabOffsetX = $state<number>(280);
@@ -133,6 +138,21 @@ export class RiggingStore {
 	collabOpacity = $state<number>(1.0);
 	collabVisible = $state<boolean>(true);
 	collabSyncTracking = $state<boolean>(true);
+
+	// Collab Guest 2 (Streamer 3)
+	isCollab2Active = $state<boolean>(false);
+	collab2ModelId = $state<string>('mihari');
+	collab2ModelUrl = $state<string>('/models/mihari/Mihari_V1.model3.json');
+	collab2ModelName = $state<string>('Mihari (Collab Partner 2)');
+	collab2CameraDeviceId = $state<string>('');
+	collab2CameraLabel = $state<string>('');
+	collab2Position = $state<'left' | 'right' | 'pip'>('left');
+	collab2Scale = $state<number>(0.85);
+	collab2OffsetX = $state<number>(-280);
+	collab2OffsetY = $state<number>(0);
+	collab2Opacity = $state<number>(1.0);
+	collab2Visible = $state<boolean>(true);
+	collab2SyncTracking = $state<boolean>(true);
 
 	// Accessories Attach System (Props & Items)
 	activeAccessories = $state<AccessoryItem[]>([
@@ -636,7 +656,15 @@ export class RiggingStore {
 
 	toggleCollabMode(enable?: boolean) {
 		this.isCollabModeActive = enable !== undefined ? enable : !this.isCollabModeActive;
-		this.showToast(this.isCollabModeActive ? '✓ Mode Collab Aktif (Dual Avatar)' : 'Mode Collab Dinonaktifkan');
+		this.showToast(this.isCollabModeActive ? '✓ Collab Guest 1 Aktif' : 'Collab Guest 1 Dinonaktifkan');
+		this.syncCollabLayers();
+		this.persist();
+	}
+
+	toggleCollab2Mode(enable?: boolean) {
+		this.isCollab2Active = enable !== undefined ? enable : !this.isCollab2Active;
+		this.showToast(this.isCollab2Active ? '✓ Collab Guest 2 Aktif (Max 3 Streamers)' : 'Collab Guest 2 Dinonaktifkan');
+		this.syncCollabLayers();
 		this.persist();
 	}
 
@@ -647,10 +675,61 @@ export class RiggingStore {
 		this.persist();
 	}
 
+	setCollab2Model(id: string, name: string, url: string) {
+		this.collab2ModelId = id;
+		this.collab2ModelName = name;
+		this.collab2ModelUrl = url;
+		this.persist();
+	}
+
+	setCollabCamera(participant: 'host' | 'guest1' | 'guest2', deviceId: string, label: string) {
+		if (participant === 'host') {
+			this.cameraDeviceId = deviceId;
+			this.activeCameraLabel = label;
+		} else if (participant === 'guest1') {
+			this.collabCameraDeviceId = deviceId;
+			this.collabCameraLabel = label;
+		} else if (participant === 'guest2') {
+			this.collab2CameraDeviceId = deviceId;
+			this.collab2CameraLabel = label;
+		}
+		const title = participant === 'host' ? 'Host' : participant === 'guest1' ? 'Guest 1' : 'Guest 2';
+		this.showToast(`Kamera ${title}: ${label || 'Default'}`);
+		this.persist();
+	}
+
+	syncCollabLayers() {
+		const hasCollab2 = this.stageLayers.some((l) => l.id === 'layer-collab-2' || l.type === 'model-collab-2');
+		if (this.isCollab2Active && !hasCollab2) {
+			const collabIdx = this.stageLayers.findIndex((l) => l.id === 'layer-collab' || l.type === 'model-collab');
+			const insertIdx = collabIdx !== -1 ? collabIdx + 1 : 1;
+			this.stageLayers.splice(insertIdx, 0, {
+				id: 'layer-collab-2',
+				name: 'Avatar Collab (Guest 2)',
+				type: 'model-collab-2',
+				visible: true,
+				opacity: 1.0,
+				locked: false,
+				badge: 'Guest 2',
+				description: 'Avatar tamu kedua di panggung (Max 3 Streamers)'
+			});
+			this.stageLayers = [...this.stageLayers];
+		}
+	}
+
 	toggleAccessory(id: string) {
 		const acc = this.activeAccessories.find((a) => a.id === id);
 		if (acc) {
 			acc.visible = !acc.visible;
+			this.persist();
+		}
+	}
+
+	removeAccessory(id: string) {
+		const acc = this.activeAccessories.find((a) => a.id === id);
+		if (acc) {
+			acc.visible = false;
+			this.showToast(`Copot aksesoris: ${acc.name}`);
 			this.persist();
 		}
 	}
@@ -663,11 +742,39 @@ export class RiggingStore {
 		}
 	}
 
+	deleteLayer(layerId: string) {
+		const layer = this.stageLayers.find((l) => l.id === layerId);
+		if (!layer) return;
+
+		if (layer.type === 'accessories') {
+			this.activeAccessories.forEach((a) => (a.visible = false));
+			this.showToast('Semua aksesoris & props telah dicopot');
+		} else if (layer.type === 'model-collab') {
+			this.isCollabModeActive = false;
+			this.showToast('Collab Guest 1 dicopot dari panggung');
+		} else if (layer.type === 'model-collab-2') {
+			this.isCollab2Active = false;
+			this.stageLayers = this.stageLayers.filter((l) => l.id !== 'layer-collab-2');
+			this.showToast('Collab Guest 2 dicopot dari panggung');
+		} else if (layer.type === 'shader-fx') {
+			this.screenEffect = 'none';
+			this.showToast('Filter Layar (Shader) dinonaktifkan');
+		} else if (layer.type === 'background') {
+			this.backgroundStyle = 'transparent';
+			this.showToast('Background diubah ke Transparan (Alpha)');
+		} else if (layer.type === 'model-host') {
+			this.toggleLayer(layerId);
+		}
+		this.stageLayers = [...this.stageLayers];
+		this.persist();
+	}
+
 	toggleLayer(layerId: string) {
 		const layer = this.stageLayers.find((l) => l.id === layerId);
 		if (layer) {
 			layer.visible = !layer.visible;
 			if (layer.type === 'model-collab') this.collabVisible = layer.visible;
+			if (layer.type === 'model-collab-2') this.collab2Visible = layer.visible;
 			this.stageLayers = [...this.stageLayers];
 			this.showToast(`${layer.visible ? '👁️ Menampilkan' : '🙈 Menyembunyikan'} layer: ${layer.name}`);
 			this.persist();
@@ -679,6 +786,7 @@ export class RiggingStore {
 		if (layer) {
 			layer.opacity = Math.max(0, Math.min(1, opacity));
 			if (layer.type === 'model-collab') this.collabOpacity = layer.opacity;
+			if (layer.type === 'model-collab-2') this.collab2Opacity = layer.opacity;
 			this.stageLayers = [...this.stageLayers];
 			this.persist();
 		}

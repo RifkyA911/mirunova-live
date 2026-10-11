@@ -195,14 +195,44 @@ export function solveFaceLandmarks(
 	const lookDownAvg = ((blendshapesMap.get('eyeLookDownLeft') ?? 0) + (blendshapesMap.get('eyeLookDownRight') ?? 0)) / 2;
 	const eyeBallY = Math.max(-1, Math.min(1, (lookUpAvg - lookDownAvg) * 1.6));
 
-	// 3. Eyebrows (-1 to 1)
+	// 3. Eyebrows (-1 to 1) Dual-Source: High-Sensitivity Blendshapes + Geometric Landmarks Fallback
 	const browInnerUp = blendshapesMap.get('browInnerUp') ?? 0;
 	const browOuterUpL = blendshapesMap.get('browOuterUpLeft') ?? 0;
 	const browOuterUpR = blendshapesMap.get('browOuterUpRight') ?? 0;
 	const browDownL = blendshapesMap.get('browDownLeft') ?? 0;
 	const browDownR = blendshapesMap.get('browDownRight') ?? 0;
-	const browL = Math.max(-1, Math.min(1, browInnerUp * 0.6 + browOuterUpL * 0.4 - browDownL * 1.2));
-	const browR = Math.max(-1, Math.min(1, browInnerUp * 0.6 + browOuterUpR * 0.4 - browDownR * 1.2));
+
+	// Geometric Eyebrow Elevation (distance between eyebrow arch and upper eyelid)
+	let geometricBrowL = 0;
+	let geometricBrowR = 0;
+	if (landmarks && landmarks.length >= 468 && landmarks[105] && landmarks[159] && landmarks[334] && landmarks[386] && landmarks[33] && landmarks[263]) {
+		const eyeSpan = Math.hypot(landmarks[263].x - landmarks[33].x, landmarks[263].y - landmarks[33].y) || 0.25;
+		// Delta Y: landmark[159].y (upper eyelid) is lower on screen than landmark[105].y (eyebrow arch)
+		const distL = (landmarks[159].y - landmarks[105].y) / eyeSpan;
+		const distR = (landmarks[386].y - landmarks[334].y) / eyeSpan;
+
+		// Baseline neutral distance is roughly ~0.185.
+		// > 0.19 = raised (up to +1.0), < 0.17 = furrowed / lowered (down to -1.0)
+		geometricBrowL = Math.max(-1.0, Math.min(1.0, (distL - 0.185) * 14.0));
+		geometricBrowR = Math.max(-1.0, Math.min(1.0, (distR - 0.185) * 14.0));
+	}
+
+	// High Dynamic Range Blendshape Eyebrow Calculation
+	const blendBrowL = (browInnerUp * 1.6 + browOuterUpL * 1.3 - browDownL * 2.2);
+	const blendBrowR = (browInnerUp * 1.6 + browOuterUpR * 1.3 - browDownR * 2.2);
+
+	let browL = Math.abs(blendBrowL) > 0.08 ? blendBrowL : geometricBrowL;
+	let browR = Math.abs(blendBrowR) > 0.08 ? blendBrowR : geometricBrowR;
+	if (Math.abs(blendBrowL) > 0.08 && Math.abs(geometricBrowL) > 0.08) {
+		browL = (blendBrowL * 0.6 + geometricBrowL * 0.4);
+		browR = (blendBrowR * 0.6 + geometricBrowR * 0.4);
+	}
+	browL = Math.max(-1.0, Math.min(1.0, browL));
+	browR = Math.max(-1.0, Math.min(1.0, browR));
+
+	// Eyebrow Form / Angle (-1 to 1) for expressive anger or sorrow
+	const browFormL = Math.max(-1.0, Math.min(1.0, (browDownL * -1.6) + (browInnerUp * 0.9)));
+	const browFormR = Math.max(-1.0, Math.min(1.0, (browDownR * -1.6) + (browInnerUp * 0.9)));
 
 	// 4. Enhanced Mouth Expressions & Cheeks with Geometric Curvature Analysis
 	const jawOpen = blendshapesMap.get('jawOpen') ?? 0;
@@ -294,6 +324,8 @@ export function solveFaceLandmarks(
 		eyeBallY,
 		browL,
 		browR,
+		browFormL,
+		browFormR,
 		mouthOpen,
 		mouthForm,
 		mouthX,

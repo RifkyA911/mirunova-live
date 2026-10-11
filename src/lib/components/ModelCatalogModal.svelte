@@ -358,9 +358,9 @@
 		}}
 		class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150"
 	>
-		<!-- 2X WIDER CONTAINER (max-w-5xl) -->
+		<!-- EXPANSIVE WIDER CONTAINER (max-w-6xl xl:max-w-7xl) -->
 		<div
-			class="w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border transition-colors duration-200 {
+			class="w-full max-w-6xl xl:max-w-7xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border transition-colors duration-200 {
 				isLightTheme
 					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
 					: 'bg-zinc-950/98 text-zinc-100 border-zinc-800 shadow-2xl'
@@ -586,18 +586,19 @@
 											</div>
 										{/if}
 
-										<div class="flex items-start gap-3 mb-2.5">
-											<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+										<div class="flex items-start gap-3.5 mb-2.5">
+											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 												{#if model.avatarUrl}
 													<img
 														src={model.avatarUrl}
 														alt={model.name}
-														class="w-full h-full object-cover"
+														class="w-full h-full object-cover object-top"
+														style="image-rendering: -webkit-optimize-contrast;"
 														loading="lazy"
 													/>
 												{:else}
 													<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
-														<Layers class="w-6 h-6" />
+														<Layers class="w-8 h-8" />
 													</div>
 												{/if}
 											</div>
@@ -662,9 +663,9 @@
 											</div>
 										{/if}
 
-										<div class="flex items-start gap-3 mb-2.5">
-											<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												<img src={sample.avatarUrl} alt={sample.name} class="w-full h-full object-cover" loading="lazy" />
+										<div class="flex items-start gap-3.5 mb-2.5">
+											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+												<img src={sample.avatarUrl} alt={sample.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" />
 											</div>
 											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
 												<div class="flex items-center gap-1.5 mb-0.5">
@@ -736,8 +737,8 @@
 									isActive ? 'ring-2 ring-purple-500/50' : ''
 								}">
 									<div class="flex items-center gap-3.5">
-										<div class="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-800 border border-purple-500/40 shrink-0 shadow-md">
-											<img src={legend.avatarUrl} alt={legend.name} class="w-full h-full object-cover" />
+										<div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-purple-500/40 shrink-0 shadow-md">
+											<img src={legend.avatarUrl} alt={legend.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" />
 										</div>
 										<div class="space-y-1">
 											<div class="flex items-center gap-2">
@@ -892,12 +893,13 @@
 										{/if}
 
 										<div class="flex items-start gap-3.5 mb-2.5">
-											<div class="relative w-20 h-20 rounded-2xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 												{#if model.avatarUrl}
 													<img
 														src={model.avatarUrl}
 														alt={model.name}
-														class="w-full h-full object-cover"
+														class="w-full h-full object-cover object-top"
+														style="image-rendering: -webkit-optimize-contrast;"
 														loading="lazy"
 													/>
 												{/if}
@@ -1010,9 +1012,9 @@
 										{/if}
 
 										<!-- Top Row: Thumbnail + Info -->
-										<div class="flex items-start gap-3 mb-2.5">
-											<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover" loading="lazy" />
+										<div class="flex items-start gap-3.5 mb-2.5">
+											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+												<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" />
 											</div>
 											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
 												<div class="flex items-center gap-1.5 mb-0.5">
@@ -1161,18 +1163,19 @@
 									{/if}
 
 									<!-- Top Card Row: Avatar Visual Preview + Title -->
-									<div class="flex items-start gap-3 mb-2.5">
-										<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+									<div class="flex items-start gap-3.5 mb-2.5">
+										<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 											{#if model.avatarUrl}
 												<img
 													src={model.avatarUrl}
 													alt={model.name}
-													class="w-full h-full object-cover"
+													class="w-full h-full object-cover object-top"
+													style="image-rendering: -webkit-optimize-contrast;"
 													loading="lazy"
 												/>
 											{:else}
 												<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
-													<Box class="w-6 h-6" />
+													<Box class="w-8 h-8" />
 												</div>
 											{/if}
 										</div>

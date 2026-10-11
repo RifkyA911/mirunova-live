@@ -505,13 +505,13 @@
 		</div>
 	{/if}
 
-	<!-- Floating Toast Notification -->
+	<!-- Floating Toast Notification (High Contrast Ultra-Readable) -->
 	{#if rigging.toastMessage}
 		<div
-			class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2.5 px-4 py-2 bg-zinc-950/90 text-zinc-100 border border-cyan-500/40 rounded-full shadow-2xl backdrop-blur-md pointer-events-none animate-in fade-in slide-in-from-top-2 duration-200"
+			class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-2.5 bg-zinc-950 border-2 border-cyan-400 text-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.95)] backdrop-blur-xl pointer-events-none animate-in fade-in slide-in-from-top-2 duration-150"
 		>
-			<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-			<span class="text-xs font-semibold text-cyan-200 tracking-wide">{rigging.toastMessage}</span>
+			<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0 shadow-[0_0_12px_#22d3ee] animate-pulse"></span>
+			<span class="text-xs sm:text-sm font-bold text-white tracking-wide select-none drop-shadow-sm">{rigging.toastMessage}</span>
 		</div>
 	{/if}
 </main>

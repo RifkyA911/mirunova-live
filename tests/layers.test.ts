@@ -150,4 +150,54 @@ describe('Photoshop Layer Manager, Accessories & Collab System', () => {
 		rigging.resetAvatarTransform();
 		expect(rigging.resetTransformSignal).toBeGreaterThan(0);
 	});
+
+	it('should support Collab Guest 2 (Max 3 Streamers) and multi-camera routing', () => {
+		expect(rigging.isCollab2Active).toBe(false);
+
+		rigging.toggleCollab2Mode(true);
+		expect(rigging.isCollab2Active).toBe(true);
+		expect(rigging.stageLayers.some((l) => l.type === 'model-collab-2')).toBe(true);
+
+		rigging.setCollab2Model('rice', 'Rice Neko', '/models/rice/Rice.model3.json');
+		expect(rigging.collab2ModelId).toBe('rice');
+		expect(rigging.collab2ModelName).toBe('Rice Neko');
+
+		rigging.setCollabCamera('host', 'cam-host-01', 'Integrated Laptop Camera');
+		rigging.setCollabCamera('guest1', 'cam-guest1-02', 'USB 1080p Webcam');
+		rigging.setCollabCamera('guest2', 'cam-guest2-03', 'DroidCam / OBS Virtual Cam');
+
+		expect(rigging.cameraDeviceId).toBe('cam-host-01');
+		expect(rigging.activeCameraLabel).toBe('Integrated Laptop Camera');
+		expect(rigging.collabCameraDeviceId).toBe('cam-guest1-02');
+		expect(rigging.collabCameraLabel).toBe('USB 1080p Webcam');
+		expect(rigging.collab2CameraDeviceId).toBe('cam-guest2-03');
+		expect(rigging.collab2CameraLabel).toBe('DroidCam / OBS Virtual Cam');
+	});
+
+	it('should support deleting layers and removing individual accessories', () => {
+		// Accessories removal
+		const sunglasses = rigging.activeAccessories.find((a) => a.id === 'sunglasses')!;
+		sunglasses.visible = true;
+		expect(sunglasses.visible).toBe(true);
+
+		rigging.removeAccessory('sunglasses');
+		expect(sunglasses.visible).toBe(false);
+
+		// Delete Collab 2
+		rigging.toggleCollab2Mode(true);
+		expect(rigging.isCollab2Active).toBe(true);
+		rigging.deleteLayer('layer-collab-2');
+		expect(rigging.isCollab2Active).toBe(false);
+
+		// Delete Shader layer resets screenEffect
+		rigging.screenEffect = 'crt';
+		rigging.deleteLayer('layer-shader');
+		expect(rigging.screenEffect).toBe('none');
+
+		// Delete Background layer resets to transparent
+		rigging.backgroundStyle = 'mesh';
+		rigging.deleteLayer('layer-background');
+		expect(rigging.backgroundStyle).toBe('transparent');
+	});
 });
+

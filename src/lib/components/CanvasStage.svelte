@@ -13,6 +13,9 @@
 	let collabModel: any = null;
 	let currentCollabUrl = '';
 	let isCollabLoading = false;
+	let collabModel2: any = null;
+	let currentCollab2Url = '';
+	let isCollab2Loading = false;
 	let isDragging = false;
 	let dragStart = { x: 0, y: 0 };
 	let modelPosition = $state<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -68,6 +71,9 @@
 
 			if (rigging.isCollabModeActive && rigging.collabModelUrl) {
 				await loadCollabModel(rigging.collabModelUrl, Live2DModel);
+			}
+			if (rigging.isCollab2Active && rigging.collab2ModelUrl) {
+				await loadCollab2Model(rigging.collab2ModelUrl, Live2DModel);
 			}
 		} catch (err) {
 			console.error('Failed to initialize Live2D stage:', err);
@@ -449,6 +455,93 @@
 		collabModel.alpha = (rigging.collabVisible && isLayerVisible) ? ((rigging.collabOpacity ?? 1.0) * layerOpacity) : 0;
 	}
 
+	async function loadCollab2Model(url: string, Live2DModelClass?: any) {
+		if (!app) return;
+		try {
+			isCollab2Loading = true;
+			if (collabModel2) {
+				if (collabModel2.destroy) collabModel2.destroy();
+				if (collabModel2.container) app.stage.removeChild(collabModel2.container);
+				else app.stage.removeChild(collabModel2);
+				collabModel2 = null;
+			}
+			if (!url || !rigging.isCollab2Active) return;
+
+			const Live2D = Live2DModelClass || (await import('pixi-live2d-display/cubism4')).Live2DModel;
+			const model = await Live2D.from(url, {
+				autoInteract: false
+			});
+
+			collabModel2 = model;
+			model.anchor.set(0.5, 0.5);
+			currentCollab2Url = url;
+
+			app.stage.addChild(model);
+			updateCollab2Transform();
+			updateLayerZIndices();
+
+			if (model.internalModel) {
+				model.internalModel.on('beforeModelUpdate', () => {
+					const core = model.internalModel?.coreModel;
+					if (!core) return;
+					const now = performance.now();
+
+					if (rigging.collab2SyncTracking) {
+						for (const param of rigging.parameters) {
+							try {
+								const val = rigging.getActiveValue(param.id);
+								core.setParameterValueById(param.id, val);
+							} catch {}
+						}
+					} else {
+						// Gentle idle breathing and natural head sway for guest 2 avatar
+						const breath = (Math.sin(now * 0.0035 + 1.2) + 1) / 2;
+						const sway = Math.sin(now * 0.002 + 1.0) * 3.5;
+						try {
+							core.setParameterValueById('ParamBreath', breath);
+							core.setParameterValueById('ParamAngleX', sway);
+							core.setParameterValueById('ParamAngleZ', sway * 0.5);
+						} catch {}
+					}
+				});
+			}
+		} catch (err) {
+			console.warn('Failed to load collab 2 partner model:', err);
+		} finally {
+			isCollab2Loading = false;
+		}
+	}
+
+	function updateCollab2Transform() {
+		if (!collabModel2 || !app) return;
+		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+
+		const baseScale = Math.min(rendererWidth / (collabModel2.width || 800), rendererHeight / (collabModel2.height || 1000)) * 0.65;
+		const effectiveScale = baseScale * (rigging.collab2Scale || 1.0);
+		collabModel2.scale.set(effectiveScale);
+
+		let posX = rendererWidth * 0.28;
+		let posY = rendererHeight / 2 + 50;
+
+		if (rigging.collab2Position === 'right') {
+			posX = rendererWidth * 0.72;
+		} else if (rigging.collab2Position === 'center') {
+			posX = rendererWidth * 0.5;
+		} else if (rigging.collab2Position === 'pip') {
+			posX = rendererWidth * 0.18;
+			posY = rendererHeight * 0.28;
+			collabModel2.scale.set(effectiveScale * 0.55);
+		}
+
+		collabModel2.position.set(posX + (rigging.collab2OffsetX || 0), posY + (rigging.collab2OffsetY || 0));
+
+		const collab2Layer = rigging.stageLayers.find((l) => l.type === 'model-collab-2' || l.id === 'layer-collab-2');
+		const isLayerVisible = collab2Layer ? collab2Layer.visible : true;
+		const layerOpacity = collab2Layer ? collab2Layer.opacity : 1.0;
+		collabModel2.alpha = (rigging.collab2Visible && isLayerVisible) ? ((rigging.collab2Opacity ?? 1.0) * layerOpacity) : 0;
+	}
+
 	function updateLayerZIndices() {
 		if (!app) return;
 		const layers = rigging.stageLayers;
@@ -459,11 +552,13 @@
 				currentModel.zIndex = pixiZ;
 			} else if (layer.type === 'model-collab' && collabModel) {
 				collabModel.zIndex = pixiZ;
+			} else if ((layer.type === 'model-collab-2' || layer.id === 'layer-collab-2') && collabModel2) {
+				collabModel2.zIndex = pixiZ;
 			}
 		});
 	}
 
-	// Reactively manage Collab Model loading, visibility & transform
+	// Reactively manage Collab Model 1 loading, visibility & transform
 	$effect(() => {
 		const active = rigging.isCollabModeActive;
 		const url = rigging.collabModelUrl;
@@ -487,6 +582,35 @@
 				collabModel.visible = Boolean(rigging.collabVisible && isLayerVisible && layerOpacity > 0);
 				collabModel.alpha = collabModel.visible ? ((rigging.collabOpacity ?? 1.0) * layerOpacity) : 0;
 				updateCollabTransform();
+			}
+			updateLayerZIndices();
+		}
+	});
+
+	// Reactively manage Collab Model 2 loading, visibility & transform
+	$effect(() => {
+		const active = rigging.isCollab2Active;
+		const url = rigging.collab2ModelUrl;
+		const pos = rigging.collab2Position;
+		const scale = rigging.collab2Scale;
+		const offX = rigging.collab2OffsetX;
+		const offY = rigging.collab2OffsetY;
+		const opacity = rigging.collab2Opacity;
+		const vis = rigging.collab2Visible;
+		const layers = rigging.stageLayers;
+
+		if (app) {
+			if (active && url && (currentCollab2Url !== url || !collabModel2)) {
+				loadCollab2Model(url);
+			} else if (!active && collabModel2) {
+				collabModel2.visible = false;
+			} else if (active && collabModel2) {
+				const collab2Layer = rigging.stageLayers.find((l) => l.type === 'model-collab-2' || l.id === 'layer-collab-2');
+				const isLayerVisible = collab2Layer ? collab2Layer.visible : true;
+				const layerOpacity = collab2Layer ? collab2Layer.opacity : 1.0;
+				collabModel2.visible = Boolean(rigging.collab2Visible && isLayerVisible && layerOpacity > 0);
+				collabModel2.alpha = collabModel2.visible ? ((rigging.collab2Opacity ?? 1.0) * layerOpacity) : 0;
+				updateCollab2Transform();
 			}
 			updateLayerZIndices();
 		}
@@ -847,6 +971,10 @@
 		if (collabModel?.destroy) {
 			collabModel.destroy();
 			collabModel = null;
+		}
+		if (collabModel2?.destroy) {
+			collabModel2.destroy();
+			collabModel2 = null;
 		}
 		if (app) {
 			app.destroy(true, { children: true, texture: true, baseTexture: true });

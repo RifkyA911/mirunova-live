@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.20.0] - 2026-10-11
+
+### Added & Enhanced
+- **Multi-Camera Collab Studio for Up to 3 Streamers (`riggingStore.svelte.ts` & `CanvasStage.svelte`):**
+  - Expanded Collab streaming engine to support up to 3 live avatars simultaneously (Host + Guest 1 + Guest 2).
+  - Multi-camera device routing: Host, Guest 1, and Guest 2 can each bind to separate physical or virtual webcams (USB cam, integrated webcam, OBS Virtual Camera, DroidCam).
+  - Added dedicated Guest 2 Live2D model instance with reactive transforms (left, center, right, pip), scale, custom offset X/Y, visibility, and alpha opacity controls.
+  - Independent model selection and synchronized tracking toggles for all participants.
+- **Flat Photoshop-Style Layer Manager & Widened Sticky Sidebar (`LayerManagerModal.svelte`):**
+  - Completely flattened layer structure by eliminating nested sub-lists; all scene elements (host avatar, collab partners, active wearable props, background, shaders) are now treated as top-level first-class layers.
+  - Added instant Delete button (`Trash2`) on every deletable layer row (collab partners and individual active accessories).
+  - Widened sticky dock from 384px to 520px (`min(520px, 95vw)`) with full viewport height (`100vh`) for spacious, unconstrained slider control and hardware device names.
+  - Direct opacity binding: range sliders reliably control element transparency across Pixi avatar alpha, CSS style opacity, and background layers.
+- **Broadcast-Grade OBS Studio Command Center (`ObsModal.svelte`):**
+  - Complete architectural overhaul into a professional streaming command center.
+  - 5 resolution & streaming profiles: 1080p60 FHD, 1440p60 QHD, 4K60 UHD, Vertical 9:16 TikTok Live, 720p60 HD.
+  - Live Browser Source URL generator with 1-click copy and sound feedback.
+  - Pipeline toggle between native transparent alpha and chroma key green (#00FF00).
+  - 1-click Custom CSS snippet generator for OBS Studio browser source setup.
+  - Illustrated 4-step OBS setup walkthrough and real-time studio diagnostics HUD.
+- **Model Catalog Thumbnail Quality & Modal Expansion (`ModelCatalogModal.svelte`):**
+  - Enlarged thumbnail previews across all 6 catalog sections from `w-16`/`w-20` to `w-24 h-24 sm:w-28 sm:h-28 rounded-2xl` with contrast-optimized crisp rendering (`image-rendering: -webkit-optimize-contrast`).
+  - Widened catalog dialog container to `max-w-6xl xl:max-w-7xl` for high-resolution visual previews.
+- **Dual-Source Eyebrow Tracking (`solver.ts` & `tracker.ts`):**
+  - Upgraded eyebrow solver to dual-source estimation: combines MediaPipe blendshape signals with geometric eye-to-eyebrow vertical displacement normalized by inter-pupillary distance.
+  - Enabled expressive sorrow and anger eyebrow deformation via `browFormL` and `browFormR`.
+- **High-Contrast Toast Notifications (`+page.svelte`):**
+  - Upgraded floating toast styling to high-contrast opaque `bg-zinc-950 border-2 border-cyan-400 text-white shadow-[0_12px_40px_rgba(0,0,0,0.95)]` with bold typography and glowing status indicator.
+
+---
+
 ## [0.19.0] - 2026-10-11
 
 ### Fixed & Enhanced

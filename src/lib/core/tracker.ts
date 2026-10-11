@@ -740,6 +740,10 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamEyeBallY', globalSmoother.smooth('ParamEyeBallY', solved.eyeBallY, 'generic'));
 					rigging.setLiveValue('ParamBrowLY', globalSmoother.smooth('ParamBrowLY', browTargetL, 'generic'));
 					rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', browTargetR, 'generic'));
+					rigging.setLiveValue('ParamBrowLForm', globalSmoother.smooth('ParamBrowLForm', solved.browFormL ?? 0, 'generic'));
+					rigging.setLiveValue('ParamBrowRForm', globalSmoother.smooth('ParamBrowRForm', solved.browFormR ?? 0, 'generic'));
+					rigging.setLiveValue('ParamBrowLAngle', globalSmoother.smooth('ParamBrowLAngle', browTargetL * 0.75, 'generic'));
+					rigging.setLiveValue('ParamBrowRAngle', globalSmoother.smooth('ParamBrowRAngle', browTargetR * 0.75, 'generic'));
 					rigging.setLiveValue('ParamMouthOpenY', globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen, 'mouth'));
 					rigging.setLiveValue('ParamMouthForm', globalSmoother.smooth('ParamMouthForm', solved.mouthForm, 'mouth'));
 					rigging.setLiveValue('ParamMouthX', globalSmoother.smooth('ParamMouthX', solved.mouthX, 'mouth'));
