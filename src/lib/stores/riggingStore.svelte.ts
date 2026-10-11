@@ -738,6 +738,40 @@ export class RiggingStore {
 		const acc = this.activeAccessories.find((a) => a.id === id);
 		if (acc) {
 			Object.assign(acc, partial);
+			this.activeAccessories = [...this.activeAccessories];
+			this.persist();
+		}
+	}
+
+	addCustomAccessory(name: string, imageUrl: string, attachTo: AccessoryItem['attachTo'] = 'head') {
+		const newId = `custom-prop-${Date.now()}`;
+		const newProp: AccessoryItem = {
+			id: newId,
+			name: name || 'Custom Prop',
+			category: 'prop',
+			icon: 'Sparkles',
+			emoji: '🖼️',
+			visible: true,
+			scale: 1.0,
+			offsetX: 0,
+			offsetY: attachTo === 'head' ? -180 : 0,
+			rotation: 0,
+			opacity: 1.0,
+			imageUrl,
+			attachTo
+		};
+		this.activeAccessories = [newProp, ...this.activeAccessories];
+		this.setCursorToolMode('select-layer');
+		this.selectLayerElement(newId);
+		this.showToast(`✓ Prop "${newProp.name}" berhasil dipasang!`);
+		this.persist();
+	}
+
+	setAccessoryAttachTo(id: string, attachTo: AccessoryItem['attachTo']) {
+		const acc = this.activeAccessories.find((a) => a.id === id);
+		if (acc) {
+			acc.attachTo = attachTo;
+			this.activeAccessories = [...this.activeAccessories];
 			this.persist();
 		}
 	}

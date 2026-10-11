@@ -4,6 +4,7 @@
 	import { tracker } from '#lib/core/tracker';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import { MODEL_CATALOG, MODEL_3D_CATALOG } from '#lib/data/models';
+	import type { AccessoryItem } from '#lib/types/tracking';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import {
@@ -37,11 +38,15 @@
 		Trash2,
 		Camera,
 		Video,
-		RefreshCw
+		RefreshCw,
+		Upload,
+		Image,
+		ChevronDown,
+		ChevronUp,
+		Sliders
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
-	let activeSubTab = $state<'layers' | 'accessories' | 'collab'>('layers');
 	let isDraggingWindow = $state<boolean>(false);
 	let windowDragOffset = { x: 0, y: 0 };
 	let isResizingWindow = $state<boolean>(false);
@@ -49,6 +54,16 @@
 	let draggedLayerIdx = $state<number | null>(null);
 	let dragOverIdx = $state<number | null>(null);
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
+
+	// Collapsible quick drawer states
+	let isAddPropDrawerOpen = $state<boolean>(false);
+	let isCollabDrawerOpen = $state<boolean>(false);
+
+	// Custom Prop Upload states
+	let customPropName = $state<string>('');
+	let customPropImageUrl = $state<string>('');
+	let customPropAttachTo = $state<'head' | 'body' | 'screen'>('head');
+	let customPropFileInput = $state<HTMLInputElement>();
 
 	onMount(async () => {
 		try {
@@ -207,8 +222,8 @@
 			const maxH = typeof window !== 'undefined' ? window.innerHeight : 1080;
 			const dw = ev.clientX - resizeStart.x;
 			const dh = ev.clientY - resizeStart.y;
-			rigging.layerWindowWidth = Math.max(340, Math.min(maxW - 40, resizeStart.w + dw));
-			rigging.layerWindowHeight = Math.max(260, Math.min(maxH - 40, resizeStart.h + dh));
+			rigging.layerWindowWidth = Math.max(380, Math.min(maxW - 40, resizeStart.w + dw));
+			rigging.layerWindowHeight = Math.max(280, Math.min(maxH - 40, resizeStart.h + dh));
 		};
 
 		const onResizeUp = (ev: PointerEvent) => {
@@ -255,6 +270,37 @@
 		draggedLayerIdx = null;
 		dragOverIdx = null;
 	}
+
+	function handleCustomPropFileUpload(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (ev) => {
+			if (ev.target?.result) {
+				customPropImageUrl = ev.target.result as string;
+				if (!customPropName.trim()) {
+					customPropName = file.name.replace(/\.[^/.]+$/, '');
+				}
+				playSfx('toggle');
+			}
+		};
+		reader.readAsDataURL(file);
+	}
+
+	function handleAddCustomPropSubmit() {
+		if (!customPropImageUrl) {
+			rigging.showToast('Pilih gambar prop terlebih dahulu');
+			return;
+		}
+		const name = customPropName.trim() || 'Custom Prop';
+		playSfx('success');
+		rigging.addCustomAccessory(name, customPropImageUrl, customPropAttachTo);
+		customPropImageUrl = '';
+		customPropName = '';
+		isAddPropDrawerOpen = false;
+	}
 </script>
 
 {#if rigging.isLayerManagerOpen}
@@ -269,15 +315,15 @@
 		} {
 			rigging.layerManagerViewMode === 'windowed'
 				? 'fixed rounded-3xl'
-				: 'fixed top-0 right-0 h-screen w-[520px] max-w-[95vw] rounded-l-3xl rounded-r-none border-r-0 border-y-0'
+				: 'fixed top-0 right-0 h-screen w-[540px] max-w-[95vw] rounded-l-3xl rounded-r-none border-r-0 border-y-0'
 		} {
 			isLightTheme
-				? 'bg-white/95 text-zinc-900 border-zinc-200/90 shadow-xl'
-				: 'bg-zinc-950/95 text-zinc-100 border-zinc-800/90 shadow-2xl shadow-cyan-950/20'
+				? 'bg-white/98 text-zinc-900 border-zinc-200/90 shadow-xl'
+				: 'bg-zinc-950/98 text-zinc-100 border-zinc-800/90 shadow-2xl shadow-cyan-950/20'
 		}"
 		style={rigging.layerManagerViewMode === 'windowed'
-			? `left: ${rigging.layerWindowX}px; top: ${rigging.layerWindowY}px; width: ${rigging.layerWindowWidth}px; height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`}; min-width: 340px; min-height: 240px; max-width: 95vw; max-height: 95vh;`
-			: `width: min(520px, 95vw); height: 100vh;`}
+			? `left: ${rigging.layerWindowX}px; top: ${rigging.layerWindowY}px; width: ${rigging.layerWindowWidth}px; height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`}; min-width: 380px; min-height: 280px; max-width: 95vw; max-height: 95vh;`
+			: `width: min(540px, 95vw); height: 100vh;`}
 	>
 		<!-- Window Header (Drag Handle in Windowed mode) -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -299,16 +345,16 @@
 							Layer Manager
 						</h2>
 						<span class="text-[9px] px-1.5 py-0.2 rounded-full font-mono bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shrink-0">
-							{rigging.stageLayers.length}
+							{rigging.stageLayers.length} Layer
 						</span>
-						{#if rigging.selectedLayerElementId}
-							<span class="text-[9px] px-1.5 py-0.2 rounded-full font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 shrink-0 truncate max-w-[90px]">
-								{rigging.selectedLayerElementId}
+						{#if activeAccCount > 0}
+							<span class="text-[9px] px-1.5 py-0.2 rounded-full font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 shrink-0">
+								{activeAccCount} Props
 							</span>
 						{/if}
 					</div>
 					<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} truncate">
-						{rigging.layerManagerViewMode === 'windowed' ? 'Drag header untuk geser • Tarik sudut untuk resize' : 'Mode Sticky (Full Height Sisi Kanan)'}
+						{rigging.layerManagerViewMode === 'windowed' ? 'Drag header untuk geser • Sudut kanan bawah untuk resize' : 'Mode Sticky (Full Height Sisi Kanan)'}
 					</p>
 				</div>
 			</div>
@@ -363,251 +409,520 @@
 		</div>
 
 		{#if !rigging.isLayerMinimized}
-			<!-- Navigation Tabs Bar -->
-			<div class="px-4 pt-1.5 border-b flex items-center gap-1 shrink-0 {
-				isLightTheme ? 'bg-zinc-100/60 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800/60'
+			<!-- Quick Actions Toolbar: Add Props & Collab Studio (Unified, No Redundant Tabs) -->
+			<div class="px-3.5 py-2 border-b flex items-center gap-2 shrink-0 {
+				isLightTheme ? 'bg-zinc-100/70 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800/60'
 			}">
+				<!-- Button: Upload / Add Prop Drawer Toggle -->
 				<button
 					type="button"
 					onclick={() => {
 						playSfx('click');
-						activeSubTab = 'layers';
+						isAddPropDrawerOpen = !isAddPropDrawerOpen;
+						if (isAddPropDrawerOpen) isCollabDrawerOpen = false;
 					}}
-					class="py-2 px-2.5 border-b-2 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer {
-						activeSubTab === 'layers'
-							? 'border-cyan-500 text-cyan-500 font-bold'
-							: isLightTheme ? 'border-transparent text-zinc-500 hover:text-zinc-800' : 'border-transparent text-zinc-400 hover:text-zinc-200'
-					}"
-				>
-					<Layers class="w-3.5 h-3.5" />
-					<span>Layers</span>
-				</button>
-
-				<button
-					type="button"
-					onclick={() => {
-						playSfx('click');
-						activeSubTab = 'accessories';
-					}}
-					class="py-2 px-2.5 border-b-2 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer {
-						activeSubTab === 'accessories'
-							? 'border-amber-500 text-amber-500 font-bold'
-							: isLightTheme ? 'border-transparent text-zinc-500 hover:text-zinc-800' : 'border-transparent text-zinc-400 hover:text-zinc-200'
+					class="flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border {
+						isAddPropDrawerOpen
+							? 'bg-amber-500 text-zinc-950 border-amber-400 shadow-sm'
+							: 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
 					}"
 				>
 					<Sparkles class="w-3.5 h-3.5" />
-					<span>Props ({activeAccCount})</span>
+					<span>+ Upload / Pasang Prop</span>
+					{#if isAddPropDrawerOpen}
+						<ChevronUp class="w-3 h-3" />
+					{:else}
+						<ChevronDown class="w-3 h-3 opacity-60" />
+					{/if}
 				</button>
 
+				<!-- Button: Collab Studio Drawer Toggle -->
 				<button
 					type="button"
 					onclick={() => {
 						playSfx('click');
-						activeSubTab = 'collab';
+						isCollabDrawerOpen = !isCollabDrawerOpen;
+						if (isCollabDrawerOpen) isAddPropDrawerOpen = false;
 					}}
-					class="py-2 px-2.5 border-b-2 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer {
-						activeSubTab === 'collab'
-							? 'border-purple-500 text-purple-500 font-bold'
-							: isLightTheme ? 'border-transparent text-zinc-500 hover:text-zinc-800' : 'border-transparent text-zinc-400 hover:text-zinc-200'
+					class="flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border {
+						isCollabDrawerOpen
+							? 'bg-purple-600 text-white border-purple-500 shadow-sm'
+							: 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30'
 					}"
 				>
 					<Users class="w-3.5 h-3.5" />
-					<span>Collab</span>
-					{#if rigging.isCollabModeActive}
+					<span>Collab Studio (3 Ppl)</span>
+					{#if rigging.isCollabModeActive || rigging.isCollab2Active}
 						<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+					{/if}
+					{#if isCollabDrawerOpen}
+						<ChevronUp class="w-3 h-3" />
+					{:else}
+						<ChevronDown class="w-3 h-3 opacity-60" />
 					{/if}
 				</button>
 			</div>
 
-			<!-- Tab Body Content -->
-			<div class="p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar flex-1 min-h-0">
-				<!-- TAB 1: LAYERS WITH CLEAN DRAG-HANDLE DND (NO SLIDER CONFLICT) -->
-				{#if activeSubTab === 'layers'}
-					<div class="space-y-2">
-						<div class="flex items-center justify-between text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-							<span>Tarik ikon grip untuk atur urutan Z-Index:</span>
-							<span class="font-mono text-[10px]">Atas = Paling Depan</span>
+			<!-- Collapsible Drawer 1: Upload / Add Prop -->
+			{#if isAddPropDrawerOpen}
+				<div class="p-3.5 border-b bg-amber-950/15 border-amber-500/30 space-y-3 shrink-0 animate-in fade-in duration-150">
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+							<Upload class="w-3.5 h-3.5" />
+							Upload Custom Prop / Aksesoris Gambar
+						</span>
+						<span class="text-[10px] text-zinc-400">PNG, WebP, SVG, GIF, JPEG</span>
+					</div>
+
+					<!-- Custom Prop Upload Row -->
+					<div class="p-3 rounded-2xl border space-y-2.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900/80 border-zinc-800'}">
+						<div class="flex items-center gap-3">
+							<!-- Image Preview or Upload Trigger Box -->
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<div
+								onclick={() => customPropFileInput?.click()}
+								class="w-14 h-14 rounded-xl border-2 border-dashed border-amber-500/40 hover:border-amber-400 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden shrink-0 {
+									isLightTheme ? 'bg-zinc-50' : 'bg-zinc-950'
+								}"
+								title="Pilih gambar dari komputer"
+							>
+								{#if customPropImageUrl}
+									<img src={customPropImageUrl} alt="Preview" class="w-full h-full object-contain p-1" />
+								{:else}
+									<Image class="w-5 h-5 text-amber-400/80 mb-0.5" />
+									<span class="text-[8px] font-bold text-amber-300">PILIH</span>
+								{/if}
+							</div>
+							<input
+								bind:this={customPropFileInput}
+								type="file"
+								accept="image/*"
+								onchange={handleCustomPropFileUpload}
+								class="hidden"
+							/>
+
+							<!-- Name and Attachment Options -->
+							<div class="flex-1 space-y-1.5 min-w-0">
+								<input
+									type="text"
+									bind:value={customPropName}
+									placeholder="Nama aksesoris / prop..."
+									class="w-full px-2.5 py-1 rounded-xl text-xs border {
+										isLightTheme
+											? 'bg-white border-zinc-300 text-zinc-900'
+											: 'bg-zinc-950 border-zinc-700 text-zinc-200 focus:border-amber-400'
+									}"
+								/>
+
+								<!-- Body Attachment Selector -->
+								<div class="flex items-center gap-1 text-[10px]">
+									<span class="text-zinc-400 mr-1 shrink-0">Tempel di:</span>
+									<button
+										type="button"
+										onclick={() => (customPropAttachTo = 'head')}
+										class="px-2 py-0.5 rounded-lg border font-semibold transition-all cursor-pointer {
+											customPropAttachTo === 'head'
+												? 'bg-amber-500 text-zinc-950 border-amber-400 font-bold'
+												: 'bg-zinc-800 text-zinc-300 border-zinc-700'
+										}"
+									>
+										Kepala (Head)
+									</button>
+									<button
+										type="button"
+										onclick={() => (customPropAttachTo = 'body')}
+										class="px-2 py-0.5 rounded-lg border font-semibold transition-all cursor-pointer {
+											customPropAttachTo === 'body'
+												? 'bg-amber-500 text-zinc-950 border-amber-400 font-bold'
+												: 'bg-zinc-800 text-zinc-300 border-zinc-700'
+										}"
+									>
+										Badan (Body)
+									</button>
+									<button
+										type="button"
+										onclick={() => (customPropAttachTo = 'screen')}
+										class="px-2 py-0.5 rounded-lg border font-semibold transition-all cursor-pointer {
+											customPropAttachTo === 'screen'
+												? 'bg-amber-500 text-zinc-950 border-amber-400 font-bold'
+												: 'bg-zinc-800 text-zinc-300 border-zinc-700'
+										}"
+									>
+										Layar (HUD)
+									</button>
+								</div>
+							</div>
 						</div>
 
-						<div class="space-y-1.5">
-							{#each rigging.stageLayers as layer, idx (layer.id)}
-								{@const thumb = getLayerThumbnail(layer.type)}
-								{@const ThumbIcon = thumb.icon}
-								{@const isSelected = rigging.selectedLayerElementId === layer.id ||
-									(rigging.selectedLayerElementId === 'host' && layer.type === 'model-host') ||
-									(rigging.selectedLayerElementId === 'collab' && layer.type === 'model-collab')}
-								<!-- Row is drop target only, not whole-draggable -->
-								<!-- svelte-ignore a11y_no_static_element_interactions -->
-								<div
-									role="listitem"
-									ondragover={(e) => onLayerDragOver(idx, e)}
-									ondrop={(e) => onLayerDrop(idx, e)}
-									class="p-2.5 rounded-2xl border transition-all duration-150 flex items-center justify-between gap-2.5 {
-										dragOverIdx === idx ? 'border-cyan-400 ring-2 ring-cyan-500/40' : ''
-									} {
-										isSelected
-											? 'border-cyan-500/70 bg-cyan-500/10 ring-1 ring-cyan-500/40 shadow-sm'
-											: layer.visible
-												? isLightTheme
-													? 'bg-white border-zinc-200 shadow-xs hover:border-zinc-300'
-													: 'bg-zinc-900/60 border-zinc-800 shadow-xs hover:border-zinc-700'
-												: 'opacity-50 bg-zinc-950/40 border-dashed border-zinc-800'
+						<div class="flex items-center justify-end gap-2 pt-1">
+							<button
+								type="button"
+								onclick={handleAddCustomPropSubmit}
+								class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+							>
+								<Check class="w-3.5 h-3.5" />
+								<span>Pasang ke Panggung</span>
+							</button>
+						</div>
+					</div>
+
+					<!-- Quick Preset Props Selection -->
+					<div class="space-y-1.5 pt-1">
+						<span class="text-[11px] font-bold text-zinc-400 block">
+							Atau Pilih Preset Cepat:
+						</span>
+						<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+							{#each rigging.activeAccessories.slice(0, 10) as item}
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('toggle');
+										rigging.toggleAccessory(item.id);
+									}}
+									class="p-1.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 {
+										item.visible
+											? 'border-amber-400 bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/50 font-bold'
+											: isLightTheme
+												? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+												: 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+									title={item.name}
+								>
+									<span class="text-base">{item.emoji}</span>
+									<span class="text-[9px] truncate max-w-full block">{item.name.split(' ')[0]}</span>
+								</button>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Collapsible Drawer 2: Collab Studio Multi-Camera Setup -->
+			{#if isCollabDrawerOpen}
+				<div class="p-3.5 border-b bg-purple-950/15 border-purple-500/30 space-y-3 shrink-0 animate-in fade-in duration-150">
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+							<Users class="w-3.5 h-3.5" />
+							Studio Collab Multi-Camera (Maks 3 Orang)
+						</span>
+						<button
+							type="button"
+							onclick={refreshCameraList}
+							class="text-[10px] text-purple-300 hover:text-purple-200 flex items-center gap-1 cursor-pointer"
+						>
+							<RefreshCw class="w-3 h-3" />
+							<span>Pindai Kamera</span>
+						</button>
+					</div>
+
+					<!-- Streamer 2 (Collab Guest 1) Setup -->
+					<div class="p-3 rounded-2xl border space-y-2 {
+						rigging.isCollabModeActive
+							? 'bg-purple-950/30 border-purple-500/40'
+							: isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+					}">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
+								<span class="w-2 h-2 rounded-full {rigging.isCollabModeActive ? 'bg-purple-400 shadow-[0_0_8px_#c084fc]' : 'bg-zinc-600'}"></span>
+								<span class="text-xs font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Guest 1: {rigging.collabModelName}</span>
+							</div>
+							<button
+								type="button"
+								onclick={() => rigging.toggleCollabMode()}
+								class="px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer {
+									rigging.isCollabModeActive
+										? 'bg-purple-600 text-white'
+										: 'bg-zinc-800 text-zinc-300'
+								}"
+							>
+								{rigging.isCollabModeActive ? '✓ Aktif' : '+ Aktifkan'}
+							</button>
+						</div>
+
+						{#if rigging.isCollabModeActive}
+							<div class="space-y-1.5 pt-1 text-[10px]">
+								<select
+									value={rigging.collabCameraDeviceId}
+									onchange={(e) => {
+										const sel = e.target as HTMLSelectElement;
+										const opt = sel.options[sel.selectedIndex];
+										rigging.setCollabCamera('guest1', sel.value, opt?.text || '');
+									}}
+									class="w-full px-2 py-1 rounded-xl border {
+										isLightTheme ? 'bg-white border-zinc-300 text-zinc-800' : 'bg-zinc-950 border-zinc-700 text-zinc-200'
 									}"
 								>
-									<!-- Left: Drag Grip Handle (ONLY draggable item) & Thumbnail & Meta -->
-									<div class="flex items-center gap-2 truncate flex-1">
-										<!-- Dedicated Drag Grip Handle -->
-										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										<div
-											role="button"
-											tabindex="0"
-											draggable={!layer.locked}
-											ondragstart={(e) => onLayerDragStart(idx, e)}
-											ondragend={onLayerDragEnd}
-											title={layer.locked ? 'Layer terkunci' : 'Tarik ikon ini untuk atur urutan'}
-											class="p-1 text-zinc-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing shrink-0 select-none {
-												layer.locked ? 'opacity-30 cursor-not-allowed' : ''
-											}"
-										>
-											<GripVertical class="w-3.5 h-3.5" />
-										</div>
+									<option value="">Pilih Kamera Mandiri Guest 1...</option>
+									{#each availableCameras as cam}
+										<option value={cam.deviceId}>{cam.label || `Webcam (${cam.deviceId.slice(0, 8)})`}</option>
+									{/each}
+								</select>
+							</div>
+						{/if}
+					</div>
 
-										<!-- Live Thumbnail -->
-										<div
-											class="w-9 h-9 rounded-xl border overflow-hidden shrink-0 relative flex items-center justify-center shadow-inner {thumb.bgClass}"
-											style={thumb.style || ''}
-										>
-											{#if thumb.avatarUrl}
-												<img
-													src={thumb.avatarUrl}
-													alt={layer.name}
-													class="w-full h-full object-cover object-top"
-												/>
-											{:else if ThumbIcon}
-												<ThumbIcon class="w-4 h-4 opacity-75" />
-											{/if}
-										</div>
+					<!-- Streamer 3 (Collab Guest 2) Setup -->
+					<div class="p-3 rounded-2xl border space-y-2 {
+						rigging.isCollab2Active
+							? 'bg-indigo-950/30 border-indigo-500/40'
+							: isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+					}">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
+								<span class="w-2 h-2 rounded-full {rigging.isCollab2Active ? 'bg-indigo-400 shadow-[0_0_8px_#818cf8]' : 'bg-zinc-600'}"></span>
+								<span class="text-xs font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Guest 2: {rigging.collab2ModelName}</span>
+							</div>
+							<button
+								type="button"
+								onclick={() => rigging.toggleCollab2Mode()}
+								class="px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer {
+									rigging.isCollab2Active
+										? 'bg-indigo-600 text-white'
+										: 'bg-zinc-800 text-zinc-300'
+								}"
+							>
+								{rigging.isCollab2Active ? '✓ Aktif' : '+ Aktifkan'}
+							</button>
+						</div>
 
-										<!-- Clickable text to select layer -->
-										<!-- svelte-ignore a11y_click_events_have_key_events -->
-										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										<div
-											onclick={() => {
-												playSfx('click');
-												if (layer.type === 'model-host') rigging.selectLayerElement('host');
-												else if (layer.type === 'model-collab') rigging.selectLayerElement('collab');
-												else rigging.selectLayerElement(layer.id);
-											}}
-											class="truncate cursor-pointer flex-1"
-										>
-											<div class="flex items-center gap-1.5 truncate">
-												<span class="text-xs font-bold truncate {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-													{layer.name}
-												</span>
-												<span class="text-[8px] px-1 py-0.2 rounded font-mono font-semibold bg-zinc-800 text-zinc-300 shrink-0">
-													{layer.badge}
-												</span>
-											</div>
-											<div class="text-[9px] text-zinc-400 font-mono">
-												Opacity: {Math.round(layer.opacity * 100)}%
-											</div>
-										</div>
+						{#if rigging.isCollab2Active}
+							<div class="space-y-1.5 pt-1 text-[10px]">
+								<select
+									value={rigging.collab2CameraDeviceId}
+									onchange={(e) => {
+										const sel = e.target as HTMLSelectElement;
+										const opt = sel.options[sel.selectedIndex];
+										rigging.setCollabCamera('guest2', sel.value, opt?.text || '');
+									}}
+									class="w-full px-2 py-1 rounded-xl border {
+										isLightTheme ? 'bg-white border-zinc-300 text-zinc-800' : 'bg-zinc-950 border-zinc-700 text-zinc-200'
+									}"
+								>
+									<option value="">Pilih Kamera Mandiri Guest 2...</option>
+									{#each availableCameras as cam}
+										<option value={cam.deviceId}>{cam.label || `Webcam (${cam.deviceId.slice(0, 8)})`}</option>
+									{/each}
+								</select>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
+			<!-- UNIFIED LAYER STACK (Core View: Photoshop Style) -->
+			<div class="p-3.5 overflow-y-auto space-y-2 custom-scrollbar flex-1 min-h-0">
+				<div class="flex items-center justify-between text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+					<span>Urutan Layer Panggung:</span>
+					<span class="font-mono text-[10px]">Atas = Paling Depan (Z-Index Tertinggi)</span>
+				</div>
+
+				<div class="space-y-2">
+					{#each rigging.stageLayers as layer, idx (layer.id)}
+						{@const thumb = getLayerThumbnail(layer.type)}
+						{@const ThumbIcon = thumb.icon}
+						{@const isSelected = rigging.selectedLayerElementId === layer.id ||
+							(rigging.selectedLayerElementId === 'host' && layer.type === 'model-host') ||
+							(rigging.selectedLayerElementId === 'collab' && layer.type === 'model-collab') ||
+							(rigging.selectedLayerElementId === 'collab-2' && layer.type === 'model-collab-2')}
+						<!-- Row is drop target only, not whole-draggable -->
+						<!-- svelte-ignore a11y_no_static_element_interactions -->
+						<div
+							role="listitem"
+							ondragover={(e) => onLayerDragOver(idx, e)}
+							ondrop={(e) => onLayerDrop(idx, e)}
+							class="p-2.5 rounded-2xl border transition-all duration-150 flex flex-col gap-2 {
+								dragOverIdx === idx ? 'border-cyan-400 ring-2 ring-cyan-500/40' : ''
+							} {
+								isSelected
+									? 'border-cyan-500/70 bg-cyan-500/10 ring-1 ring-cyan-500/40 shadow-sm'
+									: layer.visible
+										? isLightTheme
+											? 'bg-white border-zinc-200 shadow-xs hover:border-zinc-300'
+											: 'bg-zinc-900/70 border-zinc-800 shadow-xs hover:border-zinc-700'
+										: 'opacity-50 bg-zinc-950/40 border-dashed border-zinc-800'
+							}"
+						>
+							<!-- Main Row: Left Info + Right Controls Flush Right -->
+							<div class="w-full flex items-center justify-between gap-2.5">
+								<!-- Left: Drag Grip Handle & Thumbnail & Title -->
+								<div class="flex items-center gap-2 truncate min-w-0 flex-1">
+									<!-- Dedicated Drag Grip Handle -->
+									<!-- svelte-ignore a11y_no_static_element_interactions -->
+									<div
+										role="button"
+										tabindex="0"
+										draggable={!layer.locked}
+										ondragstart={(e) => onLayerDragStart(idx, e)}
+										ondragend={onLayerDragEnd}
+										title={layer.locked ? 'Layer terkunci' : 'Tarik ikon ini untuk atur urutan'}
+										class="p-1 text-zinc-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing shrink-0 select-none {
+											layer.locked ? 'opacity-30 cursor-not-allowed' : ''
+										}"
+									>
+										<GripVertical class="w-3.5 h-3.5" />
 									</div>
 
-									<!-- Right: Controls (Slider, Visibility, Lock, Reorder Up/Down, Delete) -->
-									<div class="flex items-center gap-1.5 shrink-0">
-										<!-- Opacity Slider with explicit event isolation -->
-										<div class="flex items-center gap-1" title="Geser transparansi layer: {Math.round(layer.opacity * 100)}%">
-											<input
-												type="range"
-												draggable={false}
-												onpointerdown={(e) => e.stopPropagation()}
-												onmousedown={(e) => e.stopPropagation()}
-												min="0"
-												max="1"
-												step="0.05"
-												value={layer.opacity}
-												disabled={layer.locked}
-												oninput={(e) => rigging.setLayerOpacity(layer.id, parseFloat((e.target as HTMLInputElement).value))}
-												class="w-16 h-1.5 bg-zinc-800 rounded appearance-none cursor-pointer accent-cyan-400 disabled:opacity-30"
+									<!-- Live Thumbnail -->
+									<div
+										class="w-9 h-9 rounded-xl border overflow-hidden shrink-0 relative flex items-center justify-center shadow-inner {thumb.bgClass}"
+										style={thumb.style || ''}
+									>
+										{#if thumb.avatarUrl}
+											<img
+												src={thumb.avatarUrl}
+												alt={layer.name}
+												class="w-full h-full object-cover object-top"
 											/>
+										{:else if ThumbIcon}
+											<ThumbIcon class="w-4 h-4 opacity-75" />
+										{/if}
+									</div>
+
+									<!-- Clickable text to select layer -->
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<!-- svelte-ignore a11y_no_static_element_interactions -->
+									<div
+										onclick={() => {
+											playSfx('click');
+											if (layer.type === 'model-host') rigging.selectLayerElement('host');
+											else if (layer.type === 'model-collab') rigging.selectLayerElement('collab');
+											else if (layer.type === 'model-collab-2') rigging.selectLayerElement('collab-2');
+											else rigging.selectLayerElement(layer.id);
+										}}
+										class="truncate cursor-pointer flex-1 min-w-0"
+									>
+										<div class="flex items-center gap-1.5 truncate">
+											<span class="text-xs font-bold truncate {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+												{#if layer.type === 'model-host'}
+													Host: {rigging.modelName}
+												{:else if layer.type === 'model-collab'}
+													Collab 1: {rigging.isCollabModeActive ? rigging.collabModelName : '(Nonaktif)'}
+												{:else if layer.type === 'model-collab-2'}
+													Collab 2: {rigging.isCollab2Active ? rigging.collab2ModelName : '(Nonaktif)'}
+												{:else if layer.type === 'accessories'}
+													Aksesoris & Props ({activeAccCount})
+												{:else if layer.type === 'shader-fx'}
+													Filter Layar ({rigging.screenEffect.toUpperCase()})
+												{:else if layer.type === 'background'}
+													Latar Belakang ({rigging.backgroundStyle.toUpperCase()})
+												{:else}
+													{layer.name}
+												{/if}
+											</span>
+											<span class="text-[8px] px-1 py-0.2 rounded font-mono font-semibold bg-zinc-800 text-zinc-300 shrink-0">
+												{layer.badge}
+											</span>
 										</div>
-
-										<!-- Visibility Eye Toggle -->
-										<button
-											type="button"
-											onclick={(e) => {
-												e.stopPropagation();
-												playSfx('toggle');
-												rigging.toggleLayer(layer.id);
-											}}
-											title={layer.visible ? 'Sembunyikan' : 'Tampilkan'}
-											class="p-1.5 rounded-lg border transition-colors cursor-pointer {
-												layer.visible
-													? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400'
-													: 'bg-zinc-800/80 border-zinc-700 text-zinc-500'
-											}"
-										>
-											{#if layer.visible}
-												<Eye class="w-3 h-3" />
+										<div class="text-[9px] text-zinc-400 font-mono truncate">
+											{#if layer.type === 'model-host'}
+												Live2D Host Avatar • Transparansi: {Math.round(layer.opacity * 100)}%
+											{:else if layer.type === 'model-collab'}
+												Kamera: {rigging.collabCameraLabel || 'Default'} • {Math.round(layer.opacity * 100)}%
+											{:else if layer.type === 'model-collab-2'}
+												Kamera: {rigging.collab2CameraLabel || 'Default'} • {Math.round(layer.opacity * 100)}%
 											{:else}
-												<EyeOff class="w-3 h-3" />
+												Transparansi: {Math.round(layer.opacity * 100)}%
 											{/if}
-										</button>
+										</div>
+									</div>
+								</div>
 
-										<!-- Lock Toggle -->
+								<!-- Right: Controls strictly pinned flush right -->
+								<div class="flex items-center gap-1.5 ml-auto shrink-0">
+									<!-- Opacity Slider with explicit event isolation -->
+									<div class="flex items-center gap-1" title="Transparansi layer: {Math.round(layer.opacity * 100)}%">
+										<input
+											type="range"
+											draggable={false}
+											onpointerdown={(e) => e.stopPropagation()}
+											onmousedown={(e) => e.stopPropagation()}
+											min="0"
+											max="1"
+											step="0.05"
+											value={layer.opacity}
+											disabled={layer.locked}
+											oninput={(e) => rigging.setLayerOpacity(layer.id, parseFloat((e.target as HTMLInputElement).value))}
+											class="w-14 sm:w-16 h-1.5 bg-zinc-800 rounded appearance-none cursor-pointer accent-cyan-400 disabled:opacity-30"
+										/>
+									</div>
+
+									<!-- Visibility Eye Toggle -->
+									<button
+										type="button"
+										onclick={(e) => {
+											e.stopPropagation();
+											playSfx('toggle');
+											rigging.toggleLayer(layer.id);
+										}}
+										title={layer.visible ? 'Sembunyikan' : 'Tampilkan'}
+										class="p-1.5 rounded-lg border transition-colors cursor-pointer {
+											layer.visible
+												? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400'
+												: 'bg-zinc-800/80 border-zinc-700 text-zinc-500'
+										}"
+									>
+										{#if layer.visible}
+											<Eye class="w-3 h-3" />
+										{:else}
+											<EyeOff class="w-3 h-3" />
+										{/if}
+									</button>
+
+									<!-- Lock Toggle -->
+									<button
+										type="button"
+										onclick={(e) => {
+											e.stopPropagation();
+											playSfx('click');
+											rigging.setLayerLock(layer.id);
+										}}
+										title={layer.locked ? 'Buka Kunci' : 'Kunci Layer'}
+										class="p-1.5 rounded-lg border transition-colors cursor-pointer {
+											layer.locked
+												? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
+												: 'bg-zinc-800/80 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+										}"
+									>
+										{#if layer.locked}
+											<Lock class="w-3 h-3" />
+										{:else}
+											<Unlock class="w-3 h-3" />
+										{/if}
+									</button>
+
+									<!-- Reorder Z-Index Buttons -->
+									<div class="flex items-center gap-0.5">
 										<button
 											type="button"
+											disabled={idx === 0}
 											onclick={(e) => {
 												e.stopPropagation();
 												playSfx('click');
-												rigging.setLayerLock(layer.id);
+												rigging.moveLayer(layer.id, 'up');
 											}}
-											title={layer.locked ? 'Buka Kunci' : 'Kunci Layer'}
-											class="p-1.5 rounded-lg border transition-colors cursor-pointer {
-												layer.locked
-													? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-													: 'bg-zinc-800/80 border-zinc-700 text-zinc-400 hover:text-zinc-200'
-											}"
+											title="Naikkan Layer"
+											class="p-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-30 cursor-pointer"
 										>
-											{#if layer.locked}
-												<Lock class="w-3 h-3" />
-											{:else}
-												<Unlock class="w-3 h-3" />
-											{/if}
+											<ArrowUp class="w-2.5 h-2.5" />
 										</button>
+										<button
+											type="button"
+											disabled={idx === rigging.stageLayers.length - 1}
+											onclick={(e) => {
+												e.stopPropagation();
+												playSfx('click');
+												rigging.moveLayer(layer.id, 'down');
+											}}
+											title="Turunkan Layer"
+											class="p-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-30 cursor-pointer"
+										>
+											<ArrowDown class="w-2.5 h-2.5" />
+										</button>
+									</div>
 
-										<!-- Reorder Z-Index Buttons -->
-										<div class="flex items-center gap-0.5">
-											<button
-												type="button"
-												disabled={idx === 0}
-												onclick={(e) => {
-													e.stopPropagation();
-													playSfx('click');
-													rigging.moveLayer(layer.id, 'up');
-												}}
-												title="Naikkan Layer"
-												class="p-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-30 cursor-pointer"
-											>
-												<ArrowUp class="w-2.5 h-2.5" />
-											</button>
-											<button
-												type="button"
-												disabled={idx === rigging.stageLayers.length - 1}
-												onclick={(e) => {
-													e.stopPropagation();
-													playSfx('click');
-													rigging.moveLayer(layer.id, 'down');
-												}}
-												title="Turunkan Layer"
-												class="p-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-30 cursor-pointer"
-											>
-												<ArrowDown class="w-2.5 h-2.5" />
-											</button>
-										</div>
-
-										<!-- Delete Layer Button -->
+									<!-- Delete Layer Button (if applicable) -->
+									{#if layer.type === 'accessories' || layer.type === 'model-collab' || layer.type === 'model-collab-2' || layer.type === 'shader-fx'}
 										<button
 											type="button"
 											onclick={(e) => {
@@ -620,35 +935,25 @@
 										>
 											<Trash2 class="w-3 h-3" />
 										</button>
-									</div>
+									{/if}
 								</div>
-							{/each}
-						</div>
+							</div>
 
-						<!-- Active Props / Accessories Flat Stack (if any attached) -->
-						{#if rigging.activeAccessories.filter((a) => a.visible).length > 0}
-							<div class="pt-3 border-t border-zinc-800/60 space-y-2">
-								<div class="flex items-center justify-between text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
-									<span class="font-bold flex items-center gap-1.5 text-amber-400">
-										<Sparkles class="w-3.5 h-3.5" />
-										Aksesoris & Props Aktif ({rigging.activeAccessories.filter((a) => a.visible).length})
-									</span>
-									<span class="text-[9px] text-zinc-500">Klik untuk geser di kanvas</span>
-								</div>
-
-								<div class="space-y-1.5">
+							<!-- Nested Active Props List directly inside the unified Accessories Layer -->
+							{#if layer.type === 'accessories' && rigging.activeAccessories.filter((a) => a.visible).length > 0}
+								<div class="pl-6 pt-2 border-t border-zinc-800/60 space-y-1.5">
 									{#each rigging.activeAccessories.filter((a) => a.visible) as acc (acc.id)}
 										{@const isAccSelected = rigging.cursorToolMode === 'select-layer' && rigging.selectedLayerElementId === acc.id}
 										<div
-											class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-2.5 {
+											class="p-2 rounded-xl border transition-all flex items-center justify-between gap-2 {
 												isAccSelected
 													? 'border-amber-400 bg-amber-500/15 ring-1 ring-amber-400/50 shadow-xs'
 													: isLightTheme
-														? 'bg-white border-zinc-200 hover:border-zinc-300'
-														: 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+														? 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
+														: 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
 											}"
 										>
-											<!-- Left: Emoji & Name -->
+											<!-- Left: Thumbnail & Name -->
 											<!-- svelte-ignore a11y_click_events_have_key_events -->
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<div
@@ -657,19 +962,35 @@
 													rigging.setCursorToolMode('select-layer');
 													rigging.selectLayerElement(acc.id);
 												}}
-												class="flex items-center gap-2 truncate flex-1 cursor-pointer"
+												class="flex items-center gap-2 truncate flex-1 min-w-0 cursor-pointer"
 											>
-												<div class="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-base shadow-inner shrink-0">
-													{acc.emoji}
+												<div class="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-sm shadow-inner shrink-0 overflow-hidden">
+													{#if acc.imageUrl}
+														<img src={acc.imageUrl} alt={acc.name} class="w-full h-full object-contain" />
+													{:else}
+														{acc.emoji}
+													{/if}
 												</div>
-												<div class="truncate">
+												<div class="truncate min-w-0 flex-1">
 													<div class="flex items-center gap-1.5 truncate">
-														<span class="text-xs font-bold truncate {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+														<span class="text-[11px] font-bold truncate {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 															{acc.name}
 														</span>
-														<span class="text-[8px] px-1 py-0.2 rounded font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-															Props
-														</span>
+														<!-- Attachment Selector Dropdown -->
+														<select
+															value={acc.attachTo || 'head'}
+															onchange={(e) => {
+																e.stopPropagation();
+																const sel = e.target as HTMLSelectElement;
+																rigging.setAccessoryAttachTo(acc.id, sel.value as any);
+															}}
+															onclick={(e) => e.stopPropagation()}
+															class="text-[9px] px-1 py-0.2 rounded font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 cursor-pointer"
+														>
+															<option value="head">Di Kepala</option>
+															<option value="body">Di Badan</option>
+															<option value="screen">Di Layar</option>
+														</select>
 													</div>
 													<div class="text-[9px] text-zinc-400 font-mono">
 														Skala: {acc.scale}x • Opacity: {Math.round((acc.opacity || 1) * 100)}%
@@ -677,8 +998,8 @@
 												</div>
 											</div>
 
-											<!-- Right: Opacity Slider, Eye, and Delete Button -->
-											<div class="flex items-center gap-1.5 shrink-0">
+											<!-- Right: Opacity Slider, Eye, Delete Button strictly pinned flush right -->
+											<div class="flex items-center gap-1.5 ml-auto shrink-0">
 												<input
 													type="range"
 													draggable={false}
@@ -689,13 +1010,14 @@
 													step="0.05"
 													bind:value={acc.opacity}
 													oninput={() => rigging.persist()}
-													class="w-14 h-1.5 bg-zinc-800 rounded appearance-none cursor-pointer accent-amber-500"
-													title="Geser transparansi aksesoris"
+													class="w-12 h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-amber-500"
+													title="Transparansi aksesoris"
 												/>
 
 												<button
 													type="button"
-													onclick={() => {
+													onclick={(e) => {
+														e.stopPropagation();
 														playSfx('toggle');
 														acc.visible = !acc.visible;
 														rigging.persist();
@@ -712,11 +1034,12 @@
 
 												<button
 													type="button"
-													onclick={() => {
+													onclick={(e) => {
+														e.stopPropagation();
 														playSfx('click');
 														rigging.removeAccessory(acc.id);
 													}}
-													title="Hapus / Copot Aksesoris Ini"
+													title="Copot Aksesoris Ini"
 													class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-colors cursor-pointer"
 												>
 													<Trash2 class="w-3 h-3" />
@@ -725,588 +1048,10 @@
 										</div>
 									{/each}
 								</div>
-							</div>
-						{/if}
-
-						<!-- Quick Layer Creation & Actions Bar -->
-						<div class="pt-2 flex items-center gap-2">
-							<button
-								type="button"
-								onclick={() => {
-									playSfx('click');
-									activeSubTab = 'accessories';
-								}}
-								class="flex-1 py-2 px-3 rounded-xl border border-dashed border-amber-500/40 hover:border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-							>
-								<Plus class="w-3.5 h-3.5" />
-								<span>+ Pasang Props / Aksesoris</span>
-							</button>
-
-							<button
-								type="button"
-								onclick={() => {
-									playSfx('click');
-									activeSubTab = 'collab';
-								}}
-								class="flex-1 py-2 px-3 rounded-xl border border-dashed border-purple-500/40 hover:border-purple-400 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-							>
-								<Users class="w-3.5 h-3.5" />
-								<span>+ Collab Studio (3 Streamers)</span>
-							</button>
-						</div>
-					</div>
-
-				<!-- TAB 2: ACCESSORIES & PROPS -->
-				{:else if activeSubTab === 'accessories'}
-					<div class="space-y-3">
-						<div class="flex items-center justify-between text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-							<span>Aksesoris mengikuti gerakan kepala Live2D</span>
-							<span class="font-mono text-[10px] text-amber-400 font-bold">{activeAccCount} Terpasang</span>
-						</div>
-
-						<div class="space-y-2">
-							{#each rigging.activeAccessories as item}
-								{@const isSelected = rigging.selectedLayerElementId === item.id}
-								<div
-									class="p-3 rounded-2xl border transition-all {
-										isSelected
-											? 'border-amber-400 ring-2 ring-amber-500/40 bg-amber-500/10'
-											: item.visible
-												? 'border-amber-500/40 bg-amber-500/5 shadow-xs'
-												: isLightTheme
-													? 'bg-white border-zinc-200'
-													: 'bg-zinc-900/60 border-zinc-800/80'
-									}"
-								>
-									<div class="flex items-center justify-between">
-										<!-- svelte-ignore a11y_click_events_have_key_events -->
-										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										<div
-											onclick={() => {
-												playSfx('click');
-												rigging.selectLayerElement(item.id);
-											}}
-											class="flex items-center gap-2 cursor-pointer flex-1"
-										>
-											<div class="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-base shadow-xs">
-												{item.emoji}
-											</div>
-											<div>
-												<span class="text-xs font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-													{item.name}
-												</span>
-												<span class="text-[8px] uppercase font-mono px-1 rounded bg-zinc-800 text-zinc-400">
-													{item.category}
-												</span>
-											</div>
-										</div>
-
-										<button
-											type="button"
-											onclick={() => {
-												playSfx('toggle');
-												rigging.toggleAccessory(item.id);
-											}}
-											class="px-2 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer {
-												item.visible
-													? 'bg-amber-500 text-zinc-950 border-amber-400 shadow-xs'
-													: 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'
-											}"
-										>
-											{item.visible ? '✓ Pasang' : '+ Pasang'}
-										</button>
-									</div>
-
-									{#if item.visible}
-										<!-- Fine Position & Scale Adjustments (Isolated from DnD) -->
-										<div class="space-y-1.5 pt-2 mt-2 border-t border-zinc-800/60 text-[10px]">
-											<div class="flex items-center justify-between">
-												<span class="text-zinc-400">Ukuran Scale:</span>
-												<span class="font-mono text-amber-400 font-bold">{item.scale.toFixed(2)}x</span>
-											</div>
-											<input
-												type="range"
-												draggable={false}
-												onpointerdown={(e) => e.stopPropagation()}
-												onmousedown={(e) => e.stopPropagation()}
-												min="0.5"
-												max="2.0"
-												step="0.05"
-												bind:value={item.scale}
-												oninput={() => rigging.persist()}
-												class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-amber-500"
-											/>
-
-											<div class="grid grid-cols-2 gap-2 pt-0.5">
-												<div>
-													<div class="flex justify-between text-[9px] text-zinc-400">
-														<span>X:</span>
-														<span class="font-mono text-zinc-300">{item.offsetX}px</span>
-													</div>
-													<input
-														type="range"
-														draggable={false}
-														onpointerdown={(e) => e.stopPropagation()}
-														onmousedown={(e) => e.stopPropagation()}
-														min="-200"
-														max="200"
-														step="5"
-														bind:value={item.offsetX}
-														oninput={() => rigging.persist()}
-														class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-amber-500"
-													/>
-												</div>
-												<div>
-													<div class="flex justify-between text-[9px] text-zinc-400">
-														<span>Y:</span>
-														<span class="font-mono text-zinc-300">{item.offsetY}px</span>
-													</div>
-													<input
-														type="range"
-														draggable={false}
-														onpointerdown={(e) => e.stopPropagation()}
-														onmousedown={(e) => e.stopPropagation()}
-														min="-350"
-														max="150"
-														step="5"
-														bind:value={item.offsetY}
-														oninput={() => rigging.persist()}
-														class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-amber-500"
-													/>
-												</div>
-											</div>
-										</div>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					</div>
-
-				<!-- TAB 3: MULTI-CAMERA COLLAB STREAMER STUDIO (MAX 3 STREAMERS) -->
-				{:else if activeSubTab === 'collab'}
-					{@const activeStreamerCount = 1 + (rigging.isCollabModeActive ? 1 : 0) + (rigging.isCollab2Active ? 1 : 0)}
-					<div class="space-y-3.5">
-						<!-- Studio Overview Header Card -->
-						<div class="p-3.5 rounded-2xl border bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-zinc-900 border-purple-500/30 flex items-center justify-between shadow-md">
-							<div class="flex items-center gap-3">
-								<div class="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-inner">
-									<Users class="w-5 h-5" />
-								</div>
-								<div>
-									<div class="flex items-center gap-2">
-										<h3 class="text-xs font-bold text-zinc-100">
-											Collab Studio Multi-Camera
-										</h3>
-										<span class="px-2 py-0.5 rounded-full font-mono font-bold text-[9px] {
-											activeStreamerCount === 3
-												? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-												: activeStreamerCount === 2
-													? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-													: 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-										}">
-											{activeStreamerCount}/3 Streamers Aktif
-										</span>
-									</div>
-									<p class="text-[10px] text-zinc-400 mt-0.5">
-										Maksimal 3 orang streamer dengan kamera webcam mandiri per individu
-									</p>
-								</div>
-							</div>
-
-							<button
-								type="button"
-								onclick={refreshCameraList}
-								class="p-2 rounded-xl border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-xs active:scale-95"
-								title="Pindai ulang hardware webcam yang terhubung"
-							>
-								<RefreshCw class="w-3.5 h-3.5" />
-							</button>
-						</div>
-
-						<!-- STREAMER 1: HOST UTAMA -->
-						<div class="p-3.5 rounded-2xl border space-y-2.5 {
-							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
-						}">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-2">
-									<span class="w-2.5 h-2.5 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span>
-									<span class="text-xs font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-										Streamer 1 (Host Utama)
-									</span>
-									<span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">
-										HOST
-									</span>
-								</div>
-								<span class="text-[10px] text-zinc-400 font-medium truncate max-w-[150px]">
-									{rigging.modelName}
-								</span>
-							</div>
-
-							<!-- Dedicated Camera Hardware Selector for Host -->
-							<div class="space-y-1">
-								<label for="host-camera-select" class="flex items-center justify-between text-[10px] text-zinc-400">
-									<span class="flex items-center gap-1">
-										<Camera class="w-3 h-3 text-pink-400" />
-										Pilih Perangkat Kamera Host:
-									</span>
-									<span class="font-mono text-[9px] text-zinc-500">
-										{availableCameras.length} webcam terdeteksi
-									</span>
-								</label>
-								<select
-									id="host-camera-select"
-									value={rigging.cameraDeviceId}
-									onchange={(e) => {
-										const sel = e.target as HTMLSelectElement;
-										tracker.switchCamera(sel.value);
-									}}
-									class="w-full px-2.5 py-1.5 rounded-xl border text-xs font-medium cursor-pointer transition-colors {
-										isLightTheme
-											? 'bg-white border-zinc-300 text-zinc-800'
-											: 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-pink-500'
-									}"
-								>
-									<option value="">Kamera Default Sistem (Otomatis)</option>
-									{#each availableCameras as cam}
-										<option value={cam.deviceId}>
-											{cam.label || `Webcam (${cam.deviceId.slice(0, 8)}...)`}
-										</option>
-									{/each}
-								</select>
-							</div>
-						</div>
-
-						<!-- STREAMER 2: COLLAB GUEST 1 -->
-						<div class="p-3.5 rounded-2xl border space-y-3 {
-							rigging.isCollabModeActive
-								? 'bg-purple-950/20 border-purple-500/40 ring-1 ring-purple-500/30 shadow-xs'
-								: isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800'
-						}">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-2">
-									<span class="w-2.5 h-2.5 rounded-full {rigging.isCollabModeActive ? 'bg-purple-400 shadow-[0_0_8px_#c084fc]' : 'bg-zinc-600'}"></span>
-									<div>
-										<span class="text-xs font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-											Streamer 2 (Collab Guest 1)
-										</span>
-										<span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 ml-1.5">
-											GUEST 1
-										</span>
-									</div>
-								</div>
-
-								<button
-									type="button"
-									onclick={() => rigging.toggleCollabMode()}
-									class="px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 {
-										rigging.isCollabModeActive
-											? 'bg-purple-600 hover:bg-purple-500 text-white'
-											: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
-									}"
-								>
-									{rigging.isCollabModeActive ? '✓ Aktif' : '+ Aktifkan'}
-								</button>
-							</div>
-
-							{#if rigging.isCollabModeActive}
-								<!-- Camera Selector for Guest 1 -->
-								<div class="space-y-1">
-									<label for="collab1-camera-select" class="flex items-center justify-between text-[10px] text-zinc-400">
-										<span class="flex items-center gap-1">
-											<Camera class="w-3 h-3 text-purple-400" />
-											Kamera Khusus Guest 1:
-										</span>
-										<span class="text-[9px] text-purple-300 font-mono">
-											{rigging.collabCameraLabel || 'Kamera Mandiri'}
-										</span>
-									</label>
-									<select
-										id="collab1-camera-select"
-										value={rigging.collabCameraDeviceId}
-										onchange={(e) => {
-											const sel = e.target as HTMLSelectElement;
-											const opt = sel.options[sel.selectedIndex];
-											rigging.setCollabCamera('guest1', sel.value, opt?.text || '');
-										}}
-										class="w-full px-2.5 py-1.5 rounded-xl border text-xs font-medium cursor-pointer transition-colors {
-											isLightTheme
-												? 'bg-white border-zinc-300 text-zinc-800'
-												: 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-purple-500'
-										}"
-									>
-										<option value="">Gunakan Kamera Sekunder (Pilih dari daftar...)</option>
-										{#each availableCameras as cam}
-											<option value={cam.deviceId}>
-												{cam.label || `Webcam (${cam.deviceId.slice(0, 8)}...)`}
-											</option>
-										{/each}
-									</select>
-								</div>
-
-								<!-- Model Selector for Guest 1 -->
-								<div class="space-y-1.5">
-									<span class="text-[10px] text-zinc-400 block font-semibold">
-										Avatar Live2D Guest 1:
-									</span>
-									<div class="grid grid-cols-3 gap-1.5">
-										{#each MODEL_CATALOG.slice(0, 6) as model}
-											<button
-												type="button"
-												onclick={() => rigging.setCollabModel(model.id, model.name, model.url)}
-												class="p-1.5 rounded-xl border text-left transition-all cursor-pointer {
-													rigging.collabModelId === model.id
-														? 'border-purple-500 bg-purple-500/20 text-purple-200 font-bold ring-1 ring-purple-500/50 shadow-xs'
-														: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
-												}"
-											>
-												<div class="truncate text-[11px]">{model.name}</div>
-											</button>
-										{/each}
-									</div>
-								</div>
-
-								<!-- Layout Position, Scale, & Sync Controls -->
-								<div class="space-y-2 pt-1 border-t border-zinc-800/60">
-									<div class="flex items-center justify-between text-[10px]">
-										<span class="text-zinc-400">Posisi di Panggung:</span>
-										<div class="flex items-center gap-1">
-											{#each ['left', 'center', 'right', 'pip'] as pos}
-												<button
-													type="button"
-													onclick={() => (rigging.collabPosition = pos as any)}
-													class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase transition-all {
-														rigging.collabPosition === pos
-															? 'bg-purple-600 text-white shadow-xs'
-															: 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
-													}"
-												>
-													{pos}
-												</button>
-											{/each}
-										</div>
-									</div>
-
-									<div class="grid grid-cols-2 gap-2 text-[10px]">
-										<div>
-											<div class="flex justify-between text-zinc-400 mb-0.5">
-												<span>Skala:</span>
-												<span class="font-mono text-purple-300 font-bold">{Math.round(rigging.collabScale * 100)}%</span>
-											</div>
-											<input
-												type="range"
-												draggable={false}
-												min="0.4"
-												max="1.5"
-												step="0.05"
-												bind:value={rigging.collabScale}
-												oninput={() => rigging.persist()}
-												class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-purple-500"
-											/>
-										</div>
-
-										<div>
-											<div class="flex justify-between text-zinc-400 mb-0.5">
-												<span>Geser X:</span>
-												<span class="font-mono text-purple-300 font-bold">{rigging.collabOffsetX}px</span>
-											</div>
-											<input
-												type="range"
-												draggable={false}
-												min="-500"
-												max="500"
-												step="10"
-												bind:value={rigging.collabOffsetX}
-												oninput={() => rigging.persist()}
-												class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-purple-500"
-											/>
-										</div>
-									</div>
-
-									<div class="flex items-center justify-between pt-1">
-										<span class="text-[10px] text-zinc-400">Mode Animasi / Tracking:</span>
-										<button
-											type="button"
-											onclick={() => {
-												rigging.collabSyncTracking = !rigging.collabSyncTracking;
-												rigging.persist();
-											}}
-											class="px-2 py-0.5 rounded text-[10px] font-mono font-bold {
-												rigging.collabSyncTracking ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-											}"
-										>
-											{rigging.collabSyncTracking ? '✓ Ikuti Wajah (Sync)' : '💤 Idle & Breath Otomatis'}
-										</button>
-									</div>
-								</div>
 							{/if}
 						</div>
-
-						<!-- STREAMER 3: COLLAB GUEST 2 -->
-						<div class="p-3.5 rounded-2xl border space-y-3 {
-							rigging.isCollab2Active
-								? 'bg-indigo-950/20 border-indigo-500/40 ring-1 ring-indigo-500/30 shadow-xs'
-								: isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800'
-						}">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-2">
-									<span class="w-2.5 h-2.5 rounded-full {rigging.isCollab2Active ? 'bg-indigo-400 shadow-[0_0_8px_#818cf8]' : 'bg-zinc-600'}"></span>
-									<div>
-										<span class="text-xs font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-											Streamer 3 (Collab Guest 2)
-										</span>
-										<span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 ml-1.5">
-											GUEST 2
-										</span>
-									</div>
-								</div>
-
-								<button
-									type="button"
-									onclick={() => rigging.toggleCollab2Mode()}
-									class="px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 {
-										rigging.isCollab2Active
-											? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-											: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
-									}"
-								>
-									{rigging.isCollab2Active ? '✓ Aktif' : '+ Aktifkan'}
-								</button>
-							</div>
-
-							{#if rigging.isCollab2Active}
-								<!-- Camera Selector for Guest 2 -->
-								<div class="space-y-1">
-									<label for="collab2-camera-select" class="flex items-center justify-between text-[10px] text-zinc-400">
-										<span class="flex items-center gap-1">
-											<Camera class="w-3 h-3 text-indigo-400" />
-											Kamera Khusus Guest 2:
-										</span>
-										<span class="text-[9px] text-indigo-300 font-mono">
-											{rigging.collab2CameraLabel || 'Kamera Mandiri'}
-										</span>
-									</label>
-									<select
-										id="collab2-camera-select"
-										value={rigging.collab2CameraDeviceId}
-										onchange={(e) => {
-											const sel = e.target as HTMLSelectElement;
-											const opt = sel.options[sel.selectedIndex];
-											rigging.setCollabCamera('guest2', sel.value, opt?.text || '');
-										}}
-										class="w-full px-2.5 py-1.5 rounded-xl border text-xs font-medium cursor-pointer transition-colors {
-											isLightTheme
-												? 'bg-white border-zinc-300 text-zinc-800'
-												: 'bg-zinc-950 border-zinc-800 text-zinc-200 focus:border-indigo-500'
-										}"
-									>
-										<option value="">Gunakan Kamera Tersier (Pilih dari daftar...)</option>
-										{#each availableCameras as cam}
-											<option value={cam.deviceId}>
-												{cam.label || `Webcam (${cam.deviceId.slice(0, 8)}...)`}
-											</option>
-										{/each}
-									</select>
-								</div>
-
-								<!-- Model Selector for Guest 2 -->
-								<div class="space-y-1.5">
-									<span class="text-[10px] text-zinc-400 block font-semibold">
-										Avatar Live2D Guest 2:
-									</span>
-									<div class="grid grid-cols-3 gap-1.5">
-										{#each MODEL_CATALOG.slice(0, 6) as model}
-											<button
-												type="button"
-												onclick={() => rigging.setCollab2Model(model.id, model.name, model.url)}
-												class="p-1.5 rounded-xl border text-left transition-all cursor-pointer {
-													rigging.collab2ModelId === model.id
-														? 'border-indigo-500 bg-indigo-500/20 text-indigo-200 font-bold ring-1 ring-indigo-500/50 shadow-xs'
-														: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
-												}"
-											>
-												<div class="truncate text-[11px]">{model.name}</div>
-											</button>
-										{/each}
-									</div>
-								</div>
-
-								<!-- Layout Position, Scale, & Sync Controls -->
-								<div class="space-y-2 pt-1 border-t border-zinc-800/60">
-									<div class="flex items-center justify-between text-[10px]">
-										<span class="text-zinc-400">Posisi di Panggung:</span>
-										<div class="flex items-center gap-1">
-											{#each ['left', 'center', 'right', 'pip'] as pos}
-												<button
-													type="button"
-													onclick={() => (rigging.collab2Position = pos as any)}
-													class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase transition-all {
-														rigging.collab2Position === pos
-															? 'bg-indigo-600 text-white shadow-xs'
-															: 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
-													}"
-												>
-													{pos}
-												</button>
-											{/each}
-										</div>
-									</div>
-
-									<div class="grid grid-cols-2 gap-2 text-[10px]">
-										<div>
-											<div class="flex justify-between text-zinc-400 mb-0.5">
-												<span>Skala:</span>
-												<span class="font-mono text-indigo-300 font-bold">{Math.round(rigging.collab2Scale * 100)}%</span>
-											</div>
-											<input
-												type="range"
-												draggable={false}
-												min="0.4"
-												max="1.5"
-												step="0.05"
-												bind:value={rigging.collab2Scale}
-												oninput={() => rigging.persist()}
-												class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-indigo-500"
-											/>
-										</div>
-
-										<div>
-											<div class="flex justify-between text-zinc-400 mb-0.5">
-												<span>Geser X:</span>
-												<span class="font-mono text-indigo-300 font-bold">{rigging.collab2OffsetX}px</span>
-											</div>
-											<input
-												type="range"
-												draggable={false}
-												min="-500"
-												max="500"
-												step="10"
-												bind:value={rigging.collab2OffsetX}
-												oninput={() => rigging.persist()}
-												class="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-indigo-500"
-											/>
-										</div>
-									</div>
-
-									<div class="flex items-center justify-between pt-1">
-										<span class="text-[10px] text-zinc-400">Mode Animasi / Tracking:</span>
-										<button
-											type="button"
-											onclick={() => {
-												rigging.collab2SyncTracking = !rigging.collab2SyncTracking;
-												rigging.persist();
-											}}
-											class="px-2 py-0.5 rounded text-[10px] font-mono font-bold {
-												rigging.collab2SyncTracking ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-											}"
-										>
-											{rigging.collab2SyncTracking ? '✓ Ikuti Wajah (Sync)' : '💤 Idle & Breath Otomatis'}
-										</button>
-									</div>
-								</div>
-							{/if}
-						</div>
-					</div>
-				{/if}
+					{/each}
+				</div>
 			</div>
 		{/if}
 

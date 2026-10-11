@@ -3,7 +3,8 @@
 	import { rigging, DEFAULT_PARAMETERS } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import type { Live2DParameterDef } from '#lib/types/tracking';
-	import { Sparkles } from 'lucide-svelte';
+	import { Sparkles, Check, X, Move } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
 	import { playSfx } from '#lib/core/sfx';
 
 	let containerEl: HTMLDivElement;
@@ -107,43 +108,84 @@
 		smile: {
 			ParamEyeLSmile: 1.0,
 			ParamEyeRSmile: 1.0,
+			PARAM_EYE_L_SMILE: 1.0,
+			PARAM_EYE_R_SMILE: 1.0,
 			ParamMouthForm: 1.0,
-			ParamCheek: 0.8
+			PARAM_MOUTH_FORM: 1.0,
+			ParamCheek: 0.8,
+			PARAM_CHEEK: 0.8
 		},
 		wink: {
 			ParamEyeLOpen: 0.0,
+			PARAM_EYE_L_OPEN: 0.0,
 			ParamEyeLSmile: 1.0,
-			ParamEyeROpen: 1.0
+			PARAM_EYE_L_SMILE: 1.0,
+			ParamEyeROpen: 1.0,
+			PARAM_EYE_R_OPEN: 1.0
 		},
 		surprise: {
 			ParamEyeLOpen: 1.3,
+			PARAM_EYE_L_OPEN: 1.3,
 			ParamEyeROpen: 1.3,
+			PARAM_EYE_R_OPEN: 1.3,
 			ParamBrowLY: 0.8,
 			ParamBrowRY: 0.8,
-			ParamMouthOpenY: 0.85
+			PARAM_BROW_L_Y: 0.8,
+			PARAM_BROW_R_Y: 0.8,
+			Param: 0.8,
+			Param4: 0.8,
+			ParamMouthOpenY: 0.85,
+			PARAM_MOUTH_OPEN_Y: 0.85
 		},
 		pout: {
 			ParamCheek: 1.0,
+			PARAM_CHEEK: 1.0,
 			ParamMouthForm: -0.6,
+			PARAM_MOUTH_FORM: -0.6,
 			ParamBrowLY: -0.2,
-			ParamBrowRY: -0.2
+			ParamBrowRY: -0.2,
+			PARAM_BROW_L_Y: -0.2,
+			PARAM_BROW_R_Y: -0.2,
+			Param: -0.2,
+			Param4: -0.2
 		},
 		sad: {
 			ParamBrowLY: -0.8,
 			ParamBrowRY: -0.8,
+			PARAM_BROW_L_Y: -0.8,
+			PARAM_BROW_R_Y: -0.8,
+			Param: -0.8,
+			Param4: -0.8,
 			ParamMouthForm: -1.0,
+			PARAM_MOUTH_FORM: -1.0,
 			ParamEyeLSmile: 0.0,
-			ParamEyeRSmile: 0.0
+			ParamEyeRSmile: 0.0,
+			Param144: 1.0 // Vivian tear/cry
 		},
 		blush: {
 			ParamCheek: 1.0,
-			ParamEyeLSmile: 0.6,
-			ParamEyeRSmile: 0.6
+			PARAM_CHEEK: 1.0,
+			ParamEyeLSmile: 0.7,
+			ParamEyeRSmile: 0.7,
+			PARAM_EYE_L_SMILE: 0.7,
+			PARAM_EYE_R_SMILE: 0.7,
+			Param149: 1.0 // Vivian blush
 		},
 		angry: {
 			ParamBrowLAngle: -0.8,
 			ParamBrowRAngle: -0.8,
-			ParamMouthForm: -0.5,
+			PARAM_BROW_L_ANGLE: -0.8,
+			PARAM_BROW_R_ANGLE: -0.8,
+			Param2: -0.8,
+			Param5: -0.8,
+			ParamBrowLY: -0.4,
+			ParamBrowRY: -0.4,
+			PARAM_BROW_L_Y: -0.4,
+			PARAM_BROW_R_Y: -0.4,
+			Param: -0.4,
+			Param4: -0.4,
+			ParamMouthForm: -0.6,
+			PARAM_MOUTH_FORM: -0.6,
 			ParamEyeLOpen: 0.8,
 			ParamEyeROpen: 0.8
 		}
@@ -312,7 +354,30 @@
 					const activeExp = rigging.activeExpression;
 					const expPreset = activeExp ? EXPRESSION_PRESETS[activeExp] : null;
 
+					const TRACKING_ID_SET = new Set([
+						'ParamAngleX', 'ParamAngleY', 'ParamAngleZ',
+						'PARAM_ANGLE_X', 'PARAM_ANGLE_Y', 'PARAM_ANGLE_Z',
+						'ParamEyeLOpen', 'ParamEyeROpen', 'PARAM_EYE_L_OPEN', 'PARAM_EYE_R_OPEN',
+						'ParamEyeLSmile', 'ParamEyeRSmile', 'PARAM_EYE_L_SMILE', 'PARAM_EYE_R_SMILE',
+						'ParamEyeBallX', 'ParamEyeBallY', 'PARAM_EYE_BALL_X', 'PARAM_EYE_BALL_Y',
+						'ParamBrowLY', 'ParamBrowRY', 'PARAM_BROW_L_Y', 'PARAM_BROW_R_Y',
+						'ParamBrowLX', 'ParamBrowRX', 'PARAM_BROW_L_X', 'PARAM_BROW_R_X',
+						'ParamBrowLAngle', 'ParamBrowRAngle', 'PARAM_BROW_L_ANGLE', 'PARAM_BROW_R_ANGLE',
+						'ParamBrowLForm', 'ParamBrowRForm', 'PARAM_BROW_L_FORM', 'PARAM_BROW_R_FORM',
+						'Param', 'Param4', 'Param2', 'Param5',
+						'ParamMouthOpenY', 'ParamMouthForm', 'ParamMouthX', 'PARAM_MOUTH_OPEN_Y', 'PARAM_MOUTH_FORM',
+						'ParamCheek', 'PARAM_CHEEK',
+						'ParamBodyAngleX', 'ParamBodyAngleY', 'ParamBodyAngleZ', 'ParamBreath',
+						'PARAM_BODY_ANGLE_X', 'PARAM_BODY_ANGLE_Y', 'PARAM_BODY_ANGLE_Z', 'PARAM_BREATH',
+						'ParamArmLA', 'ParamArmRA', 'ParamArmLB', 'ParamArmRB', 'ParamHandAngleL', 'ParamHandAngleR'
+					]);
+
 					for (const param of rigging.parameters) {
+						// In live mode, only set tracked parameters or active expression overrides to preserve model built-in animations/expressions
+						if (rigging.riggingMode === 'live' && !TRACKING_ID_SET.has(param.id) && (!expPreset || !(param.id in expPreset))) {
+							continue;
+						}
+
 						let val = rigging.getActiveValue(param.id);
 
 						// If active expression overrides this parameter, apply the expression preset value
@@ -336,6 +401,44 @@
 							core.setParameterValueById(param.id, val);
 						} catch {
 							// Parameter not present in model
+						}
+					}
+
+					// High-Responsiveness Eyebrows & Linked Model Parameters (Vivian, Mihari, Hiyori, etc.)
+					const browLY = expPreset?.ParamBrowLY ?? rigging.getActiveValue('ParamBrowLY');
+					const browRY = expPreset?.ParamBrowRY ?? rigging.getActiveValue('ParamBrowRY');
+					const browLAngle = expPreset?.ParamBrowLAngle ?? rigging.getActiveValue('ParamBrowLAngle');
+					const browRAngle = expPreset?.ParamBrowRAngle ?? rigging.getActiveValue('ParamBrowRAngle');
+					const browLForm = expPreset?.ParamBrowLForm ?? rigging.getActiveValue('ParamBrowLForm');
+					const browRForm = expPreset?.ParamBrowRForm ?? rigging.getActiveValue('ParamBrowRForm');
+
+					try {
+						core.setParameterValueById('ParamBrowLY', browLY);
+						core.setParameterValueById('ParamBrowRY', browRY);
+						core.setParameterValueById('PARAM_BROW_L_Y', browLY);
+						core.setParameterValueById('PARAM_BROW_R_Y', browRY);
+						core.setParameterValueById('Param', browLY);
+						core.setParameterValueById('Param4', browRY);
+
+						core.setParameterValueById('ParamBrowLAngle', browLAngle);
+						core.setParameterValueById('ParamBrowRAngle', browRAngle);
+						core.setParameterValueById('PARAM_BROW_L_ANGLE', browLAngle);
+						core.setParameterValueById('PARAM_BROW_R_ANGLE', browRAngle);
+						core.setParameterValueById('Param2', browLAngle);
+						core.setParameterValueById('Param5', browRAngle);
+
+						core.setParameterValueById('ParamBrowLForm', browLForm);
+						core.setParameterValueById('ParamBrowRForm', browRForm);
+						core.setParameterValueById('PARAM_BROW_L_FORM', browLForm);
+						core.setParameterValueById('PARAM_BROW_R_FORM', browRForm);
+					} catch {}
+
+					// Apply custom expression preset overrides directly (e.g. Param144 for cry, Param149 for blush)
+					if (expPreset) {
+						for (const k in expPreset) {
+							try {
+								core.setParameterValueById(k, expPreset[k]);
+							} catch {}
 						}
 					}
 
@@ -720,30 +823,33 @@
 					});
 				}
 
-				// If the model does not bundle file-based expressions, provide universal expressive presets
-				if (expressionsList.length === 0) {
-					expressionsList.push(
-						{ id: 'smile', name: 'smile', label: '😊 Smile' },
-						{ id: 'wink', name: 'wink', label: '😉 Wink' },
-						{ id: 'surprise', name: 'surprise', label: '😲 Shock' },
-						{ id: 'pout', name: 'pout', label: '😤 Pout' },
-						{ id: 'sad', name: 'sad', label: '🥺 Sad' },
-						{ id: 'blush', name: 'blush', label: '😳 Blush' },
-						{ id: 'angry', name: 'angry', label: '😡 Angry' }
-					);
+				const universalPresets = [
+					{ id: 'smile', name: 'smile', label: '😊 Senyum (Smile)' },
+					{ id: 'wink', name: 'wink', label: '😉 Kedip (Wink)' },
+					{ id: 'surprise', name: 'surprise', label: '😲 Kaget (Shock)' },
+					{ id: 'pout', name: 'pout', label: '😤 Ngambek (Pout)' },
+					{ id: 'sad', name: 'sad', label: '🥺 Sedih (Sad)' },
+					{ id: 'blush', name: 'blush', label: '😳 Merona (Blush)' },
+					{ id: 'angry', name: 'angry', label: '😡 Marah (Angry)' }
+				];
+
+				for (const up of universalPresets) {
+					if (!expressionsList.some((e) => e.name === up.name)) {
+						expressionsList.push(up);
+					}
 				}
 
 				rigging.availableExpressions = expressionsList;
 			} catch (expErr) {
 				console.warn('Expressions inspection skipped:', expErr);
 				rigging.availableExpressions = [
-					{ id: 'smile', name: 'smile', label: '😊 Smile' },
-					{ id: 'wink', name: 'wink', label: '😉 Wink' },
-					{ id: 'surprise', name: 'surprise', label: '😲 Shock' },
-					{ id: 'pout', name: 'pout', label: '😤 Pout' },
-					{ id: 'sad', name: 'sad', label: '🥺 Sad' },
-					{ id: 'blush', name: 'blush', label: '😳 Blush' },
-					{ id: 'angry', name: 'angry', label: '😡 Angry' }
+					{ id: 'smile', name: 'smile', label: '😊 Senyum (Smile)' },
+					{ id: 'wink', name: 'wink', label: '😉 Kedip (Wink)' },
+					{ id: 'surprise', name: 'surprise', label: '😲 Kaget (Shock)' },
+					{ id: 'pout', name: 'pout', label: '😤 Ngambek (Pout)' },
+					{ id: 'sad', name: 'sad', label: '🥺 Sedih (Sad)' },
+					{ id: 'blush', name: 'blush', label: '😳 Merona (Blush)' },
+					{ id: 'angry', name: 'angry', label: '😡 Marah (Angry)' }
 				];
 			}
 		} catch (e) {
@@ -811,33 +917,124 @@
 	let lastPointerX = 0;
 	let lastPointerY = 0;
 
+	let initialDragSnapshot: {
+		targetId: string | null;
+		hostPos?: { x: number; y: number };
+		collabOffset?: { x: number; y: number };
+		collab2Offset?: { x: number; y: number };
+		accOffset?: { x: number; y: number };
+	} = { targetId: null };
+
+	function recordDragSnapshot() {
+		const targetId = rigging.selectedLayerElementId;
+		if (targetId === 'collab') {
+			initialDragSnapshot = {
+				targetId,
+				collabOffset: { x: rigging.collabOffsetX || 0, y: rigging.collabOffsetY || 0 }
+			};
+		} else if (targetId === 'collab-2' || targetId === 'model-collab-2') {
+			initialDragSnapshot = {
+				targetId,
+				collab2Offset: { x: rigging.collab2OffsetX || 0, y: rigging.collab2OffsetY || 0 }
+			};
+		} else if (targetId === 'host' || !targetId) {
+			initialDragSnapshot = {
+				targetId: 'host',
+				hostPos: { x: modelPosition.x, y: modelPosition.y }
+			};
+		} else {
+			const acc = rigging.activeAccessories.find((a) => a.id === targetId);
+			if (acc) {
+				initialDragSnapshot = {
+					targetId,
+					accOffset: { x: acc.offsetX, y: acc.offsetY }
+				};
+			}
+		}
+	}
+
+	function handleApplyLayerTransform() {
+		playSfx('click');
+		rigging.persist();
+		recordDragSnapshot();
+		rigging.showToast('✓ Posisi elemen berhasil diterapkan!');
+	}
+
+	function handleCancelLayerTransform() {
+		playSfx('toggle');
+		if (initialDragSnapshot.targetId === 'collab' && initialDragSnapshot.collabOffset) {
+			rigging.collabOffsetX = initialDragSnapshot.collabOffset.x;
+			rigging.collabOffsetY = initialDragSnapshot.collabOffset.y;
+			updateCollabTransform();
+		} else if ((initialDragSnapshot.targetId === 'collab-2' || initialDragSnapshot.targetId === 'model-collab-2') && initialDragSnapshot.collab2Offset) {
+			rigging.collab2OffsetX = initialDragSnapshot.collab2Offset.x;
+			rigging.collab2OffsetY = initialDragSnapshot.collab2Offset.y;
+			updateCollab2Transform();
+		} else if (initialDragSnapshot.targetId === 'host' && initialDragSnapshot.hostPos && currentModel) {
+			modelPosition = { ...initialDragSnapshot.hostPos };
+			currentModel.position.set(modelPosition.x, modelPosition.y);
+		} else if (initialDragSnapshot.accOffset) {
+			const acc = rigging.activeAccessories.find((a) => a.id === initialDragSnapshot.targetId);
+			if (acc && initialDragSnapshot.accOffset) {
+				acc.offsetX = initialDragSnapshot.accOffset.x;
+				acc.offsetY = initialDragSnapshot.accOffset.y;
+				rigging.activeAccessories = [...rigging.activeAccessories];
+			}
+		}
+		rigging.persist();
+		rigging.showToast('Posisi elemen dibatalkan ke posisi awal');
+	}
+
+	function getSelectedElementName(): string {
+		const targetId = rigging.selectedLayerElementId;
+		if (targetId === 'collab') return rigging.collabModelName || 'Partner 1';
+		if (targetId === 'collab-2' || targetId === 'model-collab-2') return rigging.collab2ModelName || 'Partner 2';
+		if (targetId === 'host' || !targetId) return rigging.modelName || 'Avatar Utama';
+		const acc = rigging.activeAccessories.find((a) => a.id === targetId);
+		return acc ? acc.name : 'Elemen Panggung';
+	}
+
 	function handleMouseDown(e: MouseEvent) {
 		if (rigging.isGuiLocked) return;
 		if (e.button !== 0 && e.button !== 1) return;
 
 		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
 		const collabLayer = rigging.stageLayers.find((l) => l.type === 'model-collab');
+		const collab2Layer = rigging.stageLayers.find((l) => l.type === 'model-collab-2' || l.id === 'layer-collab-2');
 		const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories');
 
 		if (rigging.cursorToolMode === 'select-layer') {
 			let targetId = rigging.selectedLayerElementId;
 
-			// If collab model is active and target isn't an accessory, smartly select either collab or host based on click location
-			if (rigging.isCollabModeActive && collabModel && (!targetId || targetId === 'host' || targetId === 'collab')) {
-				const isRightSide = e.clientX > (window.innerWidth / 2);
-				const clickedCollab = (rigging.collabPosition === 'right' && isRightSide) ||
-					(rigging.collabPosition === 'left' && !isRightSide) ||
-					(rigging.collabPosition === 'pip' && isRightSide);
-				targetId = clickedCollab ? 'collab' : 'host';
+			// Smart element selection based on click position
+			if ((rigging.isCollabModeActive || rigging.isCollab2Active) && (!targetId || targetId === 'host' || targetId === 'collab' || targetId === 'collab-2')) {
+				const isRightSide = e.clientX > (window.innerWidth * 0.6);
+				const isLeftSide = e.clientX < (window.innerWidth * 0.4);
+				if (rigging.isCollabModeActive && isRightSide) {
+					targetId = 'collab';
+				} else if (rigging.isCollab2Active && isLeftSide) {
+					targetId = 'collab-2';
+				} else {
+					targetId = 'host';
+				}
 				rigging.selectLayerElement(targetId);
 			}
 
+			recordDragSnapshot();
+
 			if (targetId === 'collab') {
 				if (collabLayer?.locked) {
-					rigging.showToast('🔒 Layer Avatar Collab terkunci');
+					rigging.showToast('🔒 Layer Avatar Collab Partner 1 terkunci');
 					return;
 				}
 				if (!collabLayer?.visible) return;
+			}
+			if (targetId === 'collab-2' || targetId === 'model-collab-2') {
+				if (collab2Layer?.locked) {
+					rigging.showToast('🔒 Layer Avatar Collab Partner 2 terkunci');
+					return;
+				}
+				if (!collab2Layer?.visible) return;
 			}
 			if (targetId === 'host' || !targetId) {
 				if (hostLayer?.locked) {
@@ -880,6 +1077,7 @@
 
 		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
 		const collabLayer = rigging.stageLayers.find((l) => l.type === 'model-collab');
+		const collab2Layer = rigging.stageLayers.find((l) => l.type === 'model-collab-2' || l.id === 'layer-collab-2');
 		const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories');
 
 		if (rigging.cursorToolMode === 'select-layer') {
@@ -889,6 +1087,11 @@
 				rigging.collabOffsetX = (rigging.collabOffsetX || 0) + dx;
 				rigging.collabOffsetY = (rigging.collabOffsetY || 0) + dy;
 				updateCollabTransform();
+			} else if ((targetId === 'collab-2' || targetId === 'model-collab-2') && collabModel2) {
+				if (collab2Layer?.locked || !collab2Layer?.visible) return;
+				rigging.collab2OffsetX = (rigging.collab2OffsetX || 0) + dx;
+				rigging.collab2OffsetY = (rigging.collab2OffsetY || 0) + dy;
+				updateCollab2Transform();
 			} else {
 				const acc = rigging.activeAccessories.find((a) => a.id === targetId);
 				if (acc) {
@@ -1014,16 +1217,34 @@
 			style="opacity: {accLayerOpacity};"
 		>
 			{#each rigging.activeAccessories.filter((a) => a.visible) as acc (acc.id)}
+				{@const attach = acc.attachTo || 'head'}
 				{@const headAngleZ = rigging.getActiveValue('ParamAngleZ')}
 				{@const headAngleX = rigging.getActiveValue('ParamAngleX')}
 				{@const headAngleY = rigging.getActiveValue('ParamAngleY')}
+				{@const bodyAngleZ = rigging.getActiveValue('ParamBodyAngleZ')}
+				{@const bodyAngleX = rigging.getActiveValue('ParamBodyAngleX')}
 				{@const scaleRatio = modelScale / 0.25}
 				{@const headShiftX = (headAngleX * 1.5) * scaleRatio}
 				{@const headShiftY = -(headAngleY * 1.5) * scaleRatio}
-				{@const posX = modelPosition.x + (acc.offsetX * scaleRatio) + headShiftX}
-				{@const posY = modelPosition.y + (acc.offsetY * scaleRatio) + headShiftY}
-				{@const rot = (acc.rotation || 0) + (headAngleZ * 0.9)}
-				{@const finalScale = (acc.scale || 1.0) * scaleRatio}
+				{@const bodyShiftX = (bodyAngleX * 1.2) * scaleRatio}
+				{@const posX = attach === 'screen'
+					? (modelPosition.x + acc.offsetX)
+					: attach === 'body'
+						? (modelPosition.x + (acc.offsetX * scaleRatio) + bodyShiftX)
+						: (modelPosition.x + (acc.offsetX * scaleRatio) + headShiftX)}
+				{@const posY = attach === 'screen'
+					? (modelPosition.y + acc.offsetY)
+					: attach === 'body'
+						? (modelPosition.y + (acc.offsetY * scaleRatio))
+						: (modelPosition.y + (acc.offsetY * scaleRatio) + headShiftY)}
+				{@const rot = attach === 'screen'
+					? (acc.rotation || 0)
+					: attach === 'body'
+						? ((acc.rotation || 0) + (bodyAngleZ * 0.7))
+						: ((acc.rotation || 0) + (headAngleZ * 0.9))}
+				{@const finalScale = attach === 'screen'
+					? (acc.scale || 1.0)
+					: ((acc.scale || 1.0) * scaleRatio)}
 				{@const isSelected = rigging.cursorToolMode === 'select-layer' && rigging.selectedLayerElementId === acc.id}
 
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -1039,6 +1260,7 @@
 							}
 							playSfx('click');
 							rigging.selectLayerElement(acc.id);
+							recordDragSnapshot();
 							isDragging = true;
 							lastPointerX = e.clientX;
 							lastPointerY = e.clientY;
@@ -1049,6 +1271,7 @@
 							e.stopPropagation();
 							playSfx('click');
 							rigging.selectLayerElement(acc.id);
+							recordDragSnapshot();
 						}
 					}}
 					class="absolute select-none transition-transform duration-75 origin-center will-change-transform {
@@ -1064,7 +1287,13 @@
 								🎯 {acc.name} (Drag untuk geser)
 							</div>
 						{/if}
-						{#if acc.id === 'sunglasses'}
+						{#if acc.imageUrl}
+							<img
+								src={acc.imageUrl}
+								alt={acc.name}
+								class="max-w-52 max-h-52 object-contain pointer-events-none select-none drop-shadow-md"
+							/>
+						{:else if acc.id === 'sunglasses'}
 							<!-- Cool Dark Sunglasses / Shades -->
 							<svg viewBox="0 0 160 50" class="w-36 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<rect x="5" y="10" width="65" height="35" rx="8" fill="#18181b" stroke="#38bdf8" stroke-width="3" />
@@ -1192,13 +1421,53 @@
 		</div>
 	{/if}
 
-	<!-- Cursor Tool Mode Active HUD Pill (Select & Move Layer) -->
+	<!-- Cursor Tool Mode Active Interactive HUD Pill (Select & Move Layer with Apply & Cancel) -->
 	{#if rigging.cursorToolMode === 'select-layer'}
-		<div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none select-none flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/90 text-zinc-950 font-bold text-xs shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-2 border border-amber-300">
-			<span>🎯 Mode Geser Elemen:</span>
-			<span class="font-mono text-[11px] underline">
-				{rigging.selectedLayerElementId ? `Aktif: ${rigging.selectedLayerElementId}` : 'Klik avatar/aksesoris'}
-			</span>
+		<div
+			transition:fly={{ y: -16, duration: 180 }}
+			class="absolute top-4 left-1/2 -translate-x-1/2 z-30 select-none flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-950/95 text-zinc-100 shadow-2xl backdrop-blur-xl border border-amber-500/50"
+		>
+			<div class="flex items-center gap-1.5 pr-2 border-r border-zinc-800">
+				<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+				<span class="text-xs font-bold text-amber-300">
+					🎯 Geser: <span class="text-white font-semibold">{getSelectedElementName()}</span>
+				</span>
+			</div>
+
+			<!-- Apply Button -->
+			<button
+				type="button"
+				onclick={handleApplyLayerTransform}
+				title="Simpan posisi elemen saat ini"
+				class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-xl transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm"
+			>
+				<Check class="w-3.5 h-3.5" />
+				<span>Terapkan</span>
+			</button>
+
+			<!-- Cancel Button -->
+			<button
+				type="button"
+				onclick={handleCancelLayerTransform}
+				title="Batalkan perubahan posisi ke awal"
+				class="px-2.5 py-1 bg-zinc-800 hover:bg-rose-500/20 text-zinc-300 hover:text-rose-300 hover:border-rose-500/40 border border-zinc-700 font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer flex items-center gap-1"
+			>
+				<X class="w-3.5 h-3.5" />
+				<span>Batal</span>
+			</button>
+
+			<!-- Finish / Pan Switch -->
+			<button
+				type="button"
+				onclick={() => {
+					playSfx('click');
+					rigging.setCursorToolMode('pan');
+				}}
+				class="px-2 py-1 text-zinc-400 hover:text-zinc-200 text-[11px] rounded-lg transition-colors cursor-pointer"
+				title="Kembali ke Mode Panning Panggung"
+			>
+				Selesai
+			</button>
 		</div>
 	{/if}
 

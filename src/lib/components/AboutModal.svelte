@@ -142,7 +142,7 @@
 							<span class="text-[10px] px-2.5 py-0.5 rounded-full font-mono font-bold {
 								isLightTheme ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-cyan-950 text-cyan-300 border border-cyan-800/80'
 							}">
-								v2.4.0 Studio
+								v0.20.1-beta (Beta)
 							</span>
 							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono {
 								isLightTheme ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-950 text-emerald-300 border border-emerald-800/80'

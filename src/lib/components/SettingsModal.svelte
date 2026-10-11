@@ -6,8 +6,11 @@
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
 	import { detectHardwareBenchmark, type HardwareReport } from '#lib/core/hardware';
 	import { clearPreferences, exportConfigJson, importConfigJson } from '#lib/core/storage';
+	import { MODEL_CATALOG } from '#lib/data/models';
 	import type { UITheme, AvatarFramingMode, VoiceFilterType, BackgroundStyle } from '#lib/types/tracking';
 	import {
+		Users,
+		Smile,
 		Settings,
 		X,
 		Cpu,
@@ -46,6 +49,7 @@
 	import { playSfx } from '#lib/core/sfx';
 
 	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'theme' | 'stage' | 'storage' | 'about'>('perf');
+	let trackingParticipant = $state<'host' | 'guest1' | 'guest2'>('host');
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 	let storageUsageBytes = $state<number>(0);
@@ -566,7 +570,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-5xl xl:max-w-6xl max-h-[88vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 transition-colors border {
+			class="w-full max-w-6xl xl:max-w-7xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 transition-colors border {
 				isLightTheme
 					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
 					: 'bg-zinc-950 text-zinc-100 border-zinc-800 shadow-2xl'
@@ -583,10 +587,10 @@
 					<div>
 						<h2 class="text-base sm:text-lg font-bold tracking-wide flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 							{i18n.t('settings_title')}
-							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono {
+							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold {
 								isLightTheme ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : 'bg-cyan-950 text-cyan-400 border border-cyan-800/80'
 							}">
-								v0.9.0 FOSS
+								v0.20.1-beta
 							</span>
 						</h2>
 						<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
@@ -606,13 +610,13 @@
 				</button>
 			</div>
 
-			<!-- Expansive Navigation Tabs (Scrollable on mobile) -->
-			<div class="px-6 border-b flex items-center gap-1 overflow-x-auto py-2 {
+			<!-- Expansive Navigation Tabs (Scrollable on mobile with 2px extra padding Y) -->
+			<div class="px-6 border-b flex items-center gap-1.5 overflow-x-auto py-2.5 sm:py-3 {
 				isLightTheme ? 'bg-zinc-100/50 border-zinc-200' : 'bg-zinc-900/30 border-zinc-800/80'
 			}">
 				<button
 					onclick={() => (activeTab = 'perf')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'perf'
 							? isLightTheme
 								? 'bg-cyan-100 text-cyan-800 border border-cyan-400 shadow-sm'
@@ -628,7 +632,7 @@
 
 				<button
 					onclick={() => (activeTab = 'tracking')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'tracking'
 							? isLightTheme
 								? 'bg-indigo-100 text-indigo-800 border border-indigo-400 shadow-sm'
@@ -644,7 +648,7 @@
 
 				<button
 					onclick={() => (activeTab = 'voice')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'voice'
 							? isLightTheme
 								? 'bg-emerald-100 text-emerald-800 border border-emerald-400 shadow-sm'
@@ -660,7 +664,7 @@
 
 				<button
 					onclick={() => (activeTab = 'theme')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'theme'
 							? isLightTheme
 								? 'bg-pink-100 text-pink-800 border border-pink-400 shadow-sm'
@@ -676,7 +680,7 @@
 
 				<button
 					onclick={() => (activeTab = 'stage')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'stage'
 							? isLightTheme
 								? 'bg-sky-100 text-sky-800 border border-sky-400 shadow-sm'
@@ -692,7 +696,7 @@
 
 				<button
 					onclick={() => (activeTab = 'storage')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'storage'
 							? isLightTheme
 								? 'bg-amber-100 text-amber-800 border border-amber-400 shadow-sm'
@@ -708,7 +712,7 @@
 
 				<button
 					onclick={() => (activeTab = 'about')}
-					class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
+					class="flex items-center gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer {
 						activeTab === 'about'
 							? isLightTheme
 								? 'bg-violet-100 text-violet-800 border border-violet-400 shadow-sm'
@@ -719,7 +723,7 @@
 					}"
 				>
 					<Info class="w-4 h-4" />
-					<span>{i18n.t('tab_about')}</span>
+					<span>About</span>
 				</button>
 			</div>
 
@@ -727,60 +731,75 @@
 			<div class="flex-1 overflow-y-auto p-6 space-y-6">
 				<!-- TAB 1: HARDWARE & PERF -->
 				{#if activeTab === 'perf'}
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
-						<!-- Live Telemetry Card -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-								<Activity class="w-4 h-4 text-cyan-400" />
-								<span>Live Hardware Telemetry</span>
-							</h3>
+					<div class="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-150">
+						<!-- Live Telemetry Card (Single Column Flow) -->
+						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
+							isLightTheme
+								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
+								: 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
+						}">
+							<div class="flex items-center justify-between">
+								<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+									<Activity class="w-4 h-4 text-cyan-500" />
+									<span>Live Hardware Telemetry &amp; Metrik Real-Time</span>
+								</h3>
+								<span class="text-[10px] px-2.5 py-0.5 rounded-full font-mono font-bold {
+									isLightTheme
+										? 'bg-cyan-100 text-cyan-800 border border-cyan-300'
+										: 'bg-cyan-950/80 text-cyan-300 border border-cyan-800'
+								}">
+									60 FPS Pipeline
+								</span>
+							</div>
 
-							<div class="grid grid-cols-2 gap-3 font-mono text-xs">
-								<div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/70">
-									<span class="text-[10px] text-zinc-500 block uppercase">Real-Time FPS</span>
-									<span class="text-lg font-bold text-cyan-400">{rigging.fps || 60}</span>
+							<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+								<div class="p-3.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Real-Time FPS</span>
+									<span class="text-xl font-bold text-cyan-500">{rigging.fps || 60}</span>
 								</div>
-								<div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/70">
-									<span class="text-[10px] text-zinc-500 block uppercase">Render Latency</span>
-									<span class="text-lg font-bold text-emerald-400">{rigging.latencyMs || 8} ms</span>
+								<div class="p-3.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Render Latency</span>
+									<span class="text-xl font-bold text-emerald-500">{rigging.latencyMs || 8} ms</span>
 								</div>
-								<div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/70 col-span-2">
-									<span class="text-[10px] text-zinc-500 block uppercase">{i18n.t('gpu_detected')}</span>
-									<span class="text-xs font-semibold text-zinc-200 break-words">{hardware.gpuRenderer}</span>
+								<div class="p-3.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">CPU Threads</span>
+									<span class="text-xl font-bold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">{hardware.cpuCores} Cores</span>
 								</div>
-								<div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/70">
-									<span class="text-[10px] text-zinc-500 block uppercase">{i18n.t('cpu_threads')}</span>
-									<span class="text-sm font-semibold text-zinc-300">{hardware.cpuCores} Cores</span>
+								<div class="p-3.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Kamera Stream</span>
+									<span class="text-xl font-bold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">{rigging.cameraResolution}</span>
 								</div>
-								<div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800/70">
-									<span class="text-[10px] text-zinc-500 block uppercase">{i18n.t('camera_stream_res')}</span>
-									<span class="text-sm font-semibold text-zinc-300">{rigging.cameraResolution}</span>
+								<div class="p-3.5 rounded-xl border col-span-2 sm:col-span-4 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('gpu_detected')}</span>
+									<span class="text-xs font-semibold break-words {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">{hardware.gpuRenderer}</span>
 								</div>
 							</div>
 
 							<!-- Smoothness Status Bar -->
-							<div class="space-y-2 pt-2">
+							<div class="space-y-2 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
 								<div class="flex items-center justify-between text-xs">
-									<span class="text-zinc-400 font-medium">{i18n.t('system_smoothness')}</span>
-									<span class="font-bold px-2 py-0.5 rounded-full text-[11px]" style="color: {hardware.tierColor}; background: {hardware.tierColor}20;">
+									<span class="font-medium {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">{i18n.t('system_smoothness')}</span>
+									<span class="font-bold px-2.5 py-0.5 rounded-full text-[11px]" style="color: {hardware.tierColor}; background: {hardware.tierColor}25;">
 										{hardware.tierLabel} ({hardware.score}/100)
 									</span>
 								</div>
-								<div class="w-full h-2.5 bg-zinc-800/80 rounded-full overflow-hidden">
+								<div class="w-full h-2.5 rounded-full overflow-hidden {isLightTheme ? 'bg-zinc-200' : 'bg-zinc-800'}">
 									<div
 										class="h-full rounded-full transition-all duration-300"
 										style="width: {hardware.score}%; background: {hardware.tierColor};"
 									></div>
 								</div>
-								<p class="text-[11px] text-zinc-400 leading-relaxed">
+								<p class="text-xs leading-relaxed {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 									{hardware.recommendation}
 								</p>
 
 								<!-- On-Screen HUD FPS Counter Toggle Switch -->
-								<div class="flex items-center justify-between p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 mt-2">
+								<div class="flex items-center justify-between p-3.5 rounded-xl border mt-3 {
+									isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/80'
+								}">
 									<div>
-										<span class="font-semibold text-zinc-200 block text-xs">Indikator FPS Layar (HUD Telemetry)</span>
-										<span class="text-[10px] text-zinc-500">Tampilkan counter frame rate dan latensi realtime di sudut kanvas panggung</span>
+										<span class="font-semibold block text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Indikator FPS Layar (HUD Telemetry)</span>
+										<span class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Tampilkan counter frame rate dan latensi realtime di sudut kanvas panggung</span>
 									</div>
 									<button
 										onclick={() => {
@@ -789,8 +808,8 @@
 											playSfx('toggle');
 										}}
 										aria-label="Toggle HUD FPS Counter"
-										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-											rigging.showFpsCounter ? 'bg-cyan-500' : 'bg-zinc-700'
+										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+											rigging.showFpsCounter ? 'bg-cyan-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
 										}"
 									>
 										<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
@@ -801,51 +820,61 @@
 							</div>
 						</div>
 
-						<!-- GPU Architecture & Optimization Guide -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
+						<!-- GPU Architecture & Optimization Guide (Card 2) -->
+						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
+							isLightTheme
+								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
+								: 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
+						}">
 							<div class="flex items-center justify-between">
-								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-									<Cpu class="w-4 h-4 text-emerald-400" />
+								<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+									<Cpu class="w-4 h-4 text-emerald-500" />
 									<span>{i18n.t('gpu_info_title')}</span>
 								</h3>
-								<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
+								<span class="text-[10px] px-2.5 py-0.5 rounded-full font-mono {
+									isLightTheme
+										? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+										: 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+								}">
 									WebGL High-Perf Enabled
 								</span>
 							</div>
 
-							<p class="text-xs text-zinc-400 leading-relaxed">
+							<p class="text-xs leading-relaxed {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 								{i18n.t('gpu_info_desc')}
 							</p>
 
 							<!-- Factual Windows Guide for Dedicated GPU -->
-							<div class="p-4 rounded-xl bg-zinc-950/90 border border-cyan-500/30 space-y-3">
-								<div class="flex items-center gap-2 text-xs font-bold text-cyan-300">
-									<Info class="w-4 h-4 text-cyan-400 shrink-0" />
+							<div class="p-4 rounded-xl border space-y-3 {
+								isLightTheme ? 'bg-white border-cyan-300/60' : 'bg-zinc-950/90 border-cyan-500/30'
+							}">
+								<div class="flex items-center gap-2 text-xs font-bold text-cyan-600 dark:text-cyan-300">
+									<Info class="w-4 h-4 text-cyan-500 shrink-0" />
 									<span>{i18n.t('gpu_nvidia_guide_title')}</span>
 								</div>
-								<p class="text-[11px] text-zinc-400 leading-relaxed">
+								<p class="text-[11px] leading-relaxed {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 									{i18n.t('gpu_nvidia_guide_desc')}
 								</p>
 
-								<div class="space-y-2 text-[11px] text-zinc-300">
-									<div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
-										<div class="font-bold text-cyan-400 mb-0.5">Langkah 1: Windows Graphics Settings</div>
-										<div class="text-[10px] text-zinc-400">
-											Buka <span class="text-zinc-200 font-mono">Start &gt; Settings &gt; System &gt; Display &gt; Graphics</span>. Pilih browser Anda (Chrome/Edge/Brave), klik <strong>Options</strong>, lalu centang <strong>High performance (NVIDIA GeForce)</strong>.
+								<div class="space-y-2 text-[11px]">
+									<div class="p-3 rounded-xl border {isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/80 border-zinc-800/80'}">
+										<div class="font-bold text-cyan-600 dark:text-cyan-400 mb-0.5">Langkah 1: Windows Graphics Settings</div>
+										<div class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+											Buka <span class="font-mono {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Start &gt; Settings &gt; System &gt; Display &gt; Graphics</span>. Pilih browser Anda (Chrome/Edge/Brave), klik <strong>Options</strong>, lalu centang <strong>High performance (NVIDIA GeForce)</strong>.
 										</div>
 									</div>
 
-									<div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
-										<div class="font-bold text-cyan-400 mb-0.5">Langkah 2: NVIDIA Control Panel</div>
-										<div class="text-[10px] text-zinc-400">
-											Buka <span class="text-zinc-200 font-mono">NVIDIA Control Panel &gt; Manage 3D Settings &gt; Program Settings</span>. Tambahkan browser Anda, lalu atur <em>Preferred graphics processor</em> ke <strong>High-performance NVIDIA processor</strong>.
+									<div class="p-3 rounded-xl border {isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/80 border-zinc-800/80'}">
+										<div class="font-bold text-cyan-600 dark:text-cyan-400 mb-0.5">Langkah 2: NVIDIA Control Panel</div>
+										<div class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+											Buka <span class="font-mono {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">NVIDIA Control Panel &gt; Manage 3D Settings &gt; Program Settings</span>. Tambahkan browser Anda, lalu atur <em>Preferred graphics processor</em> ke <strong>High-performance NVIDIA processor</strong>.
 										</div>
 									</div>
 
-									<div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
-										<div class="font-bold text-cyan-400 mb-0.5">Langkah 3: Hardware Acceleration Browser</div>
-										<div class="text-[10px] text-zinc-400">
-											Pastikan di pengaturan browser: <span class="text-zinc-200 font-mono">Settings &gt; System &gt; "Use graphics acceleration when available"</span> aktif (ON), lalu restart browser.
+									<div class="p-3 rounded-xl border {isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/80 border-zinc-800/80'}">
+										<div class="font-bold text-cyan-600 dark:text-cyan-400 mb-0.5">Langkah 3: Hardware Acceleration Browser</div>
+										<div class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+											Pastikan di pengaturan browser: <span class="font-mono {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Settings &gt; System &gt; "Use graphics acceleration when available"</span> aktif (ON), lalu restart browser.
 										</div>
 									</div>
 								</div>
@@ -856,179 +885,414 @@
 				<!-- TAB 2: TRACKING & CAMERA -->
 				{:else if activeTab === 'tracking'}
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
-						<!-- Camera Hardware & Inversion Settings -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
-								<Camera class="w-4 h-4 text-indigo-400" />
-								<span>Kamera & Orientasi Sumbu</span>
-							</h3>
-
-							<div class="space-y-3 text-xs">
-								<!-- Camera Picker -->
-								<div>
-									<div class="flex items-center justify-between mb-1">
-										<label for="cam-select" class="block text-zinc-400 font-medium">{i18n.t('camera_device')}</label>
-										<button
-											onclick={() => refreshDevices(true)}
-											class="flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors"
-											title={i18n.t('refresh_devices')}
-										>
-											<RefreshCw class="w-3 h-3" />
-											<span>{i18n.t('refresh_devices')}</span>
-										</button>
-									</div>
-									<select
-										id="cam-select"
-										bind:value={rigging.cameraDeviceId}
-										onchange={handleCameraDeviceChange}
-										class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 focus:outline-none focus:border-indigo-500"
-									>
-										<option value="">📸 Auto Deteksi Kamera Hardware Laptop</option>
-										{#each availableCameras as cam}
-											<option value={cam.deviceId}>
-												{formatCameraBadge(cam.label)}
-											</option>
-										{/each}
-									</select>
-									{#if rigging.activeCameraLabel}
-										<div class="mt-2 p-2 bg-emerald-950/30 border border-emerald-800/40 rounded-xl text-[11px] text-emerald-300 flex items-center gap-2 font-mono">
-											<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-											<span class="truncate"><strong>{i18n.t('active_camera_hardware')}</strong> {rigging.activeCameraLabel}</span>
-										</div>
-									{/if}
-									<div class="mt-2 p-2.5 bg-cyan-950/30 border border-cyan-800/30 rounded-xl text-[11px] text-cyan-300/90 flex items-start gap-2 leading-relaxed">
-										<Info class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-										<span><strong>Iriun / DroidCam / Windows Phone Link:</strong> {i18n.t('phone_webcam_tip')}</span>
-									</div>
-								</div>
-
-								<!-- Resolution Picker -->
-								<div>
-									<label for="res-select" class="block text-zinc-400 font-medium mb-1">{i18n.t('camera_resolution')}</label>
-									<select
-										id="res-select"
-										bind:value={rigging.cameraResolution}
-										onchange={handleResolutionChange}
-										class="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-200 focus:outline-none focus:border-indigo-500"
-									>
-										<option value="480p">480p (640x480 — Ultra Ringan)</option>
-										<option value="720p">720p (1280x720 — Seimbang Standar)</option>
-										<option value="1080p">1080p (1920x1080 — Detail Tinggi)</option>
-									</select>
-								</div>
-
-								<!-- Invert Pitch Y, Invert Yaw X & Hand Tracking Switches -->
-								<div class="pt-2 border-t border-zinc-800/60 space-y-3">
-									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
-										<div>
-											<span class="font-semibold text-zinc-200 block">{i18n.t('invert_pitch')}</span>
-											<span class="text-[10px] text-zinc-500">{i18n.t('invert_pitch_desc')}</span>
-										</div>
-										<button
-											onclick={() => {
-												rigging.invertPitch = !rigging.invertPitch;
-												rigging.persist();
-											}}
-											aria-label={i18n.t('invert_pitch')}
-											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-												rigging.invertPitch ? 'bg-indigo-500' : 'bg-zinc-700'
-											}"
-										>
-											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
-												rigging.invertPitch ? 'translate-x-4.5' : 'translate-x-1'
-											}"></span>
-										</button>
-									</div>
-
-									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
-										<div>
-											<span class="font-semibold text-zinc-200 block">{i18n.t('invert_yaw')}</span>
-											<span class="text-[10px] text-zinc-500">{i18n.t('invert_yaw_desc')}</span>
-										</div>
-										<button
-											onclick={() => {
-												rigging.invertYaw = !rigging.invertYaw;
-												rigging.persist();
-											}}
-											aria-label={i18n.t('invert_yaw')}
-											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-												rigging.invertYaw ? 'bg-indigo-500' : 'bg-zinc-700'
-											}"
-										>
-											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
-												rigging.invertYaw ? 'translate-x-4.5' : 'translate-x-1'
-											}"></span>
-										</button>
-									</div>
-
-									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
-										<div>
-											<span class="font-semibold text-zinc-200 block">{i18n.t('hands_toggle')}</span>
-											<span class="text-[10px] text-zinc-500">{i18n.t('hand_tracking_perf_tip')}</span>
-										</div>
-										<button
-											onclick={() => {
-												rigging.enableHandTracking = !rigging.enableHandTracking;
-												rigging.persist();
-											}}
-											aria-label={i18n.t('hands_toggle')}
-											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-												rigging.enableHandTracking ? 'bg-indigo-500' : 'bg-zinc-700'
-											}"
-										>
-											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
-												rigging.enableHandTracking ? 'translate-x-4.5' : 'translate-x-1'
-											}"></span>
-										</button>
-									</div>
-
-									<!-- Wink Sebelah Mata (Independent Eye Wink) -->
-									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
-										<div>
-											<span class="font-semibold text-zinc-200 block">Wink Sebelah Mata (Kedip Mandiri)</span>
-											<span class="text-[10px] text-zinc-500">Mata kiri & kanan bisa berkedip independen saat Anda mengedipkan sebelah mata</span>
-										</div>
-										<button
-											onclick={() => {
-												rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked;
-												rigging.persist();
-												playSfx('toggle');
-											}}
-											aria-label="Wink Sebelah Mata"
-											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-												!rigging.eyeBlinkLinked ? 'bg-indigo-500' : 'bg-zinc-700'
-											}"
-										>
-											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
-												!rigging.eyeBlinkLinked ? 'translate-x-4.5' : 'translate-x-1'
-											}"></span>
-										</button>
-									</div>
-
-									<!-- Cermin Mata VTuber (Mirror Eyes) -->
-									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
-										<div>
-											<span class="font-semibold text-zinc-200 block">Cermin Mata VTuber</span>
-											<span class="text-[10px] text-zinc-500">Mata kiri fisik Anda mengedipkan mata kiri avatar pada layar (orientasi cermin)</span>
-										</div>
-										<button
-											onclick={() => {
-												rigging.mirrorEyes = !rigging.mirrorEyes;
-												rigging.persist();
-												playSfx('toggle');
-											}}
-											aria-label="Cermin Mata VTuber"
-											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
-												rigging.mirrorEyes ? 'bg-indigo-500' : 'bg-zinc-700'
-											}"
-										>
-											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
-												rigging.mirrorEyes ? 'translate-x-4.5' : 'translate-x-1'
-											}"></span>
-										</button>
-									</div>
-								</div>
+						<!-- Camera Hardware & Inversion Settings (Participant-Aware: Host / Guest 1 / Guest 2) -->
+						<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+							isLightTheme
+								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
+								: 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
+						}">
+							<div class="flex items-center justify-between">
+								<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
+									<Camera class="w-4 h-4 text-indigo-500" />
+									<span>Kamera &amp; Orientasi Sumbu</span>
+								</h3>
+								<button
+									onclick={() => refreshDevices(true)}
+									class="flex items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-400 transition-colors cursor-pointer"
+									title={i18n.t('refresh_devices')}
+								>
+									<RefreshCw class="w-3 h-3" />
+									<span>Pindai Kamera</span>
+								</button>
 							</div>
+
+							<!-- Participant Selector Tabs (Host, Collab Guest 1, Collab Guest 2) -->
+							<div class="flex items-center gap-1.5 p-1 rounded-xl border {isLightTheme ? 'bg-white border-zinc-300' : 'bg-zinc-950 border-zinc-800'}">
+								<button
+									type="button"
+									onclick={() => (trackingParticipant = 'host')}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 {
+										trackingParticipant === 'host'
+											? 'bg-pink-500 text-white shadow-xs'
+											: isLightTheme ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<Smile class="w-3.5 h-3.5" />
+									<span>Host Utama</span>
+								</button>
+								<button
+									type="button"
+									onclick={() => (trackingParticipant = 'guest1')}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 {
+										trackingParticipant === 'guest1'
+											? 'bg-purple-600 text-white shadow-xs'
+											: isLightTheme ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<Users class="w-3.5 h-3.5" />
+									<span>Guest 1</span>
+									{#if rigging.isCollabModeActive}
+										<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+									{/if}
+								</button>
+								<button
+									type="button"
+									onclick={() => (trackingParticipant = 'guest2')}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 {
+										trackingParticipant === 'guest2'
+											? 'bg-indigo-600 text-white shadow-xs'
+											: isLightTheme ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									<Users class="w-3.5 h-3.5" />
+									<span>Guest 2</span>
+									{#if rigging.isCollab2Active}
+										<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+									{/if}
+								</button>
+							</div>
+
+							<!-- PARTICIPANT: HOST UTAMA -->
+							{#if trackingParticipant === 'host'}
+								<div class="space-y-3 text-xs animate-in fade-in duration-100">
+									<!-- Camera Picker for Host -->
+									<div>
+										<label for="cam-select-host" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Perangkat Kamera Host Utama:
+										</label>
+										<select
+											id="cam-select-host"
+											bind:value={rigging.cameraDeviceId}
+											onchange={handleCameraDeviceChange}
+											class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-indigo-500 cursor-pointer {
+												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+											}"
+										>
+											<option value="">📸 Auto Deteksi Kamera Hardware Laptop</option>
+											{#each availableCameras as cam}
+												<option value={cam.deviceId}>
+													{formatCameraBadge(cam.label)}
+												</option>
+											{/each}
+										</select>
+										{#if rigging.activeCameraLabel}
+											<div class="mt-2 p-2 border rounded-xl text-[11px] flex items-center gap-2 font-mono {
+												isLightTheme ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300'
+											}">
+												<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+												<span class="truncate"><strong>Hardware:</strong> {rigging.activeCameraLabel}</span>
+											</div>
+										{/if}
+									</div>
+
+									<!-- Resolution Picker -->
+									<div>
+										<label for="res-select" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Resolusi Input Kamera:
+										</label>
+										<select
+											id="res-select"
+											bind:value={rigging.cameraResolution}
+											onchange={handleResolutionChange}
+											class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-indigo-500 cursor-pointer {
+												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+											}"
+										>
+											<option value="480p">480p (640x480 — Ultra Ringan)</option>
+											<option value="720p">720p (1280x720 — Seimbang Standar)</option>
+											<option value="1080p">1080p (1920x1080 — Detail Tinggi)</option>
+										</select>
+									</div>
+
+									<!-- Invert Pitch, Invert Yaw & Axis Switches -->
+									<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'} space-y-2.5">
+										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+											<div>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">{i18n.t('invert_pitch')}</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('invert_pitch_desc')}</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.invertPitch = !rigging.invertPitch;
+													rigging.persist();
+												}}
+												aria-label={i18n.t('invert_pitch')}
+												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+													rigging.invertPitch ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+												}"
+											>
+												<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+													rigging.invertPitch ? 'translate-x-4.5' : 'translate-x-1'
+												}"></span>
+											</button>
+										</div>
+
+										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+											<div>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">{i18n.t('invert_yaw')}</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('invert_yaw_desc')}</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.invertYaw = !rigging.invertYaw;
+													rigging.persist();
+												}}
+												aria-label={i18n.t('invert_yaw')}
+												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+													rigging.invertYaw ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+												}"
+											>
+												<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+													rigging.invertYaw ? 'translate-x-4.5' : 'translate-x-1'
+												}"></span>
+											</button>
+										</div>
+
+										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+											<div>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">{i18n.t('hands_toggle')}</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('hand_tracking_perf_tip')}</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.enableHandTracking = !rigging.enableHandTracking;
+													rigging.persist();
+												}}
+												aria-label={i18n.t('hands_toggle')}
+												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+													rigging.enableHandTracking ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+												}"
+											>
+												<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+													rigging.enableHandTracking ? 'translate-x-4.5' : 'translate-x-1'
+												}"></span>
+											</button>
+										</div>
+
+										<!-- Wink Sebelah Mata (Independent Eye Wink) -->
+										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+											<div>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Wink Sebelah Mata (Kedip Mandiri)</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Mata kiri &amp; kanan bisa berkedip independen saat Anda mengedipkan sebelah mata</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked;
+													rigging.persist();
+													playSfx('toggle');
+												}}
+												aria-label="Wink Sebelah Mata"
+												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+													!rigging.eyeBlinkLinked ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+												}"
+											>
+												<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+													!rigging.eyeBlinkLinked ? 'translate-x-4.5' : 'translate-x-1'
+												}"></span>
+											</button>
+										</div>
+
+										<!-- Cermin Mata VTuber (Mirror Eyes) -->
+										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+											<div>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Cermin Mata VTuber</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Mata kiri fisik Anda mengedipkan mata kiri avatar pada layar</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.mirrorEyes = !rigging.mirrorEyes;
+													rigging.persist();
+													playSfx('toggle');
+												}}
+												aria-label="Cermin Mata VTuber"
+												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+													rigging.mirrorEyes ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+												}"
+											>
+												<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+													rigging.mirrorEyes ? 'translate-x-4.5' : 'translate-x-1'
+												}"></span>
+											</button>
+										</div>
+									</div>
+								</div>
+
+							<!-- PARTICIPANT: COLLAB GUEST 1 -->
+							{:else if trackingParticipant === 'guest1'}
+								<div class="space-y-3 text-xs animate-in fade-in duration-100">
+									<div class="flex items-center justify-between p-3 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-purple-950/20 border-purple-500/30'}">
+										<div>
+											<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Status Collab Guest 1</span>
+											<span class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Avatar: {rigging.collabModelName}</span>
+										</div>
+										<button
+											type="button"
+											onclick={() => rigging.toggleCollabMode()}
+											class="px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer {
+												rigging.isCollabModeActive ? 'bg-purple-600 text-white shadow-xs' : 'bg-zinc-800 text-zinc-300'
+											}"
+										>
+											{rigging.isCollabModeActive ? '✓ Aktif' : '+ Aktifkan'}
+										</button>
+									</div>
+
+									<!-- Camera Device Picker for Guest 1 -->
+									<div>
+										<label for="cam-select-guest1" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Perangkat Kamera Khusus Guest 1:
+										</label>
+										<select
+											id="cam-select-guest1"
+											value={rigging.collabCameraDeviceId}
+											onchange={(e) => {
+												const sel = e.target as HTMLSelectElement;
+												const opt = sel.options[sel.selectedIndex];
+												rigging.setCollabCamera('guest1', sel.value, opt?.text || '');
+											}}
+											class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-purple-500 cursor-pointer {
+												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+											}"
+										>
+											<option value="">Gunakan Kamera Sekunder (Pilih dari daftar...)</option>
+											{#each availableCameras as cam}
+												<option value={cam.deviceId}>
+													{formatCameraBadge(cam.label)}
+												</option>
+											{/each}
+										</select>
+									</div>
+
+									<!-- Model Avatar Selection for Guest 1 -->
+									<div>
+										<span class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Pilih Model Avatar Live2D Guest 1:
+										</span>
+										<div class="grid grid-cols-3 gap-1.5">
+											{#each MODEL_CATALOG.slice(0, 6) as model}
+												<button
+													type="button"
+													onclick={() => rigging.setCollabModel(model.id, model.name, model.url)}
+													class="p-2 rounded-xl border text-left transition-all cursor-pointer {
+														rigging.collabModelId === model.id
+															? 'border-purple-500 bg-purple-500/20 text-purple-200 font-bold ring-1 ring-purple-500/50'
+															: isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+													}"
+												>
+													<div class="truncate text-[11px]">{model.name}</div>
+												</button>
+											{/each}
+										</div>
+									</div>
+
+									<!-- Tracking Mode Toggle -->
+									<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+										<div>
+											<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Mode Sinkronisasi Tracking</span>
+											<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Ikuti wajah kamera mandiri atau bernafas idle otomatis</span>
+										</div>
+										<button
+											type="button"
+											onclick={() => {
+												rigging.collabSyncTracking = !rigging.collabSyncTracking;
+												rigging.persist();
+											}}
+											class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {
+												rigging.collabSyncTracking ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400'
+											}"
+										>
+											{rigging.collabSyncTracking ? '✓ Sync Kamera' : '💤 Idle Breath'}
+										</button>
+									</div>
+								</div>
+
+							<!-- PARTICIPANT: COLLAB GUEST 2 -->
+							{:else if trackingParticipant === 'guest2'}
+								<div class="space-y-3 text-xs animate-in fade-in duration-100">
+									<div class="flex items-center justify-between p-3 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-indigo-950/20 border-indigo-500/30'}">
+										<div>
+											<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Status Collab Guest 2</span>
+											<span class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Avatar: {rigging.collab2ModelName}</span>
+										</div>
+										<button
+											type="button"
+											onclick={() => rigging.toggleCollab2Mode()}
+											class="px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer {
+												rigging.isCollab2Active ? 'bg-indigo-600 text-white shadow-xs' : 'bg-zinc-800 text-zinc-300'
+											}"
+										>
+											{rigging.isCollab2Active ? '✓ Aktif' : '+ Aktifkan'}
+										</button>
+									</div>
+
+									<!-- Camera Device Picker for Guest 2 -->
+									<div>
+										<label for="cam-select-guest2" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Perangkat Kamera Khusus Guest 2:
+										</label>
+										<select
+											id="cam-select-guest2"
+											value={rigging.collab2CameraDeviceId}
+											onchange={(e) => {
+												const sel = e.target as HTMLSelectElement;
+												const opt = sel.options[sel.selectedIndex];
+												rigging.setCollabCamera('guest2', sel.value, opt?.text || '');
+											}}
+											class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-indigo-500 cursor-pointer {
+												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+											}"
+										>
+											<option value="">Gunakan Kamera Tersier (Pilih dari daftar...)</option>
+											{#each availableCameras as cam}
+												<option value={cam.deviceId}>
+													{formatCameraBadge(cam.label)}
+												</option>
+											{/each}
+										</select>
+									</div>
+
+									<!-- Model Avatar Selection for Guest 2 -->
+									<div>
+										<span class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Pilih Model Avatar Live2D Guest 2:
+										</span>
+										<div class="grid grid-cols-3 gap-1.5">
+											{#each MODEL_CATALOG.slice(0, 6) as model}
+												<button
+													type="button"
+													onclick={() => rigging.setCollab2Model(model.id, model.name, model.url)}
+													class="p-2 rounded-xl border text-left transition-all cursor-pointer {
+														rigging.collab2ModelId === model.id
+															? 'border-indigo-500 bg-indigo-500/20 text-indigo-200 font-bold ring-1 ring-indigo-500/50'
+															: isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+													}"
+												>
+													<div class="truncate text-[11px]">{model.name}</div>
+												</button>
+											{/each}
+										</div>
+									</div>
+
+									<!-- Tracking Mode Toggle -->
+									<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+										<div>
+											<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Mode Sinkronisasi Tracking</span>
+											<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Ikuti wajah kamera mandiri atau bernafas idle otomatis</span>
+										</div>
+										<button
+											type="button"
+											onclick={() => {
+												rigging.collab2SyncTracking = !rigging.collab2SyncTracking;
+												rigging.persist();
+											}}
+											class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {
+												rigging.collab2SyncTracking ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400'
+											}"
+										>
+											{rigging.collab2SyncTracking ? '✓ Sync Kamera' : '💤 Idle Breath'}
+										</button>
+									</div>
+								</div>
+							{/if}
 						</div>
 
 						<!-- Fine Sensitivity, Smoothing & Quick Presets -->
@@ -2305,132 +2569,145 @@
 						</div>
 					</div>
 
-				<!-- TAB 6: ABOUT & TERMS OF SERVICE LAUNCHPAD -->
+				<!-- TAB 6: ABOUT STUDIO & SPECIFICATIONS -->
 				{:else if activeTab === 'about'}
-					<div class="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-6 max-w-3xl mx-auto animate-in fade-in duration-150">
-						<!-- Lead Creator & Studio Launch Card -->
-						<div class="p-5 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-cyan-500/40 shadow-xl space-y-4">
+					<div class="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-150">
+						<!-- Studio Hero Banner -->
+						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
+							isLightTheme
+								? 'bg-gradient-to-br from-white via-sky-50/50 to-pink-50/30 border-zinc-200 text-zinc-900'
+								: 'bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border-cyan-500/30 text-zinc-100 shadow-xl'
+						}">
 							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 								<div class="flex items-center gap-3.5">
 									<div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 to-violet-600 flex items-center justify-center font-bold text-white shadow-lg text-lg">
 										<Sparkles class="w-6 h-6 text-white animate-pulse" />
 									</div>
 									<div>
-										<h3 class="text-base font-bold text-zinc-100 flex items-center gap-2">
-											{i18n.t('about_title')}
-											<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono font-medium">
-												v2.4.0 Studio
+										<h3 class="text-base sm:text-lg font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+											<span>MiruNova <strong class="text-cyan-500 font-black">Live</strong></span>
+											<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold {
+												isLightTheme ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-cyan-950 text-cyan-300 border border-cyan-800'
+											}">
+												v0.20.1-beta (Beta)
+											</span>
+											<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold {
+												isLightTheme ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+											}">
+												FOSS
 											</span>
 										</h3>
-										<p class="text-xs text-zinc-400 mt-0.5">
-											Arsitek & Developer Utama: <strong class="text-cyan-300">Rifky (@RifkyA911)</strong>
+										<p class="text-xs mt-0.5 {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+											Arsitek &amp; Developer Utama: <strong class="text-cyan-600 dark:text-cyan-300">Rifky (@RifkyA911)</strong>
 										</p>
 									</div>
 								</div>
-
-								<button
-									onclick={() => {
-										playSfx('modal');
-										rigging.isSettingsModalOpen = false;
-										rigging.toggleAboutModal(true);
-									}}
-									class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-xl text-xs transition-all hover:scale-105 active:scale-95 shadow-md shadow-cyan-500/20 cursor-pointer"
-								>
-									Buka Studio About &amp; Kredit Penuh &rarr;
-								</button>
 							</div>
 
-							<p class="text-xs text-zinc-300 leading-relaxed">
-								{i18n.t('about_desc')}
+							<p class="text-xs leading-relaxed {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+								MiruNova Live adalah studio VTuber generasi modern berbasis web yang berjalan 100% di browser tanpa instalasi driver berat. Menghadirkan pelacakan wajah &amp; ekspresi presisi tinggi 60 FPS, pengubah suara audio zero-latency, studio multi-kamera kolaborasi, serta ekosistem layer panggung yang fleksibel.
 							</p>
 						</div>
 
-						<!-- Privacy Charter & Commercial VTuber Rights Launch Card -->
-						<div class="p-5 rounded-2xl bg-zinc-950/80 border border-emerald-500/30 shadow-lg space-y-4">
-							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-								<div class="flex items-center gap-3">
-									<div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-										<ShieldCheck class="w-5 h-5" />
-									</div>
-									<div>
-										<h4 class="text-sm font-bold text-emerald-300">
-											{i18n.t('tos_modal_title')}
-										</h4>
-										<p class="text-[11px] text-zinc-400 mt-0.5">
-											100% Client-Side Privacy Charter • Komersial Bebas Royalti Streaming VTuber
-										</p>
-									</div>
+						<!-- Core Pillars (Privacy & Commercial Freedom) -->
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div class="p-5 rounded-2xl border space-y-2.5 {
+								isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+							}">
+								<div class="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+									<ShieldCheck class="w-4 h-4 shrink-0" />
+									<span>100% Client-Side Privacy</span>
 								</div>
-
-								<button
-									onclick={() => {
-										playSfx('modal');
-										rigging.isSettingsModalOpen = false;
-										rigging.toggleTosModal(true);
-									}}
-									class="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer"
-								>
-									Buka Privacy Charter &amp; ToS &rarr;
-								</button>
+								<p class="text-[11px] leading-relaxed {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+									Semua pemrosesan neural network (MediaPipe Face &amp; Hands) dieksekusi secara lokal di mesin Anda menggunakan WebAssembly (WASM). Zero biometric telemetry — rekaman webcam dan audio tidak pernah diunggah ke server manapun.
+								</p>
 							</div>
 
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-[11px] text-zinc-400">
-								<div class="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-2">
-									<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-									<span>Zero Biometric Telemetry (Local WASM)</span>
+							<div class="p-5 rounded-2xl border space-y-2.5 {
+								isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+							}">
+								<div class="flex items-center gap-2 text-xs font-bold text-cyan-600 dark:text-cyan-400">
+									<Tv class="w-4 h-4 shrink-0" />
+									<span>Komersial &amp; Bebas Royalti</span>
 								</div>
-								<div class="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-2">
-									<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-									<span>Hak Streaming YouTube / Twitch 100% Bebas</span>
+								<p class="text-[11px] leading-relaxed {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+									Bebas digunakan untuk siaran langsung (live streaming), kreasi konten video, dan monetisasi komersial di YouTube, Twitch, Kick, Bilibili, TikTok Live, maupun software broadcast OBS Studio via Chroma Key / Window Capture.
+								</p>
+							</div>
+						</div>
+
+						<!-- Live Streaming Keyboard Shortcuts Cheat Sheet -->
+						<div class="p-5 rounded-2xl border space-y-3.5 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+						}">
+							<div class="flex items-center gap-2">
+								<Keyboard class="w-4 h-4 text-violet-500" />
+								<h4 class="text-xs font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+									Pintasan Keyboard Streaming Cepat
+								</h4>
+							</div>
+
+							<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Space</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Kalibrasi Wajah</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">C</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Toggle Kamera</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">V</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Toggle Mic</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">H</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Sembunyi Dock</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">L</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Kunci GUI</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">O</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Mode OBS</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">S</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Screenshot</span>
+								</div>
+								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
+									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">F1</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Bantuan Pintasan</span>
 								</div>
 							</div>
 						</div>
 
-						<!-- Keyboard Shortcuts Guide Launch Card -->
-						<div class="p-5 rounded-2xl bg-zinc-950/80 border border-violet-500/30 shadow-lg space-y-4">
-							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-								<div class="flex items-center gap-3">
-									<div class="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400">
-										<Keyboard class="w-5 h-5" />
-									</div>
-									<div>
-										<h4 class="text-sm font-bold text-violet-300">
-											{i18n.t('shortcuts_title')} [F1 / ?]
-										</h4>
-										<p class="text-[11px] text-zinc-400 mt-0.5">
-											Daftar lengkap tombol pintasan keyboard cepat untuk live streaming &amp; kontrol stage
-										</p>
-									</div>
+						<!-- Core Tech Engine Specs -->
+						<div class="p-5 rounded-2xl border space-y-2.5 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+						}">
+							<span class="text-xs font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+								Spesifikasi Arsitektur Sistem
+							</span>
+							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] font-mono">
+								<div class="p-2 rounded-lg border {isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950/70 border-zinc-800 text-zinc-300'}">
+									⚡ Svelte 5 (Runes Core)
 								</div>
-
-								<button
-									onclick={() => {
-										playSfx('modal');
-										rigging.isSettingsModalOpen = false;
-										rigging.toggleShortcutModal(true);
-									}}
-									class="px-4 py-2 bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/40 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer"
-								>
-									Buka Panduan Pintasan [F1] &rarr;
-								</button>
-							</div>
-
-							<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px] text-zinc-400 font-mono">
-								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
-									<span class="text-zinc-200 font-bold block">Space</span>
-									<span class="text-[10px] text-zinc-500">Kalibrasi Wajah</span>
+								<div class="p-2 rounded-lg border {isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950/70 border-zinc-800 text-zinc-300'}">
+									👁️ MediaPipe WASM 478-pt
 								</div>
-								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
-									<span class="text-zinc-200 font-bold block">C</span>
-									<span class="text-[10px] text-zinc-500">Toggle Kamera</span>
+								<div class="p-2 rounded-lg border {isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950/70 border-zinc-800 text-zinc-300'}">
+									🎨 Pixi.js v7 Live2D Core
 								</div>
-								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
-									<span class="text-zinc-200 font-bold block">H</span>
-									<span class="text-[10px] text-zinc-500">Sembunyi Dock</span>
+								<div class="p-2 rounded-lg border {isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950/70 border-zinc-800 text-zinc-300'}">
+									🧊 Three.js 3D WebGL2
 								</div>
-								<div class="p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-center">
-									<span class="text-zinc-200 font-bold block">F1</span>
-									<span class="text-[10px] text-zinc-500">Bantuan Pintasan</span>
+								<div class="p-2 rounded-lg border {isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950/70 border-zinc-800 text-zinc-300'}">
+									🎙️ Web Audio DSP &amp; SFX
+								</div>
+								<div class="p-2 rounded-lg border {isLightTheme ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-zinc-950/70 border-zinc-800 text-zinc-300'}">
+									🚀 Bun Native Runtime
 								</div>
 							</div>
 						</div>

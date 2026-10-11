@@ -21,6 +21,10 @@
 	import { playSfx } from '#lib/core/sfx';
 	import { Radio, X, Sparkles, Check, Lock } from 'lucide-svelte';
 
+	const isLightTheme = $derived(
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+	);
+
 	// OBS Mode auto-fade control
 	let isMouseActive = $state<boolean>(true);
 	let isPillHovered = $state<boolean>(false);
@@ -505,13 +509,21 @@
 		</div>
 	{/if}
 
-	<!-- Floating Toast Notification (High Contrast Ultra-Readable) -->
+	<!-- Floating Toast Notification (Theme-Aware, High Contrast, Ultra-Legible) -->
 	{#if rigging.toastMessage}
 		<div
-			class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-2.5 bg-zinc-950 border-2 border-cyan-400 text-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.95)] backdrop-blur-xl pointer-events-none animate-in fade-in slide-in-from-top-2 duration-150"
+			class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-2.5 rounded-2xl border-2 pointer-events-none select-none animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-xl shadow-2xl {
+				isLightTheme
+					? 'bg-white/98 border-zinc-900 text-zinc-950 shadow-[0_12px_36px_rgba(0,0,0,0.18)]'
+					: 'bg-zinc-950/98 border-cyan-400 text-zinc-50 shadow-[0_12px_40px_rgba(0,0,0,0.95)] shadow-cyan-950/40'
+			}"
 		>
-			<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0 shadow-[0_0_12px_#22d3ee] animate-pulse"></span>
-			<span class="text-xs sm:text-sm font-bold text-white tracking-wide select-none drop-shadow-sm">{rigging.toastMessage}</span>
+			<span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-md animate-pulse {
+				isLightTheme ? 'bg-cyan-600 shadow-cyan-500/50' : 'bg-cyan-400 shadow-[0_0_12px_#22d3ee]'
+			}"></span>
+			<span class="text-xs sm:text-sm font-bold tracking-wide select-none drop-shadow-xs {
+				isLightTheme ? 'text-zinc-950' : 'text-zinc-50'
+			}">{rigging.toastMessage}</span>
 		</div>
 	{/if}
 </main>

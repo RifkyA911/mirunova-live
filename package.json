@@ -1,7 +1,7 @@
 {
 	"name": "mirunova-live",
 	"private": true,
-	"version": "0.17.0",
+	"version": "0.20.1-beta",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",

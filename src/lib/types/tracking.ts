@@ -132,6 +132,8 @@ export interface AccessoryItem {
 	rotation: number;
 	opacity: number;
 	color?: string;
+	imageUrl?: string;
+	attachTo?: 'head' | 'body' | 'hand-l' | 'hand-r' | 'screen';
 }
 
 export interface StageLayer {
