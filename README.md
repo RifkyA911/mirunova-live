@@ -92,7 +92,7 @@
 
 ### 🎭 9. Reorganized Multi-Engine Model Catalog & BOOTH.pm Studio
 * **2D Live2D Tab:**
-  * **Model Cubism 4 Siap Pakai:** Haru Greeter (Full hand tracking & arm gestures), Hiyori Momose, Mao.
+  * **Model Cubism 4 Siap Pakai:** Haru Greeter (Full hand tracking & arm gestures), Hiyori Momose, Mao, Mark, Ren.
   * **Sampel Gratis Live2D Inc. (Official Samples):** Shizuku (Idol), Chitose (Schoolgirl), Koharu (SD Chibi), Epsilon (Sci-Fi Mech), Tororo (Cute Pet Mascot), Hibiki (Active Boy).
   * **AI VTuber Legend Tribute:** Neuro-sama (Vedal987 / Anny AI VTuber Tribute).
 * **BOOTH.pm Tab (Categorized & Curated):**
@@ -138,9 +138,11 @@
   3. **Collab Partner Avatar:** Guest streamer model.
   4. **Host Avatar:** Primary Live2D or 3D tracked avatar.
   5. **Stage Background:** Solid, Cosmic, Mesh Grid, Alpha, Chroma.
+* **Sticky Sidebar vs Windowed Floating:** Toggle between full-height pinned right sidebar and floating windowed panel with butter-smooth RAF-throttled titlebar dragging and corner resizing.
+* **Stage-Wide Lock & Hide Integration:** Hiding a layer instantly toggles visibility and alpha on the active 2D / 3D canvas stage. Locking a layer strictly freezes canvas mouse dragging, panning, and wheel zooming to protect your stage layout.
+* **Persistent Settings:** Layer order, visibility, opacity, and locked states are automatically preserved in `localStorage`.
 * **Interactive Live Thumbnail Previews:** Every layer card renders real-time miniature thumbnail previews showing active background colors, model names, active accessory counts, and screen shaders.
-* **Layer Z-Index Reordering:** Click `Up` or `Down` to alter the rendering hierarchy; PixiJS WebGL automatically sorts children by `zIndex` in real-time.
-* **Opacity & Lock Controls:** Smooth 0%–100% layer opacity sliders and layer lock protection preventing accidental edits.
+* **Layer Z-Index Reordering:** Click `Up` or `Down` or drag-and-drop rows to alter the rendering hierarchy; PixiJS WebGL automatically sorts children by `zIndex` in real-time.
 * **Global Hotkey:** Press `P` anytime or click the `Layers` button in the Control Dock / Assist Menu to open the manager.
 
 ### 🎀 14. VTuber Accessories & Props Attach System
