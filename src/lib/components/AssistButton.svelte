@@ -12,35 +12,29 @@
 		Crosshair,
 		Pin,
 		PinOff,
-		ChevronRight,
-		ChevronLeft,
-		Sparkles
+		X,
+		Sparkles,
+		Aperture
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { tracker } from '#lib/core/tracker';
 
-	let isHovered = $state<boolean>(false);
+	let isOpen = $state<boolean>(false);
 	let isPinned = $state<boolean>(false);
 
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
 
-	const isVisible = $derived(isHovered || isPinned);
+	const isVisible = $derived(isOpen || isPinned);
 
 	const displayZoomPercent = $derived<number>(
 		Math.round((rigging.zoomLevel || 1.0) * 100)
 	);
 
-	function handleMouseEnter() {
-		if (!isHovered) {
-			playSfx('hover');
-			isHovered = true;
-		}
-	}
-
-	function handleMouseLeave() {
-		isHovered = false;
+	function toggleOpen() {
+		playSfx('click');
+		isOpen = !isOpen;
 	}
 
 	function togglePin() {
@@ -52,57 +46,118 @@
 		playSfx('calibrate');
 		tracker.calibrate();
 	}
+
+	function closeMenu() {
+		if (!isPinned) {
+			isOpen = false;
+		}
+	}
 </script>
 
 {#if !rigging.isObsMode && !rigging.isGuiLocked}
-	<!-- Left-Edge Assist Button (Hiding at left edge, ~10% peeking, slides out on hover) -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge) -->
 	<aside
 		aria-label={i18n.t('assist_button_title')}
-		onmouseenter={handleMouseEnter}
-		onmouseleave={handleMouseLeave}
-		class="fixed left-0 top-1/2 -translate-y-1/2 z-40 select-none transition-all duration-300 ease-out flex items-center {
-			isVisible ? 'translate-x-0' : '-translate-x-[calc(100%-28px)]'
-		}"
+		class="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-40 select-none flex items-center"
 	>
-		<!-- Main Assist Dock Card -->
-		<div
-			class="flex items-stretch backdrop-blur-2xl border rounded-r-2xl shadow-2xl transition-all duration-200 overflow-hidden {
-				isLightTheme
-					? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl'
-					: 'bg-zinc-950/92 border-zinc-800/80 text-zinc-200 shadow-2xl'
+		<!-- 1. Floating Circular Assist Icon (Apple AssistiveTouch Style) -->
+		<button
+			type="button"
+			onclick={toggleOpen}
+			aria-label={i18n.t('assist_button_title')}
+			title="{i18n.t('assist_button_title')} (Apple AssistiveTouch)"
+			class="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center backdrop-blur-xl border shadow-xl transition-all duration-200 cursor-pointer group active:scale-90 {
+				isVisible
+					? 'ring-2 ring-cyan-400/80 scale-105 opacity-100 shadow-cyan-500/30'
+					: 'opacity-75 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/20'
 			} {
-				isVisible ? 'border-cyan-500/50 shadow-cyan-500/15' : isLightTheme ? 'hover:border-zinc-300' : 'hover:border-zinc-700'
+				isLightTheme
+					? 'bg-white/90 border-zinc-300 text-zinc-800 shadow-zinc-400/30'
+					: 'bg-zinc-950/85 border-zinc-700/80 text-zinc-100 shadow-black/60'
 			}"
 		>
-			<!-- Expanded Control Body -->
-			<div class="p-3 w-52 flex flex-col gap-2.5 text-xs">
-				<!-- Header -->
-				<div class="flex items-center justify-between border-b pb-2 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/70'}">
+			<!-- Concentric Apple AssistiveTouch Rings -->
+			<div class="absolute inset-1.5 rounded-full border border-dashed transition-all duration-300 {
+				isVisible
+					? 'border-cyan-400/70 rotate-45'
+					: isLightTheme
+					? 'border-zinc-400/60 group-hover:border-cyan-500/60'
+					: 'border-zinc-600/70 group-hover:border-cyan-400/70'
+			}"></div>
+
+			<!-- Core Icon Dot -->
+			<div class="relative flex items-center justify-center">
+				{#if isVisible}
+					<Aperture class="w-5 h-5 text-cyan-400 animate-spin-slow" />
+				{:else}
+					<div class="relative flex items-center justify-center">
+						<SlidersHorizontal class="w-4 h-4 {isLightTheme ? 'text-zinc-700 group-hover:text-cyan-600' : 'text-zinc-300 group-hover:text-cyan-300'} transition-colors" />
+						<span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/80"></span>
+					</div>
+				{/if}
+			</div>
+		</button>
+
+		<!-- 2. Floating Assistive Menu Popover (Anchored to the left of the button) -->
+		{#if isVisible}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			{#if !isPinned}
+				<div
+					onclick={closeMenu}
+					class="fixed inset-0 z-[-1]"
+					aria-hidden="true"
+				></div>
+			{/if}
+
+			<div
+				class="absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 w-56 p-3 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-150 {
+					isLightTheme
+						? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl'
+						: 'bg-zinc-950/95 border-zinc-800/90 text-zinc-200 shadow-2xl'
+				}"
+			>
+				<!-- Header with Title, Pin & Close -->
+				<div class="flex items-center justify-between border-b pb-2 mb-2.5 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 					<div class="flex items-center gap-1.5">
-						<SlidersHorizontal class="w-4 h-4 text-cyan-500" />
-						<span class="font-bold text-[11px] tracking-wide uppercase {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+						<SlidersHorizontal class="w-3.5 h-3.5 text-cyan-500" />
+						<span class="font-bold text-[11px] tracking-wide uppercase {isLightTheme ? 'text-zinc-800' : 'text-zinc-100'}">
 							{i18n.t('assist_button_title')}
 						</span>
 					</div>
-					<button
-						type="button"
-						onclick={togglePin}
-						title={isPinned ? i18n.t('assist_unpin_tooltip') : i18n.t('assist_pin_tooltip')}
-						class="p-1 rounded-lg transition-colors cursor-pointer {
-							isLightTheme ? 'text-zinc-500 hover:text-cyan-600' : 'text-zinc-400 hover:text-cyan-300'
-						}"
-					>
-						{#if isPinned}
-							<PinOff class="w-3.5 h-3.5 text-cyan-500" />
-						{:else}
-							<Pin class="w-3.5 h-3.5" />
-						{/if}
-					</button>
+					<div class="flex items-center gap-1">
+						<button
+							type="button"
+							onclick={togglePin}
+							title={isPinned ? i18n.t('assist_unpin_tooltip') : i18n.t('assist_pin_tooltip')}
+							class="p-1 rounded-lg transition-colors cursor-pointer {
+								isLightTheme ? 'text-zinc-500 hover:text-cyan-600' : 'text-zinc-400 hover:text-cyan-300'
+							}"
+						>
+							{#if isPinned}
+								<PinOff class="w-3.5 h-3.5 text-cyan-500" />
+							{:else}
+								<Pin class="w-3.5 h-3.5" />
+							{/if}
+						</button>
+						<button
+							type="button"
+							onclick={() => {
+								isOpen = false;
+								isPinned = false;
+							}}
+							title="Close"
+							class="p-1 rounded-lg transition-colors cursor-pointer {
+								isLightTheme ? 'text-zinc-500 hover:text-rose-600' : 'text-zinc-400 hover:text-rose-400'
+							}"
+						>
+							<X class="w-3.5 h-3.5" />
+						</button>
+					</div>
 				</div>
 
-				<!-- 1. Zoom Controls Row -->
-				<div class="space-y-1">
+				<!-- Zoom Controls Row -->
+				<div class="space-y-1 mb-2.5">
 					<div class="flex items-center justify-between text-[10px] font-medium {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 						<span>{i18n.t('assist_zoom_stage')}</span>
 						<span class="font-mono {isLightTheme ? 'text-cyan-600 font-bold' : 'text-cyan-300'}">{displayZoomPercent}%</span>
@@ -158,8 +213,8 @@
 					</div>
 				</div>
 
-				<!-- 2. Framing Mode Presets -->
-				<div class="space-y-1">
+				<!-- Framing Mode Presets -->
+				<div class="space-y-1 mb-2.5">
 					<div class="text-[10px] font-medium {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">{i18n.t('assist_framing_preset')}</div>
 					<div class="grid grid-cols-3 gap-1">
 						<button
@@ -227,8 +282,8 @@
 					</div>
 				</div>
 
-				<!-- 3. Quick Stage Center & Calibrate -->
-				<div class="grid grid-cols-2 gap-1 pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
+				<!-- Quick Stage Center & Calibrate -->
+				<div class="grid grid-cols-2 gap-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/70'}">
 					<button
 						type="button"
 						onclick={() => {
@@ -262,9 +317,9 @@
 					</button>
 				</div>
 
-				<!-- 4. Quick Expression Chips (If Model Has Expressions) -->
+				<!-- Quick Expression Chips (If Model Has Expressions) -->
 				{#if rigging.availableExpressions && rigging.availableExpressions.length > 0}
-					<div class="space-y-1 pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
+					<div class="space-y-1 pt-2 mt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/70'}">
 						<div class="flex items-center justify-between text-[10px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
 							<span class="flex items-center gap-1">
 								<Sparkles class="w-3 h-3 text-pink-500" />
@@ -283,7 +338,7 @@
 								</button>
 							{/if}
 						</div>
-						<div class="flex flex-wrap gap-1 max-h-24 overflow-y-auto custom-scrollbar pr-0.5">
+						<div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-scrollbar pr-0.5">
 							{#each rigging.availableExpressions.slice(0, 6) as exp}
 								<button
 									type="button"
@@ -308,26 +363,6 @@
 					</div>
 				{/if}
 			</div>
-
-			<!-- 10% Peeking Tab Handle on Left Edge -->
-			<div
-				class="w-7 border-l flex flex-col items-center justify-center gap-2 py-3 cursor-pointer group/tab transition-colors {
-					isLightTheme
-						? 'bg-zinc-100 hover:bg-zinc-200/80 border-zinc-200'
-						: 'bg-zinc-900/95 hover:bg-zinc-800/90 border-zinc-800/80'
-				}"
-				title="Assist Button (Hover untuk membuka)"
-			>
-				<div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400/50"></div>
-				<span class="text-[9px] font-mono font-bold tracking-widest [writing-mode:vertical-lr] rotate-180 {
-					isLightTheme ? 'text-zinc-500 group-hover/tab:text-cyan-600' : 'text-zinc-400 group-hover/tab:text-cyan-300'
-				}">
-					ASSIST
-				</span>
-				<ChevronRight class="w-3.5 h-3.5 transition-transform {
-					isLightTheme ? 'text-zinc-400 group-hover/tab:text-cyan-600' : 'text-zinc-500 group-hover/tab:text-cyan-400'
-				} {isVisible ? 'rotate-180' : ''}" />
-			</div>
-		</div>
+		{/if}
 	</aside>
 {/if}

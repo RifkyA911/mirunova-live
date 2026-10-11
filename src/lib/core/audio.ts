@@ -213,20 +213,25 @@ class VoiceEngine {
 			this.setMonitor(this.lastMonitor);
 			this.setFilter(this.lastFilter);
 
-			// Metering loop
+			// Metering loop - Throttled to 60ms (~16 FPS) to prevent 60 FPS Svelte reactive churn
+			let lastMeterTime = 0;
 			const updateMeter = () => {
 				if (!this.isRunning || !this.analyserNode || !this.dataArray) return;
-				this.analyserNode.getByteFrequencyData(this.dataArray as any);
+				const now = performance.now();
+				if (now - lastMeterTime >= 60) {
+					lastMeterTime = now;
+					this.analyserNode.getByteFrequencyData(this.dataArray as any);
 
-				let sum = 0;
-				for (let i = 0; i < this.dataArray.length; i++) {
-					sum += this.dataArray[i];
-				}
-				const avg = sum / this.dataArray.length;
-				this.currentVolume = Math.min(1.0, (avg / 128) * 1.5);
+					let sum = 0;
+					for (let i = 0; i < this.dataArray.length; i++) {
+						sum += this.dataArray[i];
+					}
+					const avg = sum / this.dataArray.length;
+					this.currentVolume = Math.min(1.0, (avg / 128) * 1.5);
 
-				if (onVolumeChange) {
-					onVolumeChange(this.currentVolume);
+					if (onVolumeChange) {
+						onVolumeChange(this.currentVolume);
+					}
 				}
 
 				this.animFrameId = requestAnimationFrame(updateMeter);

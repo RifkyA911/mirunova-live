@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
-	import { MODEL_CATALOG, MODEL_3D_CATALOG, type Model3DItem } from '#lib/data/models';
+	import { MODEL_CATALOG, MODEL_3D_CATALOG, BOOTH_SHOWCASE_CATALOG, type Model3DItem } from '#lib/data/models';
 	import type { PoseLoopMode } from '#lib/types/tracking';
 	import {
 		Layers,
@@ -28,7 +28,7 @@
 	let customUrlInput = $state<string>('');
 	let glbFileInput = $state<HTMLInputElement>();
 	let localModelFileInput = $state<HTMLInputElement>();
-	let catalogTab = $state<'2d' | '3d'>('2d');
+	let catalogTab = $state<'2d' | 'booth' | '3d'>('2d');
 	let model2DFilter = $state<'all' | 'booth' | 'official'>('all');
 
 	const isLightTheme = $derived(
@@ -139,7 +139,7 @@
 						<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 							{i18n.t('models')} & Katalog Avatar
 							<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono font-bold">
-								{catalogTab === '2d' ? `${MODEL_CATALOG.length} Live2D` : `${MODEL_3D_CATALOG.length} 3D Mesh`}
+								{catalogTab === '2d' ? `${MODEL_CATALOG.length} Live2D` : catalogTab === 'booth' ? `${BOOTH_SHOWCASE_CATALOG.length} BOOTH` : `${MODEL_3D_CATALOG.length} 3D Mesh`}
 							</span>
 						</h2>
 						<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
@@ -175,7 +175,7 @@
 				</div>
 			</div>
 
-			<!-- Tab Selector: 2D Live2D vs 3D Avatars -->
+			<!-- Tab Selector: 2D Live2D vs BOOTH vs 3D Avatars -->
 			<div class="px-6 pt-3 border-b flex items-center justify-between {
 				isLightTheme ? 'bg-zinc-100/60 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800/80'
 			}">
@@ -191,7 +191,20 @@
 						}"
 					>
 						<Layers class="w-4 h-4 text-pink-500" />
-						<span>2D Live2D & Reactive Avatars ({MODEL_CATALOG.length})</span>
+						<span>2D Live2D Siap Pakai ({MODEL_CATALOG.length})</span>
+					</button>
+					<button
+						onclick={() => (catalogTab = 'booth')}
+						class="flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs transition-all {
+							catalogTab === 'booth'
+								? 'border-purple-500 text-purple-600 dark:text-purple-300 font-semibold shadow-sm'
+								: isLightTheme
+									? 'border-transparent text-zinc-500 hover:text-zinc-900'
+									: 'border-transparent text-zinc-400 hover:text-zinc-200'
+						}"
+					>
+						<Heart class="w-4 h-4 text-purple-500 fill-purple-500/30" />
+						<span>BOOTH.pm Koleksi ({BOOTH_SHOWCASE_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = '3d')}
@@ -204,7 +217,7 @@
 						}"
 					>
 						<Box class="w-4 h-4 text-cyan-500" />
-						<span>3D Procedural WebGL Cats ({MODEL_3D_CATALOG.length})</span>
+						<span>3D WebGL Cats ({MODEL_3D_CATALOG.length})</span>
 					</button>
 				</div>
 
@@ -424,6 +437,92 @@
 									Muat URL
 								</button>
 							</div>
+						</div>
+					</div>
+				{:else if catalogTab === 'booth'}
+					<!-- BOOTH.pm Curated Showcase Gallery -->
+					<div class="space-y-4 animate-in fade-in duration-150">
+						<!-- BOOTH Header Banner -->
+						<div class="p-4 rounded-2xl bg-gradient-to-r from-pink-950/40 via-purple-950/30 to-zinc-900 border border-pink-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+							<div class="flex items-center gap-3">
+								<div class="p-2.5 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 shrink-0">
+									<Heart class="w-5 h-5 fill-pink-500/40" />
+								</div>
+								<div>
+									<h3 class="text-sm font-bold text-pink-200 flex items-center gap-2">
+										Koleksi Model Unggulan BOOTH.pm
+										<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-semibold">
+											{BOOTH_SHOWCASE_CATALOG.length} Model Terkurasi
+										</span>
+									</h3>
+									<p class="text-xs text-zinc-300 mt-0.5 leading-relaxed">
+										Koleksi avatar Live2D anime & VTuber resmi dari kreator BOOTH.pm. Klik <strong>Buka di BOOTH</strong> untuk mengunduh paket resmi kreator, lalu gunakan tombol <strong>Pasang File Model</strong> di bawah.
+									</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-2 shrink-0">
+								<button
+									onclick={() => localModelFileInput?.click()}
+									class="px-3.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+								>
+									<FolderOpen class="w-3.5 h-3.5" />
+									<span>Pasang Model Lokal (.json)</span>
+								</button>
+							</div>
+						</div>
+
+						<!-- Grid of 10 BOOTH Models -->
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+							{#each BOOTH_SHOWCASE_CATALOG as item}
+								<div class="flex flex-col p-3.5 rounded-2xl border text-left transition-all bg-zinc-900/60 border-zinc-800/80 hover:border-pink-500/50 hover:bg-zinc-900 group shadow-md">
+									<!-- Top Row: Thumbnail + Info -->
+									<div class="flex items-start gap-3 mb-2.5">
+										<div class="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+											<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover" loading="lazy" />
+										</div>
+										<div class="flex flex-col min-w-0 flex-1 pt-0.5">
+											<span class="font-bold text-xs text-zinc-100 truncate group-hover:text-pink-300 transition-colors" title={item.name}>
+												{item.name}
+											</span>
+											<span class="text-[10px] text-zinc-400 mt-0.5 truncate">
+												Kreator: <strong class="text-pink-400 font-semibold">{item.author}</strong>
+											</span>
+											<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed mt-1">
+												{item.description}
+											</p>
+										</div>
+									</div>
+
+									<!-- Copyright & Terms Notice -->
+									<div class="p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/80 text-[9px] text-zinc-400 leading-tight mb-2.5">
+										<span class="text-zinc-500 block font-mono font-semibold uppercase mb-0.5">Lisensi & Hak Cipta:</span>
+										{item.copyright}
+									</div>
+
+									<!-- Tags -->
+									<div class="flex flex-wrap gap-1 mb-3">
+										{#each item.tags as tag}
+											<span class="px-1.5 py-0.5 rounded text-[8px] font-medium {tag.includes('BOOTH') ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-zinc-800 text-zinc-300'}">
+												{tag}
+											</span>
+										{/each}
+									</div>
+
+									<!-- Action Buttons -->
+									<div class="mt-auto pt-2 border-t border-zinc-800/60 flex items-center justify-between gap-2">
+										<span class="text-[9px] font-mono text-zinc-500">ID #{item.itemId}</span>
+										<a
+											href={item.boothUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="flex items-center gap-1.5 px-3 py-1 bg-pink-600/90 hover:bg-pink-500 text-white rounded-lg text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
+										>
+											<ExternalLink class="w-3 h-3" />
+											<span>Buka di BOOTH</span>
+										</a>
+									</div>
+								</div>
+							{/each}
 						</div>
 					</div>
 				{:else}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { MODEL_CATALOG, MODEL_3D_CATALOG } from '#lib/data/models';
+import { MODEL_CATALOG, MODEL_3D_CATALOG, BOOTH_SHOWCASE_CATALOG } from '#lib/data/models';
 
 describe('Model Catalog Validation', () => {
 	it('should contain at least 5 verified Live2D models with Cubism 3/4 support', () => {
@@ -62,6 +62,26 @@ describe('Model Catalog Validation', () => {
 			expect(typeof model.avatarUrl).toBe('string');
 			expect(model.tags).toBeDefined();
 			expect(model.tags?.length).toBeGreaterThan(0);
+		}
+	});
+
+	it('should validate BOOTH showcase catalog items with author copyright references', () => {
+		expect(BOOTH_SHOWCASE_CATALOG.length).toBe(10);
+
+		const expectedItemIds = [
+			'5408293', '5411426', '5975192', '5399636', '8034348',
+			'7654174', '3988142', '7483530', '6360847', '6313490'
+		];
+
+		for (const expectedId of expectedItemIds) {
+			const item = BOOTH_SHOWCASE_CATALOG.find((b) => b.itemId === expectedId);
+			expect(item).toBeDefined();
+			expect(item?.name).toBeTruthy();
+			expect(item?.author).toBeTruthy();
+			expect(item?.avatarUrl).toMatch(/^https:\/\//);
+			expect(item?.boothUrl).toContain(expectedId);
+			expect(item?.copyright).toBeTruthy();
+			expect(item?.tags.length).toBeGreaterThan(0);
 		}
 	});
 });

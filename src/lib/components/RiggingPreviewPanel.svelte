@@ -602,7 +602,7 @@
 												<span class="text-[10px] text-zinc-500 font-mono w-6 text-right">{param.min}</span>
 												<div class="flex-1 h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80 relative">
 													<div
-														class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-75"
+														class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-none"
 														style="width: {Math.max(0, Math.min(100, percentage))}%"
 													></div>
 												</div>

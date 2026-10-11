@@ -21,6 +21,7 @@ export class FaceTracker {
 	private frameCount = 0;
 	private frameLoopIndex = 0;
 	private lastFpsCalcTime = performance.now();
+	private lastLatencyCalcTime = performance.now();
 	private consecutiveLostFrames = 0;
 	private cachedHandsList: Array<Array<{ x: number; y: number; z: number }>> = [];
 	private blendshapesMap = new Map<string, number>();
@@ -177,6 +178,25 @@ export class FaceTracker {
 			);
 		}
 
+		// Validate requested camera device ID against currently enumerated devices
+		// This prevents "NotFoundError" when deviceId hash changes across GPU or browser sessions
+		const availableDevices = await this.getAvailableVideoDevices(false);
+		if (rigging.cameraDeviceId && availableDevices.length > 0) {
+			const exists = availableDevices.some((d) => d.deviceId === rigging.cameraDeviceId);
+			if (!exists) {
+				// Try matching by previous label if available
+				const byLabel = rigging.activeCameraLabel
+					? availableDevices.find((d) => d.label === rigging.activeCameraLabel)
+					: null;
+				if (byLabel) {
+					rigging.cameraDeviceId = byLabel.deviceId;
+				} else {
+					console.warn('[FaceTracker] Stale camera deviceId detected; resetting to default available device');
+					rigging.cameraDeviceId = '';
+				}
+			}
+		}
+
 		const targetWidth = rigging.cameraResolution === '1080p' ? 1920 : rigging.cameraResolution === '480p' ? 640 : 1280;
 		const targetHeight = rigging.cameraResolution === '1080p' ? 1080 : rigging.cameraResolution === '480p' ? 480 : 720;
 		const targetFps = rigging.cameraResolution === '480p' ? 30 : 60;
@@ -184,12 +204,10 @@ export class FaceTracker {
 		const videoConstraints: MediaTrackConstraints = {};
 
 		if (rigging.cameraDeviceId) {
-			// Specific device selected: enforce exact deviceId so browser NEVER hijacks with POCO F7 / phone camera
 			videoConstraints.deviceId = { exact: rigging.cameraDeviceId };
 			videoConstraints.width = { ideal: targetWidth };
 			videoConstraints.height = { ideal: targetHeight };
 		} else {
-			// Default user webcam
 			videoConstraints.facingMode = 'user';
 			videoConstraints.width = { ideal: targetWidth };
 			videoConstraints.height = { ideal: targetHeight };
@@ -210,14 +228,23 @@ export class FaceTracker {
 						audio: false
 					});
 				} catch (fallback1: any) {
-					// Fallback 2: Try ideal deviceId if driver has strict exact constraint bug
+					// Fallback 2: Try ideal deviceId if driver has strict constraint incompatibility
 					try {
 						this.stream = await navigator.mediaDevices.getUserMedia({
 							video: { deviceId: { ideal: rigging.cameraDeviceId } },
 							audio: false
 						});
 					} catch (fallback2: any) {
-						err = fallback2;
+						// Fallback 3: If deviceId is dead or unplugged, fall back to default user camera instead of crashing
+						try {
+							this.stream = await navigator.mediaDevices.getUserMedia({
+								video: { facingMode: 'user' },
+								audio: false
+							});
+							rigging.cameraDeviceId = '';
+						} catch (fallbackUser: any) {
+							err = fallbackUser;
+						}
 					}
 				}
 			} else {
@@ -246,10 +273,15 @@ export class FaceTracker {
 			}
 		}
 
-		// Read and record the actual active hardware track label
+		// Read and record the actual active hardware track and deviceId
 		const activeTrack = this.stream.getVideoTracks()[0];
 		if (activeTrack) {
+			const settings = activeTrack.getSettings();
+			if (settings.deviceId) {
+				rigging.cameraDeviceId = settings.deviceId;
+			}
 			rigging.activeCameraLabel = activeTrack.label || 'Webcam';
+			rigging.persist();
 			console.log('[FaceTracker] Active camera stream initialized:', activeTrack.label);
 		}
 
@@ -669,18 +701,19 @@ export class FaceTracker {
 				console.warn('[FaceTracker] Detection error:', err);
 			}
 
-			// Performance calculation (FPS & Latency) - Throttled to 250ms to eliminate UI thrashing
+			// Performance calculation (FPS & Latency) - Throttled independently to eliminate UI thrashing
 			this.frameCount++;
 			const now = performance.now();
 			const frameLatency = Math.round(now - startTime);
 
-			if (now - this.lastFpsCalcTime >= 250) {
+			if (now - this.lastLatencyCalcTime >= 250) {
 				rigging.latencyMs = frameLatency;
-				if (now - this.lastFpsCalcTime >= 1000) {
-					rigging.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsCalcTime));
-					this.frameCount = 0;
-					this.lastFpsCalcTime = now;
-				}
+				this.lastLatencyCalcTime = now;
+			}
+			if (now - this.lastFpsCalcTime >= 1000) {
+				rigging.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsCalcTime));
+				this.frameCount = 0;
+				this.lastFpsCalcTime = now;
 			}
 		}
 

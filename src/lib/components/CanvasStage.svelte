@@ -256,9 +256,11 @@
 						}
 					}
 
-					// Apply Part Opacity / Visibility overrides
-					if (rigging.hiddenPartIds) {
-						for (const [partId, isHidden] of Object.entries(rigging.hiddenPartIds)) {
+					// Apply Part Opacity / Visibility overrides only if custom overrides exist
+					const hiddenParts = rigging.hiddenPartIds;
+					if (hiddenParts && Object.keys(hiddenParts).length > 0) {
+						for (const partId in hiddenParts) {
+							const isHidden = hiddenParts[partId];
 							try {
 								if (typeof (core as any).setPartOpacityById === 'function') {
 									(core as any).setPartOpacityById(partId, isHidden ? 0 : 1);
@@ -270,7 +272,7 @@
 					}
 				};
 
-				model.internalModel.on('beforeModelUpdate', applyModelTracking);
+				// Hook exclusively into afterModelUpdate to override motions/physics cleanly without 2x double call overhead
 				model.internalModel.on('afterModelUpdate', applyModelTracking);
 			}
 

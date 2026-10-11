@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.0] - 2026-10-11
+
+### Added
+- **BOOTH.pm Curated Showcase Gallery (10 Models with Full Creator Credits):**
+  - Added dedicated BOOTH.pm gallery tab in `ModelCatalogModal.svelte` featuring 10 popular community models:
+    - **Villhaze (ヴィルヘイズ)** by **koiyume** (BOOTH #5408293)
+    - **Roxy (ロキシー)** by **koiyume** (BOOTH #5411426)
+    - **Ice Girl (氷の少女)** by **TianYeLuLu** (BOOTH #5975192, commercial streaming permitted with credit)
+    - **Belle / Rin (リン - ZZZ)** rigged by **pbsddy**, art by **shinan** (BOOTH #5399636)
+    - **Tsukimi Yachiyo (月見ヤチヨ)** by **SnowBear Project** (BOOTH #8034348)
+    - **KE (Live2D Free Model)** by **Sennyu** (BOOTH #7654174)
+    - **Hoshino Nya (星乃にゃ)** rigged by **skiyoshi**, art by **サッカウキツ** (BOOTH #3988142)
+    - **Changli (长离 - 鳴潮)** by **shibutani** (BOOTH #7483530)
+    - **Fugue / Tingyun (帰忘の流離人 - 崩壊：スターレイル)** by **shibutani** (BOOTH #6360847)
+    - **Camellya (椿 - 鳴潮)** by **shibutani** (BOOTH #6313490)
+  - Full author attribution, licensing/copyright guidelines, high-res pximg previews, and 1-click external BOOTH jump links.
+  - Added unit test validation suite in `tests/models.test.ts`.
+
+### Changed
+- **Apple iPhone AssistiveTouch Floating Assist Button (Right Edge):**
+  - Redesigned the Assist Button to match the iconic Apple iOS AssistiveTouch ergonomics:
+    - Positioned as a floating circular button on the **right** screen edge (`fixed right-4 top-1/2 -translate-y-1/2`).
+    - Compact, translucent resting state (`opacity-75`) with frosted glass backdrop blur and concentric indicator rings.
+    - Expanding popover anchored directly beside the button provides quick stage zoom controls (+, -, 100%), framing presets (Close-Up, Half-Body, Full-Body), center avatar reset, and instant face tracking calibration.
+    - Click-outside auto-dismiss and pin toggle to keep open during streaming.
+
+### Optimized & Fixed
+- **Tracker Latency Calculation Throttling (Eliminated 45x Re-render Storm/sec):**
+  - Fixed a critical throttling bug in `src/lib/core/tracker.ts` where `latencyMs` recalculation stayed active on every frame for 750ms consecutive per second.
+  - Separated `lastLatencyCalcTime` from `lastFpsCalcTime`, ensuring `latencyMs` updates cleanly at 250ms intervals without thrashing Svelte reactive dependencies.
+- **Resilient Camera Device ID Resolution & GPU Switching Fallback:**
+  - Resolved "Perangkat kamera (webcam) yang dipilih tidak ditemukan atau telah terputus" error when users switch between integrated and discrete NVIDIA GPUs.
+  - Validates stored `cameraDeviceId` against currently enumerated hardware devices on startup; if a deviceId hash becomes stale after GPU or browser profile switches, it seamlessly recovers using label matching or default camera fallback.
+  - Automatically updates `cameraDeviceId` to the active hardware track's real deviceId upon successful stream initialization.
+- **Live2D Single-Pass Tracking Optimization:**
+  - Streamlined `applyModelTracking` in `CanvasStage.svelte` to run exclusively on `afterModelUpdate`, eliminating 50% duplicate parameter calculation and Cubism core API calls per frame.
+  - Cached `hiddenPartIds` checks to eliminate redundant loop overhead and garbage collection pressure.
+- **Audio VU Meter Reactive Throttling:**
+  - Throttled microphone volume metering updates in `src/lib/core/audio.ts` from 60 FPS down to 60ms (~16 FPS), reducing Svelte 5 reactive effect flushes by 75% when mic is active.
+- **Eliminated CSS Layout Thrashing in Rigging Inspector:**
+  - Removed `transition-all duration-75` from live parameter slider progress bars in `RiggingPreviewPanel.svelte`, preventing browser CSS transition animations from fighting against 60 FPS real-time tracking data.
+
+---
+
 ## [0.13.0] - 2026-10-11
 
 ### Added

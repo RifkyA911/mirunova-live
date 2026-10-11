@@ -133,3 +133,129 @@ export const MODEL_3D_CATALOG: Model3DItem[] = [
 		tags: ['3D WebGL', 'Tabby Stripes', 'Amber Eyes', 'Bell Collar']
 	}
 ];
+
+export interface BoothShowcaseItem {
+	id: string;
+	itemId: string;
+	name: string;
+	author: string;
+	authorUrl?: string;
+	avatarUrl: string;
+	boothUrl: string;
+	description: string;
+	copyright: string;
+	tags: string[];
+}
+
+export const BOOTH_SHOWCASE_CATALOG: BoothShowcaseItem[] = [
+	{
+		id: 'booth-5408293',
+		itemId: '5408293',
+		name: 'Villhaze (ヴィルヘイズ)',
+		author: 'koiyume',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/18b5da43-8450-4455-bc2c-9d3156a4f5ed/i/5408293/486ea3dd-0205-4b1a-ac4a-eb253d55d873_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/5408293',
+		description: 'Model Live2D gratis berkarakter anime girl imut dengan fisika rambut halus dan kostum modis.',
+		copyright: '© koiyume. Free Live2D model for personal use.',
+		tags: ['BOOTH.pm', 'Free Download', 'koiyume', 'VTS Ready', 'Kawaii Girl']
+	},
+	{
+		id: 'booth-5411426',
+		itemId: '5411426',
+		name: 'Roxy (ロキシー)',
+		author: 'koiyume',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/18b5da43-8450-4455-bc2c-9d3156a4f5ed/i/5411426/1d481ff7-08cd-4701-b626-bdc7a4bf4bb6_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/5411426',
+		description: 'Model Live2D anime girl bertopi penyihir kawaii dengan fisika jubah & rambut melambai.',
+		copyright: '© koiyume. Free Live2D model for personal use.',
+		tags: ['BOOTH.pm', 'Free Download', 'koiyume', 'Witch Girl', 'Cubism 4']
+	},
+	{
+		id: 'booth-5975192',
+		itemId: '5975192',
+		name: 'Ice Girl (氷の少女)',
+		author: 'TianYeLuLu',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/7852de40-0e15-4aaa-a153-c87a69b871e1/i/5975192/560ba409-48c6-492e-b6aa-9c364cc3dffa_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/5975192',
+		description: 'Model Live2D original bertema es kristal anggun dengan fisika gaun transparan dan ekspresi kaya.',
+		copyright: '© TianYeLuLu. Commercial streaming allowed with credit tag 【Live2D: @TianYeLulu】.',
+		tags: ['BOOTH.pm', 'Free Download', 'TianYeLuLu', 'Commercial OK with Credit']
+	},
+	{
+		id: 'booth-5399636',
+		itemId: '5399636',
+		name: 'Belle / Rin (リン - ゼンレスゾーンゼロ)',
+		author: 'pbsddy (Rigging) / shinan (Art)',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/7ab816c3-bd68-4ea3-b099-c540787eb395/i/5399636/b067cfb9-9459-402f-988a-d5ae6e3924ea_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/5399636',
+		description: 'Fan-made Live2D model Belle (リン) dari Zenless Zone Zero (ZZZ) dengan rigging ekspresi lengkap.',
+		copyright: 'Fanmade secondary creation based on HoYoverse ZZZ. Rigged by pbsddy, Art by shinan.',
+		tags: ['BOOTH.pm', 'Zenless Zone Zero', 'Belle', 'pbsddy', 'HoYoverse Fanmade']
+	},
+	{
+		id: 'booth-8034348',
+		itemId: '8034348',
+		name: 'Tsukimi Yachiyo (月見ヤチヨ - 超かぐや姫！)',
+		author: 'SnowBear Project',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/12bc9ed4-4f56-4b8f-9741-772cab0a5540/i/8034348/6725e3ac-ff17-4f84-add2-dfd81d69ddc2_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/8034348',
+		description: 'Fan-made Live2D model Tsukimi Yachiyo dari "Chou Kaguya-hime!" dengan fisika kelinci dan telinga kawaii.',
+		copyright: '© SnowBear Project. Fanmade creation based on Chou Kaguya-hime! Non-commercial personal use only.',
+		tags: ['BOOTH.pm', 'Tsukimi Yachiyo', 'SnowBear Project', 'Fanmade', 'Free Download']
+	},
+	{
+		id: 'booth-7654174',
+		itemId: '7654174',
+		name: 'KE (Live2D Free Model)',
+		author: 'Sennyu',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/eb1fdd19-80b3-4024-b9f3-133daa459953/i/7654174/c570cef8-b93f-4755-9c69-65e911909b71_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/7654174',
+		description: 'Model Live2D gratis berkualitas tinggi siap pakai di VTube Studio dengan fisika dinamis.',
+		copyright: '© Sennyu. Free Live2D model for personal/individual use. Redistribution prohibited.',
+		tags: ['BOOTH.pm', 'KE', 'Sennyu', 'VTS Ready', 'Free Download']
+	},
+	{
+		id: 'booth-3988142',
+		itemId: '3988142',
+		name: 'Hoshino Nya (星乃にゃ)',
+		author: 'skiyoshi (Rigging) / サッカウキツ (Art)',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/2e3badde-5e2f-4dca-bf64-24099f76db47/i/3988142/61950053-3496-4149-a705-04451750efa4_base_resized.jpg',
+		boothUrl: 'https://booth.pm/en/items/3988142',
+		description: 'Model avatar VTuber Neko Chibi super populer dari VTube Studio Workshop dengan telinga kucing dan senyum gemas.',
+		copyright: 'Rigged by skiyoshi with permission from artist サッカウキツ. VTube Studio workshop favorite.',
+		tags: ['BOOTH.pm', 'Hoshino Nya', 'Cat Girl', 'skiyoshi', 'VTS Workshop']
+	},
+	{
+		id: 'booth-7483530',
+		itemId: '7483530',
+		name: 'Changli / Chang Li (长离 - 鳴潮 Wuthering Waves)',
+		author: 'shibutani',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/1c46376d-1906-4f8e-9888-35e1d61384b3/i/7483530/b3fc6574-6706-4c7e-aecb-efebff2968c8_base_resized.jpg',
+		boothUrl: 'https://shibutani.booth.pm/items/7483530',
+		description: 'Fan-made Live2D model Changli dari Wuthering Waves dengan fisika rambut panjang api dan detail kostum anggun.',
+		copyright: '© shibutani. Fanmade model based on Kuro Games Wuthering Waves. Personal viewing only, strictly non-commercial.',
+		tags: ['BOOTH.pm', 'Changli', 'Wuthering Waves', 'shibutani', 'Fanmade', 'Free Model']
+	},
+	{
+		id: 'booth-6360847',
+		itemId: '6360847',
+		name: 'Fugue / Tingyun (帰忘の流離人 - 崩壊：スターレイル)',
+		author: 'shibutani',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/1c46376d-1906-4f8e-9888-35e1d61384b3/i/6360847/f8ff267e-fece-4f2d-aec4-cc9df6d13be5_base_resized.jpg',
+		boothUrl: 'https://shibutani.booth.pm/items/6360847',
+		description: 'Fan-made Live2D model Fugue (Tingyun SP) dari Honkai: Star Rail dengan fisika ekor rubah dan ornamen sutra.',
+		copyright: '© shibutani. Fanmade model based on HoYoverse Honkai: Star Rail. Personal viewing only, strictly non-commercial.',
+		tags: ['BOOTH.pm', 'Fugue', 'Honkai: Star Rail', 'shibutani', 'Fanmade', 'Free Model']
+	},
+	{
+		id: 'booth-6313490',
+		itemId: '6313490',
+		name: 'Camellya (椿 - 鳴潮 Wuthering Waves)',
+		author: 'shibutani',
+		avatarUrl: 'https://booth.pximg.net/c/620x620/1c46376d-1906-4f8e-9888-35e1d61384b3/i/6313490/743f82a1-dd6f-4497-914d-ced923e40106_base_resized.jpg',
+		boothUrl: 'https://shibutani.booth.pm/items/6313490',
+		description: 'Fan-made Live2D model Camellya dari Wuthering Waves dengan fisika sulur bunga merah dan rambut pirang dinamis.',
+		copyright: '© shibutani. Fanmade model based on Kuro Games Wuthering Waves. Personal viewing only, strictly non-commercial.',
+		tags: ['BOOTH.pm', 'Camellya', 'Wuthering Waves', 'shibutani', 'Fanmade', 'Free Model']
+	}
+];

@@ -84,19 +84,33 @@
   * 6 Instant Presets: Sakura Bloom, Matcha Zen, Cyber Neon, Cosmic Violet, Sunset Amber, and Arctic Ice.
 * **Background Modes:** Transparent (OBS ready), Cyber Mesh (square grid), Solid Color, Tech Grid, Polka Dots, Cosmic Animated (drifting nebula), Deep Gradient, Chroma Green/Blue (#00FF00 / #0000FF), and Custom Photo Upload.
 
-### 🎭 8. Multi-Engine Model Catalog
-* **2D Live2D Models:**
+### 🎭 8. Multi-Engine Model Catalog & BOOTH.pm Showcase
+* **2D Live2D Models (Pre-installed):**
   * **Haru Greeter (Gesture & Arm Rigged):** Full hand tracking, arm rigging, high-five gesture detection, motions, and expressions bundled locally.
   * **Mihari (`Mihari_V1`), Vivian (`薇薇安`), Hiyori Momose, Mao, Shizuku, Wanko & Rice.**
   * Custom `.model3.json` local folder & zip loader.
-  * BOOTH.pm VTuber Showcase catalog.
+* **BOOTH.pm Curated Showcase Gallery (10 Models with Full Creator Credits):**
+  * **Villhaze (ヴィルヘイズ)** — © koiyume ([BOOTH #5408293](https://booth.pm/en/items/5408293))
+  * **Roxy (ロキシー)** — © koiyume ([BOOTH #5411426](https://booth.pm/en/items/5411426))
+  * **Ice Girl (氷の少女)** — © TianYeLuLu ([BOOTH #5975192](https://booth.pm/en/items/5975192))
+  * **Belle / Rin (リン - ZZZ)** — Rigged by pbsddy, Art by shinan ([BOOTH #5399636](https://booth.pm/en/items/5399636))
+  * **Tsukimi Yachiyo (月見ヤチヨ)** — © SnowBear Project ([BOOTH #8034348](https://booth.pm/en/items/8034348))
+  * **KE (Live2D Free Model)** — © Sennyu ([BOOTH #7654174](https://booth.pm/en/items/7654174))
+  * **Hoshino Nya (星乃にゃ)** — Rigged by skiyoshi, Art by サッカウキツ ([BOOTH #3988142](https://booth.pm/en/items/3988142))
+  * **Changli (长离 - 鳴潮)** — © shibutani ([BOOTH #7483530](https://shibutani.booth.pm/items/7483530))
+  * **Fugue / Tingyun (帰忘の流離人 - 崩壊：スターレイル)** — © shibutani ([BOOTH #6360847](https://shibutani.booth.pm/items/6360847))
+  * **Camellya (椿 - 鳴潮)** — © shibutani ([BOOTH #6313490](https://shibutani.booth.pm/items/6313490))
 * **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
 
-### 🔍 9. Assist Button & Center-Anchored Stage Controls
-* **Left-Edge Slide-Out Assist Button:** Elegant floating assist dock anchored to the left edge of the screen. Idle mode keeps 10% of its body peeking out with a vertical `ASSIST` handle and glowing status indicator; hovering slides out the full assist panel smoothly.
-* **Stage Controls:** Instant Zoom In (+), Zoom Out (-), 100% Reset, Reset Center (`[0]`), and framing presets (Close-up, Half Body, Full Body).
-* **Mathematical Center Anchoring:** Viewport mouse wheel zooms and button zooms anchor dead-center without spatial drift.
-* **Quick Center Calibration:** One-click center pose reset (`[C]`) and quick expression triggers.
+### 🔍 9. Apple iPhone AssistiveTouch Floating Assist Button (Right Edge)
+* **Sleek Floating Circle:** Compact circular button on the right edge of the screen styled after Apple's iconic iOS AssistiveTouch. Idle state stays translucent (`opacity-75`) with frosted glass backdrop blur and concentric indicator rings.
+* **Anchored Assistive Popover Menu:** Clicking toggles an elegant floating card anchored cleanly beside the button:
+  * Stage Zoom Controls: Zoom In (+), Zoom Out (-), and instant 100% Reset.
+  * Framing Presets: Close-Up (`closeup`), Waist-Up (`half`), and Full Body (`full`).
+  * Instant Avatar Centering: Dead-center reset (`[0]`) with zero spatial drift.
+  * Quick Pose Calibration: Instant face baseline calibration (`[C]`).
+  * Live Expression Chips: Trigger model expressions directly from the assist dock.
+  * Pin & Dismiss: Pin to stay open during streams or close cleanly on click-outside.
 
 ### ✨ 10. Dynamic Live2D Expression Selector
 * **Model Expressions in Menubar:** Dynamic variation selector button in the bottom Control Dock reading all expression definitions from the active Live2D model.
