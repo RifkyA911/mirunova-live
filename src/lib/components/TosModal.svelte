@@ -12,8 +12,14 @@
 		AlertCircle,
 		Scale,
 		Lock,
-		Sparkles
+		Sparkles,
+		Heart,
+		ExternalLink
 	} from 'lucide-svelte';
+
+	const isLightTheme = $derived(
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+	);
 
 	onMount(() => {
 		if (typeof window === 'undefined') return;
@@ -48,107 +54,195 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-4xl max-h-[90vh] bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-zinc-100 animate-in zoom-in-95 duration-200"
+			class="w-full max-w-4xl max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-colors duration-200 border {
+				isLightTheme
+					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
+					: 'bg-zinc-950 text-zinc-100 border-zinc-800 shadow-2xl'
+			}"
 		>
 			<!-- Header -->
-			<div class="px-6 sm:px-8 py-5 border-b border-zinc-800/80 bg-zinc-900/60 flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<div class="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+			<div
+				class="px-6 sm:px-8 py-5 border-b flex items-center justify-between shrink-0 {
+					isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/80'
+				}"
+			>
+				<div class="flex items-center gap-3.5">
+					<div
+						class="p-2.5 rounded-2xl flex items-center justify-center {
+							isLightTheme ? 'bg-cyan-100 text-cyan-700 border border-cyan-200' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
+						}"
+					>
 						<Scale class="w-5 h-5" />
 					</div>
 					<div>
-						<h2 class="text-base sm:text-lg font-bold tracking-wide text-zinc-100 flex items-center gap-2">
-							{i18n.t('tos_modal_title')}
-							<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono font-medium">
+						<div class="flex items-center gap-2">
+							<h2 class="text-base sm:text-lg font-extrabold tracking-wide {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+								{i18n.t('tos_modal_title')}
+							</h2>
+							<span class="text-[10px] px-2.5 py-0.5 rounded-full font-mono font-bold {
+								isLightTheme ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+							}">
 								Transparent & Fair
 							</span>
-						</h2>
-						<p class="text-xs text-zinc-400">
-							MiruNova Live • Client-Side Privacy Charter & Community Rights
+						</div>
+						<p class="text-xs {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'} mt-0.5">
+							MiruNova Live • Piagam Privasi Klien 100% Lokal & Hak Komunitas Streamer
 						</p>
 					</div>
 				</div>
 
 				<button
 					onclick={closeModal}
-					class="p-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
+					class="p-2.5 rounded-xl transition-colors cursor-pointer {
+						isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+					}"
 					aria-label="Tutup"
 				>
 					<X class="w-5 h-5" />
 				</button>
 			</div>
 
-			<!-- Body -->
-			<div class="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs text-zinc-300 leading-relaxed">
+			<!-- Body (Scrollable) -->
+			<div class="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs leading-relaxed custom-scrollbar {
+				isLightTheme ? 'text-zinc-700' : 'text-zinc-300'
+			}">
 				<!-- Section 1: Privacy Charter (100% Client-Side) -->
-				<div class="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-3">
-					<div class="flex items-center gap-2.5 text-emerald-300 font-bold text-sm">
-						<Lock class="w-4 h-4 text-emerald-400" />
+				<div
+					class="p-5 sm:p-6 rounded-3xl border space-y-3 {
+						isLightTheme ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
+					}"
+				>
+					<div class="flex items-center gap-2.5 font-extrabold text-sm {
+						isLightTheme ? 'text-emerald-900' : 'text-emerald-300'
+					}">
+						<Lock class="w-4 h-4 text-emerald-500" />
 						<span>1. {i18n.t('tos_sec1_title')}</span>
 					</div>
-					<p class="text-zinc-300 text-xs leading-relaxed">
+					<p class="text-xs leading-relaxed">
 						{i18n.t('tos_sec1_desc')}
 					</p>
 					<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
-						<div class="p-2.5 bg-zinc-950/60 rounded-xl border border-emerald-500/20 flex items-center gap-2">
-							<CheckCircle2 class="w-4 h-4 text-emerald-400 shrink-0" />
-							<span>Zero Facial Cloud Telemetry</span>
+						<div class="p-3 rounded-xl border flex items-center gap-2 {
+							isLightTheme ? 'bg-white border-emerald-200 text-emerald-900 shadow-sm' : 'bg-zinc-950/60 border-emerald-500/20 text-zinc-200'
+						}">
+							<CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0" />
+							<span class="font-semibold">Zero Facial Cloud Telemetry</span>
 						</div>
-						<div class="p-2.5 bg-zinc-950/60 rounded-xl border border-emerald-500/20 flex items-center gap-2">
-							<CheckCircle2 class="w-4 h-4 text-emerald-400 shrink-0" />
-							<span>Zero Audio Packet Transmission</span>
+						<div class="p-3 rounded-xl border flex items-center gap-2 {
+							isLightTheme ? 'bg-white border-emerald-200 text-emerald-900 shadow-sm' : 'bg-zinc-950/60 border-emerald-500/20 text-zinc-200'
+						}">
+							<CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0" />
+							<span class="font-semibold">Zero Audio Packet Transmission</span>
 						</div>
-						<div class="p-2.5 bg-zinc-950/60 rounded-xl border border-emerald-500/20 flex items-center gap-2">
-							<CheckCircle2 class="w-4 h-4 text-emerald-400 shrink-0" />
-							<span>Local LocalStorage Only</span>
+						<div class="p-3 rounded-xl border flex items-center gap-2 {
+							isLightTheme ? 'bg-white border-emerald-200 text-emerald-900 shadow-sm' : 'bg-zinc-950/60 border-emerald-500/20 text-zinc-200'
+						}">
+							<CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0" />
+							<span class="font-semibold">100% On-Device Neural Net</span>
 						</div>
 					</div>
 				</div>
 
-				<!-- Section 2: Commercial VTuber Streaming Rights -->
-				<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-3">
-					<div class="flex items-center gap-2.5 text-cyan-300 font-bold text-sm">
-						<Tv class="w-4 h-4 text-cyan-400" />
+				<!-- Section 2: Commercial & Streaming Rights -->
+				<div
+					class="p-5 sm:p-6 rounded-3xl border space-y-3 {
+						isLightTheme ? 'bg-sky-50/70 border-sky-200' : 'bg-cyan-950/20 border-cyan-500/30'
+					}"
+				>
+					<div class="flex items-center gap-2.5 font-extrabold text-sm {
+						isLightTheme ? 'text-sky-900' : 'text-cyan-300'
+					}">
+						<Tv class="w-4 h-4 text-cyan-500" />
 						<span>2. {i18n.t('tos_sec2_title')}</span>
 					</div>
-					<p class="text-zinc-300 text-xs leading-relaxed">
+					<p class="text-xs leading-relaxed">
 						{i18n.t('tos_sec2_desc')}
 					</p>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-[11px]">
+						<div class="p-3 rounded-xl border flex items-center gap-2 {
+							isLightTheme ? 'bg-white border-sky-200 text-sky-900 shadow-sm' : 'bg-zinc-950/60 border-cyan-500/20 text-zinc-200'
+						}">
+							<CheckCircle2 class="w-4 h-4 text-cyan-500 shrink-0" />
+							<span>Monetisasi Penuh di YouTube, Twitch, TikTok & Kick</span>
+						</div>
+						<div class="p-3 rounded-xl border flex items-center gap-2 {
+							isLightTheme ? 'bg-white border-sky-200 text-sky-900 shadow-sm' : 'bg-zinc-950/60 border-cyan-500/20 text-zinc-200'
+						}">
+							<CheckCircle2 class="w-4 h-4 text-cyan-500 shrink-0" />
+							<span>Bebas Biaya Royalti MiruNova Live (0% Fee)</span>
+						</div>
+					</div>
 				</div>
 
-				<!-- Section 3: Live2D & 3D Model Intellectual Property -->
-				<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-3">
-					<div class="flex items-center gap-2.5 text-pink-300 font-bold text-sm">
-						<Sparkles class="w-4 h-4 text-pink-400" />
+				<!-- Section 3: Model Licensing & Community Ethics -->
+				<div
+					class="p-5 sm:p-6 rounded-3xl border space-y-3 {
+						isLightTheme ? 'bg-amber-50/70 border-amber-200' : 'bg-amber-950/20 border-amber-500/30'
+					}"
+				>
+					<div class="flex items-center gap-2.5 font-extrabold text-sm {
+						isLightTheme ? 'text-amber-900' : 'text-amber-300'
+					}">
+						<AlertCircle class="w-4 h-4 text-amber-500" />
 						<span>3. {i18n.t('tos_sec3_title')}</span>
 					</div>
-					<p class="text-zinc-300 text-xs leading-relaxed">
+					<p class="text-xs leading-relaxed">
 						{i18n.t('tos_sec3_desc')}
 					</p>
+					<div class="p-3 rounded-xl border text-[11px] leading-relaxed {
+						isLightTheme ? 'bg-white border-amber-200 text-zinc-700 shadow-sm' : 'bg-zinc-950/60 border-amber-500/20 text-zinc-300'
+					}">
+						Model yang diunduh dari Booth.pm, Nizima, atau VRoid Hub harus mematuhi lisensi masing-masing kreator asli model tersebut. MiruNova Live bertindak sebagai runtime/viewer independen dan tidak mengklaim hak cipta atas model pengguna.
+					</div>
 				</div>
 
-				<!-- Section 4: Open Source License & Warranty Disclaimer -->
-				<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-3">
-					<div class="flex items-center gap-2.5 text-amber-300 font-bold text-sm">
-						<FileText class="w-4 h-4 text-amber-400" />
-						<span>4. Open Source Licensing & Warranty Disclaimer</span>
+				<!-- Section 4: Creator Attribution & Open Source Commitment -->
+				<div
+					class="p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 {
+						isLightTheme ? 'bg-zinc-100 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
+					}"
+				>
+					<div class="flex items-center gap-3">
+						<Heart class="w-5 h-5 text-pink-500 shrink-0" />
+						<div>
+							<div class="font-extrabold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+								Dibuat & Dikembangkan oleh Rifky (@RifkyA911)
+							</div>
+							<p class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+								Proyek FOSS berlisensi terbuka untuk kemajuan ekosistem VTuber global
+							</p>
+						</div>
 					</div>
-					<p class="text-zinc-400 text-xs leading-relaxed">
-						MiruNova Live is free and open-source software authored and maintained by <strong>Rifky (@RifkyA911)</strong>. The core platform is provided "AS IS", without warranty of any kind, express or implied. In no event shall the authors or copyright holders be liable for any claim or damages arising from the use of the software.
-					</p>
+
+					<a
+						href="https://github.com/RifkyA911/mirunova-live"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={() => playSfx('click')}
+						class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+					>
+						<span>GitHub Repository</span>
+						<ExternalLink class="w-3.5 h-3.5" />
+					</a>
 				</div>
 			</div>
 
 			<!-- Footer -->
-			<div class="px-6 sm:px-8 py-4 border-t border-zinc-800/80 bg-zinc-900/50 flex items-center justify-between text-xs">
-				<span class="text-zinc-500 text-[11px]">
-					MiruNova Live • Privacy-First VTuber Engine
+			<div
+				class="px-6 sm:px-8 py-4 border-t flex items-center justify-between {
+					isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-600' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+				}"
+			>
+				<span class="text-[11px]">
+					MiruNova Live • Privacy First VTuber Platform
 				</span>
 				<button
 					onclick={closeModal}
-					class="px-5 py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
+					class="px-4 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer {
+						isLightTheme ? 'bg-zinc-200 hover:bg-zinc-300 text-zinc-900' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+					}"
 				>
-					{i18n.t('done')}
+					Tutup
 				</button>
 			</div>
 		</div>

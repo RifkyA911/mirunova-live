@@ -125,6 +125,8 @@ export class FaceTracker {
 			video.playsInline = true;
 			video.muted = true;
 			// Kept in DOM with minimal size so browser renders frames reliably
+			video.width = 640;
+			video.height = 480;
 			video.style.position = 'fixed';
 			video.style.bottom = '0';
 			video.style.right = '0';
@@ -417,7 +419,7 @@ export class FaceTracker {
 		const startTime = performance.now();
 		const vid = this.trackingVideo;
 
-		if (vid.currentTime !== this.lastVideoTime && vid.readyState >= 2) {
+		if (vid.currentTime !== this.lastVideoTime && vid.readyState >= 2 && vid.videoWidth > 0) {
 			this.lastVideoTime = vid.currentTime;
 
 			try {
@@ -592,15 +594,24 @@ export class FaceTracker {
 					);
 
 					// Apply profile-specific adaptive smoothing & store to rigging store
+					const eyeTargetL = rigging.mirrorEyes ? solved.eyeBlinkR : solved.eyeBlinkL;
+					const eyeTargetR = rigging.mirrorEyes ? solved.eyeBlinkL : solved.eyeBlinkR;
+					const eyeSmileTargetL = rigging.mirrorEyes ? (solved.eyeSmileR ?? 0) : (solved.eyeSmileL ?? 0);
+					const eyeSmileTargetR = rigging.mirrorEyes ? (solved.eyeSmileL ?? 0) : (solved.eyeSmileR ?? 0);
+					const browTargetL = rigging.mirrorEyes ? solved.browR : solved.browL;
+					const browTargetR = rigging.mirrorEyes ? solved.browL : solved.browR;
+
 					rigging.setLiveValue('ParamAngleX', globalSmoother.smooth('ParamAngleX', solved.yaw, 'angle'));
 					rigging.setLiveValue('ParamAngleY', globalSmoother.smooth('ParamAngleY', solved.pitch, 'angle'));
 					rigging.setLiveValue('ParamAngleZ', globalSmoother.smooth('ParamAngleZ', solved.roll, 'angle'));
-					rigging.setLiveValue('ParamEyeLOpen', globalSmoother.smooth('ParamEyeLOpen', solved.eyeBlinkL, 'blink'));
-					rigging.setLiveValue('ParamEyeROpen', globalSmoother.smooth('ParamEyeROpen', solved.eyeBlinkR, 'blink'));
+					rigging.setLiveValue('ParamEyeLOpen', globalSmoother.smooth('ParamEyeLOpen', eyeTargetL, 'blink'));
+					rigging.setLiveValue('ParamEyeROpen', globalSmoother.smooth('ParamEyeROpen', eyeTargetR, 'blink'));
+					rigging.setLiveValue('ParamEyeLSmile', eyeSmileTargetL);
+					rigging.setLiveValue('ParamEyeRSmile', eyeSmileTargetR);
 					rigging.setLiveValue('ParamEyeBallX', globalSmoother.smooth('ParamEyeBallX', solved.eyeBallX, 'generic'));
 					rigging.setLiveValue('ParamEyeBallY', globalSmoother.smooth('ParamEyeBallY', solved.eyeBallY, 'generic'));
-					rigging.setLiveValue('ParamBrowLY', globalSmoother.smooth('ParamBrowLY', solved.browL, 'generic'));
-					rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', solved.browR, 'generic'));
+					rigging.setLiveValue('ParamBrowLY', globalSmoother.smooth('ParamBrowLY', browTargetL, 'generic'));
+					rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', browTargetR, 'generic'));
 					rigging.setLiveValue('ParamMouthOpenY', globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen, 'mouth'));
 					rigging.setLiveValue('ParamMouthForm', globalSmoother.smooth('ParamMouthForm', solved.mouthForm, 'mouth'));
 					rigging.setLiveValue('ParamMouthX', globalSmoother.smooth('ParamMouthX', solved.mouthX, 'mouth'));
@@ -614,8 +625,6 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamArmRB', solved.isHighFiveR ? 1 : 0);
 					rigging.setLiveValue('ParamHandAngleL', solved.isHighFiveL ? 15 : 0);
 					rigging.setLiveValue('ParamHandAngleR', solved.isHighFiveR ? 15 : 0);
-					rigging.setLiveValue('ParamEyeLSmile', solved.eyeSmileL ?? 0);
-					rigging.setLiveValue('ParamEyeRSmile', solved.eyeSmileR ?? 0);
 
 					// Draw wireframe overlay only if PIP is visible, mesh is enabled, and NO blocking modal is active
 					const isModalOpen = rigging.isSettingsModalOpen || rigging.isModelModalOpen || rigging.isThemeModalOpen || rigging.isObsModalOpen || rigging.isShortcutModalOpen;

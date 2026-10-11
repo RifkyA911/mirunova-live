@@ -12,7 +12,7 @@
 	import ShortcutGuideModal from '#lib/components/ShortcutGuideModal.svelte';
 	import AboutModal from '#lib/components/AboutModal.svelte';
 	import TosModal from '#lib/components/TosModal.svelte';
-	import ZoomControls from '#lib/components/ZoomControls.svelte';
+	import AssistButton from '#lib/components/AssistButton.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
@@ -87,6 +87,21 @@
 				rigging.isModelModalOpen = !rigging.isModelModalOpen;
 				rigging.isThemeModalOpen = false;
 				rigging.isSettingsModalOpen = false;
+			} else if (e.key === 'e' || e.key === 'E') {
+				if (rigging.availableExpressions && rigging.availableExpressions.length > 0) {
+					const exps = rigging.availableExpressions;
+					const curIdx = exps.findIndex((x) => x.name === rigging.activeExpression);
+					const nextIdx = (curIdx + 1) % (exps.length + 1);
+					if (nextIdx === exps.length) {
+						rigging.setExpression('');
+						rigging.showToast('Ekspresi: Netral / Normal');
+					} else {
+						const nextExp = exps[nextIdx];
+						rigging.setExpression(nextExp.name);
+						playSfx('expression');
+						rigging.showToast(`Ekspresi: ${nextExp.label}`);
+					}
+				}
 			} else if (e.key === 't' || e.key === 'T') {
 				rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
 				rigging.isModelModalOpen = false;
@@ -427,8 +442,8 @@
 		<!-- Picture-in-Picture Webcam & Landmark Wireframe Overlay -->
 		<CameraPip />
 
-		<!-- Right-Edge Hover-Expand Zoom Widget -->
-		<ZoomControls />
+		<!-- Left-Edge Hover-Expand Assist Button Widget -->
+		<AssistButton />
 
 		<!-- Floating Streamer Control Dock -->
 		<ControlDock />

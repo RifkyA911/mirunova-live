@@ -39,6 +39,7 @@
 		{ key: 'Space', title: 'Webcam Face Tracking', description: i18n.t('shortcut_space'), category: 'tracking', badge: 'Vision' },
 		{ key: 'V', title: 'Microphone Engine', description: i18n.t('shortcut_v'), category: 'tracking', badge: 'Audio' },
 		{ key: 'C', title: 'Center Pose Calibration', description: i18n.t('shortcut_c'), category: 'tracking', badge: 'Vision' },
+		{ key: 'E', title: 'Cycle Live2D Expressions', description: 'Ganti atau siklus ekspresi wajah model Live2D', category: 'tracking', badge: 'Expressions' },
 		{ key: 'P', title: 'PIP Camera Overlay', description: i18n.t('shortcut_p'), category: 'tracking', badge: 'Webcam' },
 		{ key: 'B', title: 'Blink Sync Mode', description: i18n.t('shortcut_b'), category: 'tracking', badge: 'Eyes' },
 

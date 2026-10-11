@@ -239,7 +239,8 @@
 }
 
 /* --- 4. CYBER DARK THEME (Obsidian / High-Tech Neon Cyan) --- */
-.theme-cyber {
+.theme-cyber,
+.theme-cyber-dark {
 	--theme-bg-base: #09090b;
 	--theme-surface-950: rgba(9, 9, 11, 0.94);
 	--theme-surface-900: rgba(18, 18, 24, 0.9);
@@ -256,14 +257,20 @@
 }
 
 .theme-cyber nav,
+.theme-cyber-dark nav,
 .theme-cyber aside,
+.theme-cyber-dark aside,
 .theme-cyber header > div,
+.theme-cyber-dark header > div,
 .theme-cyber [role="dialog"],
-.theme-cyber [class*="bg-zinc-950"] {
+.theme-cyber-dark [role="dialog"],
+.theme-cyber [class*="bg-zinc-950"],
+.theme-cyber-dark [class*="bg-zinc-950"] {
 	border-color: rgba(6, 182, 212, 0.25) !important;
 }
 
-.theme-cyber [class*="border-zinc-800"] {
+.theme-cyber [class*="border-zinc-800"],
+.theme-cyber-dark [class*="border-zinc-800"] {
 	border-color: rgba(6, 182, 212, 0.2) !important;
 }
 
@@ -947,32 +954,17 @@
 }
 
 /* ========================================================
-   ADAPTIVE BUTTONS, BADGES & HOVER INTERACTIONS (GLOBAL)
-   Dynamically aligns buttons, badges, and hovers across all themes
+   ADAPTIVE BUTTONS & HOVER INTERACTIONS (SCOPED)
+   Aligns dock, header, and aside controls without clobbering modals
    ======================================================== */
-[class*="theme-"] button:hover:not(:disabled) {
-	border-color: var(--theme-border-hover) !important;
+nav button:hover:not(:disabled),
+aside button:hover:not(:disabled) {
+	border-color: var(--theme-border-hover, inherit);
 }
 
-[class*="theme-"] [class*="hover:bg-zinc-800"]:hover,
-[class*="theme-"] [class*="hover:bg-zinc-700"]:hover {
-	background-color: var(--theme-btn-hover-bg) !important;
-	color: var(--theme-text-accent) !important;
-}
-
-[class*="theme-"] [class*="bg-cyan-500/20"],
-[class*="theme-"] [class*="bg-indigo-500/20"],
-[class*="theme-"] [class*="bg-pink-500/20"] {
-	background-color: var(--theme-badge-bg) !important;
-	color: var(--theme-badge-text) !important;
-	border-color: var(--theme-badge-border) !important;
-}
-
-[class*="theme-"] [class*="text-cyan-400"],
-[class*="theme-"] [class*="text-cyan-300"],
-[class*="theme-"] [class*="text-indigo-400"],
-[class*="theme-"] [class*="text-indigo-300"] {
-	color: var(--theme-text-accent) !important;
+nav [class*="hover:bg-zinc-800"]:hover,
+aside [class*="hover:bg-zinc-800"]:hover {
+	background-color: var(--theme-btn-hover-bg, rgba(255, 255, 255, 0.08));
 }
 
 /* Streamer Square Frame with Organic Overflow Edge Fade */

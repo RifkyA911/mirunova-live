@@ -58,6 +58,7 @@ export interface SavedUserConfig {
 	mouthTrackingMode?: 'normal' | 'high';
 	isSfxEnabled?: boolean;
 	sfxVolume?: number;
+	mirrorEyes?: boolean;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

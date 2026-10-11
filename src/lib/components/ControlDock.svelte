@@ -26,12 +26,15 @@
 		Video,
 		RefreshCw,
 		SlidersHorizontal,
-		Info
+		Info,
+		Smile,
+		Sparkles
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
 	let isLangMenuOpen = $state<boolean>(false);
 	let isDeviceMenuOpen = $state<boolean>(false);
+	let isExpressionMenuOpen = $state<boolean>(false);
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 
@@ -458,6 +461,108 @@
 			>
 				{i18n.t('models')} [M]
 			</div>
+		</div>
+
+		<!-- 8b. Live2D Model Expression Variations Selector -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isExpressionMenuOpen = !isExpressionMenuOpen;
+					isLangMenuOpen = false;
+					isDeviceMenuOpen = false;
+				}}
+				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+					isExpressionMenuOpen || rigging.activeExpression
+						? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60'
+				}"
+				aria-label="Ekspresi Wajah Model"
+			>
+				<Smile class="w-5 h-5 text-pink-400" />
+				{#if rigging.activeExpression}
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+				{/if}
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				Ekspresi Model ({rigging.availableExpressions.length}) [E]
+			</div>
+
+			<!-- Floating Expression Popover -->
+			{#if isExpressionMenuOpen}
+				<!-- Click-outside backdrop closer -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="fixed inset-0 z-[65]"
+					onclick={() => (isExpressionMenuOpen = false)}
+				></div>
+
+				<div
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 bg-zinc-950/98 backdrop-blur-2xl border border-zinc-700/80 rounded-2xl shadow-2xl p-2.5 z-[70] space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left"
+				>
+					<!-- Header -->
+					<div class="flex items-center justify-between border-b border-zinc-800/80 pb-2 px-1">
+						<div class="flex items-center gap-1.5">
+							<Sparkles class="w-4 h-4 text-pink-400" />
+							<span class="font-bold text-xs text-zinc-100 tracking-wide">Ekspresi Wajah</span>
+						</div>
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono border border-pink-500/30">
+							{rigging.availableExpressions.length} Variasi
+						</span>
+					</div>
+
+					<!-- Reset / Neutral Button -->
+					<button
+						onclick={() => {
+							playSfx('click');
+							rigging.setExpression('');
+							isExpressionMenuOpen = false;
+						}}
+						class="w-full px-3 py-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
+							!rigging.activeExpression
+								? 'bg-zinc-800/90 text-cyan-300 font-semibold border border-cyan-500/30'
+								: 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent'
+						}"
+					>
+						<span>⚪ Netral / Reset</span>
+						{#if !rigging.activeExpression}
+							<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+						{/if}
+					</button>
+
+					<!-- Expressions List -->
+					<div class="max-h-56 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+						{#if rigging.availableExpressions.length === 0}
+							<div class="p-3 text-center text-[11px] text-zinc-500">
+								Tidak ada file ekspresi terdaftar pada model ini
+							</div>
+						{:else}
+							{#each rigging.availableExpressions as exp}
+								<button
+									onclick={() => {
+										playSfx('expression');
+										rigging.setExpression(exp.name);
+										isExpressionMenuOpen = false;
+									}}
+									class="w-full px-3 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
+										rigging.activeExpression === exp.name
+											? 'bg-pink-500/20 text-pink-300 font-semibold border border-pink-500/40 shadow-sm'
+											: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white border border-transparent'
+									}"
+								>
+									<span class="truncate">{exp.label}</span>
+									{#if rigging.activeExpression === exp.name}
+										<span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+									{/if}
+								</button>
+							{/each}
+						{/if}
+					</div>
+				</div>
+			{/if}
 		</div>
 
 		<!-- 9. Screenshot & Download Avatar -->

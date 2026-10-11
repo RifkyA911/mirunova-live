@@ -72,8 +72,13 @@ export class ParameterSmoother {
 		}
 
 		// Blinking asymmetry: closing eyes should be instantaneous (ultra-responsive snap)
-		if (profile === 'blink' && targetValue < prev) {
-			alpha = Math.max(alpha, 0.85);
+		if (profile === 'blink') {
+			if (targetValue <= 0.08) {
+				// Immediate snap to closed for instant, zero-lag winks and blinks
+				alpha = 1.0;
+			} else if (targetValue < prev) {
+				alpha = Math.max(alpha, 0.92);
+			}
 		}
 
 		// Calculate smoothed output

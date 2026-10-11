@@ -142,42 +142,47 @@ export function solveFaceLandmarks(
 		}
 	}
 
+	let eyeSmileL = Math.min(1.0, (blendshapesMap.get('eyeSquintLeft') ?? 0) * 1.5);
+	let eyeSmileR = Math.min(1.0, (blendshapesMap.get('eyeSquintRight') ?? 0) * 1.5);
+
+	let isWinkL = false;
+	let isWinkR = false;
+
 	if (eyeBlinkLinked) {
 		const combined = Math.max(blinkL, blinkR);
 		blinkL = combined;
 		blinkR = combined;
 	} else {
-		// Asymmetric Wink Isolation:
-		// When one eye is intentionally closing while the other is open,
-		// prevent facial squint muscle bleed from partially closing the open eye!
+		// Asymmetric Wink Isolation & Snap:
+		// When one eye is winking while the other is open,
+		// firmly snap the winking eye shut, keep the other eye wide open, and trigger a cute anime smile wink!
 		const blinkDiff = blinkL - blinkR;
-		if (blinkDiff > 0.18 && blinkL > 0.35) {
-			// Deliberate Left eye wink: Keep right eye fully open
-			blinkR = Math.max(0, blinkR - 0.25);
-			blinkL = Math.min(1.0, blinkL * 1.25);
-		} else if (blinkDiff < -0.18 && blinkR > 0.35) {
-			// Deliberate Right eye wink: Keep left eye fully open
-			blinkL = Math.max(0, blinkL - 0.25);
-			blinkR = Math.min(1.0, blinkR * 1.25);
+		if (blinkDiff >= 0.12 && blinkL >= 0.28) {
+			// Deliberate Left eye wink
+			isWinkL = true;
+			blinkR = Math.max(0, blinkR - 0.35); // Keep right eye firmly open
+			blinkL = 1.0; // Snap left eye completely shut
+			eyeSmileL = 1.0; // Cute anime wink smile
+		} else if (blinkDiff <= -0.12 && blinkR >= 0.28) {
+			// Deliberate Right eye wink
+			isWinkR = true;
+			blinkL = Math.max(0, blinkL - 0.35); // Keep left eye firmly open
+			blinkR = 1.0; // Snap right eye completely shut
+			eyeSmileR = 1.0; // Cute anime wink smile
 		}
 	}
 
-	// Crisp eyelid response: baseline open eyes (0.0 to 0.25) remain 100% open
-	let eyeBlinkL = 1 - smoothStep(0.25, 0.65, blinkL);
-	let eyeBlinkR = 1 - smoothStep(0.25, 0.65, blinkR);
+	// Crisp eyelid response curve:
+	// If winking was detected, instantly enforce 0.0 on the winking eye and 1.0 on open eye!
+	let eyeBlinkL = isWinkL ? 0.0 : 1 - smoothStep(0.20, 0.55, blinkL);
+	let eyeBlinkR = isWinkR ? 0.0 : 1 - smoothStep(0.20, 0.55, blinkR);
 
-	// Solid open eyes lock: snap to 1.0 when >= 0.78
-	if (eyeBlinkL >= 0.78) eyeBlinkL = 1.0;
-	if (eyeBlinkR >= 0.78) eyeBlinkR = 1.0;
-	// Clean closed eye lock: snap to 0.0 when <= 0.18
-	if (eyeBlinkL <= 0.18) eyeBlinkL = 0.0;
-	if (eyeBlinkR <= 0.18) eyeBlinkR = 0.0;
-
-	// Smiling eye blendshapes (^.^)
-	const squintL = blendshapesMap.get('eyeSquintLeft') ?? 0;
-	const squintR = blendshapesMap.get('eyeSquintRight') ?? 0;
-	const eyeSmileL = Math.min(1.0, squintL * 1.5);
-	const eyeSmileR = Math.min(1.0, squintR * 1.5);
+	// Solid open eyes lock: snap to 1.0 when >= 0.75
+	if (eyeBlinkL >= 0.75) eyeBlinkL = 1.0;
+	if (eyeBlinkR >= 0.75) eyeBlinkR = 1.0;
+	// Clean closed eye lock: snap to 0.0 when <= 0.22
+	if (eyeBlinkL <= 0.22) eyeBlinkL = 0.0;
+	if (eyeBlinkR <= 0.22) eyeBlinkR = 0.0;
 
 	// Symmetrical Eye Gaze (-1 to 1) using both left and right eye blendshapes
 	const lookInL = blendshapesMap.get('eyeLookInLeft') ?? 0;

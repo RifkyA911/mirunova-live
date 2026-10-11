@@ -115,6 +115,16 @@ describe('solveFaceLandmarks', () => {
 		const resWinkR = solveFaceLandmarks(landmarks, winkRBlendshapes, { yaw: 0, pitch: 0, roll: 0 });
 		expect(resWinkR.eyeBlinkR).toBeLessThan(0.2); // closed
 		expect(resWinkR.eyeBlinkL).toBe(1.0);         // solid open
+
+		// Realistic subtle wink with natural squint tension (0.38 vs 0.14)
+		const subtleWink = new Map<string, number>([
+			['eyeBlinkLeft', 0.38],
+			['eyeBlinkRight', 0.14]
+		]);
+		const resSubtle = solveFaceLandmarks(landmarks, subtleWink, { yaw: 0, pitch: 0, roll: 0 });
+		expect(resSubtle.eyeBlinkL).toBeLessThan(0.2); // cleanly closed
+		expect(resSubtle.eyeBlinkR).toBe(1.0);         // open eye stays solid
+		expect(resSubtle.eyeSmileL).toBe(1.0);        // cute anime wink smile triggered
 	});
 
 	it('computes mouthForm and mouthX for smiling, frowning, and jaw skew', () => {

@@ -92,12 +92,17 @@
   * BOOTH.pm VTuber Showcase catalog.
 * **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
 
-### 🔍 9. Zoom Controls & Center-Anchored Zooming
-* **Right-Edge Floating Zoom Widget:** Hover-expand vertical toolbar with Zoom In, Zoom Out, Reset Center (100%), and framing presets.
-* **Mathematical Center Anchoring:** Mouse wheel and button zooms anchor dead-center to the viewport/avatar without drift.
-* **Keyboard Hotkeys:** `+` / `=` to Zoom In, `-` / `_` to Zoom Out, `Z` to Reset Zoom.
+### 🔍 9. Assist Button & Center-Anchored Stage Controls
+* **Left-Edge Slide-Out Assist Button:** Elegant floating assist dock anchored to the left edge of the screen. Idle mode keeps 10% of its body peeking out with a vertical `ASSIST` handle and glowing status indicator; hovering slides out the full assist panel smoothly.
+* **Stage Controls:** Instant Zoom In (+), Zoom Out (-), 100% Reset, Reset Center (`[0]`), and framing presets (Close-up, Half Body, Full Body).
+* **Mathematical Center Anchoring:** Viewport mouse wheel zooms and button zooms anchor dead-center without spatial drift.
+* **Quick Center Calibration:** One-click center pose reset (`[C]`) and quick expression triggers.
 
-### 🎥 10. OBS Studio Integration
+### ✨ 10. Dynamic Live2D Expression Selector
+* **Model Expressions in Menubar:** Dynamic variation selector button in the bottom Control Dock reading all expression definitions from the active Live2D model.
+* **Floating Expression Popover:** One-click activation with visual active states, neutral reset button, procedural sound feedback, and global keyboard hotkey `E` to cycle expressions.
+
+### 🎥 11. OBS Studio Integration
 * **One-Click Screen Mode:** Hides all application UI leaving only the avatar stage.
 * **URL Parameter Integration:** Add `?obs=true&bg=transparent` or `?obs=true&bg=chroma` directly to OBS Browser Source for zero-configuration integration.
 

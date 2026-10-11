@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.12.0] - 2026-10-11
+
+### Added
+- **Studio Assist Button (Slide-Out Left Screen Edge):**
+  - Consolidated zoom controls into an elegant, floating **Assist Button** anchored on the left screen edge (`-translate-x-[calc(100%-28px)]`).
+  - 10% peeking tab with glowing cyan indicator and vertical `ASSIST` text peeks out when idle, sliding out smoothly on hover.
+  - Complete stage control palette: Zoom In (+), Zoom Out (-), 100% Reset, Reset Center [0], Framing presets (Close-Up Face, Half-Body, Full-Body), Center Pose Calibration [C], and Quick Expression chips.
+- **Dynamic Live2D Model Expression Selector:**
+  - Added Expression Variation Selector button to the main Control Dock displaying active expression badge and total variation count (`✨ {n} Variasi`).
+  - Dynamic discovery of expression files from Live2D `.model3.json` (`expressionManager.definitions` or `settings.expressions`) with fallback to anime presets (Smile, Wink, Shock, Pout, Sad).
+  - Floating expression popover with instant trigger, reset button, and global hotkey `E` to cycle expressions during live streams.
+- **Instant Winking Engine & Mirror Eyes (`mirrorEyes`):**
+  - Re-tuned asymmetric wink threshold (`blinkDiff >= 0.12 && blinkL >= 0.28`) snapping directly to 0.0 with 0-lag alpha in parameter smoother.
+  - Automatic `ParamEyeSmile = 1.0` anime wink expression trigger.
+  - VTuber mirror eye tracking mode (`mirrorEyes = true`) mapping camera-left eye to avatar viewer-left eye for natural webcam mirroring.
+  - Dual hook on `beforeModelUpdate` AND `afterModelUpdate` in `CanvasStage.svelte` guaranteeing tracking values override internal Live2D idle motion curves and auto-blink controllers.
+- **Overhauled Theme Selector UI/UX (ThemeModal):**
+  - Studio-grade theme selector with realistic **Mini-UI Preview Mockups** for all 13 themes rendering actual background, surface, accent, and button styling.
+  - 5-color complete palette strip showing exact hex codes for Background, Surface, Accent, Border, and Text.
+  - Categorized filter tabs: "Semua Tema (13)", "Daylight / Terang (4)", "Dark & Cyber (8)", and "Custom Studio (PRO)".
+  - Custom Theme Studio with live interactive card preview and 6 curated one-click presets (🌸 Sakura Bloom, 🍵 Matcha Zen, ⚡ Cyber Neon, 🌌 Cosmic Violet, 🍊 Sunset Amber, 💎 Arctic Ice).
+- **High-Contrast Theme Adaptability in Modals & Scoped CSS:**
+  - Scoped button hover rules in `layout.css`, removing destructive blanket `!important` text and badge overrides that caused illegible text on light themes.
+  - Overhauled `AboutModal.svelte` and `TosModal.svelte` to dynamically adapt to daylight and dark themes with crisp high-contrast cards and typography.
+  - Prominent creator spotlight for **Rifky (@RifkyA911)**, repository star link, and desktop PWA status.
+- **Procedural Web Audio SFX Engine Polish:**
+  - Added procedural `hover` micro-blip (520-640Hz) and expression chime.
+  - Auto-resuming AudioContext on user interaction with boosted master gain (0.75x).
+
+---
+
 ## [0.11.0] - 2026-10-11
 
 ### Added

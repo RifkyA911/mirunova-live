@@ -67,7 +67,7 @@ export class RiggingStore {
 	isCameraActive = $state<boolean>(false);
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
-	enableHandTracking = $state<boolean>(true);
+	enableHandTracking = $state<boolean>(false);
 
 	// OBS Screen Mode System
 	isObsMode = $state<boolean>(false);
@@ -91,6 +91,7 @@ export class RiggingStore {
 	jitterReduction = $state<number>(0.5);     // 0.0 to 1.0 jitter suppression filter
 	deadzoneThreshold = $state<number>(0.3);    // 0 to 1.5 degrees continuous deadband
 	eyeBlinkLinked = $state<boolean>(false);    // sync both eyes
+	mirrorEyes = $state<boolean>(true);         // VTuber mirror eye tracking (left-to-left)
 	holdPoseOnLoss = $state<boolean>(true);     // hold pose on 1-frame drop & smooth decay
 	invertPitch = $state<boolean>(false);       // Invert Y (menunduk / mendongak)
 	invertYaw = $state<boolean>(false);         // Invert X (kiri / kanan)
@@ -98,6 +99,10 @@ export class RiggingStore {
 	mouthTrackingMode = $state<'normal' | 'high'>('normal'); // 'normal' | 'high' (Speech boost)
 	isSfxEnabled = $state<boolean>(true);       // UI sound effects toggle
 	sfxVolume = $state<number>(0.6);            // UI sound effects volume (0.0 to 1.0)
+
+	// Live2D Model Expressions
+	availableExpressions = $state<Array<{ id: string; name: string; label: string }>>([]);
+	activeExpression = $state<string>('');
 
 	// Camera Hardware Preferences
 	cameraDeviceId = $state<string>('');
@@ -255,6 +260,7 @@ export class RiggingStore {
 			mouthTrackingMode: this.mouthTrackingMode,
 			isSfxEnabled: this.isSfxEnabled,
 			sfxVolume: this.sfxVolume,
+			mirrorEyes: this.mirrorEyes,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -325,6 +331,7 @@ export class RiggingStore {
 		if (saved.mouthTrackingMode) this.mouthTrackingMode = saved.mouthTrackingMode;
 		if (saved.isSfxEnabled !== undefined) this.isSfxEnabled = saved.isSfxEnabled;
 		if (saved.sfxVolume !== undefined) this.sfxVolume = saved.sfxVolume;
+		if (saved.mirrorEyes !== undefined) this.mirrorEyes = saved.mirrorEyes;
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 
@@ -531,6 +538,13 @@ export class RiggingStore {
 
 	playMotion(name: string) {
 		this.triggerMotionSignal = { name, timestamp: performance.now() };
+	}
+
+	setExpression(name: string) {
+		this.activeExpression = name;
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('mirunova:set-expression', { detail: { name } }));
+		}
 	}
 }
 

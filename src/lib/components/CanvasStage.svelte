@@ -67,6 +67,57 @@
 		}
 	});
 
+	// Reactively trigger expressions
+	let lastAppliedExpression = '';
+	$effect(() => {
+		const exp = rigging.activeExpression;
+		if (currentModel && exp !== lastAppliedExpression) {
+			lastAppliedExpression = exp;
+			applyExpression(exp);
+		}
+	});
+
+	function applyExpression(expName: string) {
+		if (!currentModel) return;
+		try {
+			if (!expName || expName === 'normal' || expName === 'reset') {
+				if (typeof currentModel.expression === 'function') {
+					currentModel.expression('');
+				}
+				// Also reset procedural facial parameters if they were applied
+				rigging.setManualValue('ParamEyeLSmile', 0);
+				rigging.setManualValue('ParamEyeRSmile', 0);
+				rigging.setManualValue('ParamCheek', 0);
+				rigging.setManualValue('ParamMouthForm', 0);
+			} else if (typeof currentModel.expression === 'function') {
+				currentModel.expression(expName);
+			} else {
+				// Procedural fallbacks
+				if (expName === 'smile') {
+					rigging.setManualValue('ParamEyeLSmile', 1);
+					rigging.setManualValue('ParamEyeRSmile', 1);
+					rigging.setManualValue('ParamMouthForm', 1);
+				} else if (expName === 'wink') {
+					rigging.setManualValue('ParamEyeLOpen', 0);
+					rigging.setManualValue('ParamEyeLSmile', 1);
+				} else if (expName === 'surprise') {
+					rigging.setManualValue('ParamEyeLOpen', 1.2);
+					rigging.setManualValue('ParamEyeROpen', 1.2);
+					rigging.setManualValue('ParamMouthOpenY', 0.8);
+				} else if (expName === 'pout') {
+					rigging.setManualValue('ParamCheek', 1);
+					rigging.setManualValue('ParamMouthForm', -0.5);
+				} else if (expName === 'sad') {
+					rigging.setManualValue('ParamMouthForm', -1);
+					rigging.setManualValue('ParamBrowLY', -0.8);
+					rigging.setManualValue('ParamBrowRY', -0.8);
+				}
+			}
+		} catch (err) {
+			console.warn('Failed to apply expression:', expName, err);
+		}
+	}
+
 	let lastScreenshotSignal = 0;
 	$effect(() => {
 		const signal = rigging.screenshotSignal;
@@ -171,12 +222,17 @@
 
 			app.stage.addChild(model);
 
-			// Hook parameters into beforeModelUpdate event for 100% reliable tracking
+			// Hook parameters into beforeModelUpdate and afterModelUpdate for 100% reliable tracking
 			if (model.internalModel) {
-				model.internalModel.on('beforeModelUpdate', () => {
+				const applyModelTracking = () => {
 					const core = model.internalModel?.coreModel;
 					if (!core) return;
 					const now = performance.now();
+
+					// If camera tracking is active, disable internal auto-blink generator so it does not cancel user winks
+					if (model.internalModel.motionManager && (model.internalModel.motionManager as any).eyeBlink) {
+						(model.internalModel.motionManager as any).eyeBlink.enabled = !rigging.isCameraActive;
+					}
 
 					for (const param of rigging.parameters) {
 						let val = rigging.getActiveValue(param.id);
@@ -212,7 +268,10 @@
 							}
 						}
 					}
-				});
+				};
+
+				model.internalModel.on('beforeModelUpdate', applyModelTracking);
+				model.internalModel.on('afterModelUpdate', applyModelTracking);
 			}
 
 			inspectModelParameters(model);
@@ -292,6 +351,49 @@
 				}
 			} catch {
 				rigging.availableMotions = [];
+			}
+
+			// Discover expressions provided by the Live2D model
+			try {
+				const expMgr = model.internalModel?.motionManager?.expressionManager;
+				const expDefs = expMgr?.definitions;
+				const expressionsList: Array<{ id: string; name: string; label: string }> = [];
+
+				if (Array.isArray(expDefs) && expDefs.length > 0) {
+					expDefs.forEach((def: any, idx: number) => {
+						const name = def.name || def.file || `exp_${idx}`;
+						const cleanLabel = name.replace(/\.(exp3?|json)$/i, '').replace(/^.*\//, '');
+						expressionsList.push({ id: name, name, label: cleanLabel });
+					});
+				} else if (model.internalModel?.settings?.expressions && model.internalModel.settings.expressions.length > 0) {
+					const rawExps = model.internalModel.settings.expressions;
+					rawExps.forEach((exp: any, idx: number) => {
+						const name = exp.Name || exp.name || exp.File || `exp_${idx}`;
+						const cleanLabel = (exp.Name || exp.name || name).replace(/\.(exp3?|json)$/i, '').replace(/^.*\//, '');
+						expressionsList.push({ id: name, name, label: cleanLabel });
+					});
+				}
+
+				// If the model does not bundle file-based expressions, provide universal expressive presets
+				if (expressionsList.length === 0) {
+					expressionsList.push(
+						{ id: 'smile', name: 'smile', label: '😊 Smile' },
+						{ id: 'wink', name: 'wink', label: '😉 Wink' },
+						{ id: 'surprise', name: 'surprise', label: '😲 Shock' },
+						{ id: 'pout', name: 'pout', label: '😤 Pout' },
+						{ id: 'sad', name: 'sad', label: '🥺 Sad' }
+					);
+				}
+
+				rigging.availableExpressions = expressionsList;
+			} catch (expErr) {
+				console.warn('Expressions inspection skipped:', expErr);
+				rigging.availableExpressions = [
+					{ id: 'smile', name: 'smile', label: '😊 Smile' },
+					{ id: 'wink', name: 'wink', label: '😉 Wink' },
+					{ id: 'surprise', name: 'surprise', label: '😲 Shock' },
+					{ id: 'pout', name: 'pout', label: '😤 Pout' }
+				];
 			}
 		} catch (e) {
 			console.warn('Parameter inspection skipped:', e);
