@@ -118,3 +118,45 @@ export interface Live2DModelItem {
 	boothUrl?: string;
 	author?: string;
 }
+
+export interface AccessoryItem {
+	id: string;
+	name: string;
+	category: 'head' | 'face' | 'chest' | 'prop';
+	icon: string;
+	emoji: string;
+	visible: boolean;
+	scale: number;
+	offsetX: number;
+	offsetY: number;
+	rotation: number;
+	opacity: number;
+	color?: string;
+}
+
+export interface StageLayer {
+	id: string;
+	name: string;
+	type: 'shader-fx' | 'accessories' | 'model-collab' | 'model-host' | 'background';
+	visible: boolean;
+	opacity: number;
+	locked: boolean;
+	badge: string;
+	description: string;
+}
+
+export interface CollabConfig {
+	enabled: boolean;
+	modelId: string;
+	modelUrl: string;
+	modelName: string;
+	avatarUrl?: string;
+	position: 'left' | 'right' | 'pip' | 'center';
+	scale: number;
+	offsetX: number;
+	offsetY: number;
+	opacity: number;
+	visible: boolean;
+	syncTracking: boolean;
+}
+

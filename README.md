@@ -131,6 +131,39 @@
 * **One-Click Screen Mode:** Hides all application UI leaving only the avatar stage.
 * **URL Parameter Integration:** Add `?obs=true&bg=transparent` or `?obs=true&bg=chroma` directly to OBS Browser Source for zero-configuration integration.
 
+### 🖼️ 13. Photoshop-Style Layer Manager & Stage Studio
+* **5-Tier Stackable Photoshop Layers:**
+  1. **Shader FX & Filters:** Vignette, Scanlines, CRT phosphor glow, Blur overlays.
+  2. **Accessories & Props:** VTuber wearable props layer.
+  3. **Collab Partner Avatar:** Guest streamer model.
+  4. **Host Avatar:** Primary Live2D or 3D tracked avatar.
+  5. **Stage Background:** Solid, Cosmic, Mesh Grid, Alpha, Chroma.
+* **Interactive Live Thumbnail Previews:** Every layer card renders real-time miniature thumbnail previews showing active background colors, model names, active accessory counts, and screen shaders.
+* **Layer Z-Index Reordering:** Click `Up` or `Down` to alter the rendering hierarchy; PixiJS WebGL automatically sorts children by `zIndex` in real-time.
+* **Opacity & Lock Controls:** Smooth 0%–100% layer opacity sliders and layer lock protection preventing accidental edits.
+* **Global Hotkey:** Press `P` anytime or click the `Layers` button in the Control Dock / Assist Menu to open the manager.
+
+### 🎀 14. VTuber Accessories & Props Attach System
+* **10 Customizable Wearable Props:**
+  * **Sunglasses (Thug Life Shades)** (`🕶️`), **Nekomimi Cat Ears** (`🐱`), **RGB Gaming Headset** (`🎧`), **Magician Top Hat** (`🎩`), **Sakura Hairpin** (`🌸`), **Royalty Golden Crown** (`👑`), **Studio Broadcast Mic** (`🎙️`), **Gentleman Mustache** (`🥸`), **Angel Golden Halo** (`😇`), **Floating Heart Aura** (`💖`).
+* **Real-Time Head Tracking Anchoring:** Props are anchored to the avatar's coordinates and respond to MediaPipe head tilt (`ParamAngleZ`), turning (`ParamAngleX`), and nod (`ParamAngleY`) with smooth rotation and translation.
+* **Fine-Tuning Controls:** Adjust item scale (0.5x–2.0x), horizontal offset X (-200px to +200px), and vertical offset Y (-350px to +200px) directly in the Layer Manager.
+
+### 👯 15. Mode Collab Streamer (Dual Avatar In-Browser Streaming)
+* **Zero-Setup Multi-Avatar Streaming:** Host two Live2D models simultaneously in the same browser window for collaborative streaming without running dual heavy desktop apps.
+* **Flexible Layout Presets:** Place guest avatar Side-by-Side (Left), Side-by-Side (Right), or Picture-in-Picture (PiP corner).
+* **Synchronized or Autonomous Tracking:** Choose between synchronized tracking (both avatars mirror streamer's face) or independent natural breathing and subtle sway loops for the guest avatar.
+* **Independent Transform & Opacity:** Fine-tune partner scale, position offsets, and individual opacity.
+
+### ⚡ 16. In-Memory ZIP Unpacking (`fflate`) & 1-Click BOOTH Installer
+* **1-Click Official & Neuro-sama Mounting:** Direct URL models mount immediately in 1 click without prompting any file picker.
+* **Instant Client-Side ZIP Unpack:** Built-in `fflate` engine unzips downloaded BOOTH `.zip` archives directly in RAM in <200ms, parses `.model3.json`, and converts textures to internal blob URLs with zero disk overhead.
+* **Drag-and-Drop ZIP Support:** Drop any `.zip` Live2D model package directly onto the Model Catalog window to mount it instantly.
+
+### 🛡️ 17. Resilient Windows Webcam Hardware Fallback
+* **Eliminates Hardware Camera Dropouts:** Solves `"Perangkat kamera (webcam) yang dipilih tidak ditemukan atau telah terputus"` errors when switching to dedicated discrete GPU (NVIDIA GeForce GTX 1650 Ti / RTX series).
+* **4-Tier Graceful Acquisition:** Automatically falls back from ideal constraints through device-id matching down to universal `{ video: true }` and exhaustive hardware sweeps, guaranteeing camera startup on 100% of Windows laptop drivers.
+
 ---
 
 ## 🚀 Quickstart

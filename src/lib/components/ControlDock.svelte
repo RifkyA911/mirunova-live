@@ -28,7 +28,8 @@
 		SlidersHorizontal,
 		Info,
 		Smile,
-		Sparkles
+		Sparkles,
+		Box
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
@@ -471,7 +472,7 @@
 				class="p-2.5 rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label={i18n.t('models')}
 			>
-				<Layers class="w-5 h-5 text-pink-400" />
+				<Box class="w-5 h-5 text-pink-400" />
 			</button>
 			<div
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
@@ -592,6 +593,35 @@
 					</div>
 				</div>
 			{/if}
+		</div>
+
+		<!-- 8c. Photoshop Layers, Props & Collab Manager Modal Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					rigging.toggleLayerManager();
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					rigging.isSettingsModalOpen = false;
+					isLangMenuOpen = false;
+					isDeviceMenuOpen = false;
+					isExpressionMenuOpen = false;
+				}}
+				class="p-2.5 rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
+					rigging.isLayerManagerOpen
+						? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('layer_manager_title')}
+			>
+				<Layers class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('layer_manager_title')} [P]
+			</div>
 		</div>
 
 		<!-- 9. Screenshot & Download Avatar -->

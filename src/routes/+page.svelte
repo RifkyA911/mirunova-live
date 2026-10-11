@@ -13,6 +13,7 @@
 	import AboutModal from '#lib/components/AboutModal.svelte';
 	import TosModal from '#lib/components/TosModal.svelte';
 	import AssistButton from '#lib/components/AssistButton.svelte';
+	import LayerManagerModal from '#lib/components/LayerManagerModal.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
@@ -75,6 +76,7 @@
 				if (rigging.isShortcutModalOpen) rigging.isShortcutModalOpen = false;
 				if (rigging.isAboutModalOpen) rigging.isAboutModalOpen = false;
 				if (rigging.isTosModalOpen) rigging.isTosModalOpen = false;
+				if (rigging.isLayerManagerOpen) rigging.isLayerManagerOpen = false;
 			} else if (e.key === ' ' || e.code === 'Space') {
 				e.preventDefault();
 				if (rigging.isCameraActive) tracker.stopCamera();
@@ -83,6 +85,8 @@
 				rigging.toggleGuiLock();
 			} else if (e.key === 'h' || e.key === 'H') {
 				rigging.toggleDock();
+			} else if (e.key === 'p' || e.key === 'P') {
+				rigging.toggleLayerManager();
 			} else if (e.key === 'm' || e.key === 'M') {
 				rigging.isModelModalOpen = !rigging.isModelModalOpen;
 				rigging.isThemeModalOpen = false;
@@ -311,24 +315,30 @@
 			: 'theme-cyber'
 	}"
 >
-	<!-- Dynamic Background Layer (Active across Live2D & 3D stages) -->
-	<div
-		class="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 {
-			rigging.backgroundStyle === 'cosmic' ? 'cosmic-backdrop' : ''
-		}"
-		style={dynamicBgStyle}
-	></div>
+	<!-- Dynamic Background Layer (Active across Live2D & 3D stages, tied to Photoshop Layer Manager) -->
+	{#if (rigging.stageLayers.find((l) => l.type === 'background')?.visible ?? true)}
+		{@const bgLayer = rigging.stageLayers.find((l) => l.type === 'background')}
+		{@const bgOpacity = bgLayer ? bgLayer.opacity : 1.0}
+		<div
+			class="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 {
+				rigging.backgroundStyle === 'cosmic' ? 'cosmic-backdrop' : ''
+			}"
+			style="{dynamicBgStyle} opacity: {bgOpacity};"
+		></div>
+	{/if}
 
-	<!-- Screen Effect Overlays (hidden in OBS mode to preserve clean stream output) -->
-	{#if !rigging.isObsMode}
+	<!-- Screen Effect Overlays (controlled by Layer Manager and hidden in OBS mode) -->
+	{#if !rigging.isObsMode && (rigging.stageLayers.find((l) => l.type === 'shader-fx')?.visible ?? true)}
+		{@const shaderLayer = rigging.stageLayers.find((l) => l.type === 'shader-fx')}
+		{@const shaderOpacity = shaderLayer ? shaderLayer.opacity : 1.0}
 		{#if rigging.screenEffect === 'vignette'}
-			<div class="absolute inset-0 pointer-events-none shadow-[inset_0_0_140px_rgba(0,0,0,0.85)] z-10"></div>
+			<div class="absolute inset-0 pointer-events-none shadow-[inset_0_0_140px_rgba(0,0,0,0.85)] z-10" style="opacity: {shaderOpacity};"></div>
 		{:else if rigging.screenEffect === 'scanlines'}
-			<div class="absolute inset-0 pointer-events-none scanlines-overlay z-10"></div>
+			<div class="absolute inset-0 pointer-events-none scanlines-overlay z-10" style="opacity: {shaderOpacity};"></div>
 		{:else if rigging.screenEffect === 'crt'}
-			<div class="absolute inset-0 pointer-events-none crt-glow-overlay z-10 shadow-[inset_0_0_100px_rgba(6,182,212,0.15)]"></div>
+			<div class="absolute inset-0 pointer-events-none crt-glow-overlay z-10 shadow-[inset_0_0_100px_rgba(6,182,212,0.15)]" style="opacity: {shaderOpacity};"></div>
 		{:else if rigging.screenEffect === 'blur'}
-			<div class="absolute inset-0 pointer-events-none backdrop-blur-[2px] z-10"></div>
+			<div class="absolute inset-0 pointer-events-none backdrop-blur-[2px] z-10" style="opacity: {shaderOpacity};"></div>
 		{/if}
 	{/if}
 
@@ -471,6 +481,9 @@
 
 		<!-- Studio Privacy Charter & Terms of Service Modal -->
 		<TosModal />
+
+		<!-- Photoshop Layer Manager, Accessories & Collab Modal -->
+		<LayerManagerModal />
 	{/if}
 
 	<!-- 4. GUI Locked Floating Indicator & Unlock Button (Pojok Kiri Bawah, icon only, hover tooltip) -->

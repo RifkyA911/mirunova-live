@@ -14,7 +14,8 @@
 		PinOff,
 		X,
 		Sparkles,
-		Aperture
+		Aperture,
+		Layers
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { tracker } from '#lib/core/tracker';
@@ -55,27 +56,27 @@
 </script>
 
 {#if !rigging.isObsMode && !rigging.isGuiLocked}
-	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge with 20% Peeking) -->
+	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge with 10% Peeking, 16px margin on hover) -->
 	<aside
 		aria-label={i18n.t('assist_button_title')}
-		class="fixed right-0 top-1/2 -translate-y-1/2 z-40 select-none flex items-center transition-transform duration-200 ease-out {
-			isVisible ? 'translate-x-0' : 'translate-x-[20%] hover:translate-x-0'
+		class="fixed right-0 top-1/2 -translate-y-1/2 z-40 select-none flex items-center transition-all duration-300 ease-out {
+			isVisible ? '-translate-x-4' : 'translate-x-[90%] hover:-translate-x-4'
 		}"
 	>
-		<!-- 1. Floating Circular Assist Icon (Apple AssistiveTouch Style - Strictly Circular) -->
+		<!-- 1. Floating Circular Assist Icon (Strictly Circular with overflow-hidden & concentric rings) -->
 		<button
 			type="button"
 			onclick={toggleOpen}
 			aria-label={i18n.t('assist_button_title')}
 			title="{i18n.t('assist_button_title')} (Apple AssistiveTouch)"
-			class="relative w-12 h-12 rounded-full aspect-square flex items-center justify-center backdrop-blur-xl border shadow-xl transition-all duration-200 cursor-pointer group active:scale-95 shrink-0 {
+			class="relative w-12 h-12 rounded-full overflow-hidden aspect-square flex items-center justify-center backdrop-blur-2xl border-2 shadow-2xl transition-all duration-300 cursor-pointer group active:scale-95 shrink-0 {
 				isVisible
-					? 'ring-2 ring-cyan-400/90 scale-105 opacity-100 shadow-cyan-500/40'
-					: 'opacity-80 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/25'
+					? 'ring-2 ring-cyan-400/90 scale-105 opacity-100 shadow-cyan-500/50'
+					: 'opacity-80 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/30'
 			} {
 				isLightTheme
 					? 'bg-white/95 border-zinc-300 text-zinc-800 shadow-zinc-400/30'
-					: 'bg-zinc-950/90 border-zinc-700/80 text-zinc-100 shadow-black/70'
+					: 'bg-zinc-950/95 border-zinc-700/80 text-zinc-100 shadow-black/80'
 			}"
 		>
 			<!-- Concentric Circular Apple AssistiveTouch Rings -->
@@ -337,6 +338,29 @@
 					>
 						<Crosshair class="w-3 h-3 text-cyan-500" />
 						<span>{i18n.t('assist_center_btn')}</span>
+					</button>
+				</div>
+
+				<!-- Layers, Props & Collab Quick Launcher -->
+				<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/70'}">
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.toggleLayerManager();
+							if (!isPinned) isOpen = false;
+						}}
+						class="w-full py-1.5 px-2 rounded-xl text-[10px] font-semibold flex items-center justify-between transition-all cursor-pointer {
+							isLightTheme
+								? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800'
+								: 'bg-zinc-900/80 hover:bg-cyan-500/15 border border-zinc-800 hover:border-cyan-500/40 text-zinc-300 hover:text-cyan-300'
+						}"
+					>
+						<span class="flex items-center gap-1.5">
+							<Layers class="w-3.5 h-3.5 text-cyan-400" />
+							<span>{i18n.t('layer_manager_title')}</span>
+						</span>
+						<span class="text-[9px] font-mono text-zinc-500">[P]</span>
 					</button>
 				</div>
 

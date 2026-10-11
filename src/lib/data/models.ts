@@ -290,6 +290,7 @@ export interface OfficialSampleItem {
 	author: string;
 	avatarUrl: string;
 	sampleUrl: string;
+	modelUrl?: string;
 	description: string;
 	copyright: string;
 	tags: string[];
@@ -302,6 +303,7 @@ export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
 		author: 'Live2D Inc.',
 		avatarUrl: '/models/previews/shizuku.svg',
 		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/guansss/pixi-live2d-display/test/assets/shizuku/shizuku.model.json',
 		description: 'Model standar legendaris Live2D Cubism dengan rigging rambut panjang halus, ekspresi kaya, dan fisika seragam sekolah.',
 		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
 		tags: ['Live2D Inc.', 'Official Free Sample', 'Shizuku', 'Standard Cubism', 'Free Material']
@@ -312,6 +314,7 @@ export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
 		author: 'Live2D Inc.',
 		avatarUrl: '/models/previews/chitose.svg',
 		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Hiyori/Hiyori.model3.json',
 		description: 'Model Cubism definisi tinggi dengan fisika sweater rajut, beret modis, dan kedipan mata ekspresif.',
 		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
 		tags: ['Live2D Inc.', 'Official Free Sample', 'Chitose', 'High Definition', 'Student Avatar']
@@ -322,6 +325,7 @@ export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
 		author: 'Live2D Inc.',
 		avatarUrl: '/models/previews/koharu.svg',
 		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Rice/Rice.model3.json',
 		description: 'Model anime chibi imut dengan kuncir kembar, pita merah jambu, dan goyangan kepala membal yang menggemaskan.',
 		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
 		tags: ['Live2D Inc.', 'Official Free Sample', 'Koharu', 'Chibi Girl', 'Twin Buns']
@@ -332,6 +336,7 @@ export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
 		author: 'Live2D Inc.',
 		avatarUrl: '/models/previews/epsilon.svg',
 		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Mao/Mao.model3.json',
 		description: 'Model anime futuristik bersetelan mecha sci-fi dengan visor HUD bercahaya dan artikulasi part pelindung canggih.',
 		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
 		tags: ['Live2D Inc.', 'Official Free Sample', 'Epsilon', 'Cyberpunk', 'Sci-Fi Armor']
@@ -342,6 +347,7 @@ export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
 		author: 'Live2D Inc.',
 		avatarUrl: '/models/previews/tororo.svg',
 		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
+		modelUrl: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Wanko/Wanko.model3.json',
 		description: 'Maskot kucing putih dan hitam Live2D Cubism dengan fisika telinga membal, kibasan ekor fluid, dan respon ceria.',
 		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
 		tags: ['Live2D Inc.', 'Official Free Sample', 'Tororo', 'Cat Mascot', 'Pet Physics']
@@ -352,6 +358,7 @@ export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
 		author: 'Live2D Inc.',
 		avatarUrl: '/models/previews/hibiki.svg',
 		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
+		modelUrl: '/models/haru/Haru.model3.json',
 		description: 'Karakter pria anime energik dengan jaket kasual berkerah, rambut jabrik dinamis, dan ragam motion aksi lincah.',
 		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
 		tags: ['Live2D Inc.', 'Official Free Sample', 'Hibiki', 'Action Male', 'Dynamic Motion']
@@ -364,6 +371,7 @@ export interface CommunityLegendItem {
 	author: string;
 	avatarUrl: string;
 	sourceUrl: string;
+	modelUrl?: string;
 	description: string;
 	copyright: string;
 	tags: string[];
@@ -376,6 +384,7 @@ export const COMMUNITY_LEGEND_CATALOG: CommunityLegendItem[] = [
 		author: 'Vedal987 (AI Dev) & Anny (Original Art) / Community Live2D Rig',
 		avatarUrl: '/models/previews/neurosama.svg',
 		sourceUrl: 'https://www.twitch.tv/vedal987',
+		modelUrl: '/models/haru/Haru.model3.json',
 		description: 'Tribute showcase untuk avatar AI VTuber paling terkenal di dunia karya Vedal987 & artist Anny. Menampilkan estetika anime rambut cokelat dengan jepit pita dan responsivitas interaktif.',
 		copyright: 'Non-commercial community tribute based on Neuro-sama (created by Vedal987, art by Anny). All intellectual property belongs to their respective creators.',
 		tags: ['AI VTuber', 'Neuro-sama', 'Vedal987', 'Anny', 'Tribute Showcase', 'Live2D Community']

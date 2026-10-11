@@ -10,10 +10,13 @@
 	let app: any = null;
 	let currentModel: any = null;
 	let currentModelUrl = '';
+	let collabModel: any = null;
+	let currentCollabUrl = '';
+	let isCollabLoading = false;
 	let isDragging = false;
 	let dragStart = { x: 0, y: 0 };
-	let modelPosition = { x: 0, y: 0 };
-	let modelScale = 0.25;
+	let modelPosition = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+	let modelScale = $state<number>(0.25);
 
 	let liveFps = $state<number>(60);
 	let liveFrameMs = $state<number>(16.6);
@@ -43,6 +46,7 @@
 			});
 
 			containerEl.appendChild(app.view as HTMLCanvasElement);
+			app.stage.sortableChildren = true;
 
 			// Real-Time Hardware FPS & Frame Time Tracker
 			app.ticker.add(() => {
@@ -61,6 +65,10 @@
 
 			currentModelUrl = rigging.modelUrl;
 			await loadModel(rigging.modelUrl, Live2DModel);
+
+			if (rigging.isCollabModeActive && rigging.collabModelUrl) {
+				await loadCollabModel(rigging.collabModelUrl, Live2DModel);
+			}
 		} catch (err) {
 			console.error('Failed to initialize Live2D stage:', err);
 		} finally {
@@ -313,6 +321,140 @@
 		}
 	}
 
+	async function loadCollabModel(url: string, Live2DModelClass?: any) {
+		if (!app) return;
+		try {
+			isCollabLoading = true;
+			if (collabModel) {
+				if (collabModel.destroy) collabModel.destroy();
+				if (collabModel.container) app.stage.removeChild(collabModel.container);
+				else app.stage.removeChild(collabModel);
+				collabModel = null;
+			}
+			if (!url || !rigging.isCollabModeActive) return;
+
+			const Live2D = Live2DModelClass || (await import('pixi-live2d-display/cubism4')).Live2DModel;
+			const model = await Live2D.from(url, {
+				autoInteract: false
+			});
+
+			collabModel = model;
+			model.anchor.set(0.5, 0.5);
+			currentCollabUrl = url;
+
+			app.stage.addChild(model);
+			updateCollabTransform();
+			updateLayerZIndices();
+
+			if (model.internalModel) {
+				model.internalModel.on('beforeModelUpdate', () => {
+					const core = model.internalModel?.coreModel;
+					if (!core) return;
+					const now = performance.now();
+
+					if (rigging.collabSyncTracking) {
+						for (const param of rigging.parameters) {
+							try {
+								const val = rigging.getActiveValue(param.id);
+								core.setParameterValueById(param.id, val);
+							} catch {}
+						}
+					} else {
+						// Gentle idle breathing and natural head sway for partner avatar
+						const breath = (Math.sin(now * 0.003) + 1) / 2;
+						const sway = Math.sin(now * 0.0018) * 3.5;
+						try {
+							core.setParameterValueById('ParamBreath', breath);
+							core.setParameterValueById('ParamAngleX', sway);
+							core.setParameterValueById('ParamAngleZ', sway * 0.5);
+						} catch {}
+					}
+				});
+			}
+		} catch (err) {
+			console.warn('Failed to load collab partner model:', err);
+		} finally {
+			isCollabLoading = false;
+		}
+	}
+
+	function updateCollabTransform() {
+		if (!collabModel || !app) return;
+		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
+		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
+
+		const baseScale = Math.min(rendererWidth / (collabModel.width || 800), rendererHeight / (collabModel.height || 1000)) * 0.65;
+		const effectiveScale = baseScale * (rigging.collabScale || 1.0);
+		collabModel.scale.set(effectiveScale);
+
+		let posX = rendererWidth * 0.72;
+		let posY = rendererHeight / 2 + 50;
+
+		if (rigging.collabPosition === 'left') {
+			posX = rendererWidth * 0.28;
+		} else if (rigging.collabPosition === 'pip') {
+			posX = rendererWidth * 0.82;
+			posY = rendererHeight * 0.28;
+			collabModel.scale.set(effectiveScale * 0.55);
+		}
+
+		collabModel.position.set(posX + (rigging.collabOffsetX || 0), posY + (rigging.collabOffsetY || 0));
+
+		const collabLayer = rigging.stageLayers.find((l) => l.type === 'model-collab');
+		const isLayerVisible = collabLayer ? collabLayer.visible : true;
+		const layerOpacity = collabLayer ? collabLayer.opacity : 1.0;
+		collabModel.alpha = (rigging.collabVisible && isLayerVisible) ? ((rigging.collabOpacity ?? 1.0) * layerOpacity) : 0;
+	}
+
+	function updateLayerZIndices() {
+		if (!app) return;
+		const layers = rigging.stageLayers;
+		const total = layers.length;
+		layers.forEach((layer, idx) => {
+			const pixiZ = total - idx;
+			if (layer.type === 'model-host' && currentModel) {
+				currentModel.zIndex = pixiZ;
+			} else if (layer.type === 'model-collab' && collabModel) {
+				collabModel.zIndex = pixiZ;
+			}
+		});
+	}
+
+	// Reactively manage Collab Model loading, visibility & transform
+	$effect(() => {
+		const active = rigging.isCollabModeActive;
+		const url = rigging.collabModelUrl;
+		const pos = rigging.collabPosition;
+		const scale = rigging.collabScale;
+		const offX = rigging.collabOffsetX;
+		const offY = rigging.collabOffsetY;
+		const opacity = rigging.collabOpacity;
+		const vis = rigging.collabVisible;
+		const layers = rigging.stageLayers;
+
+		if (app) {
+			if (active && url && (currentCollabUrl !== url || !collabModel)) {
+				loadCollabModel(url);
+			} else if (!active && collabModel) {
+				collabModel.visible = false;
+			} else if (active && collabModel) {
+				collabModel.visible = true;
+				updateCollabTransform();
+			}
+			updateLayerZIndices();
+		}
+	});
+
+	// Reactively manage Host Model opacity & layer visibility
+	$effect(() => {
+		if (currentModel) {
+			const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+			const isLayerVisible = hostLayer ? hostLayer.visible : true;
+			const layerOpacity = hostLayer ? hostLayer.opacity : 1.0;
+			currentModel.alpha = isLayerVisible ? layerOpacity : 0;
+		}
+	});
+
 	function inspectModelParameters(model: any) {
 		try {
 			const core = model.internalModel?.coreModel;
@@ -541,6 +683,10 @@
 			currentModel.destroy();
 			currentModel = null;
 		}
+		if (collabModel?.destroy) {
+			collabModel.destroy();
+			collabModel = null;
+		}
 		if (app) {
 			app.destroy(true, { children: true, texture: true, baseTexture: true });
 			app = null;
@@ -564,6 +710,144 @@
 	onwheel={handleWheel}
 	ondblclick={handleDoubleClick}
 >
+	<!-- VTuber Accessories & Props Layer (Anchored to avatar tracking coordinates) -->
+	{#if (rigging.stageLayers.find((l) => l.type === 'accessories')?.visible ?? true)}
+		{@const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories')}
+		{@const accLayerOpacity = accLayer ? accLayer.opacity : 1.0}
+		<div
+			class="absolute inset-0 pointer-events-none select-none overflow-hidden z-20"
+			style="opacity: {accLayerOpacity};"
+		>
+			{#each rigging.activeAccessories.filter((a) => a.visible) as acc (acc.id)}
+				{@const headAngleZ = rigging.getActiveValue('ParamAngleZ')}
+				{@const headAngleX = rigging.getActiveValue('ParamAngleX')}
+				{@const headAngleY = rigging.getActiveValue('ParamAngleY')}
+				{@const scaleRatio = modelScale / 0.25}
+				{@const headShiftX = (headAngleX * 1.5) * scaleRatio}
+				{@const headShiftY = -(headAngleY * 1.5) * scaleRatio}
+				{@const posX = modelPosition.x + (acc.offsetX * scaleRatio) + headShiftX}
+				{@const posY = modelPosition.y + (acc.offsetY * scaleRatio) + headShiftY}
+				{@const rot = (acc.rotation || 0) + (headAngleZ * 0.9)}
+				{@const finalScale = (acc.scale || 1.0) * scaleRatio}
+
+				<div
+					class="absolute pointer-events-none select-none transition-transform duration-75 origin-center will-change-transform"
+					style="left: 0; top: 0; transform: translate3d({posX}px, {posY}px, 0) rotate({rot}deg) scale({finalScale}); opacity: {acc.opacity || 1.0};"
+				>
+					<div class="-translate-x-1/2 -translate-y-1/2 flex items-center justify-center filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+						{#if acc.id === 'sunglasses'}
+							<!-- Cool Dark Sunglasses / Shades -->
+							<svg viewBox="0 0 160 50" class="w-36 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<rect x="5" y="10" width="65" height="35" rx="8" fill="#18181b" stroke="#38bdf8" stroke-width="3" />
+								<rect x="90" y="10" width="65" height="35" rx="8" fill="#18181b" stroke="#38bdf8" stroke-width="3" />
+								<path d="M70 18 C75 14, 85 14, 90 18" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" />
+								<path d="M10 16 L60 16" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+								<path d="M95 16 L145 16" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+								<path d="M5 16 L-10 12" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+								<path d="M155 16 L170 12" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+							</svg>
+						{:else if acc.id === 'cat-ears'}
+							<!-- Cute Nekomimi Headband -->
+							<svg viewBox="0 0 180 80" class="w-44 h-20" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M25 75 L15 15 L70 50 Z" fill="#18181b" stroke="#ec4899" stroke-width="3" stroke-linejoin="round" />
+								<path d="M30 65 L24 28 L60 50 Z" fill="#f472b6" />
+								<path d="M155 75 L165 15 L110 50 Z" fill="#18181b" stroke="#ec4899" stroke-width="3" stroke-linejoin="round" />
+								<path d="M150 65 L156 28 L120 50 Z" fill="#f472b6" />
+								<path d="M25 75 C60 55, 120 55, 155 75" stroke="#ec4899" stroke-width="5" stroke-linecap="round" />
+								<circle cx="90" cy="58" r="6" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />
+							</svg>
+						{:else if acc.id === 'headset'}
+							<!-- RGB Neon Gaming Headset -->
+							<svg viewBox="0 0 200 120" class="w-48 h-28" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M25 90 C25 20, 175 20, 175 90" stroke="#09090b" stroke-width="10" stroke-linecap="round" />
+								<path d="M35 85 C35 30, 165 30, 165 85" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" opacity="0.9" />
+								<rect x="10" y="70" width="28" height="46" rx="12" fill="#18181b" stroke="#06b6d4" stroke-width="3" />
+								<circle cx="24" cy="93" r="7" fill="#06b6d4" opacity="0.6" />
+								<rect x="162" y="70" width="28" height="46" rx="12" fill="#18181b" stroke="#06b6d4" stroke-width="3" />
+								<circle cx="176" cy="93" r="7" fill="#06b6d4" opacity="0.6" />
+								<path d="M20 105 C20 125, 45 130, 65 125" stroke="#27272a" stroke-width="4" stroke-linecap="round" />
+								<circle cx="68" cy="124" r="5" fill="#f43f5e" />
+							</svg>
+						{:else if acc.id === 'top-hat'}
+							<!-- Magician Silk Top Hat -->
+							<svg viewBox="0 0 140 100" class="w-36 h-28" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<ellipse cx="70" cy="85" rx="60" ry="12" fill="#18181b" stroke="#3f3f46" stroke-width="2" />
+								<path d="M35 82 L42 20 L98 20 L105 82 Z" fill="#09090b" stroke="#27272a" stroke-width="2" />
+								<ellipse cx="70" cy="20" rx="28" ry="8" fill="#18181b" stroke="#3f3f46" stroke-width="1.5" />
+								<path d="M37 72 L40 60 L100 60 L103 72 Z" fill="#e11d48" />
+								<circle cx="70" cy="66" r="4" fill="#fbbf24" />
+							</svg>
+						{:else if acc.id === 'sakura-pin'}
+							<!-- Sakura Cherry Blossom Flower Pin -->
+							<svg viewBox="0 0 80 80" class="w-20 h-20" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<g transform="translate(40,40)">
+									{#each [0, 72, 144, 216, 288] as deg}
+										<path
+											d="M0 0 C-10 -20, -12 -35, 0 -38 C12 -35, 10 -20, 0 0"
+											fill="#fbcfe8"
+											stroke="#f472b6"
+											stroke-width="1.5"
+											transform="rotate({deg})"
+										/>
+									{/each}
+									<circle cx="0" cy="0" r="6" fill="#fbbf24" />
+									<circle cx="0" cy="0" r="3" fill="#f59e0b" />
+								</g>
+							</svg>
+						{:else if acc.id === 'crown'}
+							<!-- Golden Royalty Crown -->
+							<svg viewBox="0 0 140 90" class="w-36 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M15 75 L20 25 L45 55 L70 12 L95 55 L120 25 L125 75 Z" fill="#fbbf24" stroke="#d97706" stroke-width="3" stroke-linejoin="round" />
+								<ellipse cx="70" cy="75" rx="55" ry="8" fill="#f59e0b" stroke="#b45309" stroke-width="2" />
+								<circle cx="70" cy="12" r="5" fill="#ef4444" stroke="#991b1b" stroke-width="1" />
+								<circle cx="20" cy="25" r="4" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1" />
+								<circle cx="120" cy="25" r="4" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1" />
+								<circle cx="70" cy="60" r="5" fill="#10b981" />
+							</svg>
+						{:else if acc.id === 'studio-mic'}
+							<!-- Broadcast Condenser Microphone with Boom Arm -->
+							<svg viewBox="0 0 100 120" class="w-24 h-32" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<rect x="35" y="15" width="30" height="55" rx="15" fill="#27272a" stroke="#52525b" stroke-width="2" />
+								<rect x="39" y="19" width="22" height="24" rx="8" fill="#18181b" />
+								<line x1="39" y1="26" x2="61" y2="26" stroke="#71717a" stroke-width="1" />
+								<line x1="39" y1="32" x2="61" y2="32" stroke="#71717a" stroke-width="1" />
+								<line x1="39" y1="38" x2="61" y2="38" stroke="#71717a" stroke-width="1" />
+								<path d="M25 45 C25 80, 75 80, 75 45" stroke="#3f3f46" stroke-width="3" fill="none" stroke-linecap="round" />
+								<line x1="50" y1="78" x2="50" y2="105" stroke="#3f3f46" stroke-width="4" stroke-linecap="round" />
+								<circle cx="50" cy="108" r="8" fill="#18181b" stroke="#52525b" stroke-width="2" />
+							</svg>
+						{:else if acc.id === 'mustache'}
+							<!-- Classic Gentleman Handlebar Mustache -->
+							<svg viewBox="0 0 120 40" class="w-32 h-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									d="M60 20 C50 10, 25 5, 8 20 C2 24, 0 32, 10 30 C22 28, 45 32, 60 22 C75 32, 98 28, 110 30 C120 32, 118 24, 112 20 C95 5, 70 10, 60 20 Z"
+									fill="#18181b"
+									stroke="#27272a"
+									stroke-width="1.5"
+								/>
+							</svg>
+						{:else if acc.id === 'halo'}
+							<!-- Angel Golden Halo Ring -->
+							<svg viewBox="0 0 160 50" class="w-40 h-14" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<ellipse cx="80" cy="25" rx="65" ry="16" stroke="#facc15" stroke-width="7" fill="none" opacity="0.9" class="animate-pulse" />
+								<ellipse cx="80" cy="25" rx="65" ry="16" stroke="#fef08a" stroke-width="2" fill="none" opacity="0.95" />
+							</svg>
+						{:else if acc.id === 'heart-aura'}
+							<!-- Floating Hearts Sparkles -->
+							<div class="relative w-28 h-28 flex items-center justify-center animate-bounce">
+								<span class="text-3xl filter drop-shadow-[0_0_10px_#f43f5e]">💖</span>
+								<span class="absolute top-0 right-2 text-lg text-pink-400 animate-ping">✨</span>
+								<span class="absolute bottom-2 left-1 text-base text-rose-300 animate-pulse">💕</span>
+							</div>
+						{:else}
+							<span class="text-4xl filter drop-shadow-md">{acc.emoji}</span>
+						{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+
 	<!-- Real-Time HUD FPS Counter (Configurable Toggle) -->
 	{#if rigging.showFpsCounter}
 		<div

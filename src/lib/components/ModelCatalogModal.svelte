@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { unzip } from 'fflate';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import {
@@ -42,6 +43,7 @@
 	let glbFileInput = $state<HTMLInputElement>();
 	let folderInputEl = $state<HTMLInputElement>();
 	let multiFileInputEl = $state<HTMLInputElement>();
+	let zipInputEl = $state<HTMLInputElement>();
 
 	let catalogTab = $state<'2d' | 'booth' | '3d'>('2d');
 	let boothCategoryFilter = $state<'all' | 'hoyoverse-kuro' | 'original-anime' | 'vts-popular'>('all');
@@ -102,12 +104,25 @@
 		customUrlInput = '';
 	}
 
-	function triggerInstallModel(item: { id: string; name: string }) {
+	function triggerInstallModel(item: { id: string; name: string; modelUrl?: string }) {
 		playSfx('click');
+		if (item.modelUrl) {
+			rigging.avatarEngine = 'live2d';
+			rigging.setModel(item.id, item.name, item.modelUrl);
+			rigging.showToast(`✓ Memasang model: ${item.name}`);
+			return;
+		}
 		activeTargetModelName = item.name;
 		activeTargetModelId = item.id;
-		rigging.showToast(`Pilih folder hasil unduh yang memuat file model untuk: ${item.name}`);
-		folderInputEl?.click();
+		rigging.showToast(`Pilih file ZIP atau folder hasil unduh untuk: ${item.name}`);
+		zipInputEl?.click();
+	}
+
+	async function handleZipSelect(e: Event) {
+		const target = e.target as HTMLInputElement;
+		if (!target.files || target.files.length === 0) return;
+		await processLive2DFiles(target.files);
+		target.value = '';
 	}
 
 	async function handleFolderSelect(e: Event) {
@@ -126,7 +141,40 @@
 
 	async function processLive2DFiles(files: FileList | File[]) {
 		if (!files || files.length === 0) return;
-		const fileArr = Array.from(files);
+		let fileArr = Array.from(files);
+
+		// Handle ZIP file directly in memory via fflate
+		if (fileArr.length === 1 && fileArr[0].name.toLowerCase().endsWith('.zip')) {
+			try {
+				rigging.showToast(`Mengekstrak file ZIP di memori: ${fileArr[0].name}...`);
+				const zipBuf = await fileArr[0].arrayBuffer();
+				const unzippedFiles: File[] = await new Promise((resolve, reject) => {
+					unzip(new Uint8Array(zipBuf), (err, data) => {
+						if (err) return reject(err);
+						const list: File[] = [];
+						for (const fullPath in data) {
+							const bytes = data[fullPath];
+							if (!bytes || bytes.length === 0) continue;
+							const filename = fullPath.split('/').pop() || fullPath;
+							const blob = new Blob([bytes]);
+							const f = new File([blob], filename);
+							(f as any).webkitRelativePath = fullPath;
+							list.push(f);
+						}
+						resolve(list);
+					});
+				});
+				if (unzippedFiles.length === 0) {
+					rigging.showToast('⚠️ Arsip ZIP kosong atau tidak memuat file model!');
+					return;
+				}
+				fileArr = unzippedFiles;
+			} catch (zipErr: any) {
+				console.error('ZIP unpack error:', zipErr);
+				rigging.showToast(`⚠️ Gagal membuka ZIP: ${zipErr.message || zipErr}`);
+				return;
+			}
+		}
 
 		// Find the model3.json file
 		const modelFile = fileArr.find(
@@ -359,9 +407,26 @@
 				</div>
 			</div>
 
-			<!-- Body Content (Scrollable) -->
-			<div class="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
-				<!-- Hidden Folder and Multi-file Pickers for 100% Reliable Local Model Loading -->
+			<!-- Body Content (Scrollable with Drag & Drop ZIP support) -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar"
+				ondragover={(e) => e.preventDefault()}
+				ondrop={(e) => {
+					e.preventDefault();
+					if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+						processLive2DFiles(e.dataTransfer.files);
+					}
+				}}
+			>
+				<!-- Hidden Folder, Multi-file, and ZIP Pickers for 100% Reliable Local Model Loading -->
+				<input
+					type="file"
+					accept=".zip,application/zip,application/x-zip-compressed"
+					bind:this={zipInputEl}
+					onchange={handleZipSelect}
+					class="hidden"
+				/>
 				<input
 					type="file"
 					webkitdirectory

@@ -378,6 +378,12 @@ export const translations = {
 		expressions_reset: '⚪ Neutral / Reset',
 		expressions_empty: 'No expression files found in this model',
 
+		// Photoshop Layers & Collab
+		layer_manager_title: 'Layers & Collab',
+		layers_photoshop: 'Photoshop Layers',
+		collab_mode: 'Collab Mode',
+		accessories_props: 'Accessories & Props',
+
 		close_btn: 'Close',
 		save_btn: 'Save'
 	},
@@ -758,6 +764,12 @@ export const translations = {
 		expressions_reset: '⚪ Netral / Reset',
 		expressions_empty: 'Tidak ada file ekspresi pada model ini',
 
+		// Photoshop Layers & Collab
+		layer_manager_title: 'Layer & Collab',
+		layers_photoshop: 'Layer Photoshop',
+		collab_mode: 'Mode Collab',
+		accessories_props: 'Aksesoris & Props',
+
 		close_btn: 'Tutup',
 		save_btn: 'Simpan'
 	},
@@ -1136,6 +1148,12 @@ export const translations = {
 		expressions_variations: 'バリエーション',
 		expressions_reset: '⚪ 標準 / リセット',
 		expressions_empty: 'このモデルには表情データがありません',
+
+		// Photoshop Layers & Collab
+		layer_manager_title: 'レイヤー＆コラボ',
+		layers_photoshop: 'Photoshopレイヤー',
+		collab_mode: 'コラボモード',
+		accessories_props: 'アクセサリー＆小道具',
 
 		close_btn: '閉じる',
 		save_btn: '保存'

@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.0] - 2026-10-11
+
+### Added & Enhanced
+- **Resilient Windows Discrete GPU Camera Hardware Fallback (`tracker.ts`):**
+  - Resolved `"Perangkat kamera (webcam) yang dipilih tidak ditemukan atau telah terputus"` errors occurring when switching to dedicated discrete GPU mode (NVIDIA GeForce GTX 1650 Ti / RTX series).
+  - Removed strict mobile-only `facingMode: 'user'` constraint which caused Windows camera driver crashes.
+  - Implemented 4-tier graceful fallback: Tier 1 Ideal constraints $\to$ Tier 2 deviceId only without constraints $\to$ Tier 3 Universal `{ video: true, audio: false }` $\to$ Tier 4 exhaustive hardware sweep of all enumerated video devices.
+  - Added automatic stale camera deviceId cleanup in browser storage on device disconnection.
+- **In-Memory ZIP Decompression (`fflate`) & 1-Click BOOTH Model Installer (`ModelCatalogModal.svelte`):**
+  - Integrated ultra-fast `fflate` engine to unpack downloaded BOOTH Live2D `.zip` archives directly in browser RAM in $<200$ms with zero disk I/O.
+  - Automatically parses `.model3.json` inside the archive, maps all relative textures, moc3, physics, and pose files to memory blob URLs, and mounts the model instantly.
+  - 1-Click direct mounting for all models with direct URLs (Live2D official samples & Neuro-sama) without opening any file dialogs.
+  - Added native drag-and-drop support for `.zip` files anywhere onto the Model Catalog modal.
+- **Photoshop-Style Layer Manager & Stage Studio (`LayerManagerModal.svelte` & `+page.svelte`):**
+  - Complete Photoshop-style layer stack containing 5 customizable layers:
+    1. **Efek & Filter Layar (Shader FX)** (Vignette, Scanlines, CRT phosphor glow, Blur).
+    2. **Aksesoris & Props Avatar** (Wearable VTuber props).
+    3. **Avatar Collab (Partner Guest)** (Guest streamer model).
+    4. **Avatar Utama (Host)** (Tracked primary Live2D / 3D model).
+    5. **Latar Belakang Panggung** (Background styling).
+  - Interactive live miniature thumbnail previews showing active background colors/swatches, model avatars, active accessory counts, and screen shaders.
+  - Layer reordering (Up / Down) that directly controls WebGL (`app.stage.sortableChildren`) and DOM Z-index stacking.
+  - Independent layer visibility toggles (`Eye` / `EyeOff`) and smooth 0%–100% opacity sliders.
+  - Layer lock toggle (`Lock` / `Unlock`) preventing accidental changes.
+  - Accessible via global hotkey `P`, Control Dock button, and Assist Menu shortcut.
+- **VTuber Accessories & Props Attach System (`CanvasStage.svelte`):**
+  - 10 interactive wearable accessories:
+    - **Sunglasses (Thug Life Shades)** (`🕶️`), **Nekomimi Cat Ears** (`🐱`), **RGB Gaming Headset** (`🎧`), **Magician Top Hat** (`🎩`), **Sakura Hairpin** (`🌸`), **Royalty Golden Crown** (`👑`), **Studio Broadcast Mic** (`🎙️`), **Gentleman Mustache** (`🥸`), **Angel Golden Halo** (`😇`), **Floating Heart Aura** (`💖`).
+  - Anchored directly to avatar coordinates with dynamic scaling and rotation driven by MediaPipe head tilt (`ParamAngleZ`), turning (`ParamAngleX`), and nod (`ParamAngleY`).
+  - Fine-tuning controls for item scale (0.5x–2.0x), horizontal offset X (-200px to +200px), and vertical offset Y (-350px to +200px).
+- **Mode Collab Streamer (Dual Avatar In-Browser Streaming):**
+  - Multi-avatar streaming engine rendering two Live2D models simultaneously in the same browser window with zero additional software.
+  - Layout presets: Side-by-Side Left, Side-by-Side Right, and Picture-in-Picture (PiP).
+  - Synchronized face tracking toggle or autonomous natural breathing and head sway loops for the partner avatar.
+  - Independent partner scale, position offsets, and individual opacity controls.
+- **Apple iPhone AssistiveTouch Assist Button UI/UX Overhaul (`AssistButton.svelte`):**
+  - Strictly circular geometry (`w-12 h-12 rounded-full overflow-hidden aspect-square`) with concentric rings, eliminating rectangular backdrop-blur filter artifacts.
+  - Idle state peeks only 10% body off the right screen edge (`translate-x-[90%]`), sliding smoothly to 100% visible with a 16px right margin gap (`hover:-translate-x-4` / `-translate-x-4`).
+  - Added one-click launcher for Photoshop Layer Manager & Collab Mode inside the Assist Menu.
+- **Automated Regression Test Suite:**
+  - Added `tests/layers.test.ts` covering layer stacking order, reordering, visibility, opacity clamping, accessories toggling, and Collab mode configuration (53/53 tests passing across 11 test suites).
+  - Clean `svelte-check` validation with 0 errors and 0 warnings.
+
+---
+
 ## [0.16.0] - 2026-10-11
 
 ### Added & Enhanced

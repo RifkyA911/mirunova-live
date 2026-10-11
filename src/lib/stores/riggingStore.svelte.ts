@@ -8,7 +8,9 @@ import type {
 	RiggingViewMode,
 	AvatarFramingMode,
 	VoiceFilterType,
-	ThemePalette
+	ThemePalette,
+	AccessoryItem,
+	StageLayer
 } from '#lib/types/tracking';
 import { MODEL_CATALOG } from '#lib/data/models';
 import { UI_THEMES } from '#lib/data/themes';
@@ -62,6 +64,7 @@ export class RiggingStore {
 	isShortcutModalOpen = $state<boolean>(false);
 	isAboutModalOpen = $state<boolean>(false);
 	isTosModalOpen = $state<boolean>(false);
+	isLayerManagerOpen = $state<boolean>(false);
 	isDockHidden = $state<boolean>(false);
 	resetTransformSignal = $state<number>(0);
 	isCameraActive = $state<boolean>(false);
@@ -117,6 +120,42 @@ export class RiggingStore {
 	squareFrameSize = $state<number>(620);           // Box size in px
 	hiddenPartIds = $state<Record<string, boolean>>({}); // Model part visibility overrides
 	availableParts = $state<Array<{ id: string; name: string; opacity: number }>>([]); // Discovered live parts
+
+	// Collab Mode System (Dual Avatar Streaming)
+	isCollabModeActive = $state<boolean>(false);
+	collabModelId = $state<string>('haru');
+	collabModelUrl = $state<string>('/models/haru/Haru.model3.json');
+	collabModelName = $state<string>('Haru (Collab Partner)');
+	collabPosition = $state<'left' | 'right' | 'pip'>('right');
+	collabScale = $state<number>(0.85);
+	collabOffsetX = $state<number>(280);
+	collabOffsetY = $state<number>(0);
+	collabOpacity = $state<number>(1.0);
+	collabVisible = $state<boolean>(true);
+	collabSyncTracking = $state<boolean>(true);
+
+	// Accessories Attach System (Props & Items)
+	activeAccessories = $state<AccessoryItem[]>([
+		{ id: 'sunglasses', name: 'Kacamata Hitam Thug Life', category: 'face', icon: 'Glasses', emoji: '🕶️', visible: false, scale: 1.0, offsetX: 0, offsetY: -130, rotation: 0, opacity: 1.0 },
+		{ id: 'cat-ears', name: 'Bando Telinga Kucing', category: 'head', icon: 'Smile', emoji: '🐱', visible: false, scale: 1.1, offsetX: 0, offsetY: -240, rotation: 0, opacity: 1.0 },
+		{ id: 'headset', name: 'RGB Gaming Headset', category: 'head', icon: 'Headphones', emoji: '🎧', visible: false, scale: 1.15, offsetX: 0, offsetY: -150, rotation: 0, opacity: 1.0 },
+		{ id: 'top-hat', name: 'Top Hat Pesulap', category: 'head', icon: 'Crown', emoji: '🎩', visible: false, scale: 1.2, offsetX: 0, offsetY: -290, rotation: 0, opacity: 1.0 },
+		{ id: 'sakura-pin', name: 'Jepit Bunga Sakura', category: 'head', icon: 'Sparkles', emoji: '🌸', visible: false, scale: 0.9, offsetX: 110, offsetY: -210, rotation: 12, opacity: 1.0 },
+		{ id: 'crown', name: 'Mahkota Emas Kerajaan', category: 'head', icon: 'Crown', emoji: '👑', visible: false, scale: 1.1, offsetX: 0, offsetY: -270, rotation: 0, opacity: 1.0 },
+		{ id: 'studio-mic', name: 'Mikrofon Broadcast Studio', category: 'prop', icon: 'Mic', emoji: '🎤', visible: false, scale: 1.0, offsetX: 80, offsetY: 70, rotation: -10, opacity: 1.0 },
+		{ id: 'mustache', name: 'Kumis Retro Gentleman', category: 'face', icon: 'Smile', emoji: '🥸', visible: false, scale: 0.85, offsetX: 0, offsetY: -40, rotation: 0, opacity: 1.0 },
+		{ id: 'halo', name: 'Halo Cahaya Emas', category: 'head', icon: 'Sparkles', emoji: '😇', visible: false, scale: 1.1, offsetX: 0, offsetY: -310, rotation: 0, opacity: 1.0 },
+		{ id: 'heart-aura', name: 'Floating Heart Aura', category: 'prop', icon: 'Heart', emoji: '💖', visible: false, scale: 1.0, offsetX: 120, offsetY: -160, rotation: 15, opacity: 0.9 }
+	]);
+
+	// Photoshop Layer Manager Stacking Order (Top to bottom)
+	stageLayers = $state<StageLayer[]>([
+		{ id: 'layer-shader', name: 'Efek & Filter Layar (Shader FX)', type: 'shader-fx', visible: true, opacity: 1.0, locked: false, badge: 'Shader FX', description: 'Vignette, Scanlines, CRT Monitor Shader' },
+		{ id: 'layer-accessories', name: 'Aksesoris & Props Avatar', type: 'accessories', visible: true, opacity: 1.0, locked: false, badge: 'Props', description: 'Kacamata, Headset, Telinga Kucing, Mic' },
+		{ id: 'layer-collab', name: 'Avatar Collab (Partner Guest)', type: 'model-collab', visible: true, opacity: 1.0, locked: false, badge: 'Collab', description: 'Avatar tamu / streamer partner di panggung' },
+		{ id: 'layer-host', name: 'Avatar Utama (Host)', type: 'model-host', visible: true, opacity: 1.0, locked: false, badge: 'Host Avatar', description: 'Live2D / 3D model utama yang dilacak webcam' },
+		{ id: 'layer-background', name: 'Latar Belakang Panggung', type: 'background', visible: true, opacity: 1.0, locked: false, badge: 'Background', description: 'Solid, Mesh Grid, Blueprint, Wallpaper' }
+	]);
 
 	// Floating / Windowed Rigging Panel Geometry (Draggable & Resizable)
 	riggingWindowX = $state<number>(0);
@@ -548,6 +587,75 @@ export class RiggingStore {
 		if (typeof window !== 'undefined') {
 			window.dispatchEvent(new CustomEvent('mirunova:set-expression', { detail: { name } }));
 		}
+	}
+
+	toggleLayerManager(open?: boolean) {
+		this.isLayerManagerOpen = open !== undefined ? open : !this.isLayerManagerOpen;
+	}
+
+	toggleCollabMode(enable?: boolean) {
+		this.isCollabModeActive = enable !== undefined ? enable : !this.isCollabModeActive;
+		this.showToast(this.isCollabModeActive ? '✓ Mode Collab Aktif (Dual Avatar)' : 'Mode Collab Dinonaktifkan');
+		this.persist();
+	}
+
+	setCollabModel(id: string, name: string, url: string) {
+		this.collabModelId = id;
+		this.collabModelName = name;
+		this.collabModelUrl = url;
+		this.persist();
+	}
+
+	toggleAccessory(id: string) {
+		const acc = this.activeAccessories.find((a) => a.id === id);
+		if (acc) {
+			acc.visible = !acc.visible;
+			this.persist();
+		}
+	}
+
+	updateAccessory(id: string, partial: Partial<AccessoryItem>) {
+		const acc = this.activeAccessories.find((a) => a.id === id);
+		if (acc) {
+			Object.assign(acc, partial);
+			this.persist();
+		}
+	}
+
+	toggleLayer(layerId: string) {
+		const layer = this.stageLayers.find((l) => l.id === layerId);
+		if (layer) {
+			layer.visible = !layer.visible;
+			if (layer.type === 'model-collab') this.collabVisible = layer.visible;
+			this.persist();
+		}
+	}
+
+	setLayerOpacity(layerId: string, opacity: number) {
+		const layer = this.stageLayers.find((l) => l.id === layerId);
+		if (layer) {
+			layer.opacity = Math.max(0, Math.min(1, opacity));
+			if (layer.type === 'model-collab') this.collabOpacity = layer.opacity;
+			this.persist();
+		}
+	}
+
+	setLayerLock(layerId: string, locked?: boolean) {
+		const layer = this.stageLayers.find((l) => l.id === layerId);
+		if (layer) {
+			layer.locked = locked !== undefined ? locked : !layer.locked;
+			this.persist();
+		}
+	}
+
+	moveLayer(layerId: string, direction: 'up' | 'down') {
+		const index = this.stageLayers.findIndex((l) => l.id === layerId);
+		if (index === -1) return;
+		const targetIdx = direction === 'up' ? index - 1 : index + 1;
+		if (targetIdx < 0 || targetIdx >= this.stageLayers.length) return;
+		const item = this.stageLayers.splice(index, 1)[0];
+		this.stageLayers.splice(targetIdx, 0, item);
+		this.persist();
 	}
 }
 
