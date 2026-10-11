@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.0] - 2026-10-11
+
+### Added & Enhanced
+- **Independent Eye Wink Tracking Engine (`Wink Sebelah Mata`):**
+  - Resolved eyelid conflict where MediaPipe ML blendshapes were being overridden by geometric EAR calculations.
+  - Implemented asymmetric wink isolation (`blinkDiff >= 0.12 && blinkL >= 0.28` or `blinkL >= 0.45 && blinkR <= 0.35`) in `solver.ts`.
+  - Enforced wide-open clamp (`1.0`) on the opposite eye to prevent squinting/drooping during single-eye winks.
+  - Added cute anime wink smile activation (`ParamEyeSmile = 1.0`) when winking.
+  - Automatically suppresses internal Cubism auto-blink generator during active webcam tracking in `CanvasStage.svelte`.
+  - Added toggle switches for **Wink Sebelah Mata (Kedip Mandiri)** and **Cermin Mata VTuber (Mirror Eyes)** in Settings > Tracking.
+- **On-Screen Live FPS & Frame Latency HUD:**
+  - Added real-time smoothed FPS & frame time (`ms`) pill counter floating in the top-right corner of `CanvasStage.svelte`.
+  - Color-coded indicator: Emerald (>= 55 FPS), Amber (30–54 FPS), Rose (< 30 FPS).
+  - Wired into `riggingStore.showFpsCounter` with persistent localStorage support and toggle switch in Settings > Hardware & Telemetry.
+- **Fluid Bouncy Anime Loading Screen & Fluffy Web Audio SFX:**
+  - Replaced generic circular spinner with a fluid anime orb loading card featuring floating sparkle stars, pulsing audio equalizer waves, and glowing borders.
+  - Synthesized fluffy procedural Web Audio sound effects:
+    - `'loadingStart'`: Dreamy rising sine wave arpeggio on model load initialization.
+    - `'loadingSuccess'`: Crystalline sparkle chime upon complete texture attachment.
+- **Official Live2D Inc. Free Samples & Neuro-sama AI VTuber:**
+  - Added official free sample models from `https://www.live2d.com/en/learn/sample/`:
+    - **Shizuku (しずく)** — Live2D Inc. Classic Idol.
+    - **Chitose (千歳)** — Live2D Inc. Schoolgirl.
+    - **Koharu (こはる)** — Live2D Inc. SD Chibi Character.
+    - **Epsilon (イプシロン)** — Live2D Inc. Sci-Fi Mech Android.
+    - **Tororo (トロロ)** — Live2D Inc. Cute Animal Mascot.
+    - **Hibiki (ヒビキ)** — Live2D Inc. Energetic Boy.
+  - Added **Neuro-sama (ネウロ様)**: AI VTuber tribute honoring Vedal987 & Anny.
+  - Created high-quality SVG vector preview cards in `static/models/previews/`.
+- **BOOTH.pm Tab Reorganization & Universal Local Folder Installer:**
+  - Moved pre-installed BOOTH models (`Mihari`, `Vivian`) from "2D Live2D" to a dedicated "Model Siap Pakai" section in the BOOTH.pm tab.
+  - Solved "Pasang Model Ini" 404 texture bug by implementing an in-memory directory & multi-file picker (`webkitdirectory` / `multiple`) that parses `.model3.json` and remaps all relative moc, texture, physics, and pose files to memory blob URLs with zero missing texture errors.
+- **Visual Thumbnail Cards for Background Styles:**
+  - Upgraded background style selectors in both `SettingsModal.svelte` and `ThemeModal.svelte` into visual preview cards showing CSS patterns for Solid (live hex swatch), Cyber Mesh, Studio Blueprint, Dot Matrix, Cosmic Space Flow, Alpha Transparent (OBS checkerboard), Chroma Green, and Custom Wallpaper.
+
+---
+
 ## [0.15.0] - 2026-10-11
 
 ### Fixed

@@ -3,6 +3,8 @@
 	import { rigging, DEFAULT_PARAMETERS } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import type { Live2DParameterDef } from '#lib/types/tracking';
+	import { Sparkles } from 'lucide-svelte';
+	import { playSfx } from '#lib/core/sfx';
 
 	let containerEl: HTMLDivElement;
 	let app: any = null;
@@ -12,6 +14,11 @@
 	let dragStart = { x: 0, y: 0 };
 	let modelPosition = { x: 0, y: 0 };
 	let modelScale = 0.25;
+
+	let liveFps = $state<number>(60);
+	let liveFrameMs = $state<number>(16.6);
+	let fpsFrameCounter = 0;
+	let lastFpsSampleTime = performance.now();
 
 	onMount(async () => {
 		if (typeof window === 'undefined') return;
@@ -36,6 +43,21 @@
 			});
 
 			containerEl.appendChild(app.view as HTMLCanvasElement);
+
+			// Real-Time Hardware FPS & Frame Time Tracker
+			app.ticker.add(() => {
+				fpsFrameCounter++;
+				const now = performance.now();
+				const elapsed = now - lastFpsSampleTime;
+				if (elapsed >= 500) {
+					const calculated = Math.round((fpsFrameCounter * 1000) / elapsed);
+					liveFps = Math.max(1, Math.min(240, calculated));
+					liveFrameMs = Number((1000 / liveFps).toFixed(1));
+					rigging.fps = liveFps;
+					fpsFrameCounter = 0;
+					lastFpsSampleTime = now;
+				}
+			});
 
 			currentModelUrl = rigging.modelUrl;
 			await loadModel(rigging.modelUrl, Live2DModel);
@@ -191,6 +213,7 @@
 		if (!app) return;
 		try {
 			rigging.isLoadingModel = true;
+			playSfx('loadingStart');
 			if (avatarTickerFn && app.ticker) {
 				app.ticker.remove(avatarTickerFn);
 				avatarTickerFn = null;
@@ -232,6 +255,9 @@
 					// If camera tracking is active, disable internal auto-blink generator so it does not cancel user winks
 					if (model.internalModel.motionManager && (model.internalModel.motionManager as any).eyeBlink) {
 						(model.internalModel.motionManager as any).eyeBlink.enabled = !rigging.isCameraActive;
+					}
+					if ((model.internalModel as any).eyeBlink) {
+						(model.internalModel as any).eyeBlink.enabled = !rigging.isCameraActive;
 					}
 
 					for (const param of rigging.parameters) {
@@ -278,6 +304,7 @@
 
 			inspectModelParameters(model);
 			applyFramingPreset();
+			playSfx('loadingSuccess');
 		} catch (err: any) {
 			console.error('Failed to load Live2D model:', err);
 			alert(`Gagal memuat model Live2D: ${err?.message || err}. Silakan pilih model lain.`);
@@ -537,12 +564,61 @@
 	onwheel={handleWheel}
 	ondblclick={handleDoubleClick}
 >
-	<!-- Model Loading Spinner -->
+	<!-- Real-Time HUD FPS Counter (Configurable Toggle) -->
+	{#if rigging.showFpsCounter}
+		<div
+			class="absolute top-4 left-4 z-30 pointer-events-none select-none flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 shadow-lg text-xs font-mono transition-all animate-in fade-in"
+		>
+			<span
+				class="w-2 h-2 rounded-full {liveFps >= 50 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : liveFps >= 30 ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' : 'bg-rose-400 shadow-[0_0_8px_#f87171]'}"
+			></span>
+			<span class="font-bold {liveFps >= 50 ? 'text-emerald-300' : liveFps >= 30 ? 'text-amber-300' : 'text-rose-300'}">
+				{liveFps} FPS
+			</span>
+			<span class="text-zinc-500 text-[10px]">({liveFrameMs}ms)</span>
+		</div>
+	{/if}
+
+	<!-- Fluid Animated Avatar Loading Screen -->
 	{#if rigging.isLoadingModel}
-		<div class="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-20 pointer-events-none">
-			<div class="flex flex-col items-center gap-3">
-				<div class="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
-				<span class="text-xs font-semibold text-cyan-300 tracking-widest">{i18n.t('loading_model')}</span>
+		<div class="absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md z-40 pointer-events-none select-none animate-in fade-in duration-200">
+			<div class="relative flex flex-col items-center p-8 rounded-3xl bg-zinc-950/90 border border-pink-500/30 shadow-2xl shadow-pink-500/20 max-w-xs text-center space-y-4 overflow-hidden">
+				<!-- Fluid Iridescent Glowing Orb with Floating Sparkles -->
+				<div class="relative w-24 h-24 flex items-center justify-center">
+					<!-- Pulsing outer glow aura -->
+					<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-500/40 via-purple-500/30 to-cyan-400/40 blur-xl animate-pulse"></div>
+					<!-- Fluid morphing bouncy blob -->
+					<div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 via-purple-600 to-cyan-400 shadow-lg shadow-pink-500/40 flex items-center justify-center animate-bounce">
+						<Sparkles class="w-7 h-7 text-white animate-spin [animation-duration:4s]" />
+					</div>
+					<!-- Orbiting decorative floating particle stars -->
+					<div class="absolute -top-1 right-2 text-pink-300 text-xs animate-ping [animation-duration:2s]">✦</div>
+					<div class="absolute bottom-1 -left-1 text-cyan-300 text-xs animate-ping [animation-duration:2.5s]">★</div>
+				</div>
+
+				<div class="space-y-1 z-10">
+					<h3 class="font-bold text-sm text-zinc-100 flex items-center justify-center gap-1.5">
+						<span>{i18n.t('loading_model')}</span>
+						<span class="inline-flex gap-0.5">
+							<span class="w-1 h-1 rounded-full bg-pink-400 animate-bounce [animation-delay:0ms]"></span>
+							<span class="w-1 h-1 rounded-full bg-purple-400 animate-bounce [animation-delay:150ms]"></span>
+							<span class="w-1 h-1 rounded-full bg-cyan-400 animate-bounce [animation-delay:300ms]"></span>
+						</span>
+					</h3>
+					<p class="text-xs text-pink-300/90 font-mono font-medium truncate max-w-[220px]">
+						{rigging.modelName || 'Live2D Avatar'}
+					</p>
+				</div>
+
+				<!-- Fluid Equalizer / Progress Waves -->
+				<div class="flex items-center gap-1 pt-1">
+					{#each [40, 70, 95, 60, 85, 50, 75] as height, idx}
+						<div
+							class="w-1 rounded-full bg-gradient-to-t from-pink-500 to-cyan-400 animate-pulse"
+							style="height: {height / 4}px; animation-delay: {idx * 80}ms; animation-duration: 800ms;"
+						></div>
+					{/each}
+				</div>
 			</div>
 		</div>
 	{/if}

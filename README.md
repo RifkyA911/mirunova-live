@@ -37,41 +37,48 @@
 
 ### 👁️ 1. Full-Body, Face & Hand Recognition
 * **Head Pose Kinematics:** 3-axis Euler angle tracking (Yaw, Pitch, Roll) with raw posture baseline calibration.
-* **Eye & Gaze Tracking:** Independent left & right eye blink with asymmetric wink isolation (`ParamEyeLOpen`, `ParamEyeROpen`), anti-flutter eyelid hysteresis, synchronized blink toggle, and 2D iris gaze deflection (`ParamEyeBallX`, `ParamEyeBallY`).
+* **Eye & Gaze Tracking (Independent Wink):** Independent left & right eye blink with asymmetric wink isolation (`ParamEyeLOpen`, `ParamEyeROpen`), anti-flutter eyelid hysteresis, and 2D iris gaze deflection (`ParamEyeBallX`, `ParamEyeBallY`).
+  * **Wink Sebelah Mata (Independent Wink):** Asymmetric wink logic isolates single-eye winks cleanly (`blinkDiff >= 0.12`), locks the opposite eye wide open (`1.0`) to prevent drooping, triggers an anime-accurate wink smile (`ParamEyeSmile = 1.0`), and automatically pauses Cubism auto-blink during active tracking.
+  * **Cermin Mata VTuber (Mirror Eyes):** Physical left eye winks the left eye of the avatar on screen for natural mirrored streaming.
 * **Eyebrows & Expressions:** Brow elevation/furrowing (`ParamBrowLY`, `ParamBrowRY`), cheek puff (`ParamCheek`), smile/frown curve (`ParamMouthForm`), and sadness/frown recognition via geometric corner droop.
 * **Mouth Tracking Sensitivity & Speech Boost:** Real-time jaw displacement (`ParamMouthOpenY`) and mouth skew (`ParamMouthX`) with adjustable sensitivity (0.5x–2.5x) and a dedicated **Speech Boost** mode (1.65x multiplier + geometric lip separation fallback) ensuring responsive lip-sync during fast speaking or whispering.
 * **Hand Tracking & Gestures:** 21-keypoint MediaPipe hand landmark detection mapping arm angles (`ParamArmLA/RA`) and high-five gesture detection.
 
-### 🎮 2. Discrete GPU Acceleration (NVIDIA / AMD) & WebGL Optimization
+### ⚡ 2. Real-Time On-Screen FPS & Telemetry HUD
+* **Live HUD FPS Badge:** Sleek floating pill in the top-right corner displaying smoothed frames per second (`FPS`) and millisecond frame interval (`ms`).
+* **Hardware Telemetry Integration:** Color-coded status indicator (Emerald >= 55 FPS, Amber 30–54 FPS, Rose < 30 FPS).
+* **Toggleable in Settings:** Can be shown or hidden at any time via Settings > Hardware & Telemetry > Tampilkan FPS Counter HUD di Layar.
+
+### 🌸 3. Fluid Animated Loading Screen & Procedural Audio Chimes
+* **Fluid Anime Loading Card:** Replaces generic spinners with a glowing, bouncy anime orb card with floating sparkle stars, pulsing audio equalizer bars, and dynamic status messages.
+* **Satisfying Fluffy Sound Effects:** Synthesized mathematically via Web Audio API:
+  * `loadingStart`: Dreamy harmonic ascending arpeggio on model load initialization.
+  * `loadingSuccess`: Crystalline sparkle chime upon complete texture binding and canvas attachment.
+
+### 🎮 4. Discrete GPU Acceleration (NVIDIA / AMD) & WebGL Optimization
 * **High-Performance Context Request:** WebGL contexts explicitly request `powerPreference: 'high-performance'` to ensure modern graphics engines prefer dedicated hardware over integrated graphics.
 * **Dual-GPU Routing Guide:** Comprehensive guidance for dual-GPU laptops (Intel + NVIDIA / AMD + NVIDIA) where Windows/browsers may default to integrated GPUs for power savings.
   * **Windows Graphics Settings:** Set browser (`chrome.exe` / `msedge.exe` / `brave.exe`) to *High Performance (NVIDIA GPU)* in Windows Settings > System > Display > Graphics.
   * **NVIDIA Control Panel:** Assign "High-performance NVIDIA processor" in Manage 3D Settings > Program Settings.
 * **Live Hardware Telemetry:** Dynamic 0–100 benchmark scoring, actual rendering FPS, millisecond frame latency, WebGL unmasked GPU renderer info, and CPU thread concurrency.
 
-### 🎙️ 3. Web Audio DSP Engine, Mic Test & Voice Conversion Test
+### 🎙️ 5. Web Audio DSP Engine, Mic Test & Voice Conversion Test
 * **Client-Side DSP Voice Models:** 8 local Web Audio filters (Kawaii Anime Girl, Ikemen Deep Voice, Chipmunk Helium, Cyber Robot, Vintage Walkie-Talkie, Concert Hall Echo, Studio Broadcast Vocal, Natural Passthrough).
 * **Interactive Mic & DSP Conversion Test Widget:**
   * Record a 4-second voice buffer in Settings to test hardware microphone clarity.
   * Preview "Raw Mic Voice" (direct recording) or "Converted DSP Voice" (active voice changer effect) with **zero feedback loops** and zero screeching.
 * **External Neural AI Voice Conversion:** Architectural blueprint for W-Okada AI Voice Changer (RVC v2 + CUDA) routed into OBS Studio via VB-Cable virtual audio cable.
 
-### 🔔 4. Zero-Latency Procedural UI Sound Effects (SFX)
+### 🔔 6. Zero-Latency Procedural UI Sound Effects (SFX)
 * **Web Audio Synthesis:** Zero external audio files required; all sound effects are synthesized mathematically in real-time via Web Audio API oscillators, bandpass filters, and exponential gain ramps.
-* **Studio Audio Feedback:** Responsive sounds for button clicks, camera activation, neutral calibration, modal open/close, theme switching, and screenshot shutter.
+* **Studio Audio Feedback:** Responsive sounds for button clicks, camera activation, neutral calibration, modal open/close, theme switching, model loading, and screenshot shutter.
 * **Configurable:** Dedicated toggle and volume slider in Studio Settings.
 
-### 📱 5. Progressive Web App (PWA) Desktop Installation
+### 📱 7. Progressive Web App (PWA) Desktop Installation
 * **Standalone Desktop Mode:** Install MiruNova Live directly to your desktop or taskbar with a single click, launching in a dedicated window without browser address bars.
 * **Full PWA Suite:** Valid `manifest.webmanifest`, vector `favicon.svg`, and service worker caching core assets for ultra-fast startup.
 
-### 📜 6. Dedicated Studio About & Terms of Service (ToS) Modals
-* **Dedicated About Modal:** Studio-grade modal celebrating project architecture, creator credits for **Rifky (@RifkyA911)**, quick link to the GitHub repository, and PWA desktop installation trigger.
-* **Terms of Service & Privacy Charter:**
-  * **100% Client-Side Privacy Guarantee:** All webcam video frames, MediaPipe 478 landmarks, and microphone streams run exclusively in local browser RAM/WebGL/WASM. Zero data is ever transmitted to cloud servers.
-  * **Commercial VTuber Freedom:** 100% royalty-free commercial live streaming rights on YouTube, Twitch, Kick, Bilibili, TikTok, and other platforms.
-
-### 🎨 7. Theme & Background Studio (13 Themes + Custom Studio)
+### 🎨 8. Theme & Stage Background Visual Studio
 * **☀️ 4 Daylight Themes:**
   * **Sakura Light Pink (Evanescia):** Soft cherry blossom daylight with HoYoverse Evanescia coral pink `#FA7FC2`, pale sakura `#F5B7CE`, and pure white daylight surfaces.
   * **Matcha Light Green:** Soothing Japanese green tea daylight with botanical green `#16a34a`, soft mint borders `#bbf7d0`, and crisp daylight card surfaces.
@@ -79,34 +86,34 @@
   * **Light Crisp:** Modern minimalist daylight interface with electric sky accents.
 * **🌙 8 Dark & Neon Themes:**
   * **Cyber Dark** (Default obsidian & cyan), **Neo Cyan** (Tron aqua), **Sakura Pink** (Kawaii magenta), **Matcha Green** (Zen forest), **Midnight Blue** (Navy calm), **Synthwave** (80s sunset violet), **Monochrome** (OLED black & silver), **Sakura Sweet** (Evanescia Dark).
-* **🎨 Custom Theme Studio:**
-  * Interactive color palette builder with 5 color pickers (`bg`, `surface`, `accent`, `border`, `text`).
-  * 6 Instant Presets: Sakura Bloom, Matcha Zen, Cyber Neon, Cosmic Violet, Sunset Amber, and Arctic Ice.
-* **Background Modes:** Transparent (OBS ready), Cyber Mesh (square grid), Solid Color, Tech Grid, Polka Dots, Cosmic Animated (drifting nebula), Deep Gradient, Chroma Green/Blue (#00FF00 / #0000FF), and Custom Photo Upload.
+* **🎨 Custom Theme Studio:** Interactive color palette builder with 5 color pickers (`bg`, `surface`, `accent`, `border`, `text`) and 6 Instant Presets.
+* **🖼️ Interactive Visual Thumbnail Cards for Stage Backgrounds:**
+  * Interactive thumbnail preview cards in Settings & Theme Studio for: Solid Color (live hex swatch), Cyber Mesh Grid (wireframe), Studio Blueprint (grid), Dot Matrix (dots), Cosmic Space Flow (nebula), Transparent Alpha (checkerboard for OBS), Chroma Key Green (#00FF00), and Custom Local Wallpaper.
 
-### 🎭 8. Multi-Engine Model Catalog & Categorized BOOTH.pm Showcase
-* **2D Live2D Models (Pre-installed):**
-  * **Haru Greeter (Gesture & Arm Rigged):** Full hand tracking, arm rigging, high-five gesture detection, motions, and expressions bundled locally.
-  * **Mihari (`Mihari_V1`), Vivian (`薇薇安`), Hiyori Momose, Mao, Shizuku, Wanko & Rice.**
-  * Custom `.model3.json` local folder & zip loader.
-* **Categorized BOOTH.pm Showcase Gallery (10 Models with Full Creator Credits & 1-Click Installer):**
-  * **HoYoverse & Kuro Games Fanmade:**
-    * **Belle / Rin (リン - ZZZ)** — Rigged by pbsddy, Art by shinan ([BOOTH #5399636](https://booth.pm/en/items/5399636))
-    * **Changli (长离 - 鳴潮)** — © shibutani ([BOOTH #7483530](https://shibutani.booth.pm/items/7483530))
-    * **Fugue / Tingyun (帰忘の流離人 - 崩壊：スターレイル)** — © shibutani ([BOOTH #6360847](https://shibutani.booth.pm/items/6360847))
-    * **Camellya (椿 - 鳴潮)** — © shibutani ([BOOTH #6313490](https://shibutani.booth.pm/items/6313490))
-  * **Original Anime & Kawaii Girls:**
-    * **Villhaze (ヴィルヘイズ)** — © koiyume ([BOOTH #5408293](https://booth.pm/en/items/5408293))
-    * **Roxy (ロキシー)** — © koiyume ([BOOTH #5411426](https://booth.pm/en/items/5411426))
-    * **Ice Girl (氷の少女)** — © TianYeLuLu ([BOOTH #5975192](https://booth.pm/en/items/5975192))
-    * **Tsukimi Yachiyo (月見ヤチヨ)** — © SnowBear Project ([BOOTH #8034348](https://booth.pm/en/items/8034348))
-  * **VTube Studio Community Favorites:**
-    * **Hoshino Nya (星乃にゃ)** — Rigged by skiyoshi, Art by サッカウキツ ([BOOTH #3988142](https://booth.pm/en/items/3988142))
-    * **KE (Live2D Free Model)** — © Sennyu ([BOOTH #7654174](https://booth.pm/en/items/7654174))
-  * **Direct "Pasang Model Ini" Installer:** 1-click installer button allowing users to install downloaded `.model3.json` archives directly with automatic metadata binding.
+### 🎭 9. Reorganized Multi-Engine Model Catalog & BOOTH.pm Studio
+* **2D Live2D Tab:**
+  * **Model Cubism 4 Siap Pakai:** Haru Greeter (Full hand tracking & arm gestures), Hiyori Momose, Mao.
+  * **Sampel Gratis Live2D Inc. (Official Samples):** Shizuku (Idol), Chitose (Schoolgirl), Koharu (SD Chibi), Epsilon (Sci-Fi Mech), Tororo (Cute Pet Mascot), Hibiki (Active Boy).
+  * **AI VTuber Legend Tribute:** Neuro-sama (Vedal987 / Anny AI VTuber Tribute).
+* **BOOTH.pm Tab (Categorized & Curated):**
+  * **Model Siap Pakai (Pre-Installed BOOTH Models):** Mihari (`Mihari_V1`), Vivian (`薇薇安`).
+  * **Showcase Terkurasi (10 Models with 1-Click "Pasang Model Ini" Installer & Creator Credits):**
+    * Belle / Rin (リン - ZZZ) © pbsddy & shinan ([BOOTH #5399636](https://booth.pm/en/items/5399636))
+    * Changli (长离 - 鳴潮) © shibutani ([BOOTH #7483530](https://shibutani.booth.pm/items/7483530))
+    * Fugue / Tingyun (帰忘の流離人) © shibutani ([BOOTH #6360847](https://shibutani.booth.pm/items/6360847))
+    * Camellya (椿 - 鳴潮) © shibutani ([BOOTH #6313490](https://shibutani.booth.pm/items/6313490))
+    * Villhaze (ヴィルヘイズ) © koiyume ([BOOTH #5408293](https://booth.pm/en/items/5408293))
+    * Roxy (ロキシー) © koiyume ([BOOTH #5411426](https://booth.pm/en/items/5411426))
+    * Ice Girl (氷の少女) © TianYeLuLu ([BOOTH #5975192](https://booth.pm/en/items/5975192))
+    * Tsukimi Yachiyo (月見ヤチヨ) © SnowBear Project ([BOOTH #8034348](https://booth.pm/en/items/8034348))
+    * Hoshino Nya (星乃にゃ) © skiyoshi & サッカウキツ ([BOOTH #3988142](https://booth.pm/en/items/3988142))
+    * KE (Live2D Free Model) © Sennyu ([BOOTH #7654174](https://booth.pm/en/items/7654174))
+* **Universal In-Memory Folder & Multi-File Local Model Installer:**
+  * Clicking "Pasang Model Ini" opens an in-memory directory / multi-file picker (`webkitdirectory` / `multiple`).
+  * Resolves all relative textures, physics, poses, and moc3 files into browser blob URLs, eliminating all missing texture 404 errors.
 * **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
 
-### 🔍 9. Apple iPhone AssistiveTouch Edge-Docked Assist Button & Zoom Slider
+### 🔍 10. Apple iPhone AssistiveTouch Edge-Docked Assist Button & Zoom Slider
 * **Docked Circular Button with 20% Off-Screen Peeking:** Strictly circular floating button docked against the right screen edge (`fixed right-0 top-1/2 -translate-y-1/2`). Idle state stays partially hidden (~20% off-screen) and slides 100% into view smoothly on hover or click.
 * **Anchored Assistive Popover Menu:**
   * **Continuous Zoom Range Slider:** Smooth slider (`30%` to `250%`) with live percentage display, plus quick `-`, `100%`, `+` step buttons.
@@ -116,11 +123,11 @@
   * **Live Expression Chips:** Trigger model expressions directly from the assist dock.
   * **Pin & Dismiss:** Pin to stay open during streams or close cleanly on click-outside.
 
-### ✨ 10. Dynamic Live2D Expression Selector
+### ✨ 11. Dynamic Live2D Expression Selector
 * **Model Expressions in Menubar:** Dynamic variation selector button in the bottom Control Dock reading all expression definitions from the active Live2D model.
 * **Floating Expression Popover:** One-click activation with visual active states, neutral reset button, procedural sound feedback, and global keyboard hotkey `E` to cycle expressions.
 
-### 🎥 11. OBS Studio Integration
+### 🎥 12. OBS Studio Integration
 * **One-Click Screen Mode:** Hides all application UI leaving only the avatar stage.
 * **URL Parameter Integration:** Add `?obs=true&bg=transparent` or `?obs=true&bg=chroma` directly to OBS Browser Source for zero-configuration integration.
 

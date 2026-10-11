@@ -6,7 +6,7 @@
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
 	import { detectHardwareBenchmark, type HardwareReport } from '#lib/core/hardware';
 	import { clearPreferences, exportConfigJson, importConfigJson } from '#lib/core/storage';
-	import type { UITheme, AvatarFramingMode, VoiceFilterType } from '#lib/types/tracking';
+	import type { UITheme, AvatarFramingMode, VoiceFilterType, BackgroundStyle } from '#lib/types/tracking';
 	import {
 		Settings,
 		X,
@@ -200,6 +200,75 @@
 		{ code: 'en', label: 'English' },
 		{ code: 'ja', label: '日本語' }
 	];
+
+	const backgroundStyleCards: Array<{
+		id: BackgroundStyle;
+		label: string;
+		desc: string;
+		previewClass: string;
+	}> = [
+		{
+			id: 'solid',
+			label: 'Solid Color',
+			desc: 'Warna studio polos (hex kustom)',
+			previewClass: 'border-zinc-700'
+		},
+		{
+			id: 'mesh',
+			label: 'Mesh Kotak-kotak',
+			desc: 'Wireframe perspektif 3D cyan sci-fi',
+			previewClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:14px_14px]'
+		},
+		{
+			id: 'grid',
+			label: 'Studio Blueprint',
+			desc: 'Garis grid arsitektur studio bersih',
+			previewClass: 'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4640_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4640_1px,transparent_1px)] bg-[size:10px_10px]'
+		},
+		{
+			id: 'dots',
+			label: 'Dot Matrix',
+			desc: 'Pola titik matriks modern futuristik',
+			previewClass: 'bg-zinc-950 bg-[radial-gradient(#38bdf840_1.5px,transparent_1.5px)] bg-[size:10px_10px]'
+		},
+		{
+			id: 'cosmic',
+			label: 'Cosmic Nebula',
+			desc: 'Gradasi kosmik violet, ungu & pink',
+			previewClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950'
+		},
+		{
+			id: 'transparent',
+			label: 'Alpha Transparent',
+			desc: 'Papan catur transparan untuk OBS Overlay',
+			previewClass: 'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:12px_12px]'
+		},
+		{
+			id: 'chroma',
+			label: 'Chroma Key Green',
+			desc: 'Hijau murni #00FF00 untuk Color Key OBS',
+			previewClass: 'bg-[#00FF00]'
+		},
+		{
+			id: 'custom-image',
+			label: 'Custom Wallpaper',
+			desc: 'Gunakan wallpaper gambar dari komputer',
+			previewClass: 'bg-gradient-to-r from-violet-900 to-indigo-900'
+		}
+	];
+
+	let stageWallpaperInput = $state<HTMLInputElement>();
+
+	function handleStageWallpaperUpload(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+		const url = URL.createObjectURL(file);
+		rigging.customBgUrl = url;
+		rigging.backgroundStyle = 'custom-image';
+		rigging.persist();
+		rigging.showToast(`✓ Wallpaper dipasang: ${file.name}`);
+	}
 
 	async function refreshDevices(requestPermission = false) {
 		try {
@@ -677,6 +746,29 @@
 								<p class="text-[11px] text-zinc-400 leading-relaxed">
 									{hardware.recommendation}
 								</p>
+
+								<!-- On-Screen HUD FPS Counter Toggle Switch -->
+								<div class="flex items-center justify-between p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 mt-2">
+									<div>
+										<span class="font-semibold text-zinc-200 block text-xs">Indikator FPS Layar (HUD Telemetry)</span>
+										<span class="text-[10px] text-zinc-500">Tampilkan counter frame rate dan latensi realtime di sudut kanvas panggung</span>
+									</div>
+									<button
+										onclick={() => {
+											rigging.showFpsCounter = !rigging.showFpsCounter;
+											rigging.persist();
+											playSfx('toggle');
+										}}
+										aria-label="Toggle HUD FPS Counter"
+										class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
+											rigging.showFpsCounter ? 'bg-cyan-500' : 'bg-zinc-700'
+										}"
+									>
+										<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+											rigging.showFpsCounter ? 'translate-x-4.5' : 'translate-x-1'
+										}"></span>
+									</button>
+								</div>
 							</div>
 						</div>
 
@@ -855,6 +947,52 @@
 										>
 											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
 												rigging.enableHandTracking ? 'translate-x-4.5' : 'translate-x-1'
+											}"></span>
+										</button>
+									</div>
+
+									<!-- Wink Sebelah Mata (Independent Eye Wink) -->
+									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
+										<div>
+											<span class="font-semibold text-zinc-200 block">Wink Sebelah Mata (Kedip Mandiri)</span>
+											<span class="text-[10px] text-zinc-500">Mata kiri & kanan bisa berkedip independen saat Anda mengedipkan sebelah mata</span>
+										</div>
+										<button
+											onclick={() => {
+												rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked;
+												rigging.persist();
+												playSfx('toggle');
+											}}
+											aria-label="Wink Sebelah Mata"
+											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
+												!rigging.eyeBlinkLinked ? 'bg-indigo-500' : 'bg-zinc-700'
+											}"
+										>
+											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+												!rigging.eyeBlinkLinked ? 'translate-x-4.5' : 'translate-x-1'
+											}"></span>
+										</button>
+									</div>
+
+									<!-- Cermin Mata VTuber (Mirror Eyes) -->
+									<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60">
+										<div>
+											<span class="font-semibold text-zinc-200 block">Cermin Mata VTuber</span>
+											<span class="text-[10px] text-zinc-500">Mata kiri fisik Anda mengedipkan mata kiri avatar pada layar (orientasi cermin)</span>
+										</div>
+										<button
+											onclick={() => {
+												rigging.mirrorEyes = !rigging.mirrorEyes;
+												rigging.persist();
+												playSfx('toggle');
+											}}
+											aria-label="Cermin Mata VTuber"
+											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {
+												rigging.mirrorEyes ? 'bg-indigo-500' : 'bg-zinc-700'
+											}"
+										>
+											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+												rigging.mirrorEyes ? 'translate-x-4.5' : 'translate-x-1'
 											}"></span>
 										</button>
 									</div>
@@ -1725,28 +1863,105 @@
 								</div>
 							</div>
 
-							<!-- Background Style Select -->
-							<div class="space-y-1.5">
-								<label for="bg-style-select" class="block text-xs font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-									{i18n.t('bg_mode')}
-								</label>
-								<select
-									id="bg-style-select"
-									bind:value={rigging.backgroundStyle}
-									onchange={() => rigging.persist()}
-									class="w-full p-2.5 rounded-xl text-xs border focus:outline-none focus:border-sky-500 cursor-pointer {
-										isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-100'
-									}"
-								>
-									<option value="solid">Solid Color (Custom Hex Color)</option>
-									<option value="mesh">Mesh Kotak-kotak (Wireframe Grid)</option>
-									<option value="grid">Clean Studio Grid</option>
-									<option value="dots">Dot Matrix</option>
-									<option value="cosmic">Cosmic Space Flow</option>
-									<option value="transparent">Transparent Alpha (OBS Streaming)</option>
-									<option value="chroma">Chroma Key Green (#00FF00)</option>
-								</select>
+							<!-- Visual Background Style Cards Grid -->
+							<div class="space-y-2">
+								<div class="flex items-center justify-between">
+									<span class="text-xs font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+										{i18n.t('bg_mode')}
+									</span>
+									<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
+										{rigging.backgroundStyle.toUpperCase()}
+									</span>
+								</div>
+
+								<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+									{#each backgroundStyleCards as card}
+										{@const isSelected = rigging.backgroundStyle === card.id}
+										<button
+											type="button"
+											onclick={() => {
+												rigging.backgroundStyle = card.id;
+												rigging.persist();
+												playSfx('click');
+												if (card.id === 'custom-image' && !rigging.customBgUrl) {
+													stageWallpaperInput?.click();
+												}
+											}}
+											class="group relative flex flex-col p-2 rounded-xl border text-left transition-all duration-150 cursor-pointer overflow-hidden {
+												isSelected
+													? 'border-sky-500 bg-sky-500/15 shadow-md ring-1 ring-sky-500/50'
+													: isLightTheme
+														? 'bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-700'
+														: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800/80 text-zinc-300'
+											}"
+										>
+											<!-- Miniature Visual Preview Box -->
+											<div class="w-full h-11 rounded-lg border border-zinc-700/60 overflow-hidden mb-1.5 relative flex items-center justify-center shadow-inner {card.previewClass}"
+												style={card.id === 'solid' ? `background-color: ${rigging.backgroundColor};` : (card.id === 'custom-image' && rigging.customBgUrl ? `background-image: url(${rigging.customBgUrl}); background-size: cover; background-position: center;` : '')}
+											>
+												{#if card.id === 'solid'}
+													<span class="text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-black/60 text-white backdrop-blur-xs">
+														{rigging.backgroundColor}
+													</span>
+												{:else if card.id === 'transparent'}
+													<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-black/60 text-zinc-300 backdrop-blur-xs">
+														PNG Alpha
+													</span>
+												{:else if card.id === 'chroma'}
+													<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-black/60 text-green-300 backdrop-blur-xs">
+														Chroma Key
+													</span>
+												{:else if card.id === 'custom-image' && !rigging.customBgUrl}
+													<span class="text-[8px] font-medium px-1 py-0.2 rounded bg-black/60 text-zinc-300 backdrop-blur-xs">
+														+ Foto
+													</span>
+												{/if}
+
+												{#if isSelected}
+													<div class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-sky-500 text-zinc-950 flex items-center justify-center shadow">
+														<Check class="w-2.5 h-2.5 stroke-[3]" />
+													</div>
+												{/if}
+											</div>
+
+											<!-- Label & Description -->
+											<span class="text-[11px] font-bold leading-tight truncate {isSelected ? 'text-sky-300' : isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+												{card.label}
+											</span>
+											<span class="text-[9px] text-zinc-400 leading-tight mt-0.5 line-clamp-1">
+												{card.desc}
+											</span>
+										</button>
+									{/each}
+								</div>
+								<input
+									type="file"
+									bind:this={stageWallpaperInput}
+									onchange={handleStageWallpaperUpload}
+									accept="image/*"
+									class="hidden"
+								/>
 							</div>
+
+							<!-- Custom Wallpaper Upload Box if custom-image is selected -->
+							{#if rigging.backgroundStyle === 'custom-image'}
+								<div class="p-3 rounded-xl border flex items-center justify-between gap-3 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
+									<div class="text-xs">
+										<span class="font-semibold block {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">Wallpaper Komputer</span>
+										<span class="text-[11px] text-zinc-400">
+											{rigging.customBgUrl ? '✓ File gambar aktif terpasang' : 'Pilih gambar lokal untuk dijadikan latar kanvas'}
+										</span>
+									</div>
+									<button
+										type="button"
+										onclick={() => stageWallpaperInput?.click()}
+										class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+									>
+										<Upload class="w-3.5 h-3.5" />
+										<span>{rigging.customBgUrl ? 'Ganti Gambar' : 'Pilih Gambar'}</span>
+									</button>
+								</div>
+							{/if}
 
 							<!-- Solid Background Color Picker (If solid selected) -->
 							{#if rigging.backgroundStyle === 'solid'}

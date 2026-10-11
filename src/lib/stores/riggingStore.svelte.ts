@@ -68,6 +68,7 @@ export class RiggingStore {
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
 	enableHandTracking = $state<boolean>(false);
+	showFpsCounter = $state<boolean>(true);
 
 	// OBS Screen Mode System
 	isObsMode = $state<boolean>(false);
@@ -261,6 +262,7 @@ export class RiggingStore {
 			isSfxEnabled: this.isSfxEnabled,
 			sfxVolume: this.sfxVolume,
 			mirrorEyes: this.mirrorEyes,
+			showFpsCounter: this.showFpsCounter,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -332,6 +334,7 @@ export class RiggingStore {
 		if (saved.isSfxEnabled !== undefined) this.isSfxEnabled = saved.isSfxEnabled;
 		if (saved.sfxVolume !== undefined) this.sfxVolume = saved.sfxVolume;
 		if (saved.mirrorEyes !== undefined) this.mirrorEyes = saved.mirrorEyes;
+		if (saved.showFpsCounter !== undefined) this.showFpsCounter = saved.showFpsCounter;
 		if (saved.currentLocale) i18n.setLocale(saved.currentLocale as any);
 	}
 

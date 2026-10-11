@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-koharu" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="50%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#fda4af"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-koharu)"/>
+  <!-- Hair Twin Buns -->
+  <circle cx="28" cy="38" r="14" fill="#fb7185"/>
+  <circle cx="92" cy="38" r="14" fill="#fb7185"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="65" rx="28" ry="28" fill="#fff1f2"/>
+  <!-- Eyes -->
+  <ellipse cx="47" cy="61" rx="6" ry="8" fill="#be123c"/>
+  <circle cx="49" cy="59" r="3" fill="#ffffff"/>
+  <ellipse cx="73" cy="61" rx="6" ry="8" fill="#be123c"/>
+  <circle cx="75" cy="59" r="3" fill="#ffffff"/>
+  <!-- Smile -->
+  <path d="M54 77 Q60 83 66 77" stroke="#e11d48" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="41" cy="71" r="5" fill="#fda4af" opacity="0.9"/>
+  <circle cx="79" cy="71" r="5" fill="#fda4af" opacity="0.9"/>
+  <!-- Bangs -->
+  <path d="M32 50 C40 32 80 32 88 50 C78 44 70 54 60 48 C50 54 42 44 32 50 Z" fill="#fb7185"/>
+  <!-- Ribbons -->
+  <circle cx="34" cy="48" r="4.5" fill="#f43f5e"/>
+  <circle cx="86" cy="48" r="4.5" fill="#f43f5e"/>
+</svg>

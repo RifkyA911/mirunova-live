@@ -58,12 +58,24 @@ Aplikasi pelacak avatar Live2D tradisional (seperti VTube Studio atau PrprLive) 
    * 8 preset DSP voice changer murni client-side Web Audio API.
    * Modul uji mikrofon 4 detik dengan tombol uji suara asli dan suara DSP bebas feedback loop.
 8. **Procedural UI Sound Effects (SFX)**
-   * Efek audio sintetis Web Audio API tanpa file audio eksternal untuk klik, kamera, kalibrasi, shutter, dan pergantian tema.
+   * Efek audio sintetis Web Audio API tanpa file audio eksternal untuk klik, kamera, kalibrasi, shutter, pergantian tema, serta fluffy loading arpeggio dan sparkle chimes.
 9. **Dedicated About & Terms of Service (ToS) Modals**
    * Modal About mandiri dengan atribusi arsitek & pembuat **Rifky (@RifkyA911)** dan link repositori GitHub.
    * Piagam Privasi 100% Client-Side dan Hak Siaran Komersial VTuber bebas royalti.
 10. **Progressive Web App (PWA) Desktop Ready**
     * Dukungan instalasi aplikasi desktop standalone (PWA) dengan manifest, favicon SVG, dan service worker.
+11. **Independent Eye Wink & Auto-Blink Suppression Engine**
+    * Isolasi wink mata asimetris dengan penguncian mata lawan tetap terbuka (1.0), aktivasi senyum wink anime (`ParamEyeSmile = 1.0`), dan supresi auto-blink Cubism selama webcam aktif.
+12. **On-Screen Real-Time FPS & Telemetry HUD**
+    * Badge pill mengambang sudut kanan atas menampilkan smoothed FPS & latency frame dalam milidetik (ms) dengan saklar toggle di Pengaturan.
+13. **Fluid Anime Loading Animation & Fluffy SFX**
+    * Animasi kartu anime berdenyut dengan bintang mengambang, wave audio visualizer, serta chime Web Audio kepuasan tinggi saat pergantian model.
+14. **Katalog Model Resmi Live2D & Neuro-sama AI VTuber**
+    * 6 sampel resmi Live2D Inc. (Shizuku, Chitose, Koharu, Epsilon, Tororo, Hibiki) dan penghormatan legenda AI VTuber (Neuro-sama).
+15. **Universal In-Memory Folder & Multi-File Local Model Installer**
+    * Pemilih folder (`webkitdirectory`) & multi-file (`multiple`) yang memetakan file-file Live2D lokal langsung ke blob URLs in-memory tanpa error missing texture 404.
+16. **Kartu Pratinjau Visual Background & Theme Studio**
+    * Pratinjau visual thumbnail CSS untuk Solid, Cyber Mesh, Studio Blueprint, Dot Matrix, Cosmic, Transparent, Chroma Green, dan Custom Wallpaper.
 
 ---
 
@@ -78,4 +90,4 @@ Aplikasi pelacak avatar Live2D tradisional (seperti VTube Studio atau PrprLive) 
 * Latensi dari pergerakan wajah ke respons model < 50ms.
 * Waktu inisialisasi awal (load model + load model AI) < 3 detik pada koneksi internet standar.
 * 0 dropped frames yang disebabkan oleh Garbage Collection di rendering loop.
-* 100% lulus seluruh unit tests (44 passing tests).
+* 100% lulus seluruh unit tests (48 passing tests).

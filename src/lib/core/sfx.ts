@@ -11,7 +11,9 @@ export type SfxType =
 	| 'modal'
 	| 'theme'
 	| 'expression'
-	| 'success';
+	| 'success'
+	| 'loadingStart'
+	| 'loadingSuccess';
 
 let audioCtx: AudioContext | null = null;
 
@@ -270,6 +272,52 @@ export function playSfx(type: SfxType) {
 				gain2.connect(masterGain);
 				osc2.start(now + 0.055);
 				osc2.stop(now + 0.17);
+				break;
+			}
+
+			case 'loadingStart': {
+				// Fluffy dreamy anime loading sweep (soft rising arpeggio: C5 -> E5 -> G5 -> B5 -> C6)
+				const notes = [523.25, 659.25, 783.99, 987.77, 1046.5];
+				notes.forEach((freq, idx) => {
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+					osc.type = 'sine';
+					const start = now + idx * 0.045;
+					osc.frequency.setValueAtTime(freq * 0.98, start);
+					osc.frequency.exponentialRampToValueAtTime(freq, start + 0.05);
+
+					gain.gain.setValueAtTime(0.001, start);
+					gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+					gain.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
+
+					osc.connect(gain);
+					gain.connect(masterGain);
+					osc.start(start);
+					osc.stop(start + 0.25);
+				});
+				break;
+			}
+
+			case 'loadingSuccess': {
+				// Satisfying, ultra-smooth fluffy sparkle chime (E5 -> G#5 -> B5 -> E6 with airy decay)
+				const chords = [659.25, 830.61, 987.77, 1318.51];
+				chords.forEach((freq, idx) => {
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+					osc.type = 'sine';
+					const start = now + idx * 0.035;
+					osc.frequency.setValueAtTime(freq, start);
+					osc.frequency.exponentialRampToValueAtTime(freq * 1.02, start + 0.08);
+
+					gain.gain.setValueAtTime(0.001, start);
+					gain.gain.exponentialRampToValueAtTime(0.35, start + 0.015);
+					gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+
+					osc.connect(gain);
+					gain.connect(masterGain);
+					osc.start(start);
+					osc.stop(start + 0.38);
+				});
 				break;
 			}
 		}

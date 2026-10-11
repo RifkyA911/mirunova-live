@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-chitose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-chitose)"/>
+  <!-- Hair back -->
+  <path d="M25 45 C18 80 25 110 38 116 L82 116 C95 110 102 80 95 45 Z" fill="#78350f"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="62" rx="27" ry="29" fill="#fffbeb"/>
+  <!-- Eyes -->
+  <ellipse cx="48" cy="58" rx="5" ry="7" fill="#92400e"/>
+  <circle cx="50" cy="56" r="2.5" fill="#ffffff"/>
+  <ellipse cx="72" cy="58" rx="5" ry="7" fill="#92400e"/>
+  <circle cx="74" cy="56" r="2.5" fill="#ffffff"/>
+  <!-- Smile -->
+  <path d="M53 74 Q60 79 67 74" stroke="#d97706" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <circle cx="43" cy="67" r="4.5" fill="#fed7aa" opacity="0.9"/>
+  <circle cx="77" cy="67" r="4.5" fill="#fed7aa" opacity="0.9"/>
+  <!-- Bangs -->
+  <path d="M28 46 C36 26 84 26 92 46 C82 38 72 50 60 44 C48 50 38 38 28 46 Z" fill="#92400e"/>
+  <!-- Beret hat -->
+  <path d="M34 32 C38 16 82 16 86 32 Z" fill="#b45309"/>
+</svg>

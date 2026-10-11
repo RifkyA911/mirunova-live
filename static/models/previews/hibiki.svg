@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-hibiki" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-hibiki)"/>
+  <!-- Spiky anime hair back -->
+  <path d="M26 48 L18 28 L36 34 L48 16 L60 30 L74 14 L84 34 L102 26 L94 50 Z" fill="#451a03"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="64" rx="26" ry="28" fill="#ffedd5"/>
+  <!-- Confident Eyes -->
+  <ellipse cx="48" cy="60" rx="5" ry="6" fill="#7c2d12"/>
+  <circle cx="50" cy="58" r="2" fill="#ffffff"/>
+  <ellipse cx="72" cy="60" rx="5" ry="6" fill="#7c2d12"/>
+  <circle cx="74" cy="58" r="2" fill="#ffffff"/>
+  <!-- Grin -->
+  <path d="M52 75 Q60 82 68 75 Z" fill="#991b1b"/>
+  <!-- Bangs -->
+  <path d="M30 46 L40 54 L52 44 L60 56 L70 44 L80 54 L90 46 Z" fill="#78350f"/>
+  <!-- Jacket collar -->
+  <polygon points="38,98 60,82 82,98 72,118 48,118" fill="#1e293b"/>
+  <polygon points="48,102 60,88 72,102" fill="#ea580c"/>
+</svg>

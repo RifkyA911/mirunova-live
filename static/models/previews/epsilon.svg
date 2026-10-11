@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-epsilon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg-epsilon)"/>
+  <!-- Cyber Visor / Headset -->
+  <path d="M22 55 L32 45 L88 45 L98 55 L94 68 L88 62 L32 62 L26 68 Z" fill="#38bdf8" opacity="0.9"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="65" rx="26" ry="28" fill="#f8fafc"/>
+  <!-- Eyes with glowing cyan visor -->
+  <rect x="40" y="55" width="40" height="10" rx="4" fill="#00f0ff" opacity="0.85"/>
+  <ellipse cx="48" cy="60" rx="3.5" ry="4.5" fill="#0369a1"/>
+  <circle cx="50" cy="58" r="1.5" fill="#ffffff"/>
+  <ellipse cx="72" cy="60" rx="3.5" ry="4.5" fill="#0369a1"/>
+  <circle cx="74" cy="58" r="1.5" fill="#ffffff"/>
+  <!-- Cool smirk -->
+  <path d="M54 75 Q62 79 66 74" stroke="#0284c7" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Cyber markings -->
+  <path d="M38 72 L44 76" stroke="#00f0ff" stroke-width="1.5"/>
+  <path d="M82 72 L76 76" stroke="#00f0ff" stroke-width="1.5"/>
+  <!-- Cyber Hair -->
+  <path d="M28 42 C34 22 86 22 92 42 C82 34 70 46 60 40 C50 46 38 34 28 42 Z" fill="#475569"/>
+</svg>

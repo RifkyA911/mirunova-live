@@ -121,16 +121,16 @@
 		{ hex: '#f8fafc', name: 'Studio White' }
 	];
 
-	const bgStyles: Array<{ id: BackgroundStyle; label: string; desc: string }> = [
-		{ id: 'solid', label: 'Solid Color', desc: 'Warna latar bersih sesuai palet' },
-		{ id: 'transparent', label: 'Transparent', desc: 'OBS Browser overlay stream' },
-		{ id: 'mesh', label: 'Cyber Mesh Grid', desc: 'Wireframe kotak-kotak kontras' },
-		{ id: 'grid', label: 'Tech Grid Paper', desc: 'Wireframe grafik presisi cyber' },
-		{ id: 'dots', label: 'Anime Polka Dots', desc: 'Pola titik estetik anime' },
-		{ id: 'cosmic', label: 'Cosmic Animated', desc: 'Drifting nebula panggung' },
-		{ id: 'gradient', label: 'Deep Gradient', desc: 'Gradien halus ke luar angkasa' },
-		{ id: 'chroma', label: 'Chroma Key Green', desc: 'Layar hijau jernih untuk OBS' },
-		{ id: 'custom-image', label: 'Custom Wallpaper', desc: 'Upload file gambar Anda' }
+	const bgStyles: Array<{ id: BackgroundStyle; label: string; desc: string; previewClass: string }> = [
+		{ id: 'solid', label: 'Solid Color', desc: 'Warna latar bersih sesuai palet', previewClass: 'border-zinc-700' },
+		{ id: 'transparent', label: 'Transparent', desc: 'OBS Browser overlay stream', previewClass: 'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:10px_10px]' },
+		{ id: 'mesh', label: 'Cyber Mesh Grid', desc: 'Wireframe kotak-kotak kontras', previewClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:12px_12px]' },
+		{ id: 'grid', label: 'Tech Grid Paper', desc: 'Wireframe grafik presisi cyber', previewClass: 'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4640_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4640_1px,transparent_1px)] bg-[size:8px_8px]' },
+		{ id: 'dots', label: 'Anime Polka Dots', desc: 'Pola titik estetik anime', previewClass: 'bg-zinc-950 bg-[radial-gradient(#38bdf840_1.5px,transparent_1.5px)] bg-[size:8px_8px]' },
+		{ id: 'cosmic', label: 'Cosmic Animated', desc: 'Drifting nebula panggung', previewClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950' },
+		{ id: 'gradient', label: 'Deep Gradient', desc: 'Gradien halus ke luar angkasa', previewClass: 'bg-gradient-to-b from-zinc-900 via-indigo-950 to-zinc-950' },
+		{ id: 'chroma', label: 'Chroma Key Green', desc: 'Layar hijau jernih untuk OBS', previewClass: 'bg-[#00FF00]' },
+		{ id: 'custom-image', label: 'Custom Wallpaper', desc: 'Upload file gambar Anda', previewClass: 'bg-gradient-to-r from-violet-900 to-indigo-900' }
 	];
 
 	const screenEffects: Array<{ id: ScreenEffect; label: string }> = [
@@ -635,20 +635,31 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.backgroundStyle = style.id;
+										if (style.id === 'custom-image' && !rigging.customBgUrl) {
+											fileInputEl?.click();
+										}
 									}}
-									class="flex flex-col p-2.5 rounded-xl border text-left transition-all cursor-pointer {
+									class="flex flex-col p-2 rounded-xl border text-left transition-all cursor-pointer overflow-hidden {
 										isSelectedBg
-											? 'border-cyan-500 bg-cyan-500/10 text-cyan-300 font-semibold shadow-sm'
+											? 'border-cyan-500 bg-cyan-500/10 text-cyan-300 font-semibold shadow-sm ring-1 ring-cyan-500/40'
 											: (isLightTheme ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-600' : 'bg-zinc-900/40 hover:bg-zinc-900 border-zinc-800/80 text-zinc-400')
 									}"
 								>
-									<div class="flex items-center justify-between w-full mb-1">
-										<span class="font-bold text-xs">{style.label}</span>
+									<!-- Miniature Visual Preview Box -->
+									<div class="w-full h-8 rounded-lg border border-zinc-700/60 overflow-hidden mb-1.5 relative flex items-center justify-center shadow-inner {style.previewClass}"
+										style={style.id === 'solid' ? `background-color: ${rigging.backgroundColor};` : (style.id === 'custom-image' && rigging.customBgUrl ? `background-image: url(${rigging.customBgUrl}); background-size: cover; background-position: center;` : '')}
+									>
 										{#if isSelectedBg}
-											<Check class="w-3.5 h-3.5 text-cyan-400" />
+											<div class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-cyan-500 text-zinc-950 flex items-center justify-center shadow">
+												<Check class="w-2.5 h-2.5 stroke-[3]" />
+											</div>
 										{/if}
 									</div>
-									<span class="text-[10px] opacity-75 leading-tight">{style.desc}</span>
+
+									<div class="flex items-center justify-between w-full mb-0.5">
+										<span class="font-bold text-xs truncate">{style.label}</span>
+									</div>
+									<span class="text-[10px] opacity-75 leading-tight line-clamp-1">{style.desc}</span>
 								</button>
 							{/each}
 						</div>

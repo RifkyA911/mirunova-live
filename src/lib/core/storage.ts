@@ -59,6 +59,7 @@ export interface SavedUserConfig {
 	isSfxEnabled?: boolean;
 	sfxVolume?: number;
 	mirrorEyes?: boolean;
+	showFpsCounter?: boolean;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';
