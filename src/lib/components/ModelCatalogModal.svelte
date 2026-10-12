@@ -1185,7 +1185,7 @@
 												<span class="font-bold text-xs text-zinc-100 truncate">{model.name}</span>
 											</div>
 											<span class="inline-flex self-start px-1.5 py-0.5 rounded bg-zinc-800 text-cyan-400 font-mono text-[9px] border border-zinc-700 mb-1">
-												3D PROCEDURAL
+												{model.type === 'fbx' ? '3D HUMANOID (FBX)' : model.type === 'glb' ? '3D GLB MESH' : '3D PROCEDURAL'}
 											</span>
 											<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed">
 												{model.description}

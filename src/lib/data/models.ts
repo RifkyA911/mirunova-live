@@ -3,7 +3,7 @@ import type { Live2DModelItem } from '#lib/types/tracking';
 export interface Model3DItem {
 	id: string;
 	name: string;
-	type: 'procedural' | 'glb';
+	type: 'procedural' | 'glb' | 'fbx';
 	url?: string;
 	avatarUrl?: string;
 	description: string;
@@ -127,6 +127,15 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 ];
 
 export const MODEL_3D_CATALOG: Model3DItem[] = [
+	{
+		id: 'neuro-sama',
+		name: "Neuro-sama (Vedal's Version)",
+		type: 'fbx',
+		url: '/models/neurosama/neuro-sama.fbx',
+		avatarUrl: '/models/previews/neurosama.svg',
+		description: 'Model 3D humanoid resmi Neuro-sama karya Vedal dengan full-body humanoid rig (172 bones), tekstur 4K, MediaPipe face tracking, dan VRChat morph targets (Starry Eyes, Blush, Lip-Sync).',
+		tags: ['3D Humanoid', 'Neuro-sama', 'Vedal', 'Full Body', 'Face Tracking', 'Starry Eyes', 'Visemes', 'VRChat FBX']
+	},
 	{
 		id: 'mochi-cat',
 		name: 'Mochi The Cat (Shiro Neko)',

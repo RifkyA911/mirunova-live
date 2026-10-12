@@ -150,7 +150,13 @@ MiruNova Live menghadirkan mesin pengubah suara digital (DSP) berbasis **Web Aud
 * **Universal In-Memory Folder & Multi-File Local Model Installer:**
   * Clicking "Pasang Model Ini" opens an in-memory directory / multi-file picker (`webkitdirectory` / `multiple`).
   * Resolves all relative textures, physics, poses, and moc3 files into browser blob URLs, eliminating all missing texture 404 errors.
-* **3D Avatar Engine (Three.js):** Procedural rigged anime cats (Mochi, Kuro, Tora) with reactive ears, head rotation, eye blinks, paw gestures, and tail sway + custom `.glb` upload.
+* **3D Avatar Engine (Three.js & FBXLoader):**
+  * **Model 3D Humanoid Neuro-sama (Vedal's Version):** Model 3D resmi karya Vedal987 dengan full-body humanoid skeleton rig (172 bones), tekstur 4K, MediaPipe face recognition tracking, dan VRChat morph targets (Starry Eyes, Blush, Lip-Sync).
+  * **Procedural Rigged Anime Cats:** Mochi, Kuro, Tora dengan reactive ears, head rotation, eye blinks, paw gestures, dan tail sway.
+  * **3D Quick-Action Studio HUD Toolbar (Tombol Bergambar):**
+    * 🧍 **Framing Kamera Bergambar:** Full Body (Kepala ke kaki), Half Body (Pinggang ke atas), Close-Up Face (Wajah detail).
+    * ⭐ **Ekspresi Wajah Bergambar:** Star Eyes (Mata Bintang), Senyum (Smile), Pipi Merona (Blush), Kedipan (Wink), Terkejut (Oh), Netral.
+    * 👋 **Full Body Pose Bergambar:** Lambaian Tangan (Wave), Pose V (Peace Sign), Pose Hati (Heart), Gerak Santai (Idle Sway), Pose Tegak (Rest Pose).
 
 ### 🔍 10. Apple iPhone AssistiveTouch Edge-Docked Assist Button & Zoom Slider
 * **Docked Circular Button with 20% Off-Screen Peeking:** Strictly circular floating button docked against the right screen edge (`fixed right-0 top-1/2 -translate-y-1/2`). Idle state stays partially hidden (~20% off-screen) and slides 100% into view smoothly on hover or click.

@@ -44,4 +44,48 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 			})
 		).not.toThrow();
 	});
+
+	it('should support framing modes: full body, half body, and face close-up', () => {
+		const stage = new ThreeStage();
+		stage.setFraming('full');
+		expect(stage.currentFraming).toBe('full');
+
+		stage.setFraming('half');
+		expect(stage.currentFraming).toBe('half');
+
+		stage.setFraming('closeup');
+		expect(stage.currentFraming).toBe('closeup');
+	});
+
+	it('should support facial expression and full-body pose switching', () => {
+		const stage = new ThreeStage();
+
+		expect(() => stage.setExpression('stars')).not.toThrow();
+		expect(stage.activeExpression).toBe('stars');
+
+		expect(() => stage.setExpression('blush')).not.toThrow();
+		expect(stage.activeExpression).toBe('blush');
+
+		expect(() => stage.setExpression('')).not.toThrow();
+		expect(stage.activeExpression).toBe('');
+
+		expect(() => stage.setFullBodyPose('wave')).not.toThrow();
+		expect(stage.activeFullBodyPose).toBe('wave');
+
+		expect(() => stage.setFullBodyPose('peace')).not.toThrow();
+		expect(stage.activeFullBodyPose).toBe('peace');
+
+		expect(() => stage.setFullBodyPose('heart')).not.toThrow();
+		expect(stage.activeFullBodyPose).toBe('heart');
+
+		expect(() => stage.setFullBodyPose('idle')).not.toThrow();
+		expect(stage.activeFullBodyPose).toBe('idle');
+	});
+
+	it('should support zoomBy and resetZoom controls', () => {
+		const stage = new ThreeStage();
+		expect(() => stage.zoomBy(1.2)).not.toThrow();
+		expect(() => stage.zoomBy(0.8)).not.toThrow();
+		expect(() => stage.resetZoom()).not.toThrow();
+	});
 });

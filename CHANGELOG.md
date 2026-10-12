@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.20.1-beta] - 2026-10-11
 
 ### Added & Enhanced
+- **3D Humanoid Model Installation & Neuro-sama (Vedal's Version) (`models.ts`, `threeStage.ts`, `ThreeCanvasStage.svelte`):**
+  - Integrated full 3D humanoid model `neuro-sama.fbx` from Vedal's VRChat release into `static/models/neurosama/` with 5 high-resolution textures (`body`, `clothes`, `secondary_clothes`, `neuro_hair`, `neuroexpresions`).
+  - Added Three.js `FBXLoader` support and registered `neuro-sama` in `MODEL_3D_CATALOG` with dedicated SVG preview badge.
+  - Configured 172-bone humanoid skeleton tracking (head, neck, eyes, torso, spine, hips, shoulders, arms, hands, dynamic hair & skirt flutter).
+- **Face Recognition & Full Body Humanoid Rigging (`threeStage.ts`):**
+  - Mapped real-time MediaPipe face recognition tracking: Head Yaw/Pitch/Roll, neck rotation, eye gaze pupils (`EyeL`/`EyeR`), and blendshapes.
+  - Linked native VRChat morph targets (`vrc.blink`, `vrc.aa` mouth open, `vrc.ee` smile, `vrc.oh` surprised, `stars` star eyes, `blush` cheek glow).
+  - Configured full-body breathing expansion and natural torso sway physics.
+- **3D Quick-Action Studio HUD Toolbar with Pictorial Buttons (`ThreeCanvasStage.svelte`):**
+  - Floating glassmorphism 3D HUD bar with pictorial buttons:
+    - **Framing Kamera (3 Tombol Bergambar):** 🧍 `Full Body` (Kepala hingga sepatu), 🥋 `Half Body` (Pinggang ke atas), 👤 `Close-Up Face` (Fokus wajah ekspresi).
+    - **Ekspresi Wajah (6 Tombol Bergambar):** ⭐ `Star Eyes`, 😊 `Senyum`, 😳 `Blush`, 😉 `Kedip`, 😮 `Terkejut`, 😐 `Netral`.
+    - **Full Body Pose (5 Tombol Bergambar):** 👋 `Wave Hand`, ✌️ `Peace Sign`, 💖 `Heart Pose`, 💃 `Idle Sway`, 🧘 `Rest Pose`.
+    - Collapse/expand minimize pill button ensuring zero interference with live stream overlay.
 - **Real-Time On-Screen 60 FPS Telemetry HUD (`+page.svelte`, `CanvasStage.svelte`, `ThreeCanvasStage.svelte`):**
   - Relocated live FPS badge to top-right persistent header adjacent to the MiruNova Live badge, eliminating obstruction by the camera picture-in-picture window.
   - Added color-coded health status (Emerald $\ge$ 50 FPS, Amber $\ge$ 30 FPS, Rose < 30 FPS) and latency calculation `(Xms)`.

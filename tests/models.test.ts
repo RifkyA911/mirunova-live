@@ -39,21 +39,28 @@ describe('Model Catalog Validation', () => {
 		}
 	});
 
-	it('should contain 3D Cat variants without un-rigged quadruped fox', () => {
-		expect(MODEL_3D_CATALOG.length).toBeGreaterThanOrEqual(3);
+	it('should contain 3D Cat variants and humanoid Neuro-sama FBX without un-rigged quadruped fox', () => {
+		expect(MODEL_3D_CATALOG.length).toBeGreaterThanOrEqual(4);
 
 		const catIds = MODEL_3D_CATALOG.map((m) => m.id);
 		expect(catIds).toContain('mochi-cat');
 		expect(catIds).toContain('kuro-cat');
 		expect(catIds).toContain('tora-cat');
+		expect(catIds).toContain('neuro-sama');
 
-		for (const cat of MODEL_3D_CATALOG) {
-			expect(cat.type).toBe('procedural');
+		const proceduralCats = MODEL_3D_CATALOG.filter((m) => m.type === 'procedural');
+		for (const cat of proceduralCats) {
 			expect(cat.variant).toBeDefined();
 			expect(cat.avatarUrl).toBeTruthy();
 			expect(cat.tags).toBeDefined();
 			expect(cat.tags?.length).toBeGreaterThan(0);
 		}
+
+		const neuro = MODEL_3D_CATALOG.find((m) => m.id === 'neuro-sama');
+		expect(neuro).toBeDefined();
+		expect(neuro?.type).toBe('fbx');
+		expect(neuro?.url).toBe('/models/neurosama/neuro-sama.fbx');
+		expect(neuro?.avatarUrl).toBeTruthy();
 	});
 
 	it('should provide preview visual assets for all 2D catalog models', () => {

@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 export type CatVariant = 'mochi' | 'kuro' | 'tora';
+export type FramingMode3D = 'full' | 'half' | 'closeup';
+export type FullBodyPose3D = 'idle' | 'wave' | 'peace' | 'heart' | 'stand';
 
 export class ThreeStage {
 	private scene: THREE.Scene;
@@ -10,8 +13,11 @@ export class ThreeStage {
 	private container: HTMLElement | null = null;
 	private animationFrameId: number | null = null;
 
-	// Model root & rigged nodes
-	private currentModelGroup: THREE.Group | null = null;
+	// Active Model Type & Root
+	public modelType: 'procedural' | 'fbx' | 'glb' = 'procedural';
+	private currentModelGroup: THREE.Group | THREE.Object3D | null = null;
+
+	// Procedural Cat Nodes
 	private headNode: THREE.Object3D | null = null;
 	private eyeLNode: THREE.Object3D | null = null;
 	private eyeRNode: THREE.Object3D | null = null;
@@ -22,6 +28,37 @@ export class ThreeStage {
 	private earLNode: THREE.Object3D | null = null;
 	private earRNode: THREE.Object3D | null = null;
 
+	// Humanoid FBX Bones (Neuro-sama Rig)
+	private neckNode: THREE.Object3D | null = null;
+	private hipsNode: THREE.Object3D | null = null;
+	private spineNode: THREE.Object3D | null = null;
+	private torsoNode: THREE.Object3D | null = null;
+	private shoulderLNode: THREE.Object3D | null = null;
+	private shoulderRNode: THREE.Object3D | null = null;
+	private armLNode: THREE.Object3D | null = null;
+	private armRNode: THREE.Object3D | null = null;
+	private forearmLNode: THREE.Object3D | null = null;
+	private forearmRNode: THREE.Object3D | null = null;
+	private handLNode: THREE.Object3D | null = null;
+	private handRNode: THREE.Object3D | null = null;
+	private hairBones: THREE.Object3D[] = [];
+	private skirtBones: THREE.Object3D[] = [];
+	private initialRotations: Map<THREE.Object3D, THREE.Euler> = new Map();
+
+	// Morph Targets / BlendShapes for Expressions & Lip-Sync
+	private morphMesh: THREE.SkinnedMesh | null = null;
+	private morphDict: Record<string, number> = {};
+
+	// Interactive States: Expression & Full Body Pose
+	public activeExpression: string = '';
+	public activeFullBodyPose: FullBodyPose3D = 'idle';
+
+	// Framing & Smooth Camera Animation
+	public currentFraming: FramingMode3D = 'full';
+	private cameraTargetPos: THREE.Vector3 = new THREE.Vector3(0, 0.95, 2.7);
+	private cameraLookTarget: THREE.Vector3 = new THREE.Vector3(0, 0.9, 0);
+	private currentLookAt: THREE.Vector3 = new THREE.Vector3(0, 0.9, 0);
+
 	// External GLTF animations & mixer
 	private mixer: THREE.AnimationMixer | null = null;
 	private gltfBones: Map<string, THREE.Bone> = new Map();
@@ -30,7 +67,8 @@ export class ThreeStage {
 	constructor() {
 		this.scene = new THREE.Scene();
 		this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-		this.camera.position.set(0, 0.35, 2.8);
+		this.camera.position.set(0, 0.95, 2.7);
+		this.camera.lookAt(0, 0.9, 0);
 	}
 
 	init(container: HTMLElement) {
@@ -74,13 +112,63 @@ export class ThreeStage {
 
 	zoomBy(factor: number) {
 		if (!this.camera) return;
-		const newZ = this.camera.position.z / factor;
-		this.camera.position.z = Math.max(0.8, Math.min(6.0, newZ));
+		const newZ = this.cameraTargetPos.z / factor;
+		this.cameraTargetPos.z = Math.max(0.5, Math.min(6.0, newZ));
 	}
 
 	resetZoom() {
 		if (!this.camera) return;
-		this.camera.position.set(0, 0, 2.8);
+		this.setFraming(this.currentFraming);
+	}
+
+	setFraming(mode: FramingMode3D) {
+		this.currentFraming = mode;
+		if (this.modelType === 'fbx') {
+			if (mode === 'full') {
+				// Full Body: shows full avatar from feet to head
+				this.cameraTargetPos.set(0, 0.95, 2.7);
+				this.cameraLookTarget.set(0, 0.9, 0);
+			} else if (mode === 'half') {
+				// Half Body: waist up
+				this.cameraTargetPos.set(0, 1.25, 1.55);
+				this.cameraLookTarget.set(0, 1.25, 0);
+			} else if (mode === 'closeup') {
+				// Close-up: face & expressions focus
+				this.cameraTargetPos.set(0, 1.48, 0.85);
+				this.cameraLookTarget.set(0, 1.48, 0);
+			}
+		} else {
+			// Procedural Cat / GLTF
+			if (mode === 'full') {
+				this.cameraTargetPos.set(0, 0.25, 2.8);
+				this.cameraLookTarget.set(0, 0.2, 0);
+			} else if (mode === 'half') {
+				this.cameraTargetPos.set(0, 0.35, 1.9);
+				this.cameraLookTarget.set(0, 0.3, 0);
+			} else if (mode === 'closeup') {
+				this.cameraTargetPos.set(0, 0.45, 1.2);
+				this.cameraLookTarget.set(0, 0.4, 0);
+			}
+		}
+	}
+
+	setExpression(name: string) {
+		this.activeExpression = name;
+		if (this.morphMesh && this.morphMesh.morphTargetInfluences) {
+			const infl = this.morphMesh.morphTargetInfluences;
+			const expKeys = ['stars', 'blush', 'vrc.blink', 'vrc.ee', 'vrc.oh', 'vrc.aa'];
+			for (const k of expKeys) {
+				const idx = this.morphDict[k];
+				if (idx !== undefined) infl[idx] = 0;
+			}
+			if (name && this.morphDict[name] !== undefined) {
+				infl[this.morphDict[name]] = 1.0;
+			}
+		}
+	}
+
+	setFullBodyPose(pose: FullBodyPose3D) {
+		this.activeFullBodyPose = pose;
 	}
 
 	private handleResize = () => {
@@ -95,6 +183,7 @@ export class ThreeStage {
 	// 1. Procedural Rigged 3D Cat Avatar with multiple breed variants
 	loadProceduralCat(variant: CatVariant = 'mochi') {
 		this.clearCurrentModel();
+		this.modelType = 'procedural';
 
 		const catGroup = new THREE.Group();
 		this.currentModelGroup = catGroup;
@@ -295,6 +384,7 @@ export class ThreeStage {
 	// 2. Load Any External GLTF / GLB Model
 	async loadGLTF(url: string) {
 		this.clearCurrentModel();
+		this.modelType = 'glb';
 
 		const loader = new GLTFLoader();
 		const gltf = await loader.loadAsync(url);
@@ -333,9 +423,234 @@ export class ThreeStage {
 		}
 
 		this.scene.add(model);
+		this.setFraming(this.currentFraming);
 	}
 
-	// 3. Real-Time Vision Tracking Update Loop
+	// 3. Load Humanoid Neuro-sama FBX Model with 4K Textures & VRChat BlendShapes
+	async loadNeuroSama() {
+		this.clearCurrentModel();
+		this.modelType = 'fbx';
+
+		const loader = new FBXLoader();
+		const group = await loader.loadAsync('/models/neurosama/neuro-sama.fbx');
+		this.currentModelGroup = group;
+
+		// Load textures with SRGBColorSpace
+		const texLoader = new THREE.TextureLoader();
+		const loadTex = (url: string) => {
+			const t = texLoader.load(url);
+			t.colorSpace = THREE.SRGBColorSpace;
+			return t;
+		};
+
+		const textures = {
+			expressions: loadTex('/models/neurosama/textures/neuroexpresions_vrc.png'),
+			secondaryClothes: loadTex('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
+			clothes: loadTex('/models/neurosama/textures/clothes_neuro_vrc.png'),
+			hair: loadTex('/models/neurosama/textures/neuro_hair_vrc.png'),
+			body: loadTex('/models/neurosama/textures/body_neuro_vrc.png')
+		};
+
+		group.traverse((child) => {
+			if ((child as any).isMesh) {
+				const mesh = child as THREE.SkinnedMesh;
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+
+				if (mesh.morphTargetDictionary) {
+					this.morphMesh = mesh;
+					this.morphDict = mesh.morphTargetDictionary;
+				}
+
+				if (Array.isArray(mesh.material)) {
+					mesh.material.forEach((mat: THREE.Material, idx: number) => {
+						const m = mat as THREE.MeshPhongMaterial;
+						if (idx === 0) {
+							m.map = textures.expressions;
+							m.transparent = true;
+							m.alphaTest = 0.05;
+						} else if (idx === 1) {
+							m.map = textures.secondaryClothes;
+							m.transparent = true;
+							m.alphaTest = 0.5;
+						} else if (idx === 2) {
+							m.map = textures.clothes;
+							m.transparent = false;
+						} else if (idx === 3) {
+							m.map = textures.hair;
+							m.transparent = true;
+							m.alphaTest = 0.5;
+						} else if (idx === 4) {
+							m.map = textures.body;
+							m.transparent = false;
+						}
+						m.shininess = 12;
+						m.needsUpdate = true;
+					});
+				}
+			}
+		});
+
+		// Discover humanoid bones
+		this.headNode = group.getObjectByName('head') || null;
+		this.neckNode = group.getObjectByName('neck') || null;
+		this.eyeRNode = group.getObjectByName('EyeR') || null;
+		this.eyeLNode = group.getObjectByName('EyeL') || null;
+		this.hipsNode = group.getObjectByName('hips') || null;
+		this.spineNode = group.getObjectByName('spine') || null;
+		this.torsoNode = group.getObjectByName('torso') || null;
+		this.shoulderLNode = group.getObjectByName('shoulderL') || null;
+		this.shoulderRNode = group.getObjectByName('shoulderR') || null;
+		this.armLNode = group.getObjectByName('armL') || null;
+		this.armRNode = group.getObjectByName('armR') || null;
+		this.forearmLNode = group.getObjectByName('ForearmL') || null;
+		this.forearmRNode = group.getObjectByName('ForearmR') || null;
+		this.handLNode = group.getObjectByName('handL') || null;
+		this.handRNode = group.getObjectByName('handR') || null;
+
+		// Cache secondary bones
+		this.hairBones = [];
+		this.skirtBones = [];
+		this.initialRotations.clear();
+
+		group.traverse((c) => {
+			if ((c as any).isBone) {
+				const name = c.name.toLowerCase();
+				if (name.includes('hair') || name.includes('pigtail')) this.hairBones.push(c);
+				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie')) this.skirtBones.push(c);
+				this.initialRotations.set(c, c.rotation.clone());
+			}
+		});
+
+		this.scene.add(group);
+		this.setFraming(this.currentFraming);
+	}
+
+	// 4. Load Any External Generic FBX Model
+	async loadFBX(url: string) {
+		if (url.includes('neuro') || url.includes('vedal')) {
+			return this.loadNeuroSama();
+		}
+
+		this.clearCurrentModel();
+		this.modelType = 'fbx';
+
+		const loader = new FBXLoader();
+		const group = await loader.loadAsync(url);
+		this.currentModelGroup = group;
+
+		// Center & scale
+		const box = new THREE.Box3().setFromObject(group);
+		const size = box.getSize(new THREE.Vector3());
+		const maxDim = Math.max(size.x, size.y, size.z);
+		const scale = 1.8 / (maxDim || 1);
+		group.scale.set(scale, scale, scale);
+
+		this.initialRotations.clear();
+		group.traverse((child) => {
+			if ((child as any).isMesh) {
+				const mesh = child as THREE.SkinnedMesh;
+				if (mesh.morphTargetDictionary) {
+					this.morphMesh = mesh;
+					this.morphDict = mesh.morphTargetDictionary;
+				}
+			}
+			if ((child as any).isBone) {
+				const name = child.name.toLowerCase();
+				if (name.includes('head') && !this.headNode) this.headNode = child;
+				if (name.includes('neck') && !this.neckNode) this.neckNode = child;
+				if (name.includes('hips') && !this.hipsNode) this.hipsNode = child;
+				this.initialRotations.set(child, child.rotation.clone());
+			}
+		});
+
+		this.scene.add(group);
+		this.setFraming(this.currentFraming);
+	}
+
+	private updateHumanoidArms(params: Record<string, number>, time: number) {
+		const initArmL = this.armLNode ? this.initialRotations.get(this.armLNode) : null;
+		const initArmR = this.armRNode ? this.initialRotations.get(this.armRNode) : null;
+		const initForeL = this.forearmLNode ? this.initialRotations.get(this.forearmLNode) : null;
+		const initForeR = this.forearmRNode ? this.initialRotations.get(this.forearmRNode) : null;
+		const initHandL = this.handLNode ? this.initialRotations.get(this.handLNode) : null;
+		const initHandR = this.handRNode ? this.initialRotations.get(this.handRNode) : null;
+
+		if (!initArmL || !initArmR || !this.armLNode || !this.armRNode) return;
+
+		const armLA = params['ParamArmLA'] ?? 0;
+		const armRA = params['ParamArmRA'] ?? 0;
+
+		if (this.activeFullBodyPose === 'wave') {
+			// Melambaikan tangan kanan
+			this.armRNode.rotation.z = initArmR.z + 1.2;
+			this.armRNode.rotation.x = initArmR.x - 0.6;
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 0.8;
+				this.forearmRNode.rotation.x = initForeR.x + Math.sin(time * 0.008) * 0.35;
+			}
+			if (this.handRNode && initHandR) {
+				this.handRNode.rotation.z = initHandR.z + Math.sin(time * 0.008) * 0.45;
+			}
+			this.armLNode.rotation.z = initArmL.z - Math.sin(time * 0.002) * 0.02;
+		} else if (this.activeFullBodyPose === 'peace') {
+			// Pose V / Peace sign
+			this.armRNode.rotation.z = initArmR.z + 1.0;
+			this.armRNode.rotation.y = initArmR.y - 0.5;
+			this.armRNode.rotation.x = initArmR.x - 0.8;
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 1.2;
+			}
+			if (this.handRNode && initHandR) {
+				this.handRNode.rotation.y = initHandR.y + 0.5;
+			}
+			this.armLNode.rotation.z = initArmL.z;
+		} else if (this.activeFullBodyPose === 'heart') {
+			// Pose Hati / Heart shape
+			this.armLNode.rotation.z = initArmL.z - 0.7;
+			this.armLNode.rotation.x = initArmL.x - 0.5;
+			this.armRNode.rotation.z = initArmR.z + 0.7;
+			this.armRNode.rotation.x = initArmR.x - 0.5;
+			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.z = initForeL.z - 0.8;
+			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.z = initForeR.z + 0.8;
+		} else if (this.activeFullBodyPose === 'stand') {
+			// Pose tegak natural
+			this.armLNode.rotation.copy(initArmL);
+			this.armRNode.rotation.copy(initArmR);
+			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.copy(initForeL);
+			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.copy(initForeR);
+		} else {
+			// Idle atau pelacakan tangan MediaPipe
+			const hasWebcamArmL = armLA > 12;
+			const hasWebcamArmR = armRA > 12;
+
+			if (hasWebcamArmL) {
+				const liftL = armLA / 30;
+				this.armLNode.rotation.z = initArmL.z - liftL * 1.3;
+				this.armLNode.rotation.x = initArmL.x - liftL * 0.4;
+				if (this.forearmLNode && initForeL) {
+					this.forearmLNode.rotation.z = initForeL.z - liftL * 0.6;
+				}
+			} else {
+				this.armLNode.rotation.z = initArmL.z + Math.sin(time * 0.002) * 0.02;
+				if (this.forearmLNode && initForeL) this.forearmLNode.rotation.copy(initForeL);
+			}
+
+			if (hasWebcamArmR) {
+				const liftR = armRA / 30;
+				this.armRNode.rotation.z = initArmR.z + liftR * 1.3;
+				this.armRNode.rotation.x = initArmR.x - liftR * 0.4;
+				if (this.forearmRNode && initForeR) {
+					this.forearmRNode.rotation.z = initForeR.z + liftR * 0.6;
+				}
+			} else {
+				this.armRNode.rotation.z = initArmR.z - Math.sin(time * 0.002) * 0.02;
+				if (this.forearmRNode && initForeR) this.forearmRNode.rotation.copy(initForeR);
+			}
+		}
+	}
+
+	// 5. Real-Time Vision Tracking Update Loop
 	updateParameters(params: Record<string, number>) {
 		const rad = Math.PI / 180;
 		const yaw = (params['ParamAngleX'] || 0) * rad;
@@ -353,14 +668,120 @@ export class ThreeStage {
 		const armLA = params['ParamArmLA'] ?? 0;
 		const armRA = params['ParamArmRA'] ?? 0;
 
-		// Apply Head Rotation
+		if (this.modelType === 'fbx') {
+			const initHead = this.headNode ? this.initialRotations.get(this.headNode) : null;
+			const initNeck = this.neckNode ? this.initialRotations.get(this.neckNode) : null;
+			const initHips = this.hipsNode ? this.initialRotations.get(this.hipsNode) : null;
+			const initSpine = this.spineNode ? this.initialRotations.get(this.spineNode) : null;
+			const initTorso = this.torsoNode ? this.initialRotations.get(this.torsoNode) : null;
+
+			// 1. Head & Neck Tracking (Face Recognition)
+			if (this.headNode && initHead) {
+				this.headNode.rotation.y = initHead.y + yaw * 0.75;
+				this.headNode.rotation.x = initHead.x - pitch * 0.75;
+				this.headNode.rotation.z = initHead.z - roll * 0.75;
+			}
+			if (this.neckNode && initNeck) {
+				this.neckNode.rotation.y = initNeck.y + yaw * 0.25;
+				this.neckNode.rotation.x = initNeck.x - pitch * 0.25;
+				this.neckNode.rotation.z = initNeck.z - roll * 0.25;
+			}
+
+			// 2. Eye Gaze (Iris)
+			if (this.eyeLNode && this.eyeRNode) {
+				const initEyeL = this.initialRotations.get(this.eyeLNode);
+				const initEyeR = this.initialRotations.get(this.eyeRNode);
+				if (initEyeL && initEyeR) {
+					this.eyeLNode.rotation.y = initEyeL.y + eyeBallX * 0.2;
+					this.eyeLNode.rotation.x = initEyeL.x - eyeBallY * 0.15;
+					this.eyeRNode.rotation.y = initEyeR.y + eyeBallX * 0.2;
+					this.eyeRNode.rotation.x = initEyeR.x - eyeBallY * 0.15;
+				}
+			}
+
+			// 3. Morph Targets (Expressions & Lip-Sync)
+			if (this.morphMesh && this.morphMesh.morphTargetInfluences) {
+				const dict = this.morphDict;
+				const infl = this.morphMesh.morphTargetInfluences;
+
+				// Eye Blink
+				const blinkIdx = dict['vrc.blink'];
+				if (blinkIdx !== undefined) {
+					const avgBlink = Math.min(eyeBlinkL, eyeBlinkR);
+					const blinkVal = Math.max(0, Math.min(1.0, (1.0 - avgBlink) * 1.25));
+					infl[blinkIdx] = this.activeExpression === 'vrc.blink' ? 1.0 : blinkVal;
+				}
+
+				// Lip sync mouth open
+				const aaIdx = dict['vrc.aa'];
+				const ohIdx = dict['vrc.oh'];
+				if (aaIdx !== undefined) {
+					infl[aaIdx] = this.activeExpression === 'vrc.aa' ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
+				}
+				if (ohIdx !== undefined) {
+					infl[ohIdx] = this.activeExpression === 'vrc.oh' ? 1.0 : (mouthOpen > 0.4 && Math.abs(mouthForm) < 0.2 ? mouthOpen * 0.8 : 0);
+				}
+
+				// Smile
+				const eeIdx = dict['vrc.ee'];
+				if (eeIdx !== undefined) {
+					const smileVal = mouthForm > 0.1 ? mouthForm : 0;
+					infl[eeIdx] = this.activeExpression === 'vrc.ee' ? 1.0 : Math.max(0, Math.min(1.0, smileVal));
+				}
+
+				// Star eyes (Neuro-sama signature!)
+				const starsIdx = dict['stars'];
+				if (starsIdx !== undefined) {
+					infl[starsIdx] = this.activeExpression === 'stars' ? 1.0 : 0;
+				}
+
+				// Blush
+				const blushIdx = dict['blush'];
+				if (blushIdx !== undefined) {
+					const autoBlush = mouthForm > 0.5 ? 0.4 : 0;
+					infl[blushIdx] = this.activeExpression === 'blush' ? 1.0 : autoBlush;
+				}
+			}
+
+			// 4. Full Body Sway & Breathing Physics
+			const time = performance.now();
+			const breathOffset = Math.sin(time * 0.002) * 0.02;
+
+			if (this.spineNode && initSpine) {
+				this.spineNode.rotation.y = initSpine.y + yaw * 0.15;
+				this.spineNode.rotation.x = initSpine.x + breathOffset;
+				this.spineNode.rotation.z = initSpine.z - roll * 0.1;
+			}
+			if (this.torsoNode && initTorso) {
+				this.torsoNode.rotation.y = initTorso.y + yaw * 0.1;
+				this.torsoNode.rotation.x = initTorso.x + breathOffset * 1.2;
+			}
+			if (this.hipsNode && initHips) {
+				this.hipsNode.position.y = 0.86 + Math.sin(time * 0.002) * 0.004;
+				this.hipsNode.rotation.y = initHips.y + Math.sin(time * 0.001) * 0.015;
+			}
+
+			// 5. Humanoid Arms (Gestures & Idle)
+			this.updateHumanoidArms(params, time);
+
+			// 6. Secondary Hair & Skirt Sway
+			const sway = Math.sin(time * 0.003) * 0.035;
+			for (const b of this.hairBones) {
+				b.rotation.z += (sway - b.rotation.z * 0.04) * 0.08;
+			}
+			for (const b of this.skirtBones) {
+				b.rotation.x += (-breathOffset * 0.4 - b.rotation.x * 0.04) * 0.08;
+			}
+			return;
+		}
+
+		// Procedural Cat Mode
 		if (this.headNode) {
 			this.headNode.rotation.y = yaw;
 			this.headNode.rotation.x = -pitch;
 			this.headNode.rotation.z = -roll;
 		}
 
-		// Ear twitch physics on head movement
 		if (this.earLNode) {
 			this.earLNode.rotation.z = 0.35 + yaw * 0.2;
 		}
@@ -368,7 +789,6 @@ export class ThreeStage {
 			this.earRNode.rotation.z = -0.35 + yaw * 0.2;
 		}
 
-		// Apply Eye Blinks & Gaze (Procedural Cat)
 		if (this.eyeLNode) {
 			this.eyeLNode.scale.y = Math.max(0.08, eyeBlinkL);
 			this.eyeLNode.position.x = -0.2 + eyeBallX * 0.04;
@@ -380,17 +800,14 @@ export class ThreeStage {
 			this.eyeRNode.position.y = 0.05 + eyeBallY * 0.03;
 		}
 
-		// Apply Mouth Opening & Expression
 		if (this.mouthNode) {
 			this.mouthNode.scale.y = Math.max(0.2, 1 + mouthOpen * 3.5);
 			this.mouthNode.scale.x = Math.max(0.5, 1 + Math.abs(mouthForm) * 0.35);
 			this.mouthNode.position.x = mouthX * 0.05;
 			this.mouthNode.position.y = -0.14 - mouthOpen * 0.06;
-			// Invert torus rotation to curve downward for :( frown
 			this.mouthNode.rotation.z = mouthForm < -0.15 ? 0 : Math.PI;
 		}
 
-		// Apply Arm / Paw gestures (Elevation & Interactive High-Five)
 		const isHighFiveL = armLA > 24 || (params['ParamArmLB'] ?? 0) > 0.5;
 		const isHighFiveR = armRA > 24 || (params['ParamArmRB'] ?? 0) > 0.5;
 
@@ -409,7 +826,6 @@ export class ThreeStage {
 			this.pawRNode.rotation.x = isHighFiveR ? -1.1 : -lift * 0.5;
 		}
 
-		// Tail Wagging
 		if (this.tailNode) {
 			const time = performance.now();
 			this.tailNode.rotation.z = Math.sin(time * 0.003) * 0.35;
@@ -427,6 +843,7 @@ export class ThreeStage {
 			this.mixer = null;
 		}
 		this.headNode = null;
+		this.neckNode = null;
 		this.eyeLNode = null;
 		this.eyeRNode = null;
 		this.mouthNode = null;
@@ -435,6 +852,22 @@ export class ThreeStage {
 		this.tailNode = null;
 		this.earLNode = null;
 		this.earRNode = null;
+		this.hipsNode = null;
+		this.spineNode = null;
+		this.torsoNode = null;
+		this.shoulderLNode = null;
+		this.shoulderRNode = null;
+		this.armLNode = null;
+		this.armRNode = null;
+		this.forearmLNode = null;
+		this.forearmRNode = null;
+		this.handLNode = null;
+		this.handRNode = null;
+		this.morphMesh = null;
+		this.morphDict = {};
+		this.hairBones = [];
+		this.skirtBones = [];
+		this.initialRotations.clear();
 		this.gltfBones.clear();
 	}
 
@@ -443,6 +876,12 @@ export class ThreeStage {
 			const now = performance.now();
 			const delta = (now - this.lastFrameTime) / 1000;
 			this.lastFrameTime = now;
+
+			if (this.camera) {
+				this.camera.position.lerp(this.cameraTargetPos, 0.08);
+				this.currentLookAt.lerp(this.cameraLookTarget, 0.08);
+				this.camera.lookAt(this.currentLookAt);
+			}
 
 			if (this.mixer) {
 				this.mixer.update(delta);
