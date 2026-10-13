@@ -1052,8 +1052,8 @@
 										<!-- Deteksi Wajah MediaPipe (Face Recognition) -->
 										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
 											<div>
-												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Deteksi Wajah &amp; Ekspresi</span>
-												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Lacak rotasi kepala, kedipan mata, alis, dan gerak bibir via MediaPipe</span>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Deteksi Wajah &amp; Ekspresi (Live2D &amp; 3D)</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Lacak rotasi kepala, kedipan mata, alis, dan gerak bibir via MediaPipe (berlaku penuh untuk model Live2D Cubism &amp; avatar 3D)</span>
 											</div>
 											<button
 												onclick={() => {

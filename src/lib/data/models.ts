@@ -413,16 +413,6 @@ export interface CommunityLegendItem {
 	tags: string[];
 }
 
-export const COMMUNITY_LEGEND_CATALOG: CommunityLegendItem[] = [
-	{
-		id: 'legend-neurosama',
-		name: 'Neuro-sama (ネウロ・サマ - AI VTuber Legend)',
-		author: 'Vedal987 (AI Dev) & Anny (Original Art) / Community Live2D Rig',
-		avatarUrl: '/models/previews/neurosama.svg',
-		sourceUrl: 'https://www.twitch.tv/vedal987',
-		description: 'Tribute showcase untuk avatar AI VTuber paling terkenal di dunia karya Vedal987 & artist Anny. Menampilkan estetika anime rambut cokelat dengan jepit pita dan responsivitas interaktif.',
-		copyright: 'Non-commercial community tribute based on Neuro-sama (created by Vedal987, art by Anny). All intellectual property belongs to their respective creators.',
-		tags: ['AI VTuber', 'Neuro-sama', 'Vedal987', 'Anny', 'Tribute Showcase', 'Live2D Community']
-	}
-];
+export const COMMUNITY_LEGEND_CATALOG: CommunityLegendItem[] = [];
+
 

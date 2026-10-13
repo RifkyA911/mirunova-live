@@ -14,6 +14,7 @@
 	import TosModal from '#lib/components/TosModal.svelte';
 	import AssistButton from '#lib/components/AssistButton.svelte';
 	import LayerManagerModal from '#lib/components/LayerManagerModal.svelte';
+	import StudioQuickHud from '#lib/components/StudioQuickHud.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
@@ -528,6 +529,9 @@
 
 		<!-- Photoshop Layer Manager, Accessories & Collab Modal -->
 		<LayerManagerModal />
+
+		<!-- Universal Quick-Action Studio HUD (Framing, Ekspresi, Poses & Tracking - Live2D & 3D) -->
+		<StudioQuickHud />
 	{/if}
 
 	<!-- 4. GUI Locked Floating Indicator & Unlock Button (Pojok Kiri Bawah, icon only, hover tooltip) -->

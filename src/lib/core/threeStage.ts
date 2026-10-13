@@ -162,8 +162,14 @@ export class ThreeStage {
 				const idx = this.morphDict[k];
 				if (idx !== undefined) infl[idx] = 0;
 			}
-			if (name && this.morphDict[name] !== undefined) {
-				infl[this.morphDict[name]] = 1.0;
+			let key = name;
+			if (name === 'smile') key = 'vrc.ee';
+			else if (name === 'wink') key = 'vrc.blink';
+			else if (name === 'surprised' || name === 'surprise') key = 'vrc.oh';
+			else if (name === 'open') key = 'vrc.aa';
+
+			if (key && this.morphDict[key] !== undefined) {
+				infl[this.morphDict[key]] = 1.0;
 			}
 		}
 	}
@@ -443,10 +449,15 @@ export class ThreeStage {
 		this.clearCurrentModel();
 		this.currentModelGroup = group;
 
-		// Load textures with SRGBColorSpace
+		// Load textures with SRGBColorSpace and reactive onLoad trigger
 		const texLoader = new THREE.TextureLoader();
 		const loadTex = (url: string) => {
-			const t = texLoader.load(url);
+			const t = texLoader.load(url, () => {
+				t.needsUpdate = true;
+				if (this.renderer && this.scene && this.camera) {
+					this.renderer.render(this.scene, this.camera);
+				}
+			});
 			t.colorSpace = THREE.SRGBColorSpace;
 			return t;
 		};
@@ -473,31 +484,53 @@ export class ThreeStage {
 				if (Array.isArray(mesh.material)) {
 					mesh.material.forEach((mat: THREE.Material, idx: number) => {
 						const m = mat as THREE.MeshPhongMaterial;
+						m.color.setHex(0xffffff); // Override FBX #cccccc dimming with vibrant clean white
+						m.side = THREE.DoubleSide; // Render both sides of anime hair, skirt folds & ribbons
+						m.specular = new THREE.Color(0x222222);
+						m.shininess = 10;
+
 						if (idx === 0) {
+							// Expressions texture (eyes, blush, open mouth)
 							m.map = textures.expressions;
 							m.transparent = true;
-							m.alphaTest = 0.05;
+							m.alphaTest = 0.02;
+							m.depthWrite = false; // Prevent z-fighting with face skin mesh
+							m.depthTest = true;
 						} else if (idx === 1) {
+							// Secondary clothes (ribbons, cuffs, tie, accents)
 							m.map = textures.secondaryClothes;
 							m.transparent = true;
 							m.alphaTest = 0.5;
+							m.depthWrite = true;
 						} else if (idx === 2) {
+							// Main clothes (school uniform, socks, shoes)
 							m.map = textures.clothes;
 							m.transparent = false;
+							m.depthWrite = true;
 						} else if (idx === 3) {
+							// Hair (pigtails, bangs, strands)
 							m.map = textures.hair;
 							m.transparent = true;
 							m.alphaTest = 0.5;
+							m.depthWrite = true; // Essential for hair depth sorting!
 						} else if (idx === 4) {
+							// Body (face, skin, base eyes)
 							m.map = textures.body;
 							m.transparent = false;
+							m.depthWrite = true;
 						}
-						m.shininess = 12;
 						m.needsUpdate = true;
 					});
 				}
 			}
 		});
+
+		// Ground model on floor and center along X and Z
+		const box = new THREE.Box3().setFromObject(group);
+		const center = box.getCenter(new THREE.Vector3());
+		group.position.x = -center.x;
+		group.position.y = -box.min.y;
+		group.position.z = -center.z;
 
 		// Discover humanoid bones
 		this.headNode = group.getObjectByName('head') || null;
@@ -869,24 +902,26 @@ export class ThreeStage {
 				if (blinkIdx !== undefined) {
 					const avgBlink = Math.min(eyeBlinkL, eyeBlinkR);
 					const blinkVal = Math.max(0, Math.min(1.0, (1.0 - avgBlink) * 1.25));
-					infl[blinkIdx] = this.activeExpression === 'vrc.blink' ? 1.0 : blinkVal;
+					infl[blinkIdx] = (this.activeExpression === 'vrc.blink' || this.activeExpression === 'wink') ? 1.0 : blinkVal;
 				}
 
 				// Lip sync mouth open
 				const aaIdx = dict['vrc.aa'];
 				const ohIdx = dict['vrc.oh'];
 				if (aaIdx !== undefined) {
-					infl[aaIdx] = this.activeExpression === 'vrc.aa' ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
+					infl[aaIdx] = (this.activeExpression === 'vrc.aa' || this.activeExpression === 'open') ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
 				}
 				if (ohIdx !== undefined) {
-					infl[ohIdx] = this.activeExpression === 'vrc.oh' ? 1.0 : (mouthOpen > 0.4 && Math.abs(mouthForm) < 0.2 ? mouthOpen * 0.8 : 0);
+					infl[ohIdx] = (this.activeExpression === 'vrc.oh' || this.activeExpression === 'surprised' || this.activeExpression === 'surprise')
+						? 1.0
+						: (mouthOpen > 0.4 && Math.abs(mouthForm) < 0.2 ? mouthOpen * 0.8 : 0);
 				}
 
 				// Smile
 				const eeIdx = dict['vrc.ee'];
 				if (eeIdx !== undefined) {
 					const smileVal = mouthForm > 0.1 ? mouthForm : 0;
-					infl[eeIdx] = this.activeExpression === 'vrc.ee' ? 1.0 : Math.max(0, Math.min(1.0, smileVal));
+					infl[eeIdx] = (this.activeExpression === 'vrc.ee' || this.activeExpression === 'smile') ? 1.0 : Math.max(0, Math.min(1.0, smileVal));
 				}
 
 				// Star eyes (Neuro-sama signature!)

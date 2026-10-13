@@ -223,6 +223,21 @@
 			PARAM_MOUTH_FORM: 0.6,
 			Param149: 1.0 // Vivian blush
 		},
+		stars: {
+			ParamEyeLSmile: 1.0,
+			ParamEyeRSmile: 1.0,
+			PARAM_EYE_L_SMILE: 1.0,
+			PARAM_EYE_R_SMILE: 1.0,
+			ParamCheek: 0.9,
+			PARAM_CHEEK: 0.9,
+			ParamMouthForm: 0.8,
+			PARAM_MOUTH_FORM: 0.8,
+			ParamEyeLOpen: 1.15,
+			ParamEyeROpen: 1.15,
+			PARAM_EYE_L_OPEN: 1.15,
+			PARAM_EYE_R_OPEN: 1.15,
+			Param149: 0.8
+		},
 		angry: {
 			ParamBrowLAngle: -0.85,
 			ParamBrowRAngle: -0.85,

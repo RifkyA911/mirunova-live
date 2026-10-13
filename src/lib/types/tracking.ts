@@ -63,7 +63,7 @@ export type BackgroundStyle =
 	| 'custom-image'
 	| 'chroma';
 export type ScreenEffect = 'none' | 'vignette' | 'scanlines' | 'crt' | 'blur';
-export type PoseLoopMode = 'none' | 'idle-breath' | 'gentle-sway' | 'head-nod';
+export type PoseLoopMode = 'none' | 'idle-breath' | 'gentle-sway' | 'head-nod' | 'wave';
 export type UITheme =
 	| 'cyber-dark'
 	| 'midnight'
