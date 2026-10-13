@@ -12,6 +12,7 @@ export interface SavedUserConfig {
 	avatarEngine?: 'live2d' | '3d';
 	selected3DModelId?: string;
 	customGlbUrl?: string | null;
+	stageEnvironment?: 'grid' | 'room' | 'field' | 'void';
 	uiTheme?: string;
 	backgroundStyle?: string;
 	backgroundColor?: string;

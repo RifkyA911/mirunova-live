@@ -58,36 +58,32 @@
 </script>
 
 {#if !rigging.isObsMode && !rigging.isGuiLocked}
-	<!-- Apple iPhone AssistiveTouch Floating Button (Right Screen Edge with 30% Show, 8px margin on hover/active) -->
+	<!-- Floating Assistive Controls Circle Button (Perfect Circle FAB, positioned right-5) -->
 	<aside
 		aria-label={i18n.t('assist_button_title')}
-		class="fixed right-0 top-1/2 -translate-y-1/2 z-40 select-none flex items-center transition-all duration-300 ease-out {
-			isVisible ? '-translate-x-2' : 'translate-x-[70%] hover:-translate-x-2'
-		}"
+		class="fixed right-5 sm:right-6 top-1/2 -translate-y-1/2 z-40 select-none flex items-center"
 	>
-		<!-- 1. Floating Circular Assist Icon (Strictly Circular with overflow-hidden & concentric rings) -->
+		<!-- 1. Floating Circular Assist Icon (Strictly Perfect Circle with concentric rings) -->
 		<button
 			type="button"
 			onclick={toggleOpen}
 			aria-label={i18n.t('assist_button_title')}
-			title="{i18n.t('assist_button_title')} (Apple AssistiveTouch)"
+			title="{i18n.t('assist_button_title')} (Assistive Quick Controls)"
 			class="relative w-12 h-12 rounded-full overflow-hidden aspect-square flex items-center justify-center backdrop-blur-2xl border-2 shadow-2xl transition-all duration-300 cursor-pointer group active:scale-95 shrink-0 {
 				isVisible
 					? 'ring-2 ring-cyan-400/90 scale-105 opacity-100 shadow-cyan-500/50'
-					: 'opacity-80 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/30'
+					: 'opacity-90 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/30'
 			} {
 				isLightTheme
-					? 'bg-white/95 border-zinc-300 text-zinc-800 shadow-zinc-400/30'
+					? 'bg-zinc-900/95 border-zinc-700 text-white shadow-xl'
 					: 'bg-zinc-950/95 border-zinc-700/80 text-zinc-100 shadow-black/80'
 			}"
 		>
-			<!-- Concentric Circular Apple AssistiveTouch Rings -->
+			<!-- Concentric Circular Rings -->
 			<div class="absolute inset-1.5 rounded-full border border-dashed transition-all duration-300 {
 				isVisible
 					? 'border-cyan-400/70 rotate-45'
-					: isLightTheme
-					? 'border-zinc-400/60 group-hover:border-cyan-500/70'
-					: 'border-zinc-600/70 group-hover:border-cyan-400/70'
+					: 'border-zinc-500/60 group-hover:border-cyan-400/70'
 			}"></div>
 
 			<!-- Core Icon Dot -->
@@ -96,7 +92,7 @@
 					<Aperture class="w-5 h-5 text-cyan-400 animate-spin-slow" />
 				{:else}
 					<div class="relative flex items-center justify-center">
-						<SlidersHorizontal class="w-4 h-4 {isLightTheme ? 'text-zinc-700 group-hover:text-cyan-600' : 'text-zinc-300 group-hover:text-cyan-300'} transition-colors" />
+						<SlidersHorizontal class="w-4 h-4 text-zinc-200 group-hover:text-cyan-300 transition-colors" />
 						<span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/80"></span>
 					</div>
 				{/if}
@@ -118,7 +114,7 @@
 
 			<div
 				transition:fly={{ x: 24, duration: 220, easing: cubicOut }}
-				class="absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 w-60 p-3.5 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-colors duration-150 {
+				class="absolute right-16 top-1/2 -translate-y-1/2 w-64 p-3.5 rounded-2xl backdrop-blur-2xl border shadow-2xl transition-colors duration-150 {
 					isLightTheme
 						? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl'
 						: 'bg-zinc-950/95 border-zinc-800/90 text-zinc-200 shadow-2xl'

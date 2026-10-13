@@ -96,9 +96,11 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		stage.loadProceduralCat('tora');
 
 		expect(stage['currentModelGroup']).not.toBeNull();
-		// Without init(), scene has no lights, so exactly 1 child (the active model group)
-		expect(stage['scene'].children.length).toBe(1);
-		expect(stage['scene'].children[0]).toBe(stage['currentModelGroup']);
+		// Scene contains stageEnvironmentGroup and the active model group
+		expect(stage['scene'].children.includes(stage['currentModelGroup']!)).toBe(true);
+		expect(stage['scene'].children.includes(stage['stageEnvironmentGroup']!)).toBe(true);
+		// Exactly 1 model group exists (no orphaned models from previous loads)
+		expect(stage['scene'].children.filter((c) => c !== stage['stageEnvironmentGroup']).length).toBe(1);
 	});
 
 	it('should support interactive orbit rotation, auto-spin turntable, and angle reset', () => {

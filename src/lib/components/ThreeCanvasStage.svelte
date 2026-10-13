@@ -62,6 +62,12 @@
 		threeStage.setExpression(exp);
 	});
 
+	// Sync stageEnvironment with 3D scene (grid, room, field, void)
+	$effect(() => {
+		const env = rigging.stageEnvironment;
+		threeStage.setStageEnvironment(env);
+	});
+
 	let lastScreenshotSignal = 0;
 	$effect(() => {
 		const signal = rigging.screenshotSignal;

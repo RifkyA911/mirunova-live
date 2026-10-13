@@ -5,6 +5,7 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 export type CatVariant = 'mochi' | 'kuro' | 'tora';
 export type FramingMode3D = 'full' | 'half' | 'closeup';
 export type FullBodyPose3D = 'idle' | 'wave' | 'peace' | 'heart' | 'stand';
+export type StageEnvironment3D = 'grid' | 'room' | 'field' | 'void';
 
 export class ThreeStage {
 	private scene: THREE.Scene;
@@ -12,6 +13,10 @@ export class ThreeStage {
 	private renderer: THREE.WebGLRenderer | null = null;
 	private container: HTMLElement | null = null;
 	private animationFrameId: number | null = null;
+
+	// 3D Stage Environments ('grid' | 'room' | 'field' | 'void')
+	public currentStageEnv: StageEnvironment3D = 'grid';
+	private stageEnvironmentGroup: THREE.Group = new THREE.Group();
 
 	// Active Model Type & Root
 	public modelType: 'procedural' | 'fbx' | 'glb' = 'procedural';
@@ -73,6 +78,7 @@ export class ThreeStage {
 
 	constructor() {
 		this.scene = new THREE.Scene();
+		this.scene.add(this.stageEnvironmentGroup);
 		this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
 		this.updateCameraTargetPos();
 		this.camera.position.copy(this.cameraTargetPos);
@@ -113,6 +119,8 @@ export class ThreeStage {
 		const rimLight = new THREE.DirectionalLight(0xec4899, 1.0); // Pink rim light
 		rimLight.position.set(3, -1, -2);
 		this.scene.add(rimLight);
+
+		this.setStageEnvironment(this.currentStageEnv);
 
 		window.addEventListener('resize', this.handleResize);
 		this.startRenderLoop();
@@ -229,6 +237,159 @@ export class ThreeStage {
 
 	setFullBodyPose(pose: FullBodyPose3D) {
 		this.activeFullBodyPose = pose;
+	}
+
+	public setStageEnvironment(env: StageEnvironment3D) {
+		this.currentStageEnv = env;
+		// Clear existing stage environment meshes & materials
+		while (this.stageEnvironmentGroup.children.length > 0) {
+			const obj = this.stageEnvironmentGroup.children[0];
+			this.stageEnvironmentGroup.remove(obj);
+			if ((obj as THREE.Mesh).geometry) (obj as THREE.Mesh).geometry.dispose();
+			if ((obj as THREE.Mesh).material) {
+				const mat = (obj as THREE.Mesh).material;
+				if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+				else (mat as THREE.Material).dispose();
+			}
+		}
+
+		// Reset scene fog
+		this.scene.fog = null;
+
+		if (env === 'void') {
+			return;
+		}
+
+		if (env === 'grid') {
+			// Cyber Grid & Reflective Floor Disc
+			const floorGeo = new THREE.CircleGeometry(6, 48);
+			const floorMat = new THREE.MeshStandardMaterial({
+				color: 0x090d16,
+				roughness: 0.25,
+				metalness: 0.85,
+				transparent: true,
+				opacity: 0.92
+			});
+			const floor = new THREE.Mesh(floorGeo, floorMat);
+			floor.rotation.x = -Math.PI / 2;
+			floor.position.y = 0;
+			this.stageEnvironmentGroup.add(floor);
+
+			// Grid Helper
+			const grid = new THREE.GridHelper(12, 24, 0x06b6d4, 0x1e293b);
+			grid.position.y = 0.005;
+			this.stageEnvironmentGroup.add(grid);
+
+			// Outer glowing ring
+			const ringGeo = new THREE.RingGeometry(5.8, 6.0, 48);
+			const ringMat = new THREE.MeshBasicMaterial({
+				color: 0x06b6d4,
+				side: THREE.DoubleSide,
+				transparent: true,
+				opacity: 0.7
+			});
+			const ring = new THREE.Mesh(ringGeo, ringMat);
+			ring.rotation.x = -Math.PI / 2;
+			ring.position.y = 0.008;
+			this.stageEnvironmentGroup.add(ring);
+		} else if (env === 'room') {
+			// 3D Studio Room (Floor, back wall, side walls & neon accents)
+			const floorGeo = new THREE.PlaneGeometry(16, 16);
+			const floorMat = new THREE.MeshStandardMaterial({
+				color: 0x18181b,
+				roughness: 0.4,
+				metalness: 0.2
+			});
+			const floor = new THREE.Mesh(floorGeo, floorMat);
+			floor.rotation.x = -Math.PI / 2;
+			floor.position.y = 0;
+			this.stageEnvironmentGroup.add(floor);
+
+			// Back Wall
+			const backWallGeo = new THREE.PlaneGeometry(16, 10);
+			const backWallMat = new THREE.MeshStandardMaterial({
+				color: 0x121215,
+				roughness: 0.8,
+				metalness: 0.1
+			});
+			const backWall = new THREE.Mesh(backWallGeo, backWallMat);
+			backWall.position.set(0, 5, -8);
+			this.stageEnvironmentGroup.add(backWall);
+
+			// Left Wall
+			const leftWallGeo = new THREE.PlaneGeometry(16, 10);
+			const leftWallMat = new THREE.MeshStandardMaterial({
+				color: 0x141418,
+				roughness: 0.8,
+				metalness: 0.1
+			});
+			const leftWall = new THREE.Mesh(leftWallGeo, leftWallMat);
+			leftWall.position.set(-8, 5, 0);
+			leftWall.rotation.y = Math.PI / 2;
+			this.stageEnvironmentGroup.add(leftWall);
+
+			// Right Wall
+			const rightWallGeo = new THREE.PlaneGeometry(16, 10);
+			const rightWallMat = new THREE.MeshStandardMaterial({
+				color: 0x141418,
+				roughness: 0.8,
+				metalness: 0.1
+			});
+			const rightWall = new THREE.Mesh(rightWallGeo, rightWallMat);
+			rightWall.position.set(8, 5, 0);
+			rightWall.rotation.y = -Math.PI / 2;
+			this.stageEnvironmentGroup.add(rightWall);
+
+			// Stage Floor Circular Platform
+			const platformGeo = new THREE.CylinderGeometry(2.8, 3.0, 0.1, 32);
+			const platformMat = new THREE.MeshStandardMaterial({
+				color: 0x27272a,
+				roughness: 0.3,
+				metalness: 0.6
+			});
+			const platform = new THREE.Mesh(platformGeo, platformMat);
+			platform.position.set(0, 0.05, 0);
+			this.stageEnvironmentGroup.add(platform);
+
+			// Neon strip accent on wall
+			const stripGeo = new THREE.PlaneGeometry(12, 0.08);
+			const stripMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+			const strip = new THREE.Mesh(stripGeo, stripMat);
+			strip.position.set(0, 2.8, -7.98);
+			this.stageEnvironmentGroup.add(strip);
+
+			const strip2Geo = new THREE.PlaneGeometry(12, 0.08);
+			const strip2Mat = new THREE.MeshBasicMaterial({ color: 0xec4899 });
+			const strip2 = new THREE.Mesh(strip2Geo, strip2Mat);
+			strip2.position.set(0, 3.2, -7.98);
+			this.stageEnvironmentGroup.add(strip2);
+		} else if (env === 'field') {
+			// Open Field / Horizon Stage
+			const fieldGeo = new THREE.PlaneGeometry(40, 40);
+			const fieldMat = new THREE.MeshStandardMaterial({
+				color: 0x14532d, // dark lush green grass tone
+				roughness: 0.85,
+				metalness: 0.05
+			});
+			const field = new THREE.Mesh(fieldGeo, fieldMat);
+			field.rotation.x = -Math.PI / 2;
+			field.position.y = 0;
+			this.stageEnvironmentGroup.add(field);
+
+			// Circular stone stepping pedestal
+			const stoneGeo = new THREE.CylinderGeometry(2.4, 2.6, 0.12, 32);
+			const stoneMat = new THREE.MeshStandardMaterial({
+				color: 0x3f3f46,
+				roughness: 0.7,
+				metalness: 0.2
+			});
+			const stone = new THREE.Mesh(stoneGeo, stoneMat);
+			stone.position.set(0, 0.06, 0);
+			this.stageEnvironmentGroup.add(stone);
+
+			// Atmospheric distant fog
+			this.scene.fog = new THREE.FogExp2(0x064e3b, 0.035);
+		}
 	}
 
 	private handleResize = () => {
@@ -1102,7 +1263,7 @@ export class ThreeStage {
 		// Sweep all non-light/non-camera child objects from the scene to prevent duplicate models
 		const toRemove: THREE.Object3D[] = [];
 		this.scene.children.forEach((child) => {
-			if (!(child instanceof THREE.Light) && !(child instanceof THREE.Camera)) {
+			if (!(child instanceof THREE.Light) && !(child instanceof THREE.Camera) && child !== this.stageEnvironmentGroup) {
 				toRemove.push(child);
 			}
 		});

@@ -48,15 +48,22 @@
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 
 	const DEFAULT_EXPRESSIONS = [
-		{ id: '', label: 'Netral', emoji: '😐' },
-		{ id: 'stars', label: 'Star Eyes', emoji: '⭐' },
-		{ id: 'smile', label: 'Senyum', emoji: '😊' },
-		{ id: 'blush', label: 'Blush', emoji: '😳' },
-		{ id: 'wink', label: 'Kedip', emoji: '😉' },
-		{ id: 'surprised', label: 'Kaget', emoji: '😮' },
-		{ id: 'cry', label: 'Menangis', emoji: '😭' },
-		{ id: 'pout', label: 'Marah', emoji: '😡' },
-		{ id: 'love', label: 'Love', emoji: '💖' }
+		{ id: '', label: 'Netral', emoji: '😐', category: 'basic', badge: 'Normal' },
+		{ id: 'smile', label: 'Senyum', emoji: '😊', category: 'basic', badge: 'Happy' },
+		{ id: 'laugh', label: 'Tertawa', emoji: '😄', category: 'basic', badge: 'Joy' },
+		{ id: 'surprised', label: 'Kaget', emoji: '😲', category: 'basic', badge: 'Shock' },
+		{ id: 'cry', label: 'Menangis', emoji: '😭', category: 'basic', badge: 'Sad' },
+		{ id: 'angry', label: 'Marah', emoji: '😡', category: 'basic', badge: 'Mad' },
+		{ id: 'stars', label: 'Star Eyes', emoji: '⭐', category: 'anime', badge: 'Sparkle' },
+		{ id: 'blush', label: 'Blush', emoji: '😳', category: 'anime', badge: 'Shy' },
+		{ id: 'wink', label: 'Kedip', emoji: '😉', category: 'anime', badge: 'Wink' },
+		{ id: 'love', label: 'Love Eyes', emoji: '💖', category: 'anime', badge: 'Heart' },
+		{ id: 'pout', label: 'Cemberut', emoji: '😤', category: 'anime', badge: 'Pout' },
+		{ id: 'smug', label: 'Smug', emoji: '😏', category: 'anime', badge: 'Heh' },
+		{ id: 'tongue', label: 'Lidah Melet', emoji: '😜', category: 'anime', badge: 'Bleh' },
+		{ id: 'flat', label: 'Deadpan', emoji: '😑', category: 'anime', badge: 'Flat' },
+		{ id: 'dazed', label: 'Pusing', emoji: '💫', category: 'anime', badge: 'Dizzy' },
+		{ id: 'sleepy', label: 'Mengantuk', emoji: '😴', category: 'anime', badge: 'Sleep' },
 	];
 
 	function handleSelectExpression(expId: string, label: string) {
@@ -735,7 +742,7 @@
 				></div>
 
 				<div
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-80 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-3 z-[85] space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[460px] max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-3xl shadow-2xl p-4 z-[85] space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
 						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -743,98 +750,141 @@
 					<div class="flex items-center justify-between border-b pb-2 px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<div class="flex items-center gap-1.5">
 							<Sparkles class="w-4 h-4 text-pink-500 animate-pulse" />
-							<span class="font-bold text-xs tracking-wide {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-								Ekspresi Wajah & Panggung
+							<span class="font-bold text-xs tracking-wide uppercase {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+								Katalog Ekspresi Wajah & Panggung
 							</span>
 						</div>
 						{#if rigging.activeExpression}
 							<button
 								type="button"
 								onclick={() => handleSelectExpression('', 'Netral')}
-								class="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-pink-500/20 text-pink-400 border border-pink-500/30 text-[10px] font-mono cursor-pointer hover:bg-pink-500/30 transition-colors"
+								class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-500/20 text-pink-300 border border-pink-500/40 text-[10px] font-mono font-bold cursor-pointer hover:bg-pink-500/30 transition-colors"
 								title="Reset ke Netral"
 							>
-								<span>{rigging.activeExpression}</span>
+								<span>Reset Netral</span>
 								<X class="w-3 h-3" />
 							</button>
 						{:else}
-							<span class="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-500 font-mono">
-								Netral
+							<span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono font-bold">
+								Pose Netral
 							</span>
 						{/if}
 					</div>
 
 					<!-- Section 1: Kamera Framing Presets -->
-					<div class="space-y-1">
-						<span class="text-[10px] font-bold text-zinc-400 block px-1">FRAMING KAMERA</span>
-						<div class="grid grid-cols-3 gap-1 text-[11px]">
+					<div class="space-y-1.5">
+						<div class="flex items-center justify-between px-1">
+							<span class="text-[10px] font-bold text-zinc-400">FRAMING KAMERA AVATAR</span>
+							<span class="text-[9px] text-zinc-500 font-mono">[0] Reset</span>
+						</div>
+						<div class="grid grid-cols-3 gap-1.5 text-xs">
 							<button
 								type="button"
 								onclick={() => handleSelectFraming('full')}
-								class="p-1.5 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer {
+								class="p-2 rounded-xl border font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 									rigging.framingMode === 'full'
-										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm'
+										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm ring-1 ring-cyan-500/30 font-bold'
 										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
 								}"
 							>
-								<span>🧍</span>
+								<span class="text-base">🧍</span>
 								<span>Full Body</span>
 							</button>
 							<button
 								type="button"
 								onclick={() => handleSelectFraming('half')}
-								class="p-1.5 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer {
+								class="p-2 rounded-xl border font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 									rigging.framingMode === 'half'
-										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm'
+										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm ring-1 ring-cyan-500/30 font-bold'
 										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
 								}"
 							>
-								<span>🥋</span>
+								<span class="text-base">🥋</span>
 								<span>Half Body</span>
 							</button>
 							<button
 								type="button"
 								onclick={() => handleSelectFraming('closeup')}
-								class="p-1.5 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer {
+								class="p-2 rounded-xl border font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 									rigging.framingMode === 'closeup'
-										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm'
+										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm ring-1 ring-cyan-500/30 font-bold'
 										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
 								}"
 							>
-								<span>👤</span>
+								<span class="text-base">👤</span>
 								<span>Close-Up</span>
 							</button>
 						</div>
 					</div>
 
-					<!-- Section 2: Universal Facial Expressions Grid -->
-					<div class="space-y-1">
-						<span class="text-[10px] font-bold text-pink-400 block px-1">EKSPRESI WAJAH</span>
-						<div class="grid grid-cols-3 gap-1.5 max-h-44 overflow-y-auto custom-scrollbar pr-0.5">
+					<!-- Section 2: Universal Facial Expressions Grid (Wide & Detailed) -->
+					<div class="space-y-1.5">
+						<div class="flex items-center justify-between px-1">
+							<span class="text-[10px] font-bold text-pink-400">EKSPRESI UTAMA ({DEFAULT_EXPRESSIONS.length})</span>
+							<span class="text-[9px] text-zinc-500 font-mono">Hotkey [E]</span>
+						</div>
+						<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-56 overflow-y-auto custom-scrollbar pr-1">
 							{#each DEFAULT_EXPRESSIONS as exp}
 								<button
 									type="button"
 									onclick={() => handleSelectExpression(exp.id, exp.label)}
-									class="p-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer truncate {
+									class="p-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all cursor-pointer group active:scale-95 {
 										rigging.activeExpression === exp.id
-											? 'bg-pink-500/25 border-pink-500/60 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/40'
+											? 'bg-pink-500/25 border-pink-500/70 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/50'
 											: isLightTheme
-												? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100'
+												? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100 hover:border-zinc-300'
 												: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
 									}"
 								>
-									<span>{exp.emoji}</span>
-									<span class="truncate text-[11px]">{exp.label}</span>
+									<span class="flex items-center gap-1.5 truncate">
+										<span class="text-base shrink-0">{exp.emoji}</span>
+										<span class="truncate font-semibold text-[11px]">{exp.label}</span>
+									</span>
+									<span class="text-[9px] px-1 py-0.2 rounded font-mono shrink-0 {
+										rigging.activeExpression === exp.id ? 'bg-pink-500/30 text-pink-200' : 'bg-zinc-800 text-zinc-400'
+									}">{exp.badge}</span>
 								</button>
 							{/each}
 						</div>
 					</div>
 
-					<!-- Section 3: 3D Turntable & Orbit Controls (Only shown for 3D engine) -->
+					<!-- Section 3: Model-Specific Blendshapes / Expressions (if present) -->
+					{#if rigging.availableExpressions && rigging.availableExpressions.length > 0}
+						<div class="space-y-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+							<div class="flex items-center justify-between px-1">
+								<span class="text-[10px] font-bold text-cyan-400">EKSPRESI KHUSUS MODEL ({rigging.availableExpressions.length})</span>
+								<span class="text-[9px] text-zinc-500">Live2D / 3D Morph</span>
+							</div>
+							<div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+								{#each rigging.availableExpressions as mExp}
+									<button
+										type="button"
+										onclick={() => handleSelectExpression(mExp.name, mExp.label)}
+										class="p-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer truncate active:scale-95 {
+											rigging.activeExpression === mExp.name
+												? 'bg-cyan-500/25 border-cyan-500/70 text-cyan-300 font-bold shadow-sm ring-1 ring-cyan-500/50'
+												: isLightTheme
+													? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100'
+													: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
+										}"
+										title={mExp.label}
+									>
+										<span>✨</span>
+										<span class="truncate text-[11px] font-semibold">{mExp.label}</span>
+									</button>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<!-- Section 4: 3D Turntable & Orbit Controls (Only shown for 3D engine) -->
 					{#if rigging.avatarEngine === '3d'}
-						<div class="space-y-1 pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
-							<span class="text-[10px] font-bold text-amber-400 block px-1">ROTASI 3D STAGE</span>
-							<div class="flex items-center gap-1.5">
+						<div class="space-y-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+							<div class="flex items-center justify-between px-1">
+								<span class="text-[10px] font-bold text-amber-400">ROTASI 3D STAGE & ORBIT</span>
+								<span class="text-[9px] text-zinc-500">Turntable 360°</span>
+							</div>
+							<div class="grid grid-cols-4 gap-1.5">
 								<button
 									type="button"
 									onclick={() => {
@@ -842,7 +892,7 @@
 										rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
 										rigging.showToast(rigging.is3DAutoSpin ? '🔄 3D Auto-Spin 360° Aktif' : 'Auto-Spin Dihentikan');
 									}}
-									class="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border {
+									class="col-span-2 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border active:scale-95 {
 										rigging.is3DAutoSpin
 											? 'bg-amber-500/25 border-amber-500 text-amber-300 shadow-sm ring-1 ring-amber-500/50'
 											: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
@@ -850,7 +900,7 @@
 									title="Putar Otomatis 360° Turntable"
 								>
 									<span class="{rigging.is3DAutoSpin ? 'animate-spin' : ''}">🔄</span>
-									<span class="text-[11px]">{rigging.is3DAutoSpin ? 'Stop Spin' : '360° Spin'}</span>
+									<span class="text-[11px] font-bold">{rigging.is3DAutoSpin ? 'Stop Spin' : 'Auto-Spin 360°'}</span>
 								</button>
 
 								<button
@@ -860,7 +910,7 @@
 										threeStage.rotateOrbitDegrees(-45);
 										rigging.showToast('↺ Putar Sudut 3D -45°');
 									}}
-									class="p-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+									class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
 										isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 									}"
 									title="Putar Kiri 45°"
@@ -875,7 +925,7 @@
 										threeStage.rotateOrbitDegrees(45);
 										rigging.showToast('↻ Putar Sudut 3D +45°');
 									}}
-									class="p-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+									class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
 										isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 									}"
 									title="Putar Kanan 45°"
@@ -891,12 +941,12 @@
 										rigging.is3DAutoSpin = false;
 										rigging.showToast('🎯 Sudut 3D Direset ke Depan');
 									}}
-									class="p-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+									class="col-span-4 p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
 										isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 									}"
 									title="Reset Poros 3D ke Depan"
 								>
-									🎯 Reset
+									🎯 Reset Kamera Hadap Depan (0°)
 								</button>
 							</div>
 						</div>

@@ -239,6 +239,7 @@ export class RiggingStore {
 	selected3DModelId = $state<string>('mochi-cat');
 	is3DAutoSpin = $state<boolean>(false);
 	customGlbUrl = $state<string | null>(null);
+	stageEnvironment = $state<'grid' | 'room' | 'field' | 'void'>('grid');
 
 	// Active Model Details
 	selectedModelId = $state<string>('vivian');
@@ -300,6 +301,7 @@ export class RiggingStore {
 			selectedModelId: this.selectedModelId,
 			avatarEngine: this.avatarEngine,
 			selected3DModelId: this.selected3DModelId,
+			stageEnvironment: this.stageEnvironment,
 			customGlbUrl: this.customGlbUrl,
 			uiTheme: this.uiTheme,
 			backgroundStyle: this.backgroundStyle,
@@ -371,6 +373,7 @@ export class RiggingStore {
 		if (!saved) return;
 		if (saved.avatarEngine) this.avatarEngine = saved.avatarEngine;
 		if (saved.selected3DModelId) this.selected3DModelId = saved.selected3DModelId;
+		if (saved.stageEnvironment) this.stageEnvironment = saved.stageEnvironment as any;
 		if (saved.customGlbUrl !== undefined) this.customGlbUrl = saved.customGlbUrl;
 
 		// Safe model verification to prevent 404 from obsolete models like momose_aria
@@ -583,6 +586,11 @@ export class RiggingStore {
 		this.selectedModelId = id;
 		this.modelName = name;
 		this.modelUrl = url;
+		this.persist();
+	}
+
+	setStageEnvironment(env: 'grid' | 'room' | 'field' | 'void') {
+		this.stageEnvironment = env;
 		this.persist();
 	}
 

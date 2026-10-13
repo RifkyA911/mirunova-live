@@ -868,6 +868,22 @@ export class FaceTracker {
 			}
 			ctx.stroke();
 
+			// Draw glowing landmark dots at mesh vertices
+			ctx.save();
+			ctx.fillStyle = mode === 'wireframe' ? 'rgba(56, 189, 248, 0.9)' : 'rgba(6, 182, 212, 0.9)';
+			ctx.shadowColor = mode === 'wireframe' ? '#38bdf8' : '#06b6d4';
+			ctx.shadowBlur = 3;
+			ctx.beginPath();
+			for (let i = 0; i < faceLandmarks.length; i++) {
+				const pt = faceLandmarks[i];
+				if (pt) {
+					ctx.moveTo(pt.x * width + 1.2, pt.y * height);
+					ctx.arc(pt.x * width, pt.y * height, 1.2, 0, 2 * Math.PI);
+				}
+			}
+			ctx.fill();
+			ctx.restore();
+
 			// Draw glowing yellow pupils / iris (Landmarks 468 & 473)
 			const pupilIndices = [468, 473];
 			ctx.shadowColor = '#ffff00';

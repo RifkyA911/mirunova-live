@@ -19,7 +19,7 @@
 	import { voice } from '#lib/core/audio';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import { playSfx } from '#lib/core/sfx';
-	import { Radio, X, Sparkles, Check, Lock, Camera, CameraOff } from 'lucide-svelte';
+	import { Radio, X, Sparkles, Check, Lock } from 'lucide-svelte';
 
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
@@ -440,32 +440,8 @@
 
 	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode or when GUI is locked) -->
 	{#if !rigging.isObsMode && !rigging.isGuiLocked}
-		<!-- Header Brand Watermark, Real-Time FPS Telemetry HUD & Quick Camera Switcher (Solid Opacity) -->
+		<!-- Header Brand Watermark & Real-Time FPS Telemetry HUD (Solid Opacity) -->
 		<header class="absolute top-4 right-4 z-40 flex items-center gap-2 pointer-events-auto select-none">
-			<!-- Quick Camera Action Button with Camera Icon -->
-			<button
-				type="button"
-				onclick={() => {
-					playSfx('click');
-					rigging.cycleCameraViewMode();
-				}}
-				class="px-2.5 py-1.5 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-xl flex items-center gap-1.5 shadow-xl hover:border-cyan-500/50 transition-all cursor-pointer {
-					isLightTheme ? 'bg-white border-zinc-200 text-zinc-900 shadow-md' : 'text-zinc-200'
-				}"
-				title="Mode Kamera: {rigging.cameraViewMode.toUpperCase()} (Klik untuk ganti: 3D Wireframe / Rig / Raw)"
-			>
-				{#if rigging.cameraViewMode === 'wireframe'}
-					<CameraOff class="w-4 h-4 text-cyan-400" />
-					<span class="text-xs font-bold text-cyan-400 font-mono">3D Mesh</span>
-				{:else if rigging.cameraViewMode === 'rig'}
-					<Camera class="w-4 h-4 text-emerald-400" />
-					<span class="text-xs font-bold text-emerald-400 font-mono">Rig</span>
-				{:else}
-					<Camera class="w-4 h-4 text-zinc-400" />
-					<span class="text-xs font-bold text-zinc-300 font-mono">Raw</span>
-				{/if}
-			</button>
-
 			<!-- Live HUD FPS Counter Badge -->
 			{#if rigging.showFpsCounter}
 				<div

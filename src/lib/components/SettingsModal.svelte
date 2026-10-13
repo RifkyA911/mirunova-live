@@ -45,7 +45,8 @@
 		Square as StopSquare,
 		Volume1,
 		Bell,
-		Keyboard
+		Keyboard,
+		Box
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
@@ -67,6 +68,61 @@
 	let isPlayingTest = $state<boolean>(false);
 	let testPlaybackMode = $state<'raw' | 'converted' | null>(null);
 	let testTtsText = $state<string>('Halo halo! Tes suara anime kawaii.');
+
+	// Dedicated Text-To-Speech (TTS) Studio state
+	let ttsText = $state<string>('Halo halo! Selamat datang di live streaming MiruNova Live.');
+	let ttsVoice = $state<string>('');
+	let ttsPitch = $state<number>(1.2);
+	let ttsRate = $state<number>(1.0);
+	let isTtsSpeaking = $state<boolean>(false);
+	let availableTtsVoices = $state<SpeechSynthesisVoice[]>([]);
+
+	function loadTtsVoices() {
+		if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+			availableTtsVoices = window.speechSynthesis.getVoices();
+			if (!ttsVoice && availableTtsVoices.length > 0) {
+				const preferred = availableTtsVoices.find(
+					(v) => v.lang.startsWith('id') || v.lang.startsWith('ja') || v.lang.startsWith('en')
+				);
+				ttsVoice = preferred ? preferred.name : availableTtsVoices[0].name;
+			}
+		}
+	}
+
+	function handleSpeakTts() {
+		if (!ttsText.trim()) return;
+		playSfx('click');
+		if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+			window.speechSynthesis.cancel();
+			const utterance = new SpeechSynthesisUtterance(ttsText);
+			const selected = availableTtsVoices.find((v) => v.name === ttsVoice);
+			if (selected) utterance.voice = selected;
+			utterance.pitch = ttsPitch;
+			utterance.rate = ttsRate;
+			utterance.onstart = () => { isTtsSpeaking = true; };
+			utterance.onend = () => { isTtsSpeaking = false; };
+			utterance.onerror = () => { isTtsSpeaking = false; };
+			window.speechSynthesis.speak(utterance);
+			rigging.showToast('🔊 Memutar Text-To-Speech Browser Utterance...');
+		} else {
+			voice.synthesizeVoiceText(ttsText, rigging.voiceFilter);
+		}
+	}
+
+	function handleStopTts() {
+		playSfx('click');
+		if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+			window.speechSynthesis.cancel();
+		}
+		isTtsSpeaking = false;
+	}
+
+	function handleFormantSpeak(textToSpeak?: string) {
+		const txt = textToSpeak || ttsText;
+		playSfx('click');
+		voice.synthesizeVoiceText(txt, rigging.voiceFilter);
+		rigging.showToast(`✨ Memutar Formant TTS (DSP: ${rigging.voiceFilter})`);
+	}
 
 	async function handleRecordSample() {
 		if (isRecordingTest) return;
@@ -366,6 +422,10 @@
 
 	onMount(() => {
 		refreshDevices(false);
+		loadTtsVoices();
+		if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+			window.speechSynthesis.onvoiceschanged = () => loadTtsVoices();
+		}
 
 		const onDeviceChange = () => {
 			refreshDevices(false);
@@ -1657,6 +1717,211 @@
 				<!-- TAB 3: VOICE & AUDIO -->
 				{:else if activeTab === 'voice'}
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
+						<!-- Dedicated Prominent Card: Text-To-Speech (TTS) Studio & Voice Synthesis -->
+						<div class="col-span-1 md:col-span-2 p-5 rounded-2xl border space-y-4 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/90 shadow-xl'
+						}">
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+								<div class="flex items-center gap-3">
+									<div class="p-2.5 bg-gradient-to-br from-cyan-500/20 to-pink-500/20 border border-cyan-500/30 rounded-xl text-cyan-400">
+										<Volume1 class="w-5 h-5 text-cyan-400" />
+									</div>
+									<div>
+										<h3 class="text-sm sm:text-base font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+											<span>Text-to-Speech (TTS) Studio &amp; Sintesis Suara</span>
+											<span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+												AI Speech + DSP
+											</span>
+										</h3>
+										<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+											Ketik kalimat untuk diucapkan otomatis oleh avatar Anda lewat Speech Synthesis atau DSP Voice Changer
+										</p>
+									</div>
+								</div>
+
+								{#if isTtsSpeaking}
+									<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-mono animate-pulse">
+										<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+										<span>Sedang Berbicara...</span>
+									</div>
+								{/if}
+							</div>
+
+							<!-- Text Input Box & Quick Presets -->
+							<div class="space-y-2">
+								<div class="flex items-center justify-between text-xs">
+									<label for="tts-input" class="font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+										Teks Yang Ingin Diucapkan (Speech Prompt):
+									</label>
+									<span class="text-[10px] text-zinc-500 font-mono">{ttsText.length} karakter</span>
+								</div>
+
+								<div class="flex gap-2">
+									<input
+										id="tts-input"
+										type="text"
+										bind:value={ttsText}
+										placeholder="Ketik kalimat apapun yang ingin diucapkan avatar..."
+										class="flex-1 px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-cyan-500 transition-all {
+											isLightTheme ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400' : 'bg-zinc-950 border-zinc-800 text-zinc-100 placeholder-zinc-600'
+										}"
+										onkeydown={(e) => {
+											if (e.key === 'Enter') handleSpeakTts();
+										}}
+									/>
+
+									<button
+										type="button"
+										onclick={handleSpeakTts}
+										class="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-zinc-950 font-bold text-xs rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
+									>
+										<Play class="w-3.5 h-3.5" />
+										<span>Bicara (TTS)</span>
+									</button>
+
+									{#if isTtsSpeaking}
+										<button
+											type="button"
+											onclick={handleStopTts}
+											class="px-3 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0"
+										>
+											<StopSquare class="w-3.5 h-3.5" />
+											<span>Stop</span>
+										</button>
+									{/if}
+								</div>
+
+								<!-- Quick Preset Chips -->
+								<div class="flex items-center gap-1.5 flex-wrap pt-1">
+									<span class="text-[10px] font-medium {isLightTheme ? 'text-zinc-500' : 'text-zinc-500'}">Contoh Cepat:</span>
+									<button
+										type="button"
+										onclick={() => { ttsText = 'Halo halo semuanya! Selamat datang di live streaming!'; handleSpeakTts(); }}
+										class="text-[10px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer active:scale-95 {
+											isLightTheme ? 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200' : 'bg-pink-950/40 hover:bg-pink-900/50 text-pink-300 border-pink-800/60'
+										}"
+									>
+										🌸 Anime Kawaii Intro
+									</button>
+									<button
+										type="button"
+										onclick={() => { ttsText = 'Konnichiwa minna-san! Genki desu ka? Selamat menonton ya!'; handleSpeakTts(); }}
+										class="text-[10px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer active:scale-95 {
+											isLightTheme ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border-cyan-200' : 'bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border-cyan-800/60'
+										}"
+									>
+										🎙️ VTuber Greeting
+									</button>
+									<button
+										type="button"
+										onclick={() => { ttsText = 'System online. Telemetry connection established.'; handleSpeakTts(); }}
+										class="text-[10px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer active:scale-95 {
+											isLightTheme ? 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200' : 'bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border-purple-800/60'
+										}"
+									>
+										🤖 Cyber System AI
+									</button>
+									<button
+										type="button"
+										onclick={() => { ttsText = 'Wah terima kasih banyak atas traktirannya yaa! Love you all!'; handleSpeakTts(); }}
+										class="text-[10px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer active:scale-95 {
+											isLightTheme ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border-amber-800/60'
+										}"
+									>
+										💖 Super Chat Thanks
+									</button>
+								</div>
+							</div>
+
+							<!-- Voice Synthesis Pitch, Speed & Model Options -->
+							<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
+								<!-- Voice Picker -->
+								<div>
+									<label for="tts-voice-select" class="block text-[11px] font-semibold mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+										Suara Sistem (Browser Voice):
+									</label>
+									<select
+										id="tts-voice-select"
+										bind:value={ttsVoice}
+										class="w-full px-2.5 py-1.5 rounded-xl border text-xs focus:outline-none focus:border-cyan-500 cursor-pointer {
+											isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-100'
+										}"
+									>
+										{#if availableTtsVoices.length === 0}
+											<option value="">Default Speech Voice</option>
+										{:else}
+											{#each availableTtsVoices as v}
+												<option value={v.name}>{v.name} ({v.lang})</option>
+											{/each}
+										{/if}
+									</select>
+								</div>
+
+								<!-- Pitch Slider -->
+								<div>
+									<div class="flex justify-between text-[11px] font-semibold mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+										<span>Nada Suara (Pitch):</span>
+										<span class="font-mono text-cyan-400 font-bold">{ttsPitch.toFixed(1)}x</span>
+									</div>
+									<input
+										type="range"
+										min="0.5"
+										max="2.0"
+										step="0.1"
+										bind:value={ttsPitch}
+										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+									/>
+									<div class="flex justify-between text-[9px] text-zinc-500 font-mono mt-0.5">
+										<span>Berat (0.5x)</span>
+										<span>Normal (1.0x)</span>
+										<span>Tinggi/Chibi (2.0x)</span>
+									</div>
+								</div>
+
+								<!-- Speed / Rate Slider -->
+								<div>
+									<div class="flex justify-between text-[11px] font-semibold mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+										<span>Kecepatan Bicara (Speed):</span>
+										<span class="font-mono text-pink-400 font-bold">{ttsRate.toFixed(1)}x</span>
+									</div>
+									<input
+										type="range"
+										min="0.5"
+										max="2.0"
+										step="0.1"
+										bind:value={ttsRate}
+										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-pink-400"
+									/>
+									<div class="flex justify-between text-[9px] text-zinc-500 font-mono mt-0.5">
+										<span>Lambat (0.5x)</span>
+										<span>Normal (1.0x)</span>
+										<span>Cepat (2.0x)</span>
+									</div>
+								</div>
+							</div>
+
+							<!-- Formant DSP Voice Changer Integration Button -->
+							<div class="p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 {
+								isLightTheme ? 'bg-cyan-50/60 border-cyan-200' : 'bg-cyan-950/20 border-cyan-800/40'
+							}">
+								<div>
+									<span class="font-bold text-xs text-cyan-400 block">Uji Sintesis Suara via DSP Voice Changer Filter</span>
+									<span class="text-[10px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+										Menyalurkan sintesis suara teks langsung melewati filter DSP Voice Changer aktif ({rigging.voiceFilter})
+									</span>
+								</div>
+
+								<button
+									type="button"
+									onclick={() => handleFormantSpeak()}
+									class="px-3.5 py-2 bg-pink-500 hover:bg-pink-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
+								>
+									<Sparkles class="w-3.5 h-3.5" />
+									<span>Tes via DSP ({rigging.voiceFilter})</span>
+								</button>
+							</div>
+						</div>
+
 						<!-- Real Web Audio API Microphone Engine -->
 						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
 							<div class="flex items-center justify-between">
@@ -2437,6 +2702,136 @@
 				<!-- TAB 5: STAGE & EFFECTS (PANGGUNG & KANVAS) -->
 				{:else if activeTab === 'stage'}
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
+						<!-- Dedicated Card: 3D Stage Environments (Lantai Grid, Studio Room, Open Field, Void) -->
+						<div class="col-span-1 md:col-span-2 p-5 rounded-2xl border space-y-4 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/90 shadow-xl'
+						}">
+							<div class="flex items-center justify-between border-b pb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+								<div class="flex items-center gap-2.5">
+									<div class="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-500">
+										<Box class="w-4 h-4" />
+									</div>
+									<div>
+										<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+											Lingkungan Panggung 3D (Virtual 3D Stage Environment)
+										</h3>
+										<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+											Pilihan lantai, ruangan studio, dan arena panggung virtual untuk model 3D (Neuro-sama, Manhattan Cafe, Kucing, dsb)
+										</p>
+									</div>
+								</div>
+
+								<span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+									3D Active: {rigging.stageEnvironment.toUpperCase()}
+								</span>
+							</div>
+
+							<!-- 4 Stage Environment Cards Grid -->
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+								<!-- 1. Grid / Lantai Reflektif -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('grid');
+										rigging.showToast('✓ Panggung 3D: Cyber Grid & Lantai Reflektif');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'grid'
+											? 'bg-cyan-500/15 border-cyan-500 ring-2 ring-cyan-500/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-cyan-950/60 to-zinc-950 border border-cyan-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute inset-0 bg-[radial-gradient(#06b6d4_1px,transparent_1px)] [background-size:12px_12px] opacity-40"></div>
+										<span class="text-2xl">🌐</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Cyber Grid &amp; Floor</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Lantai reflektif gelap dengan grid neon cyan dan ring panggung futuristik
+									</p>
+								</button>
+
+								<!-- 2. Room / Studio 3D -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('room');
+										rigging.showToast('✓ Panggung 3D: Studio Room');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'room'
+											? 'bg-pink-500/15 border-pink-500 ring-2 ring-pink-500/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-pink-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute w-full h-1 bg-gradient-to-r from-cyan-400 to-pink-500 top-3"></div>
+										<span class="text-2xl">🏠</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Studio Room</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Ruang studio VTuber lengkap dengan lantai panggung, dinding, dan aksen neon strip
+									</p>
+								</button>
+
+								<!-- 3. Field / Taman Alam Terbuka -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('field');
+										rigging.showToast('✓ Panggung 3D: Open Field (Taman Terbuka)');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'field'
+											? 'bg-emerald-500/15 border-emerald-500 ring-2 ring-emerald-500/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-emerald-950/70 to-zinc-950 border border-emerald-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<span class="text-2xl">🌲</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Open Field &amp; Horizon</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Panggung terbuka dengan hamparan rumput hijau, pedestal batu, dan kabut atmosferik
+									</p>
+								</button>
+
+								<!-- 4. Void / Transparan Minimal -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('void');
+										rigging.showToast('✓ Panggung 3D: Void Minimal (Transparan)');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'void'
+											? 'bg-purple-500/15 border-purple-500 ring-2 ring-purple-500/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-zinc-950 border border-purple-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<span class="text-2xl">✨</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Void Minimal (Alpha)</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Tanpa lantai atau dinding 3D, cocok untuk OBS browser source / background kustom 2D
+									</p>
+								</button>
+							</div>
+						</div>
+
 						<!-- Card 1: Latar Belakang & Efek Layar -->
 						<div class="p-5 rounded-2xl border space-y-4 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
