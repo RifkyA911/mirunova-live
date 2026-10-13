@@ -46,7 +46,7 @@ describe('VoiceEngine & Voice Changer DSP Presets', () => {
 	});
 
 	it('should verify Little Rose animated sticker accessories are registered in riggingStore', () => {
-		const roseProps = rigging.activeAccessories.filter((a) => a.id.startsWith('rose-'));
+		const roseProps = rigging.activeAccessories.filter((a: any) => a.id.startsWith('rose-'));
 		expect(roseProps.length).toBeGreaterThanOrEqual(8);
 
 		for (const prop of roseProps) {
@@ -55,5 +55,13 @@ describe('VoiceEngine & Voice Changer DSP Presets', () => {
 			expect(prop.name).toContain('Little Rose');
 			expect(prop.visible).toBe(false); // default off
 		}
+	});
+
+	it('should handle sample playback gracefully when no sample has been recorded', async () => {
+		expect(voice.hasRecordedSample()).toBe(false);
+		const rawRes = await voice.playRawSample();
+		expect(rawRes).toBe(false);
+		const convRes = await voice.playConvertedSample();
+		expect(convRes).toBe(false);
 	});
 });

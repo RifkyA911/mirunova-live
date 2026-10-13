@@ -89,23 +89,35 @@
 		}
 	}
 
-	function handlePlayRawSample() {
+	async function handlePlayRawSample() {
 		if (!hasTestSample) return;
 		playSfx('click');
 		isPlayingTest = true;
 		testPlaybackMode = 'raw';
-		voice.playRawSample(() => {
+		const played = await voice.playRawSample(() => {
 			isPlayingTest = false;
 			testPlaybackMode = null;
 		});
+		if (!played) {
+			isPlayingTest = false;
+			testPlaybackMode = null;
+			rigging.showToast('Gagal memutar sampel audio');
+		}
 	}
 
-	function handlePlayConvertedSample() {
+	async function handlePlayConvertedSample() {
 		if (!hasTestSample) return;
 		playSfx('click');
 		isPlayingTest = true;
 		testPlaybackMode = 'converted';
-		const played = voice.playConvertedSample(() => {
+
+		if (rigging.voiceFilter === 'none') {
+			rigging.setVoiceFilter('anime-girl');
+			voice.setFilter('anime-girl');
+			rigging.showToast('✓ Model Suara aktif: Kawaii Anime Girl (+5 Semitones)');
+		}
+
+		const played = await voice.playConvertedSample(() => {
 			isPlayingTest = false;
 			testPlaybackMode = null;
 		}, rigging.voiceFilter);

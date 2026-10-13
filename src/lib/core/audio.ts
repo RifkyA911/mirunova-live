@@ -181,11 +181,15 @@ class VoiceEngine {
 			}
 
 			const constraints: MediaStreamConstraints = {
-				audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+				audio: deviceId && deviceId !== 'default' ? { deviceId: { exact: deviceId } } : true,
 				video: false
 			};
 
-			this.micStream = await navigator.mediaDevices.getUserMedia(constraints);
+			try {
+				this.micStream = await navigator.mediaDevices.getUserMedia(constraints);
+			} catch {
+				this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+			}
 			this.sourceNode = this.audioCtx.createMediaStreamSource(this.micStream);
 
 			// DSP Node 0: Realtime Granular Pitch Shifter
@@ -542,10 +546,14 @@ class VoiceEngine {
 
 			if (!streamToUse || !streamToUse.active) {
 				const constraints: MediaStreamConstraints = {
-					audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+					audio: deviceId && deviceId !== 'default' ? { deviceId: { exact: deviceId } } : true,
 					video: false
 				};
-				streamToUse = await navigator.mediaDevices.getUserMedia(constraints);
+				try {
+					streamToUse = await navigator.mediaDevices.getUserMedia(constraints);
+				} catch {
+					streamToUse = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+				}
 				ownsStream = true;
 			}
 
@@ -617,7 +625,7 @@ class VoiceEngine {
 		}
 	}
 
-	playRawSample(onEnded?: () => void): boolean {
+	async playRawSample(onEnded?: () => void): Promise<boolean> {
 		if (!this.testAudioBuffer) return false;
 		if (typeof window === 'undefined') return false;
 		this.stopPlayback();
@@ -628,7 +636,7 @@ class VoiceEngine {
 				this.audioCtx = new AudioCtxClass();
 			}
 			if (this.audioCtx.state === 'suspended') {
-				this.audioCtx.resume();
+				await this.audioCtx.resume();
 			}
 
 			const source = this.audioCtx.createBufferSource();
@@ -650,7 +658,7 @@ class VoiceEngine {
 		}
 	}
 
-	playConvertedSample(onEnded?: () => void, filterType?: VoiceFilterType): boolean {
+	async playConvertedSample(onEnded?: () => void, filterType?: VoiceFilterType): Promise<boolean> {
 		if (!this.testAudioBuffer) return false;
 		if (typeof window === 'undefined') return false;
 
@@ -660,12 +668,13 @@ class VoiceEngine {
 				this.audioCtx = new AudioCtxClass();
 			}
 			if (this.audioCtx.state === 'suspended') {
-				this.audioCtx.resume();
+				await this.audioCtx.resume();
 			}
 
 			this.stopPlayback();
 
-			const activeFilter = filterType || this.lastFilter || 'anime-girl';
+			// If filterType is 'none' or unspecified, default to 'anime-girl' so conversion is immediately audible
+			const activeFilter = (filterType && filterType !== 'none') ? filterType : (this.lastFilter && this.lastFilter !== 'none' ? this.lastFilter : 'anime-girl');
 			const source = this.audioCtx.createBufferSource();
 			source.buffer = this.testAudioBuffer;
 

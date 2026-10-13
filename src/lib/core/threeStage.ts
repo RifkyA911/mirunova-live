@@ -161,12 +161,20 @@ export class ThreeStage {
 		this.updateCameraTargetPos();
 	}
 
-	public rotateOrbit(deltaTheta: number, deltaPhi: number = 0) {
+	public rotateOrbit(deltaTheta: number, deltaPhi: number = 0, immediate: boolean = false) {
 		this.orbitTheta += deltaTheta;
 		const twoPi = Math.PI * 2;
 		this.orbitTheta = ((this.orbitTheta % twoPi) + twoPi) % twoPi;
-		this.orbitPhi = Math.max(0.08, Math.min(Math.PI - 0.08, this.orbitPhi + deltaPhi));
+		// Clamp polar angle phi strictly between ~0.35 rad (30° elevation) and 1.85 rad (ground level)
+		// This guarantees the vertical axis (poros) never wobbles, camera never inverts, and lookAt never encounters singularity
+		this.orbitPhi = Math.max(0.35, Math.min(1.85, this.orbitPhi + deltaPhi));
 		this.updateCameraTargetPos();
+
+		if (immediate && this.camera) {
+			this.camera.position.copy(this.cameraTargetPos);
+			this.camera.up.set(0, 1, 0);
+			this.camera.lookAt(this.cameraLookTarget);
+		}
 	}
 
 	public rotateOrbitDegrees(degrees: number) {
@@ -753,6 +761,13 @@ export class ThreeStage {
 			}
 		});
 
+		// Ground model on floor and center along X and Z
+		const box = new THREE.Box3().setFromObject(group);
+		const center = box.getCenter(new THREE.Vector3());
+		group.position.x = -center.x;
+		group.position.y = -box.min.y;
+		group.position.z = -center.z;
+
 		if (token !== this.activeLoadToken) return;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
@@ -783,6 +798,11 @@ export class ThreeStage {
 		const maxDim = Math.max(size.x, size.y, size.z);
 		const scale = 1.8 / (maxDim || 1);
 		group.scale.set(scale, scale, scale);
+
+		const center = box.getCenter(new THREE.Vector3());
+		group.position.x = -center.x * scale;
+		group.position.y = -box.min.y * scale;
+		group.position.z = -center.z * scale;
 
 		this.initialRotations.clear();
 		group.traverse((child) => {
@@ -1134,9 +1154,13 @@ export class ThreeStage {
 			}
 
 			if (this.camera) {
-				this.camera.position.lerp(this.cameraTargetPos, 0.08);
-				this.currentLookAt.lerp(this.cameraLookTarget, 0.08);
-				this.camera.lookAt(this.currentLookAt);
+				if (this.isAutoSpin) {
+					this.camera.position.lerp(this.cameraTargetPos, 0.15);
+				} else {
+					this.camera.position.lerp(this.cameraTargetPos, 0.35);
+				}
+				this.camera.up.set(0, 1, 0);
+				this.camera.lookAt(this.cameraLookTarget);
 			}
 
 			if (this.mixer) {

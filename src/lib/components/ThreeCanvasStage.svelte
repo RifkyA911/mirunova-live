@@ -180,8 +180,8 @@
 			rigging.is3DAutoSpin = false;
 		}
 
-		const sensitivity = 0.006;
-		threeStage.rotateOrbit(-deltaX * sensitivity, deltaY * sensitivity);
+		const sensitivity = 0.005;
+		threeStage.rotateOrbit(-deltaX * sensitivity, deltaY * sensitivity, true);
 	}
 
 	function handlePointerUp(e: PointerEvent) {
