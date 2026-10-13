@@ -21,6 +21,9 @@ export interface SavedUserConfig {
 	smoothingAmount?: number;
 	eyeBlinkLinked?: boolean;
 	deadzoneThreshold?: number;
+	enableFaceTracking?: boolean;
+	enableBodyTracking?: boolean;
+	bodyTrackingIntensity?: number;
 	enableHandTracking?: boolean;
 	showCameraPip?: boolean;
 	showLandmarksMesh?: boolean;

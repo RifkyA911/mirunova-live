@@ -13,7 +13,6 @@
 	onMount(() => {
 		if (!containerEl) return;
 		threeStage.init(containerEl);
-		loadActive3DModel();
 
 		// Pre-allocated parameter buffer to prevent GC pauses (Anti-slop rule)
 		const activeParamsBuffer: Record<string, number> = {};
@@ -44,9 +43,11 @@
 		loop();
 	});
 
+	let lastLoaded3DModelId = '';
 	$effect(() => {
 		const modelId = rigging.selected3DModelId;
-		if (modelId) {
+		if (modelId && modelId !== lastLoaded3DModelId) {
+			lastLoaded3DModelId = modelId;
 			loadActive3DModel();
 		}
 	});

@@ -1049,6 +1049,29 @@
 											</button>
 										</div>
 
+										<!-- Deteksi Wajah MediaPipe (Face Recognition) -->
+										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+											<div>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Deteksi Wajah &amp; Ekspresi</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Lacak rotasi kepala, kedipan mata, alis, dan gerak bibir via MediaPipe</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.enableFaceTracking = !rigging.enableFaceTracking;
+													rigging.persist();
+													playSfx('toggle');
+												}}
+												aria-label="Deteksi Wajah"
+												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+													rigging.enableFaceTracking ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+												}"
+											>
+												<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+													rigging.enableFaceTracking ? 'translate-x-4.5' : 'translate-x-1'
+												}"></span>
+											</button>
+										</div>
+
 										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
 											<div>
 												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">{i18n.t('hands_toggle')}</span>
@@ -1296,135 +1319,295 @@
 							{/if}
 						</div>
 
-						<!-- Fine Sensitivity, Smoothing & Quick Presets -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
-							<h3 class="text-sm font-bold text-zinc-200 flex items-center justify-between">
-								<span class="flex items-center gap-2">
-									<SlidersHorizontal class="w-4 h-4 text-cyan-400" />
-									<span>{i18n.t('tracking_quality')}</span>
-								</span>
-								<span class="text-[10px] text-zinc-500">Auto-saved</span>
-							</h3>
+						<!-- Fine Sensitivity, Smoothing, Full-Body Kinematics & Framing Settings -->
+						<div class="space-y-4">
+							<!-- CARD 1: Tracking Quality & Presets -->
+							<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+								isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
+							}">
+								<h3 class="text-sm font-bold flex items-center justify-between {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
+									<span class="flex items-center gap-2">
+										<SlidersHorizontal class="w-4 h-4 text-cyan-500" />
+										<span>{i18n.t('tracking_quality')}</span>
+									</span>
+									<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Live2D &amp; 3D</span>
+								</h3>
 
-							<!-- Quick Presets -->
-							<div class="space-y-1.5">
-								<span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">
-									{i18n.t('tracking_presets_title')}
-								</span>
-								<div class="grid grid-cols-3 gap-1.5">
-									<button
-										onclick={() => applyTrackingPreset('responsive')}
-										class="px-2 py-1.5 rounded-lg text-[11px] font-medium bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors text-center"
-									>
-										Responsif
-									</button>
-									<button
-										onclick={() => applyTrackingPreset('balanced')}
-										class="px-2 py-1.5 rounded-lg text-[11px] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition-colors text-center"
-									>
-										Seimbang
-									</button>
-									<button
-										onclick={() => applyTrackingPreset('smooth')}
-										class="px-2 py-1.5 rounded-lg text-[11px] font-medium bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors text-center"
-									>
-										Ultra Halus
-									</button>
-								</div>
-							</div>
-
-							<!-- Fine Sliders -->
-							<div class="space-y-3 text-xs pt-1">
-								<div>
-									<div class="flex justify-between mb-1">
-										<span class="text-zinc-400">{i18n.t('sensitivity')}</span>
-										<span class="font-mono text-cyan-400 font-bold">{rigging.trackingSensitivity.toFixed(2)}x</span>
-									</div>
-									<input
-										type="range"
-										min="0.5"
-										max="2.5"
-										step="0.05"
-										bind:value={rigging.trackingSensitivity}
-										oninput={() => rigging.persist()}
-										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-									/>
-								</div>
-
-								<div>
-									<div class="flex justify-between mb-1">
-										<span class="text-zinc-400">{i18n.t('smoothing')}</span>
-										<span class="font-mono text-cyan-400 font-bold">{Math.round(rigging.smoothingAmount * 100)}%</span>
-									</div>
-									<input
-										type="range"
-										min="0.05"
-										max="0.85"
-										step="0.02"
-										bind:value={rigging.smoothingAmount}
-										oninput={() => rigging.persist()}
-										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-									/>
-								</div>
-
-								<div>
-									<div class="flex justify-between mb-1">
-										<span class="text-zinc-400">{i18n.t('deadzone')}</span>
-										<span class="font-mono text-cyan-400 font-bold">{rigging.deadzoneThreshold.toFixed(2)}°</span>
-									</div>
-									<input
-										type="range"
-										min="0.0"
-										max="1.5"
-										step="0.05"
-										bind:value={rigging.deadzoneThreshold}
-										oninput={() => rigging.persist()}
-										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-									/>
-								</div>
-
-								<!-- Mouth Speech Sensitivity & Speech Boost -->
-								<div class="pt-3 border-t border-zinc-800/60 space-y-3">
-									<div class="flex items-center justify-between">
-										<div>
-											<span class="text-[11px] font-semibold text-zinc-300 block">{i18n.t('mouth_sensitivity_title')}</span>
-											<span class="text-[10px] text-zinc-500">{i18n.t('mouth_sensitivity_desc')}</span>
-										</div>
+								<!-- Quick Presets -->
+								<div class="space-y-1.5">
+									<span class="text-[11px] font-semibold uppercase tracking-wider block {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+										{i18n.t('tracking_presets_title')}
+									</span>
+									<div class="grid grid-cols-3 gap-1.5">
 										<button
-											onclick={() => {
-												rigging.mouthTrackingMode = rigging.mouthTrackingMode === 'high' ? 'normal' : 'high';
-												rigging.persist();
-												playSfx('toggle');
-											}}
-											class="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors cursor-pointer {
-												rigging.mouthTrackingMode === 'high'
-													? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
-													: 'bg-zinc-800 text-zinc-400 border-zinc-700'
+											onclick={() => applyTrackingPreset('responsive')}
+											class="px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-colors text-center cursor-pointer {
+												isLightTheme ? 'bg-white hover:bg-zinc-100 border-zinc-300 text-zinc-800' : 'bg-zinc-950 hover:bg-zinc-900 border-zinc-800 text-zinc-200'
 											}"
 										>
-											{rigging.mouthTrackingMode === 'high' ? '🔥 ' + i18n.t('speech_boost_high') : i18n.t('speech_boost_normal')}
+											Responsif
+										</button>
+										<button
+											onclick={() => applyTrackingPreset('balanced')}
+											class="px-2 py-1.5 rounded-lg text-[11px] font-bold border transition-colors text-center cursor-pointer bg-indigo-500/20 text-indigo-400 border-indigo-500/40 shadow-xs"
+										>
+											Seimbang
+										</button>
+										<button
+											onclick={() => applyTrackingPreset('smooth')}
+											class="px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-colors text-center cursor-pointer {
+												isLightTheme ? 'bg-white hover:bg-zinc-100 border-zinc-300 text-zinc-800' : 'bg-zinc-950 hover:bg-zinc-900 border-zinc-800 text-zinc-200'
+											}"
+										>
+											Ultra Halus
 										</button>
 									</div>
+								</div>
 
+								<!-- Fine Sliders -->
+								<div class="space-y-3 text-xs pt-1">
 									<div>
 										<div class="flex justify-between mb-1">
-											<span class="text-zinc-400">{i18n.t('mouth_multiplier_label')}</span>
-											<span class="font-mono text-rose-400 font-bold">{(rigging.mouthSensitivity || 1.0).toFixed(1)}x</span>
+											<span class="{isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">{i18n.t('sensitivity')}</span>
+											<span class="font-mono text-cyan-500 font-bold">{rigging.trackingSensitivity.toFixed(2)}x</span>
 										</div>
 										<input
 											type="range"
 											min="0.5"
 											max="2.5"
-											step="0.1"
-											value={rigging.mouthSensitivity || 1.0}
-											oninput={(e) => {
-												const target = e.target as HTMLInputElement;
-												rigging.mouthSensitivity = parseFloat(target.value);
-												rigging.persist();
-											}}
-											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+											step="0.05"
+											bind:value={rigging.trackingSensitivity}
+											oninput={() => rigging.persist()}
+											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
 										/>
 									</div>
+
+									<div>
+										<div class="flex justify-between mb-1">
+											<span class="{isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">{i18n.t('smoothing')}</span>
+											<span class="font-mono text-cyan-500 font-bold">{Math.round(rigging.smoothingAmount * 100)}%</span>
+										</div>
+										<input
+											type="range"
+											min="0.05"
+											max="0.85"
+											step="0.02"
+											bind:value={rigging.smoothingAmount}
+											oninput={() => rigging.persist()}
+											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+										/>
+									</div>
+
+									<div>
+										<div class="flex justify-between mb-1">
+											<span class="{isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">{i18n.t('deadzone')}</span>
+											<span class="font-mono text-cyan-500 font-bold">{rigging.deadzoneThreshold.toFixed(2)}°</span>
+										</div>
+										<input
+											type="range"
+											min="0.0"
+											max="1.5"
+											step="0.05"
+											bind:value={rigging.deadzoneThreshold}
+											oninput={() => rigging.persist()}
+											class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+										/>
+									</div>
+
+									<!-- Mouth Speech Sensitivity & Speech Boost -->
+									<div class="pt-3 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'} space-y-3">
+										<div class="flex items-center justify-between">
+											<div>
+												<span class="text-[11px] font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">{i18n.t('mouth_sensitivity_title')}</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('mouth_sensitivity_desc')}</span>
+											</div>
+											<button
+												onclick={() => {
+													rigging.mouthTrackingMode = rigging.mouthTrackingMode === 'high' ? 'normal' : 'high';
+													rigging.persist();
+													playSfx('toggle');
+												}}
+												class="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors cursor-pointer {
+													rigging.mouthTrackingMode === 'high'
+														? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
+														: isLightTheme ? 'bg-zinc-200 text-zinc-700 border-zinc-300' : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+												}"
+											>
+												{rigging.mouthTrackingMode === 'high' ? '🔥 ' + i18n.t('speech_boost_high') : i18n.t('speech_boost_normal')}
+											</button>
+										</div>
+
+										<div>
+											<div class="flex justify-between mb-1">
+												<span class="{isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">{i18n.t('mouth_multiplier_label')}</span>
+												<span class="font-mono text-rose-500 font-bold">{(rigging.mouthSensitivity || 1.0).toFixed(1)}x</span>
+											</div>
+											<input
+												type="range"
+												min="0.5"
+												max="2.5"
+												step="0.1"
+												value={rigging.mouthSensitivity || 1.0}
+												oninput={(e) => {
+													const target = e.target as HTMLInputElement;
+													rigging.mouthSensitivity = parseFloat(target.value);
+													rigging.persist();
+												}}
+												class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+											/>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- CARD 2: Full-Body Kinematics & Torso Sway (Live2D & 3D) -->
+							<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+								isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
+							}">
+								<div class="flex items-center justify-between">
+									<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
+										<Activity class="w-4 h-4 text-emerald-500" />
+										<span>Full-Body &amp; Torso Kinematics (Live2D &amp; 3D)</span>
+									</h3>
+									<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+										Universal
+									</span>
+								</div>
+
+								<div class="space-y-3 text-xs">
+									<!-- Toggle Body Sway -->
+									<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
+										<div>
+											<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Tracking &amp; Goyangan Tubuh (Body Sway)</span>
+											<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Tubuh avatar otomatis berputar &amp; condong mengikuti arah gerakan kepala Anda (ParamBodyAngleX/Y/Z)</span>
+										</div>
+										<button
+											onclick={() => {
+												rigging.enableBodyTracking = !rigging.enableBodyTracking;
+												rigging.persist();
+												playSfx('toggle');
+											}}
+											aria-label="Toggle Body Tracking"
+											class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
+												rigging.enableBodyTracking ? 'bg-emerald-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
+											}"
+										>
+											<span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform {
+												rigging.enableBodyTracking ? 'translate-x-4.5' : 'translate-x-1'
+											}"></span>
+										</button>
+									</div>
+
+									<!-- Body Sway Intensity Slider -->
+									{#if rigging.enableBodyTracking}
+										<div>
+											<div class="flex justify-between mb-1">
+												<span class="{isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">Intensitas Goyangan Tubuh (Torso Sway Multiplier):</span>
+												<span class="font-mono text-emerald-500 font-bold">{rigging.bodyTrackingIntensity.toFixed(2)}x</span>
+											</div>
+											<input
+												type="range"
+												min="0.2"
+												max="2.0"
+												step="0.05"
+												bind:value={rigging.bodyTrackingIntensity}
+												oninput={() => rigging.persist()}
+												class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+											/>
+										</div>
+									{/if}
+
+									<!-- Pose Looping / Idle Breathing -->
+									<div>
+										<label for="pose-loop-select" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
+											Ritme Nafas &amp; Pose Loop Avatar (ParamBreath):
+										</label>
+										<select
+											id="pose-loop-select"
+											bind:value={rigging.poseLoopMode}
+											onchange={() => rigging.persist()}
+											class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-emerald-500 cursor-pointer {
+												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+											}"
+										>
+											<option value="idle-breath">💨 Bernapas Alami (Idle Breath)</option>
+											<option value="gentle-sway">🌊 Goyangan Tubuh Lembut (Gentle Sway)</option>
+											<option value="head-nod">✨ Mengangguk Halus (Head Nod)</option>
+											<option value="none">🛑 Diam / Tanpa Animasi Tambahan</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<!-- CARD 3: Avatar Framing Presets (Live2D & 3D) -->
+							<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+								isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
+							}">
+								<div class="flex items-center justify-between">
+									<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
+										<Tv class="w-4 h-4 text-purple-500" />
+										<span>Framing Panggung Avatar (Live2D &amp; 3D)</span>
+									</h3>
+									<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Mode Kamera</span>
+								</div>
+
+								<div class="grid grid-cols-3 gap-2">
+									<button
+										type="button"
+										onclick={() => {
+											rigging.framingMode = 'full';
+											rigging.persist();
+											playSfx('click');
+											rigging.showToast('Framing: Full Body (Seluruh Badan)');
+										}}
+										class="p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 {
+											rigging.framingMode === 'full'
+												? 'bg-purple-500/20 text-purple-300 border-purple-500 font-bold ring-2 ring-purple-500/40'
+												: isLightTheme ? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+										}"
+									>
+										<span class="text-lg">🧍</span>
+										<span class="text-xs">Full Body</span>
+										<span class="text-[9px] opacity-70">Kepala - Kaki</span>
+									</button>
+
+									<button
+										type="button"
+										onclick={() => {
+											rigging.framingMode = 'half';
+											rigging.persist();
+											playSfx('click');
+											rigging.showToast('Framing: Half Body (Setengah Badan)');
+										}}
+										class="p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 {
+											rigging.framingMode === 'half'
+												? 'bg-purple-500/20 text-purple-300 border-purple-500 font-bold ring-2 ring-purple-500/40'
+												: isLightTheme ? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+										}"
+									>
+										<span class="text-lg">🥋</span>
+										<span class="text-xs">Half Body</span>
+										<span class="text-[9px] opacity-70">Pinggang ke Atas</span>
+									</button>
+
+									<button
+										type="button"
+										onclick={() => {
+											rigging.framingMode = 'closeup';
+											rigging.persist();
+											playSfx('click');
+											rigging.showToast('Framing: Close-Up (Fokus Wajah)');
+										}}
+										class="p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 {
+											rigging.framingMode === 'closeup'
+												? 'bg-purple-500/20 text-purple-300 border-purple-500 font-bold ring-2 ring-purple-500/40'
+												: isLightTheme ? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+										}"
+									>
+										<span class="text-lg">🔍</span>
+										<span class="text-xs">Close-Up</span>
+										<span class="text-[9px] opacity-70">Fokus Ekspresi</span>
+									</button>
 								</div>
 							</div>
 						</div>

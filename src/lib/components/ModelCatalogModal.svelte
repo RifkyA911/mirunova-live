@@ -732,10 +732,16 @@
 							</div>
 
 							{#each COMMUNITY_LEGEND_CATALOG as legend}
-								{@const isActive = rigging.selectedModelId === legend.id}
-								<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border bg-gradient-to-r from-purple-950/40 via-pink-950/30 to-zinc-900 border-purple-500/30 shadow-lg {
-									isActive ? 'ring-2 ring-purple-500/50' : ''
+								{@const isActive = (rigging.avatarEngine === '3d' && rigging.selected3DModelId === 'neuro-sama') || (rigging.avatarEngine === 'live2d' && rigging.selectedModelId === legend.id)}
+								<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border bg-gradient-to-r from-purple-950/40 via-pink-950/30 to-zinc-900 border-purple-500/30 shadow-lg relative {
+									isActive ? 'ring-2 ring-purple-500/50 border-purple-500' : ''
 								}">
+									{#if isActive}
+										<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
+											<Check class="w-3 h-3 stroke-[3]" />
+											AKTIF DI PANGGUNG 3D
+										</div>
+									{/if}
 									<div class="flex items-center gap-3.5">
 										<div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-purple-500/40 shrink-0 shadow-md">
 											<img src={legend.avatarUrl} alt={legend.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" />
@@ -745,6 +751,9 @@
 												<h4 class="font-bold text-sm text-purple-200">{legend.name}</h4>
 												<span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-[9px] font-bold border border-purple-500/30">
 													AI Pioneer
+												</span>
+												<span class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[9px] font-bold border border-cyan-500/30">
+													3D Ready
 												</span>
 											</div>
 											<span class="text-[10px] text-zinc-400 block">
@@ -762,11 +771,18 @@
 									<div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
 										<button
 											type="button"
-											onclick={() => triggerInstallModel(legend)}
-											class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 cursor-pointer"
+											onclick={() => {
+												playSfx('success');
+												rigging.avatarEngine = '3d';
+												rigging.selected3DModelId = 'neuro-sama';
+												rigging.modelName = "Neuro-sama (Vedal's Version)";
+												rigging.isModelModalOpen = false;
+												rigging.showToast("✓ Memuat avatar 3D: Neuro-sama (Vedal's Version)");
+											}}
+											class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 cursor-pointer"
 										>
-											<UploadCloud class="w-3.5 h-3.5" />
-											<span>Pasang Model Neuro-sama</span>
+											<Sparkles class="w-3.5 h-3.5 text-yellow-300" />
+											<span>Gunakan Model 3D Neuro-sama</span>
 										</button>
 										<a
 											href={legend.sourceUrl}
@@ -775,7 +791,7 @@
 											class="flex items-center gap-1.5 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-medium transition-all active:scale-95"
 										>
 											<ExternalLink class="w-3.5 h-3.5 text-purple-400" />
-											<span>Twitch Channel</span>
+											<span>Twitch</span>
 										</a>
 									</div>
 								</div>

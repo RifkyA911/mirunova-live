@@ -248,4 +248,36 @@ describe('solveFaceLandmarks', () => {
 
 		expect(speechBoostRes.mouthOpen).toBeGreaterThan(normalRes.mouthOpen);
 	});
+
+	it('computes full body kinematics and respects enableBodyTracking and bodyTrackingIntensity', () => {
+		const landmarks = createMockLandmarks({
+			1: { x: 0.7, y: 0.5, z: 0 } // Yaw to the right
+		});
+		const offsets = { yaw: 0, pitch: 0, roll: 0 };
+
+		// Default body tracking enabled (1.0x)
+		const enabledRes = solveFaceLandmarks(landmarks, new Map(), offsets, null, {
+			enableBodyTracking: true,
+			bodyTrackingIntensity: 1.0
+		});
+		expect(enabledRes.bodyAngleX).toBeGreaterThan(0);
+		expect(enabledRes.armLA).toBeGreaterThan(0);
+
+		// Boosted body tracking (1.5x)
+		const boostedRes = solveFaceLandmarks(landmarks, new Map(), offsets, null, {
+			enableBodyTracking: true,
+			bodyTrackingIntensity: 1.5
+		});
+		expect(boostedRes.bodyAngleX).toBeGreaterThan(enabledRes.bodyAngleX);
+
+		// Disabled body tracking (0x)
+		const disabledRes = solveFaceLandmarks(landmarks, new Map(), offsets, null, {
+			enableBodyTracking: false,
+			bodyTrackingIntensity: 1.0
+		});
+		expect(disabledRes.bodyAngleX).toBe(0);
+		expect(disabledRes.bodyAngleY).toBe(0);
+		expect(disabledRes.bodyAngleZ).toBe(0);
+		expect(disabledRes.armLA).toBe(0);
+	});
 });

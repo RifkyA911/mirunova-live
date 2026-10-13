@@ -104,6 +104,9 @@ export class RiggingStore {
 	invertYaw = $state<boolean>(false);         // Invert X (kiri / kanan)
 	mouthSensitivity = $state<number>(1.2);     // 0.5 to 2.5 mouth responsiveness
 	mouthTrackingMode = $state<'normal' | 'high'>('normal'); // 'normal' | 'high' (Speech boost)
+	enableFaceTracking = $state<boolean>(true); // MediaPipe face tracking toggle (Live2D & 3D)
+	enableBodyTracking = $state<boolean>(true); // Full body sway & torso kinematics toggle (Live2D & 3D)
+	bodyTrackingIntensity = $state<number>(1.0); // 0.2 to 2.0 torso sway multiplier
 	isSfxEnabled = $state<boolean>(true);       // UI sound effects toggle
 	sfxVolume = $state<number>(0.6);            // UI sound effects volume (0.0 to 1.0)
 
@@ -298,6 +301,9 @@ export class RiggingStore {
 			deadzoneThreshold: this.deadzoneThreshold,
 			eyeBlinkLinked: this.eyeBlinkLinked,
 			holdPoseOnLoss: this.holdPoseOnLoss,
+			enableFaceTracking: this.enableFaceTracking,
+			enableBodyTracking: this.enableBodyTracking,
+			bodyTrackingIntensity: this.bodyTrackingIntensity,
 			enableHandTracking: this.enableHandTracking,
 			showCameraPip: this.showCameraPip,
 			showLandmarksMesh: this.showLandmarksMesh,
@@ -382,6 +388,9 @@ export class RiggingStore {
 		if (saved.holdPoseOnLoss !== undefined) this.holdPoseOnLoss = saved.holdPoseOnLoss;
 		if (saved.invertPitch !== undefined) this.invertPitch = saved.invertPitch;
 		if (saved.invertYaw !== undefined) this.invertYaw = saved.invertYaw;
+		if (saved.enableFaceTracking !== undefined) this.enableFaceTracking = saved.enableFaceTracking;
+		if (saved.enableBodyTracking !== undefined) this.enableBodyTracking = saved.enableBodyTracking;
+		if (saved.bodyTrackingIntensity !== undefined) this.bodyTrackingIntensity = saved.bodyTrackingIntensity;
 		if (saved.enableHandTracking !== undefined) this.enableHandTracking = saved.enableHandTracking;
 		if (saved.showCameraPip !== undefined) this.showCameraPip = saved.showCameraPip;
 		if (saved.showLandmarksMesh !== undefined) this.showLandmarksMesh = saved.showLandmarksMesh;

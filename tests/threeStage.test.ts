@@ -88,4 +88,16 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(() => stage.zoomBy(0.8)).not.toThrow();
 		expect(() => stage.resetZoom()).not.toThrow();
 	});
+
+	it('should maintain single active model group in scene upon multiple loads', () => {
+		const stage = new ThreeStage();
+		stage.loadProceduralCat('mochi');
+		stage.loadProceduralCat('kuro');
+		stage.loadProceduralCat('tora');
+
+		expect(stage['currentModelGroup']).not.toBeNull();
+		// Without init(), scene has no lights, so exactly 1 child (the active model group)
+		expect(stage['scene'].children.length).toBe(1);
+		expect(stage['scene'].children[0]).toBe(stage['currentModelGroup']);
+	});
 });

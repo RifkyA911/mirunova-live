@@ -2,7 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { rigging, DEFAULT_PARAMETERS } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
-	import type { Live2DParameterDef } from '#lib/types/tracking';
+	import type { Live2DParameterDef, AvatarFramingMode } from '#lib/types/tracking';
 	import { Sparkles, Check, X, Move } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { playSfx } from '#lib/core/sfx';
@@ -512,6 +512,49 @@
 					setParam('PARAM_BROW_L_FORM', browLForm);
 					setParam('PARAM_BROW_R_FORM', browRForm);
 
+					// Full-Body Torso Kinematics & Sway (Live2D & Cubism 2/3/4)
+					const isBodyEnabled = rigging.enableBodyTracking;
+					const bodyFactor = isBodyEnabled ? rigging.bodyTrackingIntensity : 0;
+					const bodyX = (rigging.getActiveValue('ParamBodyAngleX') || 0) * bodyFactor;
+					const bodyY = (rigging.getActiveValue('ParamBodyAngleY') || 0) * bodyFactor;
+					const bodyZ = (rigging.getActiveValue('ParamBodyAngleZ') || 0) * bodyFactor;
+
+					setParam('ParamBodyAngleX', bodyX);
+					setParam('PARAM_BODY_ANGLE_X', bodyX);
+					setParam('ParamBodyAngleY', bodyY);
+					setParam('PARAM_BODY_ANGLE_Y', bodyY);
+					setParam('ParamBodyAngleZ', bodyZ);
+					setParam('PARAM_BODY_ANGLE_Z', bodyZ);
+
+					// Arms & Hands Gesture Tracking (Haru & models with arm parameters)
+					const armLA = rigging.getActiveValue('ParamArmLA');
+					const armRA = rigging.getActiveValue('ParamArmRA');
+					const armLB = rigging.getActiveValue('ParamArmLB');
+					const armRB = rigging.getActiveValue('ParamArmRB');
+					const handAngleL = rigging.getActiveValue('ParamHandAngleL');
+					const handAngleR = rigging.getActiveValue('ParamHandAngleR');
+
+					setParam('ParamArmLA', armLA);
+					setParam('ParamArmRA', armRA);
+					setParam('PARAM_ARM_L_A', armLA);
+					setParam('PARAM_ARM_R_A', armRA);
+					setParam('ParamArmLB', armLB);
+					setParam('ParamArmRB', armRB);
+					setParam('ParamHandAngleL', handAngleL);
+					setParam('ParamHandAngleR', handAngleR);
+
+					// Breathing rhythm
+					if (rigging.poseLoopMode !== 'none') {
+						const speed = rigging.poseLoopSpeed;
+						const breath = (Math.sin(now * 0.003 * speed) + 1) / 2;
+						setParam('ParamBreath', breath);
+						setParam('PARAM_BREATH', breath);
+					} else if (isBodyEnabled) {
+						const naturalBreath = (Math.sin(now * 0.0025) + 1) * 0.35;
+						setParam('ParamBreath', naturalBreath);
+						setParam('PARAM_BREATH', naturalBreath);
+					}
+
 					// Apply custom expression preset overrides directly (e.g. Param144 for cry, Param149 for blush, ParamEyeLSmile for smile)
 					if (expPreset) {
 						for (const k in expPreset) {
@@ -955,7 +998,10 @@
 		}
 		currentModel.scale.set(modelScale);
 		currentModel.position.set(modelPosition.x, modelPosition.y);
-		rigging.zoomLevel = Number((modelScale / (baseModelScale || 1)).toFixed(2));
+		const targetZoom = Number((modelScale / (baseModelScale || 1)).toFixed(2));
+		if (rigging.zoomLevel !== targetZoom) {
+			rigging.zoomLevel = targetZoom;
+		}
 	}
 
 	function applyZoom(factor: number, anchorX?: number, anchorY?: number) {
@@ -980,12 +1026,17 @@
 		modelScale = newScale;
 		currentModel.scale.set(modelScale);
 		currentModel.position.set(modelPosition.x, modelPosition.y);
-		rigging.zoomLevel = Number((modelScale / (baseModelScale || 1)).toFixed(2));
+		const targetZoom = Number((modelScale / (baseModelScale || 1)).toFixed(2));
+		if (rigging.zoomLevel !== targetZoom) {
+			rigging.zoomLevel = targetZoom;
+		}
 	}
 
+	let lastAppliedFramingMode: AvatarFramingMode | '' = '';
 	$effect(() => {
 		const mode = rigging.framingMode;
-		if (mode && currentModel) {
+		if (mode && currentModel && mode !== lastAppliedFramingMode) {
+			lastAppliedFramingMode = mode;
 			applyFramingPreset();
 		}
 	});

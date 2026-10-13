@@ -315,13 +315,16 @@ export function solveFaceLandmarks(
 	const cheekPuff = Math.max(0, Math.min(1, (blendshapesMap.get('cheekPuff') ?? 0) * 1.8));
 
 	// 5. Body reactive kinematics
-	const bodyAngleX = yaw * 0.35;
-	const bodyAngleY = pitch * 0.2;
-	const bodyAngleZ = roll * 0.25;
+	const isBodyEnabled = config?.enableBodyTracking ?? true;
+	const bodyIntensity = config?.bodyTrackingIntensity ?? 1.0;
+	const bodyFactor = isBodyEnabled ? bodyIntensity : 0;
+	const bodyAngleX = yaw * 0.35 * bodyFactor;
+	const bodyAngleY = pitch * 0.2 * bodyFactor;
+	const bodyAngleZ = roll * 0.25 * bodyFactor;
 
 	// 6. Arms / Hands
-	const armLA = handData?.armLA ?? (yaw > 10 ? 10 : 0);
-	const armRA = handData?.armRA ?? (yaw < -10 ? 10 : 0);
+	const armLA = handData?.armLA ?? (bodyFactor > 0 && yaw > 10 ? 10 * bodyFactor : 0);
+	const armRA = handData?.armRA ?? (bodyFactor > 0 && yaw < -10 ? 10 * bodyFactor : 0);
 
 	return {
 		yaw,

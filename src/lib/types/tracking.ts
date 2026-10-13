@@ -47,6 +47,9 @@ export interface TrackingConfig {
 	invertYaw?: boolean;       // invert left/right head yaw
 	mouthSensitivity?: number; // 0.5 to 2.5 (default 1.2)
 	mouthTrackingMode?: 'normal' | 'high'; // Normal vs High Speech Sensitivity
+	enableFaceTracking?: boolean; // toggle face detection
+	enableBodyTracking?: boolean; // toggle body kinematics
+	bodyTrackingIntensity?: number; // 0.2 to 2.0
 }
 
 export type BackgroundStyle =

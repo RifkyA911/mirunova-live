@@ -717,38 +717,42 @@ export class FaceTracker {
 							invertPitch: rigging.invertPitch,
 							invertYaw: rigging.invertYaw,
 							mouthSensitivity: rigging.mouthSensitivity,
-							mouthTrackingMode: rigging.mouthTrackingMode
+							mouthTrackingMode: rigging.mouthTrackingMode,
+							enableFaceTracking: rigging.enableFaceTracking,
+							enableBodyTracking: rigging.enableBodyTracking,
+							bodyTrackingIntensity: rigging.bodyTrackingIntensity
 						},
 						handData
 					);
 
 					// Apply profile-specific adaptive smoothing & store to rigging store
-					const eyeTargetL = rigging.mirrorEyes ? solved.eyeBlinkR : solved.eyeBlinkL;
-					const eyeTargetR = rigging.mirrorEyes ? solved.eyeBlinkL : solved.eyeBlinkR;
-					const eyeSmileTargetL = rigging.mirrorEyes ? (solved.eyeSmileR ?? 0) : (solved.eyeSmileL ?? 0);
-					const eyeSmileTargetR = rigging.mirrorEyes ? (solved.eyeSmileL ?? 0) : (solved.eyeSmileR ?? 0);
-					const browTargetL = rigging.mirrorEyes ? solved.browR : solved.browL;
-					const browTargetR = rigging.mirrorEyes ? solved.browL : solved.browR;
+					const isFaceActive = rigging.enableFaceTracking;
+					const eyeTargetL = isFaceActive ? (rigging.mirrorEyes ? solved.eyeBlinkR : solved.eyeBlinkL) : 1.0;
+					const eyeTargetR = isFaceActive ? (rigging.mirrorEyes ? solved.eyeBlinkL : solved.eyeBlinkR) : 1.0;
+					const eyeSmileTargetL = isFaceActive ? (rigging.mirrorEyes ? (solved.eyeSmileR ?? 0) : (solved.eyeSmileL ?? 0)) : 0;
+					const eyeSmileTargetR = isFaceActive ? (rigging.mirrorEyes ? (solved.eyeSmileL ?? 0) : (solved.eyeSmileR ?? 0)) : 0;
+					const browTargetL = isFaceActive ? (rigging.mirrorEyes ? solved.browR : solved.browL) : 0;
+					const browTargetR = isFaceActive ? (rigging.mirrorEyes ? solved.browL : solved.browR) : 0;
 
-					rigging.setLiveValue('ParamAngleX', globalSmoother.smooth('ParamAngleX', solved.yaw, 'angle'));
-					rigging.setLiveValue('ParamAngleY', globalSmoother.smooth('ParamAngleY', solved.pitch, 'angle'));
-					rigging.setLiveValue('ParamAngleZ', globalSmoother.smooth('ParamAngleZ', solved.roll, 'angle'));
+					rigging.setLiveValue('ParamAngleX', isFaceActive ? globalSmoother.smooth('ParamAngleX', solved.yaw, 'angle') : 0);
+					rigging.setLiveValue('ParamAngleY', isFaceActive ? globalSmoother.smooth('ParamAngleY', solved.pitch, 'angle') : 0);
+					rigging.setLiveValue('ParamAngleZ', isFaceActive ? globalSmoother.smooth('ParamAngleZ', solved.roll, 'angle') : 0);
 					rigging.setLiveValue('ParamEyeLOpen', globalSmoother.smooth('ParamEyeLOpen', eyeTargetL, 'blink'));
 					rigging.setLiveValue('ParamEyeROpen', globalSmoother.smooth('ParamEyeROpen', eyeTargetR, 'blink'));
 					rigging.setLiveValue('ParamEyeLSmile', eyeSmileTargetL);
 					rigging.setLiveValue('ParamEyeRSmile', eyeSmileTargetR);
-					rigging.setLiveValue('ParamEyeBallX', globalSmoother.smooth('ParamEyeBallX', solved.eyeBallX, 'generic'));
-					rigging.setLiveValue('ParamEyeBallY', globalSmoother.smooth('ParamEyeBallY', solved.eyeBallY, 'generic'));
-					rigging.setLiveValue('ParamBrowLY', globalSmoother.smooth('ParamBrowLY', browTargetL, 'generic'));
-					rigging.setLiveValue('ParamBrowRY', globalSmoother.smooth('ParamBrowRY', browTargetR, 'generic'));
-					rigging.setLiveValue('ParamBrowLForm', globalSmoother.smooth('ParamBrowLForm', solved.browFormL ?? 0, 'generic'));
-					rigging.setLiveValue('ParamBrowRForm', globalSmoother.smooth('ParamBrowRForm', solved.browFormR ?? 0, 'generic'));
-					rigging.setLiveValue('ParamBrowLAngle', globalSmoother.smooth('ParamBrowLAngle', browTargetL * 0.75, 'generic'));
-					rigging.setLiveValue('ParamBrowRAngle', globalSmoother.smooth('ParamBrowRAngle', browTargetR * 0.75, 'generic'));
-					rigging.setLiveValue('ParamMouthOpenY', globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen, 'mouth'));
-					rigging.setLiveValue('ParamMouthForm', globalSmoother.smooth('ParamMouthForm', solved.mouthForm, 'mouth'));
-					rigging.setLiveValue('ParamMouthX', globalSmoother.smooth('ParamMouthX', solved.mouthX, 'mouth'));
-					rigging.setLiveValue('ParamCheek', globalSmoother.smooth('ParamCheek', solved.cheekPuff, 'generic'));
+					rigging.setLiveValue('ParamEyeBallX', isFaceActive ? globalSmoother.smooth('ParamEyeBallX', solved.eyeBallX, 'generic') : 0);
+					rigging.setLiveValue('ParamEyeBallY', isFaceActive ? globalSmoother.smooth('ParamEyeBallY', solved.eyeBallY, 'generic') : 0);
+					rigging.setLiveValue('ParamBrowLY', isFaceActive ? globalSmoother.smooth('ParamBrowLY', browTargetL, 'generic') : 0);
+					rigging.setLiveValue('ParamBrowRY', isFaceActive ? globalSmoother.smooth('ParamBrowRY', browTargetR, 'generic') : 0);
+					rigging.setLiveValue('ParamBrowLForm', isFaceActive ? globalSmoother.smooth('ParamBrowLForm', solved.browFormL ?? 0, 'generic') : 0);
+					rigging.setLiveValue('ParamBrowRForm', isFaceActive ? globalSmoother.smooth('ParamBrowRForm', solved.browFormR ?? 0, 'generic') : 0);
+					rigging.setLiveValue('ParamBrowLAngle', isFaceActive ? globalSmoother.smooth('ParamBrowLAngle', browTargetL * 0.75, 'generic') : 0);
+					rigging.setLiveValue('ParamBrowRAngle', isFaceActive ? globalSmoother.smooth('ParamBrowRAngle', browTargetR * 0.75, 'generic') : 0);
+					rigging.setLiveValue('ParamMouthOpenY', isFaceActive ? globalSmoother.smooth('ParamMouthOpenY', solved.mouthOpen, 'mouth') : 0);
+					rigging.setLiveValue('ParamMouthForm', isFaceActive ? globalSmoother.smooth('ParamMouthForm', solved.mouthForm, 'mouth') : 0);
+					rigging.setLiveValue('ParamMouthX', isFaceActive ? globalSmoother.smooth('ParamMouthX', solved.mouthX, 'mouth') : 0);
+					rigging.setLiveValue('ParamCheek', isFaceActive ? globalSmoother.smooth('ParamCheek', solved.cheekPuff, 'generic') : 0);
 					rigging.setLiveValue('ParamBodyAngleX', globalSmoother.smooth('ParamBodyAngleX', solved.bodyAngleX, 'angle'));
 					rigging.setLiveValue('ParamBodyAngleY', globalSmoother.smooth('ParamBodyAngleY', solved.bodyAngleY, 'angle'));
 					rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.smooth('ParamBodyAngleZ', solved.bodyAngleZ, 'angle'));

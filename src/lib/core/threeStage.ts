@@ -63,6 +63,7 @@ export class ThreeStage {
 	private mixer: THREE.AnimationMixer | null = null;
 	private gltfBones: Map<string, THREE.Bone> = new Map();
 	private lastFrameTime = performance.now();
+	private activeLoadToken = 0;
 
 	constructor() {
 		this.scene = new THREE.Scene();
@@ -182,6 +183,7 @@ export class ThreeStage {
 
 	// 1. Procedural Rigged 3D Cat Avatar with multiple breed variants
 	loadProceduralCat(variant: CatVariant = 'mochi') {
+		const token = ++this.activeLoadToken;
 		this.clearCurrentModel();
 		this.modelType = 'procedural';
 
@@ -376,18 +378,20 @@ export class ThreeStage {
 		tailGroup.add(tailMesh);
 		tailGroup.position.set(0, -0.5, -0.45);
 		this.tailNode = tailGroup;
-		catGroup.add(tailGroup);
-
+		if (token !== this.activeLoadToken) return;
 		this.scene.add(catGroup);
 	}
 
 	// 2. Load Any External GLTF / GLB Model
 	async loadGLTF(url: string) {
+		const token = ++this.activeLoadToken;
 		this.clearCurrentModel();
 		this.modelType = 'glb';
 
 		const loader = new GLTFLoader();
 		const gltf = await loader.loadAsync(url);
+		if (token !== this.activeLoadToken) return;
+		this.clearCurrentModel();
 		const model = gltf.scene;
 		this.currentModelGroup = model;
 
@@ -422,17 +426,21 @@ export class ThreeStage {
 			action.play();
 		}
 
+		if (token !== this.activeLoadToken) return;
 		this.scene.add(model);
 		this.setFraming(this.currentFraming);
 	}
 
 	// 3. Load Humanoid Neuro-sama FBX Model with 4K Textures & VRChat BlendShapes
 	async loadNeuroSama() {
+		const token = ++this.activeLoadToken;
 		this.clearCurrentModel();
 		this.modelType = 'fbx';
 
 		const loader = new FBXLoader();
 		const group = await loader.loadAsync('/models/neurosama/neuro-sama.fbx');
+		if (token !== this.activeLoadToken) return;
+		this.clearCurrentModel();
 		this.currentModelGroup = group;
 
 		// Load textures with SRGBColorSpace
@@ -522,6 +530,7 @@ export class ThreeStage {
 			}
 		});
 
+		if (token !== this.activeLoadToken) return;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
 	}
@@ -532,11 +541,14 @@ export class ThreeStage {
 			return this.loadNeuroSama();
 		}
 
+		const token = ++this.activeLoadToken;
 		this.clearCurrentModel();
 		this.modelType = 'fbx';
 
 		const loader = new FBXLoader();
 		const group = await loader.loadAsync(url);
+		if (token !== this.activeLoadToken) return;
+		this.clearCurrentModel();
 		this.currentModelGroup = group;
 
 		// Center & scale
@@ -564,6 +576,7 @@ export class ThreeStage {
 			}
 		});
 
+		if (token !== this.activeLoadToken) return;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
 	}
@@ -838,6 +851,15 @@ export class ThreeStage {
 			this.scene.remove(this.currentModelGroup);
 			this.currentModelGroup = null;
 		}
+		// Sweep all non-light/non-camera child objects from the scene to prevent duplicate models
+		const toRemove: THREE.Object3D[] = [];
+		this.scene.children.forEach((child) => {
+			if (!(child instanceof THREE.Light) && !(child instanceof THREE.Camera)) {
+				toRemove.push(child);
+			}
+		});
+		toRemove.forEach((obj) => this.scene.remove(obj));
+
 		if (this.mixer) {
 			this.mixer.stopAllAction();
 			this.mixer = null;
