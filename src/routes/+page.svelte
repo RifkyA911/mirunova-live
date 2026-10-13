@@ -14,6 +14,7 @@
 	import TosModal from '#lib/components/TosModal.svelte';
 	import AssistButton from '#lib/components/AssistButton.svelte';
 	import LayerManagerModal from '#lib/components/LayerManagerModal.svelte';
+	import CubeLoader from '#lib/components/CubeLoader.svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
 	import { voice } from '#lib/core/audio';
@@ -545,6 +546,16 @@
 				</div>
 			</button>
 		</div>
+	{/if}
+
+	<!-- Futuristic 3D Cube Model Loading Screen (Daiwiik Harihar 21st.dev) -->
+	{#if rigging.isLoadingModel}
+		<CubeLoader
+			title="MEMUAT AVATAR"
+			subtitle="Menginisialisasi geometri, tekstur & tracking…"
+			modelName={rigging.avatarEngine === '3d' ? (rigging.selected3DModelId || '3D Avatar') : (rigging.modelName || 'Live2D Avatar')}
+			engine={rigging.avatarEngine === '3d' ? '3D' : 'Live2D'}
+		/>
 	{/if}
 
 	<!-- Floating Toast Notification (Theme-Aware, High Contrast, Ultra-Legible) -->

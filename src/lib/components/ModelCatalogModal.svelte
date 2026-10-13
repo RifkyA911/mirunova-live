@@ -85,6 +85,7 @@
 
 	function handleSelect2DModel(m: typeof MODEL_CATALOG[0]) {
 		playSfx('click');
+		rigging.isModelModalOpen = false;
 		rigging.avatarEngine = 'live2d';
 		rigging.setModel(m.id, m.name, m.url);
 		rigging.showToast(`Memuat avatar 2D: ${m.name}`);
@@ -92,6 +93,7 @@
 
 	function handleSelect3DModel(m: Model3DItem) {
 		playSfx('click');
+		rigging.isModelModalOpen = false;
 		rigging.avatarEngine = '3d';
 		rigging.selected3DModelId = m.id;
 		rigging.modelName = m.name;
@@ -323,6 +325,7 @@
 			const modelId = activeTargetModelId || 'custom-local-' + Date.now();
 
 			rigging.avatarEngine = 'live2d';
+			rigging.isModelModalOpen = false;
 			rigging.setModel(modelId, modelName, finalUrl);
 			playSfx('success');
 			rigging.showToast(`✓ Model Live2D aktif: ${modelName}`);
@@ -340,6 +343,7 @@
 		const file = target.files?.[0];
 		if (!file) return;
 		const url = URL.createObjectURL(file);
+		rigging.isModelModalOpen = false;
 		rigging.avatarEngine = '3d';
 		rigging.customGlbUrl = url;
 		rigging.selected3DModelId = 'custom-glb';

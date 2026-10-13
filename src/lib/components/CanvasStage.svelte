@@ -3,7 +3,7 @@
 	import { rigging, DEFAULT_PARAMETERS } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import type { Live2DParameterDef, AvatarFramingMode } from '#lib/types/tracking';
-	import { Sparkles, Check, X, Move } from 'lucide-svelte';
+	import { Check, X, Move } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { playSfx } from '#lib/core/sfx';
 
@@ -1597,50 +1597,6 @@
 			>
 				Selesai
 			</button>
-		</div>
-	{/if}
-
-	<!-- Fluid Animated Avatar Loading Screen -->
-	{#if rigging.isLoadingModel}
-		<div class="absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md z-40 pointer-events-none select-none animate-in fade-in duration-200">
-			<div class="relative flex flex-col items-center p-8 rounded-3xl bg-zinc-950/90 border border-pink-500/30 shadow-2xl shadow-pink-500/20 max-w-xs text-center space-y-4 overflow-hidden">
-				<!-- Fluid Iridescent Glowing Orb with Floating Sparkles -->
-				<div class="relative w-24 h-24 flex items-center justify-center">
-					<!-- Pulsing outer glow aura -->
-					<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-500/40 via-purple-500/30 to-cyan-400/40 blur-xl animate-pulse"></div>
-					<!-- Fluid morphing bouncy blob -->
-					<div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 via-purple-600 to-cyan-400 shadow-lg shadow-pink-500/40 flex items-center justify-center animate-bounce">
-						<Sparkles class="w-7 h-7 text-white animate-spin [animation-duration:4s]" />
-					</div>
-					<!-- Orbiting decorative floating particle stars -->
-					<div class="absolute -top-1 right-2 text-pink-300 text-xs animate-ping [animation-duration:2s]">✦</div>
-					<div class="absolute bottom-1 -left-1 text-cyan-300 text-xs animate-ping [animation-duration:2.5s]">★</div>
-				</div>
-
-				<div class="space-y-1 z-10">
-					<h3 class="font-bold text-sm text-zinc-100 flex items-center justify-center gap-1.5">
-						<span>{i18n.t('loading_model')}</span>
-						<span class="inline-flex gap-0.5">
-							<span class="w-1 h-1 rounded-full bg-pink-400 animate-bounce [animation-delay:0ms]"></span>
-							<span class="w-1 h-1 rounded-full bg-purple-400 animate-bounce [animation-delay:150ms]"></span>
-							<span class="w-1 h-1 rounded-full bg-cyan-400 animate-bounce [animation-delay:300ms]"></span>
-						</span>
-					</h3>
-					<p class="text-xs text-pink-300/90 font-mono font-medium truncate max-w-[220px]">
-						{rigging.modelName || 'Live2D Avatar'}
-					</p>
-				</div>
-
-				<!-- Fluid Equalizer / Progress Waves -->
-				<div class="flex items-center gap-1 pt-1">
-					{#each [40, 70, 95, 60, 85, 50, 75] as height, idx}
-						<div
-							class="w-1 rounded-full bg-gradient-to-t from-pink-500 to-cyan-400 animate-pulse"
-							style="height: {height / 4}px; animation-delay: {idx * 80}ms; animation-duration: 800ms;"
-						></div>
-					{/each}
-				</div>
-			</div>
 		</div>
 	{/if}
 </div>

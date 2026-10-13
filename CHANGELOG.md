@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.21.0-beta] - 2026-10-14
 
-### Added & Enhanced
+- **Futuristic 3D Cube Model Loader Overhaul (`CubeLoader.svelte`, `+page.svelte`, `CanvasStage.svelte`, `ModelCatalogModal.svelte`):**
+  - Integrated 3D spinning Cube Loader inspired by Daiwiik Harihar (`@daiwiikharihar/components/cube-loader` on 21st.dev).
+  - Built with pure CSS 3D transforms (`perspective: 1200px`, `transform-style: preserve-3d`) featuring infinite multi-axis spin (`cubeSpin`), breathing translucent face panels (Cyan, Purple, Indigo), a hyper-luminous white core with pulsing aura, and ambient floor breathing shadows.
+  - Added futuristic microcopy with subtle glitch effect, dynamic avatar model title with engine badge (`2D Live2D` / `3D`), and real-time audio rhythm equalizer bars.
+  - Unified across the stage root (`+page.svelte`), providing seamless visual feedback when loading or switching both 2D and 3D avatars.
 - **Camera PiP Rig Mode & Clean Landmark Points (`CameraPip.svelte`, `tracker.ts`):**
   - Simplified preview tab label to "Rig" with cyan indicator.
   - Restored clean landmark point density with step-4 stride (`i += 4`) and vibrant cyan/sky-blue dots (`#06b6d4` / `#38bdf8`), eliminating landmark point clutter while maintaining precise tracking visual feedback.
