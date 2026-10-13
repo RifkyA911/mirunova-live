@@ -186,8 +186,8 @@
 							: isLightTheme ? 'text-zinc-600 hover:bg-zinc-200/70' : 'text-zinc-400 hover:bg-zinc-800'
 					}"
 				>
-					<Camera class="w-3 h-3 text-emerald-400" />
-					<span>Webcam + Titik Rig</span>
+					<Camera class="w-3 h-3 text-cyan-400" />
+					<span>Rig</span>
 				</button>
 
 				<button

@@ -872,17 +872,18 @@ export class FaceTracker {
 				ctx.restore();
 			}
 
-			// In 'rig' (Webcam + Rig) mode: strictly dots only! (Also drawn in 'wireframe' mode)
+			// In 'rig' (Webcam + Rig) mode: Blue/Cyan dots stepping by 4 (Clean & not crowded, matching commit ba77867)
 			ctx.save();
-			const dotColor = mode === 'wireframe' ? 'rgba(56, 189, 248, 0.95)' : 'rgba(52, 211, 153, 0.95)';
-			const dotGlow = mode === 'wireframe' ? '#38bdf8' : '#10b981';
-			const dotRadius = mode === 'wireframe' ? 1.2 : 1.6;
+			const dotColor = mode === 'wireframe' ? '#38bdf8' : '#06b6d4';
+			const dotGlow = mode === 'wireframe' ? '#38bdf8' : '#06b6d4';
+			const dotRadius = mode === 'wireframe' ? 1.2 : 1.5;
+			const step = mode === 'wireframe' ? 1 : 4; // Step by 4 in rig mode so points are clean, not overcrowded
 
 			ctx.fillStyle = dotColor;
 			ctx.shadowColor = dotGlow;
 			ctx.shadowBlur = 4;
 			ctx.beginPath();
-			for (let i = 0; i < faceLandmarks.length; i++) {
+			for (let i = 0; i < faceLandmarks.length; i += step) {
 				const pt = faceLandmarks[i];
 				if (pt) {
 					ctx.moveTo(pt.x * width + dotRadius, pt.y * height);

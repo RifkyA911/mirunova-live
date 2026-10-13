@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.20.1-beta] - 2026-10-11
+## [0.21.0-beta] - 2026-10-14
+
+### Added & Enhanced
+- **Camera PiP Rig Mode & Clean Landmark Points (`CameraPip.svelte`, `tracker.ts`):**
+  - Simplified preview tab label to "Rig" with cyan indicator.
+  - Restored clean landmark point density with step-4 stride (`i += 4`) and vibrant cyan/sky-blue dots (`#06b6d4` / `#38bdf8`), eliminating landmark point clutter while maintaining precise tracking visual feedback.
+- **Expressions Studio Overhaul with Poses, Motions & Resizable Frosted Glass (`ControlDock.svelte`):**
+  - Expanded expression popup into a comprehensive 3-tab studio:
+    - **Tab 1 (Ekspresi):** 16 universal facial expressions with intensity slider and dynamic blendshape presets.
+    - **Tab 2 (Pose & Loop):** 5 procedural animated pose loops (Pernapasan Alami, Ayunan Santai, Anggukan Kepala, Lambaian Tangan, Off) with speed multiplier slider (`0.2x` - `2.5x`), plus 5 3D full-body pose triggers (Siaga Normal, Melambai, Peace V-Sign, Love Heart, Berdiri Tegak).
+    - **Tab 3 (Motions):** Model-specific trigger motions (`availableMotions`) with procedural fallback gestures (Lambaian Tangan, Membungkuk, Sorak Hore, Mengangguk, Menggeleng, Kedip Beruntun).
+  - Redesigned with frosted glassmorphism (`backdrop-blur-3xl bg-zinc-950/75 border border-white/20`) and responsive resizability (`resize overflow-auto`) with a corner grip handle.
+- **Dedicated 3D Stage Environment Dock Menu (`ControlDock.svelte`, `+page.svelte`):**
+  - Added dedicated Stage Environment button (`Compass` icon) on the main bottom dock.
+  - Interactive selection between Cyber Grid, 3D Studio Room, Open Field, and Void Minimal stages, along with turntable spin toggle.
+  - Added keyboard shortcut `[B]` to quickly cycle 3D stage environments.
+- **iOS AssistiveTouch FAB & Natural TTS Voice (`ControlDock.svelte`, `VoiceEngine.ts`):**
+  - Redesigned circular assistive FAB with 40% resting opacity on hover and full quick-action popup.
+  - Naturalized TTS pitch and speech inflection for smoother voice changer test playback.
+
+---
 
 ### Added & Enhanced
 - **3D Humanoid Model Installation & Neuro-sama (Vedal's Version) (`models.ts`, `threeStage.ts`, `ThreeCanvasStage.svelte`):**

@@ -32,15 +32,82 @@
 		Smile,
 		Sparkles,
 		Box,
-		X
+		X,
+		Compass,
+		Play,
+		Activity,
+		User,
+		Maximize2,
+		RotateCcw,
+		GripVertical
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
-	import { threeStage, type FramingMode3D } from '#lib/core/threeStage';
-	import type { AvatarFramingMode } from '#lib/types/tracking';
+	import { threeStage, type FramingMode3D, type FullBodyPose3D, type StageEnvironment3D } from '#lib/core/threeStage';
+	import type { AvatarFramingMode, PoseLoopMode } from '#lib/types/tracking';
 
 	let isDeviceMenuOpen = $state<boolean>(false);
 	let isExpressionMenuOpen = $state<boolean>(false);
+	let isStageMenuOpen = $state<boolean>(false);
 	let isCursorToolMenuOpen = $state<boolean>(false);
+	let expressionActiveTab = $state<'expressions' | 'poses' | 'motions'>('expressions');
+
+	const POSE_LOOPS: Array<{ id: PoseLoopMode; label: string; emoji: string; desc: string }> = [
+		{ id: 'idle-breath', label: 'Breathing', emoji: '🫁', desc: 'Nafas halus alami' },
+		{ id: 'gentle-sway', label: 'Gentle Sway', emoji: '🌾', desc: 'Goyang santai kiri-kanan' },
+		{ id: 'head-nod', label: 'Head Nod', emoji: '🙂', desc: 'Anggukan kepala ritmis' },
+		{ id: 'wave', label: 'Continuous Wave', emoji: '👋', desc: 'Lambaian tangan' },
+		{ id: 'none', label: 'Pose Diam (Off)', emoji: '🛑', desc: 'Hanya ikuti webcam' }
+	];
+
+	const FULL_BODY_POSES_3D: Array<{ id: FullBodyPose3D; label: string; emoji: string }> = [
+		{ id: 'idle', label: 'Siaga Netral', emoji: '🧍' },
+		{ id: 'wave', label: 'Melambai', emoji: '👋' },
+		{ id: 'peace', label: 'Pose Peace', emoji: '✌️' },
+		{ id: 'heart', label: 'Tangan Love', emoji: '🫶' },
+		{ id: 'stand', label: 'Tegak Formal', emoji: '🚶' }
+	];
+
+	const STAGE_ENVIRONMENTS: Array<{
+		id: StageEnvironment3D;
+		name: string;
+		desc: string;
+		badge: string;
+		color: string;
+		icon: string;
+	}> = [
+		{
+			id: 'grid',
+			name: 'Cyber Grid',
+			desc: 'Lantai wireframe kotak neon cyan cyberpunk',
+			badge: 'Neon Sci-Fi',
+			color: 'border-cyan-500/50 bg-cyan-950/30 text-cyan-300',
+			icon: '🌐'
+		},
+		{
+			id: 'room',
+			name: '3D Studio Room',
+			desc: 'Ruangan dinding studio 3D dengan aksen neon',
+			badge: 'Studio',
+			color: 'border-violet-500/50 bg-violet-950/30 text-violet-300',
+			icon: '🏛️'
+		},
+		{
+			id: 'field',
+			name: 'Open Field',
+			desc: 'Padang rumput hijau luas & langit berkabut',
+			badge: 'Nature',
+			color: 'border-emerald-500/50 bg-emerald-950/30 text-emerald-300',
+			icon: '🌱'
+		},
+		{
+			id: 'void',
+			name: 'Void Minimal',
+			desc: 'Panggung gelap pekat minimalis tanpa distraksi',
+			badge: 'Clean Dark',
+			color: 'border-zinc-700 bg-zinc-900/60 text-zinc-300',
+			icon: '🌌'
+		}
+	];
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
@@ -682,6 +749,108 @@
 			</div>
 		</div>
 
+		<!-- 7b. Stage Environment Selector Popover & Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isStageMenuOpen = !isStageMenuOpen;
+					isExpressionMenuOpen = false;
+					isDeviceMenuOpen = false;
+					isCursorToolMenuOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isThemeModalOpen = false;
+				}}
+				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+					isStageMenuOpen
+						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
+				}"
+				aria-label="Lingkungan Panggung 3D"
+			>
+				<Compass class="w-5 h-5 text-indigo-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				Panggung 3D (Stage) [B]
+			</div>
+
+			<!-- Floating Stage Environment Popover -->
+			{#if isStageMenuOpen}
+				<!-- Backdrop closer -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="fixed inset-0 z-[80]" onclick={() => (isStageMenuOpen = false)}></div>
+
+				<div
+					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-80 sm:w-96 backdrop-blur-3xl border rounded-3xl shadow-2xl p-4 z-[85] space-y-3 cursor-default text-left {
+						isLightTheme ? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/90 border-white/15 text-zinc-100 shadow-2xl'
+					}"
+				>
+					<div class="flex items-center justify-between border-b pb-2 px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+						<div class="flex items-center gap-2">
+							<Compass class="w-4 h-4 text-indigo-400" />
+							<span class="font-bold text-xs uppercase tracking-wide">Panggung 3D (Stage)</span>
+						</div>
+						<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+							{rigging.stageEnvironment}
+						</span>
+					</div>
+
+					<!-- 4 Environments Grid -->
+					<div class="grid grid-cols-2 gap-2">
+						{#each STAGE_ENVIRONMENTS as stageEnv}
+							<button
+								type="button"
+								onclick={() => {
+									playSfx('click');
+									rigging.setStageEnvironment(stageEnv.id);
+									threeStage.setStageEnvironment(stageEnv.id);
+									rigging.showToast(`🪐 Panggung 3D: ${stageEnv.name}`);
+								}}
+								class="p-2.5 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+									rigging.stageEnvironment === stageEnv.id
+										? `${stageEnv.color} ring-2 ring-indigo-400 font-bold shadow-md`
+										: isLightTheme
+											? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100 text-zinc-800'
+											: 'bg-zinc-900/80 border-zinc-800 hover:bg-zinc-800 text-zinc-300'
+								}"
+							>
+								<div class="flex items-center justify-between mb-1">
+									<span class="text-lg">{stageEnv.icon}</span>
+									<span class="text-[8px] font-mono px-1.5 py-0.5 rounded bg-black/40 text-zinc-300">{stageEnv.badge}</span>
+								</div>
+								<div class="font-bold text-xs">{stageEnv.name}</div>
+								<div class="text-[9px] text-zinc-400 leading-tight mt-0.5">{stageEnv.desc}</div>
+							</button>
+						{/each}
+					</div>
+
+					<!-- Quick 3D Turntable Spin Toggle inside Stage Menu -->
+					<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'} flex items-center justify-between text-xs">
+						<span class="text-[11px] text-zinc-400 font-medium">Turntable 360° Spin:</span>
+						<button
+							type="button"
+							onclick={() => {
+								playSfx('toggle');
+								rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
+								rigging.showToast(rigging.is3DAutoSpin ? '🔄 3D Auto-Spin Aktif' : 'Auto-Spin Nonaktif');
+							}}
+							class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+								rigging.is3DAutoSpin
+									? 'bg-amber-500/25 border-amber-500 text-amber-300 font-bold'
+									: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+							}"
+						>
+							{rigging.is3DAutoSpin ? '🔄 Stop Spin' : '▶ Putar 360°'}
+						</button>
+					</div>
+				</div>
+			{/if}
+		</div>
+
 		<!-- 8. Model Catalog & Motions Modal Button -->
 		<div class="group relative flex items-center justify-center">
 			<button
@@ -742,17 +911,61 @@
 				></div>
 
 				<div
-					class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[720px] sm:w-[780px] max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-3xl shadow-2xl p-3 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
-						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
+					class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[760px] sm:w-[820px] max-w-[calc(100vw-1.5rem)] min-w-[340px] backdrop-blur-3xl border rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.65)] p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none resize overflow-auto {
+						isLightTheme ? 'bg-white/85 border-white/40 text-zinc-900 shadow-2xl' : 'bg-zinc-950/75 border-white/20 text-zinc-100 shadow-2xl'
 					}"
+					style="min-height: 290px; max-height: 82vh;"
 				>
-					<!-- Header Bar -->
-					<div class="flex items-center justify-between border-b pb-2 px-1 mb-2.5 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+					<!-- Header Bar with Tabs, Status, and Close -->
+					<div class="flex items-center justify-between border-b pb-2.5 px-1 mb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+						<!-- Tab Switcher Pills -->
+						<div class="flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-white/10">
+							<button
+								type="button"
+								onclick={() => (expressionActiveTab = 'expressions')}
+								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer {
+									expressionActiveTab === 'expressions'
+										? 'bg-pink-500/25 border border-pink-500/60 text-pink-300 font-bold shadow-sm'
+										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
+								}"
+							>
+								<Smile class="w-3.5 h-3.5 text-pink-400" />
+								<span>Ekspresi</span>
+								<span class="text-[9px] font-mono px-1 rounded bg-black/30 text-zinc-400">{DEFAULT_EXPRESSIONS.length}</span>
+							</button>
+
+							<button
+								type="button"
+								onclick={() => (expressionActiveTab = 'poses')}
+								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer {
+									expressionActiveTab === 'poses'
+										? 'bg-violet-500/25 border border-violet-500/60 text-violet-300 font-bold shadow-sm'
+										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
+								}"
+							>
+								<Activity class="w-3.5 h-3.5 text-violet-400" />
+								<span>Pose & Loop</span>
+							</button>
+
+							<button
+								type="button"
+								onclick={() => (expressionActiveTab = 'motions')}
+								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer {
+									expressionActiveTab === 'motions'
+										? 'bg-cyan-500/25 border border-cyan-500/60 text-cyan-300 font-bold shadow-sm'
+										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
+								}"
+							>
+								<Play class="w-3.5 h-3.5 text-cyan-400" />
+								<span>Motions</span>
+								{#if rigging.availableMotions.length > 0}
+									<span class="text-[9px] font-mono px-1 rounded bg-black/30 text-cyan-300">{rigging.availableMotions.length}</span>
+								{/if}
+							</button>
+						</div>
+
+						<!-- Right Status & Controls -->
 						<div class="flex items-center gap-2">
-							<Sparkles class="w-4 h-4 text-pink-500 animate-pulse" />
-							<span class="font-bold text-xs tracking-wide uppercase {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-								Katalog Ekspresi Wajah & Kontrol Panggung
-							</span>
 							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold {
 								rigging.activeExpression
 									? 'bg-pink-500/20 text-pink-300 border border-pink-500/40'
@@ -760,8 +973,7 @@
 							}">
 								{rigging.activeExpression ? `Aktif: ${rigging.activeExpression}` : 'Pose Netral'}
 							</span>
-						</div>
-						<div class="flex items-center gap-2">
+
 							{#if rigging.activeExpression}
 								<button
 									type="button"
@@ -769,10 +981,11 @@
 									class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-pink-500/20 text-pink-300 border border-pink-500/40 text-[10px] font-mono font-bold cursor-pointer hover:bg-pink-500/30 transition-colors"
 									title="Reset ke Netral"
 								>
-									<span>Reset Netral</span>
+									<span>Reset</span>
 									<X class="w-3 h-3" />
 								</button>
 							{/if}
+
 							<button
 								type="button"
 								onclick={() => (isExpressionMenuOpen = false)}
@@ -784,71 +997,283 @@
 						</div>
 					</div>
 
-					<!-- 2-Column Wide Horizontal Layout (Lebar ke samping & tidak menutupi wajah!) -->
-					<div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-						<!-- Left Side: Expressions Grid (7 cols) -->
+					<!-- 2-Column Wide Horizontal Layout -->
+					<div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+						<!-- Main Tab Content (8 cols) -->
 						<div class="md:col-span-8 space-y-2">
-							<div class="flex items-center justify-between px-1 text-[10px] font-bold text-pink-400">
-								<span>EKSPRESI UTAMA ({DEFAULT_EXPRESSIONS.length})</span>
-								<span class="text-[9px] text-zinc-500 font-mono">Hotkey [E] / [Alt + 1..8]</span>
-							</div>
-
-							<!-- 4-column compact expression chip grid with low max-h -->
-							<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-								{#each DEFAULT_EXPRESSIONS as exp}
-									<button
-										type="button"
-										onclick={() => handleSelectExpression(exp.id, exp.label)}
-										class="p-1.5 sm:p-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all cursor-pointer group active:scale-95 {
-											rigging.activeExpression === exp.id
-												? 'bg-pink-500/25 border-pink-500/70 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/50'
-												: isLightTheme
-													? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100 hover:border-zinc-300'
-													: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
-										}"
-									>
-										<span class="flex items-center gap-1.5 truncate">
-											<span class="text-base shrink-0">{exp.emoji}</span>
-											<span class="truncate font-semibold text-[11px]">{exp.label}</span>
-										</span>
-										<span class="text-[9px] px-1 py-0.2 rounded font-mono shrink-0 {
-											rigging.activeExpression === exp.id ? 'bg-pink-500/30 text-pink-200' : 'bg-zinc-800 text-zinc-400'
-										}">{exp.badge}</span>
-									</button>
-								{/each}
-							</div>
-
-							<!-- Model-Specific Blendshapes row if present -->
-							{#if rigging.availableExpressions && rigging.availableExpressions.length > 0}
-								<div class="pt-1.5 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
-									<div class="flex items-center justify-between px-1 mb-1 text-[10px] font-bold text-cyan-400">
-										<span>EKSPRESI KHUSUS MODEL ({rigging.availableExpressions.length})</span>
-										<span class="text-[9px] text-zinc-500">Live2D / 3D Morph</span>
+							{#if expressionActiveTab === 'expressions'}
+								<!-- TAB 1: FACIAL EXPRESSIONS -->
+								<div class="space-y-2">
+									<div class="flex items-center justify-between px-1 text-[10px] font-bold text-pink-400">
+										<span>EKSPRESI UTAMA ({DEFAULT_EXPRESSIONS.length})</span>
+										<span class="text-[9px] text-zinc-500 font-mono">Hotkey [E] / [Alt + 1..8]</span>
 									</div>
-									<div class="flex flex-wrap gap-1 max-h-16 overflow-y-auto custom-scrollbar pr-1">
-										{#each rigging.availableExpressions as mExp}
+
+									<!-- 4-column compact expression chip grid -->
+									<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+										{#each DEFAULT_EXPRESSIONS as exp}
 											<button
 												type="button"
-												onclick={() => handleSelectExpression(mExp.name, mExp.label)}
-												class="px-2 py-1 rounded-lg border text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer truncate active:scale-95 {
-													rigging.activeExpression === mExp.name
-														? 'bg-cyan-500/25 border-cyan-500/70 text-cyan-300 font-bold shadow-sm ring-1 ring-cyan-500/50'
+												onclick={() => handleSelectExpression(exp.id, exp.label)}
+												class="p-1.5 sm:p-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all cursor-pointer group active:scale-95 {
+													rigging.activeExpression === exp.id
+														? 'bg-pink-500/25 border-pink-500/70 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/50'
 														: isLightTheme
-															? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100'
+															? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100 hover:border-zinc-300'
 															: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
 												}"
-												title={mExp.label}
 											>
-												<span>✨</span>
-												<span class="truncate">{mExp.label}</span>
+												<span class="flex items-center gap-1.5 truncate">
+													<span class="text-base shrink-0">{exp.emoji}</span>
+													<span class="truncate font-semibold text-[11px]">{exp.label}</span>
+												</span>
+												<span class="text-[9px] px-1 py-0.2 rounded font-mono shrink-0 {
+													rigging.activeExpression === exp.id ? 'bg-pink-500/30 text-pink-200' : 'bg-zinc-800 text-zinc-400'
+												}">{exp.badge}</span>
 											</button>
 										{/each}
 									</div>
+
+									<!-- Model-Specific Blendshapes row if present -->
+									{#if rigging.availableExpressions && rigging.availableExpressions.length > 0}
+										<div class="pt-1.5 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+											<div class="flex items-center justify-between px-1 mb-1 text-[10px] font-bold text-cyan-400">
+												<span>EKSPRESI KHUSUS MODEL ({rigging.availableExpressions.length})</span>
+												<span class="text-[9px] text-zinc-500">Live2D / 3D Morph</span>
+											</div>
+											<div class="flex flex-wrap gap-1 max-h-16 overflow-y-auto custom-scrollbar pr-1">
+												{#each rigging.availableExpressions as mExp}
+													<button
+														type="button"
+														onclick={() => handleSelectExpression(mExp.name, mExp.label)}
+														class="px-2 py-1 rounded-lg border text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer truncate active:scale-95 {
+															rigging.activeExpression === mExp.name
+																? 'bg-cyan-500/25 border-cyan-500/70 text-cyan-300 font-bold shadow-sm ring-1 ring-cyan-500/50'
+																: isLightTheme
+																	? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100'
+																	: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
+														}"
+														title={mExp.label}
+													>
+														<span>✨</span>
+														<span class="truncate">{mExp.label}</span>
+													</button>
+												{/each}
+											</div>
+										</div>
+									{/if}
+								</div>
+							{:else if expressionActiveTab === 'poses'}
+								<!-- TAB 2: POSES & POSE LOOPING -->
+								<div class="space-y-3">
+									<div class="flex items-center justify-between px-1 text-[10px] font-bold text-violet-400">
+										<span>POSE LOOPING CONTINUOUS ({POSE_LOOPS.length})</span>
+										<span class="text-[9px] text-zinc-500">Animasi Idle Halus</span>
+									</div>
+
+									<!-- Pose Loops Grid -->
+									<div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+										{#each POSE_LOOPS as loop}
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.poseLoopMode = loop.id;
+													rigging.showToast(`Loop Pose: ${loop.label}`);
+												}}
+												class="p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95 {
+													rigging.poseLoopMode === loop.id
+														? 'bg-violet-500/25 border-violet-500 text-violet-300 font-bold ring-1 ring-violet-500/50'
+														: isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+												}"
+											>
+												<div class="flex items-center gap-1.5">
+													<span class="text-base">{loop.emoji}</span>
+													<span class="font-semibold text-xs">{loop.label}</span>
+												</div>
+												<div class="text-[9px] text-zinc-400 mt-0.5 truncate">{loop.desc}</div>
+											</button>
+										{/each}
+									</div>
+
+									<!-- Pose Loop Speed Slider -->
+									{#if rigging.poseLoopMode !== 'none'}
+										<div class="flex items-center gap-3 p-2 rounded-xl bg-black/30 border border-white/10">
+											<span class="text-[11px] font-medium text-zinc-400 shrink-0">Kecepatan Loop:</span>
+											<input
+												type="range"
+												min="0.2"
+												max="2.5"
+												step="0.1"
+												bind:value={rigging.poseLoopSpeed}
+												class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-violet-400"
+											/>
+											<span class="text-[11px] text-violet-300 font-mono font-bold w-10 text-right">{rigging.poseLoopSpeed.toFixed(1)}x</span>
+										</div>
+									{/if}
+
+									<!-- 3D Full Body Poses Section (if 3D mode) -->
+									{#if rigging.avatarEngine === '3d'}
+										<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+											<div class="flex items-center justify-between px-1 mb-1.5 text-[10px] font-bold text-amber-400">
+												<span>POSE TUBUH 3D (FULL BODY POSES)</span>
+												<span class="text-[9px] text-zinc-500">Pose Kinematik</span>
+											</div>
+											<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+												{#each FULL_BODY_POSES_3D as fbPose}
+													<button
+														type="button"
+														onclick={() => {
+															playSfx('click');
+															threeStage.setFullBodyPose(fbPose.id);
+															rigging.showToast(`Pose 3D: ${fbPose.label}`);
+														}}
+														class="p-2 rounded-xl border text-center transition-all cursor-pointer active:scale-95 {
+															threeStage.activeFullBodyPose === fbPose.id
+																? 'bg-amber-500/25 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500/50'
+																: isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+														}"
+													>
+														<div class="text-base mb-0.5">{fbPose.emoji}</div>
+														<div class="text-[10px] font-semibold truncate">{fbPose.label}</div>
+													</button>
+												{/each}
+											</div>
+										</div>
+									{/if}
+								</div>
+							{:else if expressionActiveTab === 'motions'}
+								<!-- TAB 3: TRIGGER MOTIONS -->
+								<div class="space-y-2.5">
+									<div class="flex items-center justify-between px-1 text-[10px] font-bold text-cyan-400">
+										<span>TRIGGER ANIMASI & MOTIONS</span>
+										<span class="text-[9px] text-zinc-500">Animasi Gerakan Model</span>
+									</div>
+
+									{#if rigging.availableMotions && rigging.availableMotions.length > 0}
+										<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+											{#each rigging.availableMotions as motion}
+												<button
+													type="button"
+													onclick={() => {
+														playSfx('click');
+														rigging.playMotion(motion);
+														rigging.showToast(`▶ Putar Gerakan: ${motion}`);
+													}}
+													class="p-2 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 {
+														isLightTheme ? 'bg-zinc-50 border-zinc-200 hover:bg-cyan-50 text-zinc-800' : 'bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300'
+													}"
+												>
+													<Play class="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+													<span class="font-mono text-xs font-semibold truncate">{motion}</span>
+												</button>
+											{/each}
+										</div>
+									{:else}
+										<!-- Procedural Fallback Gestures -->
+										<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.playMotion('wave');
+													rigging.showToast('👋 Melambai ke Penonton');
+												}}
+												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
+											>
+												<span class="text-lg">👋</span>
+												<div>
+													<div class="font-semibold text-xs">Lambaian Tangan</div>
+													<div class="text-[9px] text-zinc-500">Sapa penonton</div>
+												</div>
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.playMotion('bow');
+													rigging.showToast('🙇 Membungkuk Hormat');
+												}}
+												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
+											>
+												<span class="text-lg">🙇</span>
+												<div>
+													<div class="font-semibold text-xs">Membungkuk</div>
+													<div class="text-[9px] text-zinc-500">Salam pembuka/penutup</div>
+												</div>
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.playMotion('cheer');
+													rigging.showToast('🎉 Sorak Semangat!');
+												}}
+												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
+											>
+												<span class="text-lg">🎉</span>
+												<div>
+													<div class="font-semibold text-xs">Sorak Hore</div>
+													<div class="text-[9px] text-zinc-500">Ekspresi heboh</div>
+												</div>
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.playMotion('nod');
+													rigging.showToast('🙂 Mengangguk Setuju');
+												}}
+												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
+											>
+												<span class="text-lg">🙂</span>
+												<div>
+													<div class="font-semibold text-xs">Mengangguk</div>
+													<div class="text-[9px] text-zinc-500">Respon ya / setuju</div>
+												</div>
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.playMotion('shake');
+													rigging.showToast('🙅 Menggeleng Kepala');
+												}}
+												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
+											>
+												<span class="text-lg">🙅</span>
+												<div>
+													<div class="font-semibold text-xs">Menggeleng</div>
+													<div class="text-[9px] text-zinc-500">Respon tidak / enggan</div>
+												</div>
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													rigging.playMotion('blink_fast');
+													rigging.showToast('✨ Kedip Mata Cepat');
+												}}
+												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
+											>
+												<span class="text-lg">✨</span>
+												<div>
+													<div class="font-semibold text-xs">Kedip Beruntun</div>
+													<div class="text-[9px] text-zinc-500">Mata genit lucu</div>
+												</div>
+											</button>
+										</div>
+									{/if}
 								</div>
 							{/if}
 						</div>
 
-						<!-- Right Side: Framing & 3D Controls (4 cols) -->
+						<!-- Right Side: Framing & 3D Stage Controls (4 cols) -->
 						<div class="md:col-span-4 space-y-2.5 md:border-l md:pl-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 							<!-- Framing -->
 							<div class="space-y-1.5">
@@ -967,6 +1392,11 @@
 								</div>
 							{/if}
 						</div>
+					</div>
+
+					<!-- Visual resize grip corner at bottom-right -->
+					<div class="absolute bottom-1 right-1 pointer-events-none text-zinc-500/70 select-none flex items-center justify-center">
+						<GripVertical class="w-3 h-3 rotate-45" />
 					</div>
 				</div>
 			{/if}
