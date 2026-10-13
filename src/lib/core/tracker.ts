@@ -850,35 +850,43 @@ export class FaceTracker {
 			ctx.clearRect(0, 0, width, height);
 		}
 
-		// 1. Draw 3D Face Wireframe Mesh (Tessellation)
-		if (faceLandmarks.length > 0 && FaceLandmarker.FACE_LANDMARKS_TESSELATION) {
-			const tess = FaceLandmarker.FACE_LANDMARKS_TESSELATION;
-			ctx.save();
-			ctx.strokeStyle = mode === 'wireframe' ? 'rgba(235, 235, 245, 0.72)' : 'rgba(6, 182, 212, 0.65)';
-			ctx.lineWidth = mode === 'wireframe' ? 0.75 : 0.65;
-			ctx.beginPath();
-			for (let i = 0; i < tess.length; i++) {
-				const edge = tess[i];
-				const p1 = faceLandmarks[edge.start];
-				const p2 = faceLandmarks[edge.end];
-				if (p1 && p2) {
-					ctx.moveTo(p1.x * width, p1.y * height);
-					ctx.lineTo(p2.x * width, p2.y * height);
+		// 1. Draw 3D Face Wireframe or Dots
+		if (faceLandmarks.length > 0) {
+			// Mesh wireframe lines are ONLY drawn in pure 'wireframe' 3D mode
+			if (mode === 'wireframe' && FaceLandmarker.FACE_LANDMARKS_TESSELATION) {
+				const tess = FaceLandmarker.FACE_LANDMARKS_TESSELATION;
+				ctx.save();
+				ctx.strokeStyle = 'rgba(235, 235, 245, 0.72)';
+				ctx.lineWidth = 0.75;
+				ctx.beginPath();
+				for (let i = 0; i < tess.length; i++) {
+					const edge = tess[i];
+					const p1 = faceLandmarks[edge.start];
+					const p2 = faceLandmarks[edge.end];
+					if (p1 && p2) {
+						ctx.moveTo(p1.x * width, p1.y * height);
+						ctx.lineTo(p2.x * width, p2.y * height);
+					}
 				}
+				ctx.stroke();
+				ctx.restore();
 			}
-			ctx.stroke();
 
-			// Draw glowing landmark dots at mesh vertices
+			// In 'rig' (Webcam + Rig) mode: strictly dots only! (Also drawn in 'wireframe' mode)
 			ctx.save();
-			ctx.fillStyle = mode === 'wireframe' ? 'rgba(56, 189, 248, 0.9)' : 'rgba(6, 182, 212, 0.9)';
-			ctx.shadowColor = mode === 'wireframe' ? '#38bdf8' : '#06b6d4';
-			ctx.shadowBlur = 3;
+			const dotColor = mode === 'wireframe' ? 'rgba(56, 189, 248, 0.95)' : 'rgba(52, 211, 153, 0.95)';
+			const dotGlow = mode === 'wireframe' ? '#38bdf8' : '#10b981';
+			const dotRadius = mode === 'wireframe' ? 1.2 : 1.6;
+
+			ctx.fillStyle = dotColor;
+			ctx.shadowColor = dotGlow;
+			ctx.shadowBlur = 4;
 			ctx.beginPath();
 			for (let i = 0; i < faceLandmarks.length; i++) {
 				const pt = faceLandmarks[i];
 				if (pt) {
-					ctx.moveTo(pt.x * width + 1.2, pt.y * height);
-					ctx.arc(pt.x * width, pt.y * height, 1.2, 0, 2 * Math.PI);
+					ctx.moveTo(pt.x * width + dotRadius, pt.y * height);
+					ctx.arc(pt.x * width, pt.y * height, dotRadius, 0, 2 * Math.PI);
 				}
 			}
 			ctx.fill();
@@ -886,6 +894,7 @@ export class FaceTracker {
 
 			// Draw glowing yellow pupils / iris (Landmarks 468 & 473)
 			const pupilIndices = [468, 473];
+			ctx.save();
 			ctx.shadowColor = '#ffff00';
 			ctx.shadowBlur = 8;
 			ctx.fillStyle = '#ffeb3b';
@@ -898,56 +907,52 @@ export class FaceTracker {
 				}
 			}
 			ctx.restore();
-		} else if (faceLandmarks.length > 0) {
-			ctx.fillStyle = '#06b6d4';
-			ctx.beginPath();
-			for (let i = 0; i < faceLandmarks.length; i += 4) {
-				const pt = faceLandmarks[i];
-				const x = pt.x * width;
-				const y = pt.y * height;
-				ctx.moveTo(x + 1.2, y);
-				ctx.arc(x, y, 1.2, 0, 2 * Math.PI);
-			}
-			ctx.fill();
 		}
 
-		// 2. Draw Hand Landmarks & Skeleton Bones (Emerald Green)
+		// 2. Draw Hand Landmarks (Titik-titik sendi tangan)
 		if (handsList.length > 0 && rigging.enableHandTracking) {
+			ctx.save();
 			ctx.fillStyle = '#10b981';
+			ctx.shadowColor = '#10b981';
+			ctx.shadowBlur = 4;
 			ctx.beginPath();
 			for (const hand of handsList) {
 				for (const pt of hand) {
 					const x = pt.x * width;
 					const y = pt.y * height;
-					ctx.moveTo(x + 2.2, y);
-					ctx.arc(x, y, 2.2, 0, 2 * Math.PI);
+					ctx.moveTo(x + 2.4, y);
+					ctx.arc(x, y, 2.4, 0, 2 * Math.PI);
 				}
 			}
 			ctx.fill();
+			ctx.restore();
 
-			ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
-			ctx.lineWidth = 1.5;
-			ctx.beginPath();
+			// Skeleton lines only drawn in pure 'wireframe' mode
+			if (mode === 'wireframe') {
+				ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
+				ctx.lineWidth = 1.5;
+				ctx.beginPath();
 
-			const fingerChains = [
-				[0, 1, 2, 3, 4],
-				[0, 5, 6, 7, 8],
-				[0, 9, 10, 11, 12],
-				[0, 13, 14, 15, 16],
-				[0, 17, 18, 19, 20]
-			];
+				const fingerChains = [
+					[0, 1, 2, 3, 4],
+					[0, 5, 6, 7, 8],
+					[0, 9, 10, 11, 12],
+					[0, 13, 14, 15, 16],
+					[0, 17, 18, 19, 20]
+				];
 
-			for (const hand of handsList) {
-				for (const chain of fingerChains) {
-					for (let i = 0; i < chain.length; i++) {
-						const pt = hand[chain[i]];
-						if (!pt) continue;
-						if (i === 0) ctx.moveTo(pt.x * width, pt.y * height);
-						else ctx.lineTo(pt.x * width, pt.y * height);
+				for (const hand of handsList) {
+					for (const chain of fingerChains) {
+						for (let i = 0; i < chain.length; i++) {
+							const pt = hand[chain[i]];
+							if (!pt) continue;
+							if (i === 0) ctx.moveTo(pt.x * width, pt.y * height);
+							else ctx.lineTo(pt.x * width, pt.y * height);
+						}
 					}
 				}
+				ctx.stroke();
 			}
-			ctx.stroke();
 		}
 	}
 }

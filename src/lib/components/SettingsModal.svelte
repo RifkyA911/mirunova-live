@@ -120,8 +120,11 @@
 	function handleFormantSpeak(textToSpeak?: string) {
 		const txt = textToSpeak || ttsText;
 		playSfx('click');
-		voice.synthesizeVoiceText(txt, rigging.voiceFilter);
-		rigging.showToast(`✨ Memutar Formant TTS (DSP: ${rigging.voiceFilter})`);
+		isTtsSpeaking = true;
+		voice.synthesizeVoiceText(txt, rigging.voiceFilter, ttsVoice, () => {
+			isTtsSpeaking = false;
+		});
+		rigging.showToast(`✨ Memutar Suara Alami (Preset: ${rigging.voiceFilter})`);
 	}
 
 	async function handleRecordSample() {
@@ -205,13 +208,21 @@
 		}
 
 		playSfx('click');
-		const played = await voice.synthesizeVoiceText(testTtsText, rigging.voiceFilter);
-		isPlayingTest = false;
-		testPlaybackMode = null;
+		const played = await voice.synthesizeVoiceText(
+			testTtsText,
+			rigging.voiceFilter,
+			ttsVoice,
+			() => {
+				isPlayingTest = false;
+				testPlaybackMode = null;
+			}
+		);
 		if (!played) {
+			isPlayingTest = false;
+			testPlaybackMode = null;
 			rigging.showToast('Gagal memproses sintesis suara teks');
 		} else {
-			rigging.showToast('✓ Teks selesai disintesis lewat DSP Voice Changer!');
+			rigging.showToast('✓ Uji suara alami selesai!');
 		}
 	}
 

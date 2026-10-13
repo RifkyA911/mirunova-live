@@ -187,7 +187,7 @@
 					}"
 				>
 					<Camera class="w-3 h-3 text-emerald-400" />
-					<span>Webcam + Rig</span>
+					<span>Webcam + Titik Rig</span>
 				</button>
 
 				<button
