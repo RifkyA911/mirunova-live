@@ -1,0 +1,72 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "简.moc3",
+    "Textures": [
+      "简.8192/texture_00.png"
+    ],
+    "Physics": "简.physics3.json",
+    "DisplayInfo": "简.cdi3.json",
+    "Motions": {
+      "Idle": [
+        {
+          "File": "Scene1.motion3.json"
+        }
+      ]
+    },
+    "Expressions": [
+      {
+        "Name": "stars",
+        "File": "星星眼.exp3.json"
+      },
+      {
+        "Name": "heart",
+        "File": "爱心眼.exp3.json"
+      },
+      {
+        "Name": "blush",
+        "File": "脸红.exp3.json"
+      },
+      {
+        "Name": "tears",
+        "File": "泪.exp3.json"
+      },
+      {
+        "Name": "angry",
+        "File": "生气.exp3.json"
+      },
+      {
+        "Name": "roll",
+        "File": "白眼.exp3.json"
+      },
+      {
+        "Name": "dark",
+        "File": "脸黑.exp3.json"
+      },
+      {
+        "Name": "hand_r",
+        "File": "右手.exp3.json"
+      },
+      {
+        "Name": "hand_l",
+        "File": "左手.exp3.json"
+      },
+      {
+        "Name": "blood",
+        "File": "血.exp3.json"
+      }
+    ]
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": []
+    },
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": []
+    }
+  ]
+}

@@ -100,4 +100,40 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(stage['scene'].children.length).toBe(1);
 		expect(stage['scene'].children[0]).toBe(stage['currentModelGroup']);
 	});
+
+	it('should support interactive orbit rotation, auto-spin turntable, and angle reset', () => {
+		const stage = new ThreeStage();
+
+		// Initial orbit values
+		expect(stage.orbitTheta).toBe(0);
+		expect(stage.isAutoSpin).toBe(false);
+
+		// Rotate azimuth & polar
+		stage.rotateOrbit(0.5, -0.2);
+		expect(stage.orbitTheta).toBeCloseTo(0.5, 4);
+
+		// Rotate by degrees
+		stage.rotateOrbitDegrees(45);
+		expect(stage.orbitTheta).toBeCloseTo(0.5 + Math.PI / 4, 3);
+
+		// Negative rotate by degrees
+		stage.rotateOrbitDegrees(-90);
+		// Wrap around 2*PI
+		expect(stage.orbitTheta).toBeGreaterThanOrEqual(0);
+		expect(stage.orbitTheta).toBeLessThan(Math.PI * 2);
+
+		// Auto spin toggle
+		expect(stage.toggleAutoSpin()).toBe(true);
+		expect(stage.isAutoSpin).toBe(true);
+		expect(stage.toggleAutoSpin(false)).toBe(false);
+		expect(stage.isAutoSpin).toBe(false);
+
+		// Reset orbit
+		stage.rotateOrbit(1.2, 0.3);
+		stage.toggleAutoSpin(true);
+		stage.resetOrbit();
+		expect(stage.orbitTheta).toBe(0);
+		expect(stage.orbitPhi).toBeCloseTo(1.55, 2);
+		expect(stage.isAutoSpin).toBe(false);
+	});
 });

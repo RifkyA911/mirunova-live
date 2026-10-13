@@ -53,8 +53,14 @@ export class ThreeStage {
 	public activeExpression: string = '';
 	public activeFullBodyPose: FullBodyPose3D = 'idle';
 
-	// Framing & Smooth Camera Animation
+	// Framing, Orbit Camera & Smooth Turntable Spin
 	public currentFraming: FramingMode3D = 'full';
+	public orbitTheta: number = 0; // Azimuth angle in radians (around Y axis)
+	public orbitPhi: number = 1.55; // Polar angle in radians (from top, ~1.55 is eye-level)
+	public orbitRadius: number = 2.7; // Spherical distance from target
+	public isAutoSpin: boolean = false;
+	public autoSpinSpeed: number = 0.55; // Rad/s (~31.5 deg/s)
+
 	private cameraTargetPos: THREE.Vector3 = new THREE.Vector3(0, 0.95, 2.7);
 	private cameraLookTarget: THREE.Vector3 = new THREE.Vector3(0, 0.9, 0);
 	private currentLookAt: THREE.Vector3 = new THREE.Vector3(0, 0.9, 0);
@@ -68,8 +74,9 @@ export class ThreeStage {
 	constructor() {
 		this.scene = new THREE.Scene();
 		this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-		this.camera.position.set(0, 0.95, 2.7);
-		this.camera.lookAt(0, 0.9, 0);
+		this.updateCameraTargetPos();
+		this.camera.position.copy(this.cameraTargetPos);
+		this.camera.lookAt(this.cameraLookTarget);
 	}
 
 	init(container: HTMLElement) {
@@ -113,8 +120,8 @@ export class ThreeStage {
 
 	zoomBy(factor: number) {
 		if (!this.camera) return;
-		const newZ = this.cameraTargetPos.z / factor;
-		this.cameraTargetPos.z = Math.max(0.5, Math.min(6.0, newZ));
+		this.orbitRadius = Math.max(0.4, Math.min(6.0, this.orbitRadius / factor));
+		this.updateCameraTargetPos();
 	}
 
 	resetZoom() {
@@ -127,30 +134,68 @@ export class ThreeStage {
 		if (this.modelType === 'fbx') {
 			if (mode === 'full') {
 				// Full Body: shows full avatar from feet to head
-				this.cameraTargetPos.set(0, 0.95, 2.7);
 				this.cameraLookTarget.set(0, 0.9, 0);
+				this.orbitRadius = 2.7;
 			} else if (mode === 'half') {
 				// Half Body: waist up
-				this.cameraTargetPos.set(0, 1.25, 1.55);
 				this.cameraLookTarget.set(0, 1.25, 0);
+				this.orbitRadius = 1.55;
 			} else if (mode === 'closeup') {
 				// Close-up: face & expressions focus
-				this.cameraTargetPos.set(0, 1.48, 0.85);
 				this.cameraLookTarget.set(0, 1.48, 0);
+				this.orbitRadius = 0.85;
 			}
 		} else {
 			// Procedural Cat / GLTF
 			if (mode === 'full') {
-				this.cameraTargetPos.set(0, 0.25, 2.8);
 				this.cameraLookTarget.set(0, 0.2, 0);
+				this.orbitRadius = 2.8;
 			} else if (mode === 'half') {
-				this.cameraTargetPos.set(0, 0.35, 1.9);
 				this.cameraLookTarget.set(0, 0.3, 0);
+				this.orbitRadius = 1.9;
 			} else if (mode === 'closeup') {
-				this.cameraTargetPos.set(0, 0.45, 1.2);
 				this.cameraLookTarget.set(0, 0.4, 0);
+				this.orbitRadius = 1.2;
 			}
 		}
+		this.updateCameraTargetPos();
+	}
+
+	public rotateOrbit(deltaTheta: number, deltaPhi: number = 0) {
+		this.orbitTheta += deltaTheta;
+		const twoPi = Math.PI * 2;
+		this.orbitTheta = ((this.orbitTheta % twoPi) + twoPi) % twoPi;
+		this.orbitPhi = Math.max(0.08, Math.min(Math.PI - 0.08, this.orbitPhi + deltaPhi));
+		this.updateCameraTargetPos();
+	}
+
+	public rotateOrbitDegrees(degrees: number) {
+		this.rotateOrbit(degrees * (Math.PI / 180), 0);
+	}
+
+	public toggleAutoSpin(enabled?: boolean): boolean {
+		this.isAutoSpin = enabled !== undefined ? enabled : !this.isAutoSpin;
+		return this.isAutoSpin;
+	}
+
+	public resetOrbit() {
+		this.orbitTheta = 0;
+		this.orbitPhi = 1.55;
+		this.isAutoSpin = false;
+		this.setFraming(this.currentFraming);
+	}
+
+	public updateCameraTargetPos() {
+		const sinPhi = Math.sin(this.orbitPhi);
+		const cosPhi = Math.cos(this.orbitPhi);
+		const sinTheta = Math.sin(this.orbitTheta);
+		const cosTheta = Math.cos(this.orbitTheta);
+
+		this.cameraTargetPos.set(
+			this.cameraLookTarget.x + this.orbitRadius * sinPhi * sinTheta,
+			this.cameraLookTarget.y + this.orbitRadius * cosPhi,
+			this.cameraLookTarget.z + this.orbitRadius * sinPhi * cosTheta
+		);
 	}
 
 	setExpression(name: string) {
@@ -386,6 +431,7 @@ export class ThreeStage {
 		this.tailNode = tailGroup;
 		if (token !== this.activeLoadToken) return;
 		this.scene.add(catGroup);
+		this.setFraming(this.currentFraming);
 	}
 
 	// 2. Load Any External GLTF / GLB Model
@@ -1080,6 +1126,12 @@ export class ThreeStage {
 			const now = performance.now();
 			const delta = (now - this.lastFrameTime) / 1000;
 			this.lastFrameTime = now;
+
+			if (this.isAutoSpin) {
+				const twoPi = Math.PI * 2;
+				this.orbitTheta = (this.orbitTheta + this.autoSpinSpeed * delta) % twoPi;
+				this.updateCameraTargetPos();
+			}
 
 			if (this.camera) {
 				this.camera.position.lerp(this.cameraTargetPos, 0.08);

@@ -27,6 +27,12 @@ describe('Model Catalog Validation', () => {
 		expect(mihari?.url).toBe('/models/mihari/Mihari_V1.model3.json');
 		expect(mihari?.source).toBe('booth');
 		expect(mihari?.tags).toContain('BOOTH.pm');
+
+		const jian = MODEL_CATALOG.find((m) => m.id === 'jian');
+		expect(jian).toBeDefined();
+		expect(jian?.name).toContain('简');
+		expect(jian?.url).toBe('/models/jian/简.model3.json');
+		expect(jian?.avatarUrl).toBeTruthy();
 	});
 
 	it('should not contain blocked or dead CDN repositories', () => {

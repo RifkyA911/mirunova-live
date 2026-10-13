@@ -236,6 +236,7 @@ export class RiggingStore {
 	// Avatar Engine: Live2D vs 3D
 	avatarEngine = $state<'live2d' | '3d'>('live2d');
 	selected3DModelId = $state<string>('mochi-cat');
+	is3DAutoSpin = $state<boolean>(false);
 	customGlbUrl = $state<string | null>(null);
 
 	// Active Model Details

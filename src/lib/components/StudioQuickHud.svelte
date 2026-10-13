@@ -166,7 +166,7 @@
 					</button>
 				</div>
 
-				<!-- Tab 1: Framing Kamera (Tombol Bergambar) -->
+				<!-- Tab 1: Framing Kamera & 3D Rotate/Spin View -->
 				{#if hudTab === 'framing'}
 					<div class="flex items-center gap-2 overflow-x-auto py-0.5 px-0.5">
 						<button
@@ -213,6 +213,83 @@
 								<span class="text-[9px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5">Fokus Wajah</span>
 							</div>
 						</button>
+
+						{#if rigging.avatarEngine === '3d'}
+							<div class="h-6 w-px bg-zinc-300 dark:bg-zinc-800 mx-0.5"></div>
+
+							<!-- 3D Auto-Spin Turntable Toggle -->
+							<button
+								onclick={() => {
+									playSfx('toggle');
+									rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
+									rigging.showToast(rigging.is3DAutoSpin ? '🔄 3D Auto-Spin 360° Aktif' : 'Auto-Spin Dihentikan');
+								}}
+								class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border {
+									rigging.is3DAutoSpin
+										? 'bg-amber-500/25 border-amber-500 text-amber-600 dark:text-amber-200 shadow-md ring-1 ring-amber-500/50'
+										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+								}"
+								title="Putar Otomatis 360° Turntable"
+							>
+								<span class="text-base {rigging.is3DAutoSpin ? 'animate-spin' : ''}">🔄</span>
+								<div class="flex flex-col text-left">
+									<span class="leading-none">{rigging.is3DAutoSpin ? 'Stop Spin' : 'Auto Spin 360°'}</span>
+									<span class="text-[9px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5">Turntable View</span>
+								</div>
+							</button>
+
+							<!-- Rotate Left 45 deg -->
+							<button
+								onclick={() => {
+									playSfx('click');
+									threeStage.rotateOrbitDegrees(-45);
+									rigging.showToast('↺ Putar Sudut 3D -45°');
+								}}
+								class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border {
+									isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+								}"
+								title="Putar Sudut 3D Kiri 45°"
+								aria-label="Putar Kiri 45°"
+							>
+								<span class="text-base">↺</span>
+								<span class="text-[11px] font-mono">-45°</span>
+							</button>
+
+							<!-- Rotate Right 45 deg -->
+							<button
+								onclick={() => {
+									playSfx('click');
+									threeStage.rotateOrbitDegrees(45);
+									rigging.showToast('↻ Putar Sudut 3D +45°');
+								}}
+								class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border {
+									isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+								}"
+								title="Putar Sudut 3D Kanan 45°"
+								aria-label="Putar Kanan 45°"
+							>
+								<span class="text-base">↻</span>
+								<span class="text-[11px] font-mono">+45°</span>
+							</button>
+
+							<!-- Reset 3D Angle -->
+							<button
+								onclick={() => {
+									playSfx('click');
+									threeStage.resetOrbit();
+									rigging.is3DAutoSpin = false;
+									rigging.showToast('🎯 Sudut 3D Direset ke Depan');
+								}}
+								class="flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border {
+									isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+								}"
+								title="Reset Sudut Pandang 3D ke Depan"
+								aria-label="Reset Sudut 3D"
+							>
+								<span class="text-base">🎯</span>
+								<span class="text-[11px]">Reset</span>
+							</button>
+						{/if}
 					</div>
 
 				<!-- Tab 2: Ekspresi Wajah (Tombol Bergambar) -->

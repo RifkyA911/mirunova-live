@@ -13,6 +13,17 @@ export interface Model3DItem {
 
 export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 	{
+		id: 'jian',
+		name: '简 (Jane Doe - Zenless Zone Zero)',
+		url: '/models/jian/简.model3.json',
+		description: 'Model Live2D Cubism 4 komunitas Jane Doe (简·杜) dari Zenless Zone Zero dengan tekstur 8K ultra HD, 10 ekspresi (bintang, hati, blush, menangis, marah), dan fisika rambut & mantel dinamis.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/jian.png',
+		source: 'booth',
+		author: 'ZZZ Community',
+		tags: ['ZZZ', 'Jane Doe', 'Cubism 4', '8K Ultra HD', '10 Expressions', 'Zenless Zone Zero', 'Anime VTuber']
+	},
+	{
 		id: 'mihari',
 		name: 'Mihari (绪山美波里)',
 		url: '/models/mihari/Mihari_V1.model3.json',

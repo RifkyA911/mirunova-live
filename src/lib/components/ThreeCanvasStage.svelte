@@ -152,6 +152,47 @@
 	const hostLayerOpacity = $derived(hostLayer ? hostLayer.opacity : 1.0);
 	const isHostLayerLocked = $derived(hostLayer ? hostLayer.locked : false);
 
+	$effect(() => {
+		threeStage.toggleAutoSpin(rigging.is3DAutoSpin);
+	});
+
+	let isDragging = $state(false);
+	let prevPointerX = 0;
+	let prevPointerY = 0;
+
+	function handlePointerDown(e: PointerEvent) {
+		if (rigging.isGuiLocked || isHostLayerLocked) return;
+		if (e.button !== 0) return;
+		isDragging = true;
+		prevPointerX = e.clientX;
+		prevPointerY = e.clientY;
+		(e.currentTarget as HTMLElement)?.setPointerCapture(e.pointerId);
+	}
+
+	function handlePointerMove(e: PointerEvent) {
+		if (!isDragging) return;
+		const deltaX = e.clientX - prevPointerX;
+		const deltaY = e.clientY - prevPointerY;
+		prevPointerX = e.clientX;
+		prevPointerY = e.clientY;
+
+		if (rigging.is3DAutoSpin) {
+			rigging.is3DAutoSpin = false;
+		}
+
+		const sensitivity = 0.006;
+		threeStage.rotateOrbit(-deltaX * sensitivity, deltaY * sensitivity);
+	}
+
+	function handlePointerUp(e: PointerEvent) {
+		if (isDragging) {
+			isDragging = false;
+			try {
+				(e.currentTarget as HTMLElement)?.releasePointerCapture(e.pointerId);
+			} catch (_) {}
+		}
+	}
+
 	function handleWheel(e: WheelEvent) {
 		if (rigging.isGuiLocked || isHostLayerLocked) return;
 		e.preventDefault();
@@ -174,7 +215,11 @@
 	aria-label="3D Model Stage"
 	tabindex="0"
 	bind:this={containerEl}
+	onpointerdown={handlePointerDown}
+	onpointermove={handlePointerMove}
+	onpointerup={handlePointerUp}
+	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
 	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"
-	class="absolute inset-0 w-full h-full overflow-hidden select-none cursor-grab active:cursor-grabbing z-0"
+	class="absolute inset-0 w-full h-full overflow-hidden select-none {isDragging ? 'cursor-grabbing' : 'cursor-grab'} z-0"
 ></div>
