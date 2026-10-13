@@ -441,53 +441,51 @@
 
 	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode or when GUI is locked) -->
 	{#if !rigging.isObsMode && !rigging.isGuiLocked}
-		<!-- Header Brand Watermark & Real-Time FPS Telemetry HUD -->
-		<header class="absolute top-4 right-4 z-40 flex items-center gap-2 pointer-events-auto select-none">
+		<!-- Header Brand Watermark & Real-Time FPS Telemetry HUD (35% Non-Hover Transparency) -->
+		<header class="absolute top-4 right-4 z-40 flex items-center gap-1.5 pointer-events-auto select-none opacity-35 hover:opacity-100 transition-opacity duration-300">
 			<!-- Live HUD FPS Counter Badge -->
 			{#if rigging.showFpsCounter}
 				<div
-					class="px-3 py-1.5 rounded-xl border flex items-center gap-2 font-mono text-xs shadow-xl backdrop-blur-xl select-none animate-in fade-in transition-all {
+					class="px-2.5 py-1 rounded-xl border flex items-center gap-1.5 font-mono text-[11px] shadow-lg backdrop-blur-xl select-none {
 						isLightTheme
-							? 'bg-white/95 border-zinc-200 text-zinc-800 shadow-sm'
-							: 'bg-zinc-950/85 border-zinc-800/80 text-zinc-100 shadow-2xl'
+							? 'bg-white/90 border-zinc-200 text-zinc-800 shadow-sm'
+							: 'bg-zinc-950/85 border-zinc-800/80 text-zinc-200 shadow-xl'
 					}"
 					title="Real-Time 60 FPS Telemetry HUD (Atur di Settings [F2])"
 				>
 					<span
-						class="w-2 h-2 rounded-full {
+						class="w-1.5 h-1.5 rounded-full {
 							(rigging.fps || 60) >= 50
-								? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+								? 'bg-emerald-400 shadow-[0_0_6px_#34d399]'
 								: (rigging.fps || 60) >= 30
-									? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'
-									: 'bg-rose-400 shadow-[0_0_8px_#f87171]'
+									? 'bg-amber-400 shadow-[0_0_6px_#fbbf24]'
+									: 'bg-rose-400 shadow-[0_0_6px_#f87171]'
 						}"
 					></span>
-					<span class="font-bold {(rigging.fps || 60) >= 50 ? 'text-emerald-500 dark:text-emerald-300' : (rigging.fps || 60) >= 30 ? 'text-amber-500 dark:text-amber-300' : 'text-rose-500 dark:text-rose-300'}">
+					<span class="font-bold {(rigging.fps || 60) >= 50 ? 'text-emerald-500 dark:text-emerald-400' : (rigging.fps || 60) >= 30 ? 'text-amber-500 dark:text-amber-400' : 'text-rose-500 dark:text-rose-400'}">
 						{rigging.fps || 60} FPS
-					</span>
-					<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-						({rigging.latencyMs || 16}ms)
 					</span>
 				</div>
 			{/if}
 
+			<!-- Simplified MiruNova Live Model Badge -->
 			<button
 				type="button"
 				onclick={() => {
 					playSfx('modal');
 					rigging.toggleAboutModal(true);
 				}}
-				class="px-3.5 py-1.5 bg-zinc-950/85 backdrop-blur-xl border border-zinc-800/80 rounded-xl flex items-center gap-2 shadow-2xl hover:scale-105 hover:border-cyan-500/50 active:scale-95 transition-all cursor-pointer group text-left {
-					isLightTheme ? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-sm' : ''
+				class="px-2.5 py-1 bg-zinc-950/85 backdrop-blur-xl border border-zinc-800/80 rounded-xl flex items-center gap-1.5 shadow-lg hover:border-cyan-500/50 transition-all cursor-pointer group text-left {
+					isLightTheme ? 'bg-white/90 border-zinc-200 text-zinc-900 shadow-sm' : ''
 				}"
 				title="{i18n.t('about_title')} • MiruNova Live"
 			>
-				<div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse group-hover:scale-125 transition-transform"></div>
-				<span class="text-xs font-bold tracking-wider {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-					MIRUNOVA <span class="text-cyan-400 font-extrabold">LIVE</span>
+				<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+				<span class="text-[11px] font-bold tracking-wide {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+					MiruNova <span class="text-cyan-400 font-extrabold">Live</span>
 				</span>
-				<span class="text-[10px] px-1.5 py-0.5 rounded font-mono group-hover:text-cyan-300 transition-colors {
-					isLightTheme ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-800 text-zinc-400'
+				<span class="text-[10px] px-1.5 py-0.2 rounded font-mono truncate max-w-[140px] {
+					isLightTheme ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-900 text-zinc-400 group-hover:text-cyan-300'
 				}">
 					{rigging.avatarEngine === '3d' ? rigging.selected3DModelId : rigging.modelName}
 				</span>

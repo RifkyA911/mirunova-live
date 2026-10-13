@@ -618,15 +618,27 @@ class VoiceEngine {
 	}
 
 	playRawSample(onEnded?: () => void): boolean {
-		if (!this.testAudioBuffer || !this.audioCtx) return false;
+		if (!this.testAudioBuffer) return false;
+		if (typeof window === 'undefined') return false;
 		this.stopPlayback();
 
 		try {
+			if (!this.audioCtx) {
+				const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+				this.audioCtx = new AudioCtxClass();
+			}
+			if (this.audioCtx.state === 'suspended') {
+				this.audioCtx.resume();
+			}
+
 			const source = this.audioCtx.createBufferSource();
 			source.buffer = this.testAudioBuffer;
 			source.connect(this.audioCtx.destination);
 			source.onended = () => {
 				this.testSourceNode = null;
+				try {
+					source.disconnect();
+				} catch {}
 				if (onEnded) onEnded();
 			};
 			this.testSourceNode = source;
@@ -638,26 +650,111 @@ class VoiceEngine {
 		}
 	}
 
-	playConvertedSample(onEnded?: () => void): boolean {
-		if (!this.testAudioBuffer || !this.audioCtx || !this.filterNode || !this.gainNode) return false;
-		this.stopPlayback();
+	playConvertedSample(onEnded?: () => void, filterType?: VoiceFilterType): boolean {
+		if (!this.testAudioBuffer) return false;
+		if (typeof window === 'undefined') return false;
 
 		try {
+			if (!this.audioCtx) {
+				const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+				this.audioCtx = new AudioCtxClass();
+			}
+			if (this.audioCtx.state === 'suspended') {
+				this.audioCtx.resume();
+			}
+
+			this.stopPlayback();
+
+			const activeFilter = filterType || this.lastFilter || 'anime-girl';
 			const source = this.audioCtx.createBufferSource();
 			source.buffer = this.testAudioBuffer;
 
 			// Apply real pitch transposition factor
-			const pitch = this.getPitchRatio(this.lastFilter);
+			const pitch = this.getPitchRatio(activeFilter);
 			source.playbackRate.value = pitch;
 
-			// Route through active DSP filter chain directly to destination
-			source.connect(this.filterNode);
-			this.gainNode.connect(this.audioCtx.destination);
+			// Build dedicated standalone preview DSP chain
+			const previewFilter1 = this.audioCtx.createBiquadFilter();
+			const previewFilter2 = this.audioCtx.createBiquadFilter();
+			const previewGain = this.audioCtx.createGain();
+			previewGain.gain.value = 1.0;
+
+			const now = this.audioCtx.currentTime;
+			switch (activeFilter) {
+				case 'anime-girl':
+					previewFilter1.type = 'peaking';
+					previewFilter1.frequency.setValueAtTime(3400, now);
+					previewFilter1.gain.setValueAtTime(6.0, now);
+					previewFilter1.Q.setValueAtTime(1.5, now);
+					previewFilter2.type = 'highshelf';
+					previewFilter2.frequency.setValueAtTime(5500, now);
+					previewFilter2.gain.setValueAtTime(4.0, now);
+					break;
+				case 'ikemen':
+					previewFilter1.type = 'lowshelf';
+					previewFilter1.frequency.setValueAtTime(180, now);
+					previewFilter1.gain.setValueAtTime(6.5, now);
+					previewFilter2.type = 'peaking';
+					previewFilter2.frequency.setValueAtTime(350, now);
+					previewFilter2.gain.setValueAtTime(4.0, now);
+					previewFilter2.Q.setValueAtTime(1.2, now);
+					break;
+				case 'chipmunk':
+					previewFilter1.type = 'highpass';
+					previewFilter1.frequency.setValueAtTime(320, now);
+					previewFilter2.type = 'peaking';
+					previewFilter2.frequency.setValueAtTime(4200, now);
+					previewFilter2.gain.setValueAtTime(5.0, now);
+					previewFilter2.Q.setValueAtTime(2.0, now);
+					break;
+				case 'robot':
+					previewFilter1.type = 'bandpass';
+					previewFilter1.frequency.setValueAtTime(1200, now);
+					previewFilter1.Q.setValueAtTime(3.0, now);
+					previewFilter2.type = 'peaking';
+					previewFilter2.frequency.setValueAtTime(2400, now);
+					previewFilter2.gain.setValueAtTime(4.0, now);
+					break;
+				case 'radio-retro':
+					previewFilter1.type = 'bandpass';
+					previewFilter1.frequency.setValueAtTime(1800, now);
+					previewFilter1.Q.setValueAtTime(1.8, now);
+					previewFilter2.type = 'peaking';
+					previewFilter2.frequency.setValueAtTime(1000, now);
+					previewFilter2.gain.setValueAtTime(5.0, now);
+					break;
+				case 'echo-hall':
+					previewFilter1.type = 'lowpass';
+					previewFilter1.frequency.setValueAtTime(4500, now);
+					previewFilter2.type = 'allpass';
+					break;
+				case 'podcast-pro':
+					previewFilter1.type = 'lowshelf';
+					previewFilter1.frequency.setValueAtTime(120, now);
+					previewFilter1.gain.setValueAtTime(3.5, now);
+					previewFilter2.type = 'peaking';
+					previewFilter2.frequency.setValueAtTime(3100, now);
+					previewFilter2.gain.setValueAtTime(3.0, now);
+					previewFilter2.Q.setValueAtTime(1.2, now);
+					break;
+				default:
+					previewFilter1.type = 'allpass';
+					previewFilter2.type = 'allpass';
+					break;
+			}
+
+			source.connect(previewFilter1);
+			previewFilter1.connect(previewFilter2);
+			previewFilter2.connect(previewGain);
+			previewGain.connect(this.audioCtx.destination);
 
 			source.onended = () => {
 				this.testSourceNode = null;
 				try {
-					this.gainNode?.disconnect(this.audioCtx!.destination);
+					source.disconnect();
+					previewFilter1.disconnect();
+					previewFilter2.disconnect();
+					previewGain.disconnect();
 				} catch {}
 				if (onEnded) onEnded();
 			};

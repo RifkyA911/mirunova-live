@@ -105,10 +105,15 @@
 		playSfx('click');
 		isPlayingTest = true;
 		testPlaybackMode = 'converted';
-		voice.playConvertedSample(() => {
+		const played = voice.playConvertedSample(() => {
 			isPlayingTest = false;
 			testPlaybackMode = null;
-		});
+		}, rigging.voiceFilter);
+		if (!played) {
+			isPlayingTest = false;
+			testPlaybackMode = null;
+			rigging.showToast('Gagal memutar sampel audio');
+		}
 	}
 
 	function handleStopTestPlayback() {
