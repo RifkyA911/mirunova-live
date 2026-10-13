@@ -776,6 +776,100 @@ class VoiceEngine {
 			return false;
 		}
 	}
+
+	async synthesizeVoiceText(text: string, filterType?: VoiceFilterType): Promise<boolean> {
+		if (typeof window === 'undefined') return false;
+		try {
+			if (!this.audioCtx) {
+				const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+				this.audioCtx = new AudioCtxClass();
+			}
+			if (this.audioCtx.state === 'suspended') {
+				await this.audioCtx.resume();
+			}
+
+			const sampleRate = this.audioCtx.sampleRate;
+			const cleanText = (text || 'Halo, tes voice changer').trim().toLowerCase();
+
+			// Formant frequency lookup table [F1, F2, F3] for vowels
+			const vowelFormants: Record<string, [number, number, number]> = {
+				a: [800, 1250, 2500],
+				i: [300, 2250, 3000],
+				u: [350, 850, 2400],
+				e: [500, 1850, 2600],
+				o: [500, 1000, 2500]
+			};
+
+			const charDuration = 0.085; // 85ms per character
+			const totalDuration = Math.max(1.2, cleanText.length * charDuration + 0.35);
+			const totalSamples = Math.floor(sampleRate * totalDuration);
+
+			const audioBuffer = this.audioCtx.createBuffer(1, totalSamples, sampleRate);
+			const channelData = audioBuffer.getChannelData(0);
+
+			const baseF0 = 150;
+			let phase = 0;
+			let formantPhase1 = 0;
+			let formantPhase2 = 0;
+			let currentF1 = 600;
+			let currentF2 = 1400;
+
+			for (let i = 0; i < totalSamples; i++) {
+				const t = i / sampleRate;
+				const charIndex = Math.min(cleanText.length - 1, Math.floor(t / charDuration));
+				const char = cleanText[charIndex] || 'a';
+
+				if (vowelFormants[char]) {
+					const [f1, f2] = vowelFormants[char];
+					currentF1 += (f1 - currentF1) * 0.015;
+					currentF2 += (f2 - currentF2) * 0.015;
+				} else if (char === ' ') {
+					currentF1 = 400;
+					currentF2 = 1000;
+				}
+
+				// Natural speech pitch arc
+				const sentenceProgress = t / totalDuration;
+				const pitchInflection = Math.sin(sentenceProgress * Math.PI) * 14 - sentenceProgress * 10;
+				const f0 = baseF0 + pitchInflection;
+
+				phase += (f0 / sampleRate);
+				if (phase >= 1.0) phase -= 1.0;
+
+				// Glottal excitation pulse (Rosenberg model)
+				let glottal = 0;
+				if (phase < 0.4) {
+					glottal = 0.5 * (1 - Math.cos((Math.PI * phase) / 0.4));
+				} else if (phase < 0.6) {
+					glottal = Math.cos((Math.PI * (phase - 0.4)) / 0.4);
+				}
+
+				formantPhase1 += (currentF1 / sampleRate) * 2 * Math.PI;
+				formantPhase2 += (currentF2 / sampleRate) * 2 * Math.PI;
+
+				const formant1 = Math.sin(formantPhase1) * Math.exp(-((phase % 0.25) * 8));
+				const formant2 = Math.sin(formantPhase2) * Math.exp(-((phase % 0.25) * 12)) * 0.6;
+
+				let noise = 0;
+				if (['s', 'c', 'f', 'h', 'x', 'z', 't', 'k', 'p'].includes(char)) {
+					noise = (Math.random() * 2 - 1) * 0.4;
+				}
+
+				let env = 1.0;
+				if (t < 0.04) env = t / 0.04;
+				if (t > totalDuration - 0.1) env = Math.max(0, (totalDuration - t) / 0.1);
+				if (char === ' ') env *= 0.15;
+
+				channelData[i] = ((glottal * (formant1 + formant2) * 0.7) + noise) * env * 0.35;
+			}
+
+			this.testAudioBuffer = audioBuffer;
+			return await this.playConvertedSample(undefined, filterType);
+		} catch (err) {
+			console.warn('VoiceEngine: synthesizeVoiceText error:', err);
+			return false;
+		}
+	}
 }
 
 export const voice = new VoiceEngine();

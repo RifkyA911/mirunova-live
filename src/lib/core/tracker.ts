@@ -763,9 +763,9 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamHandAngleL', solved.isHighFiveL ? 15 : 0);
 					rigging.setLiveValue('ParamHandAngleR', solved.isHighFiveR ? 15 : 0);
 
-					// Draw wireframe overlay only if PIP is visible, mesh is enabled, and NO blocking modal is active
+					// Draw wireframe overlay only if PIP is visible and NO blocking modal is active
 					const isModalOpen = rigging.isSettingsModalOpen || rigging.isModelModalOpen || rigging.isThemeModalOpen || rigging.isObsModalOpen || rigging.isShortcutModalOpen;
-					if (this.canvasOverlay && rigging.showCameraPip && rigging.showLandmarksMesh && !isModalOpen) {
+					if (this.canvasOverlay && rigging.showCameraPip && !isModalOpen) {
 						this.drawLandmarksOverlay(landmarks, handsList);
 					}
 				} else {
@@ -835,11 +835,54 @@ export class FaceTracker {
 
 		const width = this.canvasOverlay.width;
 		const height = this.canvasOverlay.height;
+		const mode = rigging.cameraViewMode;
 
-		ctx.clearRect(0, 0, width, height);
+		if (mode === 'raw') {
+			ctx.clearRect(0, 0, width, height);
+			return;
+		}
 
-		// 1. Draw Face Landmarks (Cyan) - Single Batched Draw Call
-		if (faceLandmarks.length > 0) {
+		// Kalidoface 3D Wireframe Privacy Mode (Screenshot 2026-10-13 230534.png)
+		if (mode === 'wireframe') {
+			ctx.fillStyle = '#222226';
+			ctx.fillRect(0, 0, width, height);
+		} else {
+			ctx.clearRect(0, 0, width, height);
+		}
+
+		// 1. Draw 3D Face Wireframe Mesh (Tessellation)
+		if (faceLandmarks.length > 0 && FaceLandmarker.FACE_LANDMARKS_TESSELATION) {
+			const tess = FaceLandmarker.FACE_LANDMARKS_TESSELATION;
+			ctx.save();
+			ctx.strokeStyle = mode === 'wireframe' ? 'rgba(235, 235, 245, 0.72)' : 'rgba(6, 182, 212, 0.65)';
+			ctx.lineWidth = mode === 'wireframe' ? 0.75 : 0.65;
+			ctx.beginPath();
+			for (let i = 0; i < tess.length; i++) {
+				const edge = tess[i];
+				const p1 = faceLandmarks[edge.start];
+				const p2 = faceLandmarks[edge.end];
+				if (p1 && p2) {
+					ctx.moveTo(p1.x * width, p1.y * height);
+					ctx.lineTo(p2.x * width, p2.y * height);
+				}
+			}
+			ctx.stroke();
+
+			// Draw glowing yellow pupils / iris (Landmarks 468 & 473)
+			const pupilIndices = [468, 473];
+			ctx.shadowColor = '#ffff00';
+			ctx.shadowBlur = 8;
+			ctx.fillStyle = '#ffeb3b';
+			for (const pIdx of pupilIndices) {
+				const pt = faceLandmarks[pIdx];
+				if (pt) {
+					ctx.beginPath();
+					ctx.arc(pt.x * width, pt.y * height, 3.8, 0, 2 * Math.PI);
+					ctx.fill();
+				}
+			}
+			ctx.restore();
+		} else if (faceLandmarks.length > 0) {
 			ctx.fillStyle = '#06b6d4';
 			ctx.beginPath();
 			for (let i = 0; i < faceLandmarks.length; i += 4) {
@@ -852,8 +895,8 @@ export class FaceTracker {
 			ctx.fill();
 		}
 
-		// 2. Draw Hand Landmarks & Skeleton Bones (Emerald Green) - Batched Calls
-		if (handsList.length > 0) {
+		// 2. Draw Hand Landmarks & Skeleton Bones (Emerald Green)
+		if (handsList.length > 0 && rigging.enableHandTracking) {
 			ctx.fillStyle = '#10b981';
 			ctx.beginPath();
 			for (const hand of handsList) {

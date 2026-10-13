@@ -31,9 +31,12 @@
 		Info,
 		Smile,
 		Sparkles,
-		Box
+		Box,
+		X
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
+	import { threeStage, type FramingMode3D } from '#lib/core/threeStage';
+	import type { AvatarFramingMode } from '#lib/types/tracking';
 
 	let isDeviceMenuOpen = $state<boolean>(false);
 	let isExpressionMenuOpen = $state<boolean>(false);
@@ -43,6 +46,36 @@
 	);
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
+
+	const DEFAULT_EXPRESSIONS = [
+		{ id: '', label: 'Netral', emoji: '😐' },
+		{ id: 'stars', label: 'Star Eyes', emoji: '⭐' },
+		{ id: 'smile', label: 'Senyum', emoji: '😊' },
+		{ id: 'blush', label: 'Blush', emoji: '😳' },
+		{ id: 'wink', label: 'Kedip', emoji: '😉' },
+		{ id: 'surprised', label: 'Kaget', emoji: '😮' },
+		{ id: 'cry', label: 'Menangis', emoji: '😭' },
+		{ id: 'pout', label: 'Marah', emoji: '😡' },
+		{ id: 'love', label: 'Love', emoji: '💖' }
+	];
+
+	function handleSelectExpression(expId: string, label: string) {
+		playSfx('expression');
+		rigging.setExpression(expId);
+		if (rigging.avatarEngine === '3d') {
+			threeStage.setExpression(expId);
+		}
+		rigging.showToast(expId ? `Ekspresi: ${label}` : 'Ekspresi Netral');
+	}
+
+	function handleSelectFraming(mode: AvatarFramingMode) {
+		playSfx('click');
+		rigging.framingMode = mode;
+		if (rigging.avatarEngine === '3d') {
+			threeStage.setFraming(mode as FramingMode3D);
+		}
+		rigging.showToast(`Kamera: ${mode === 'full' ? '🧍 Full Body' : mode === 'half' ? '🥋 Half Body' : '👤 Close-Up Face'}`);
+	}
 
 	async function refreshDevices(requestPermission = false) {
 		try {
@@ -691,7 +724,7 @@
 				{i18n.t('expressions_title')} ({rigging.availableExpressions.length}) [E]
 			</div>
 
-			<!-- Floating Expression Popover -->
+			<!-- Unified Floating Expression & Stage Controls Popover -->
 			{#if isExpressionMenuOpen}
 				<!-- Click-outside backdrop closer -->
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -702,76 +735,172 @@
 				></div>
 
 				<div
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
+					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-80 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-3 z-[85] space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
 						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
 					}"
 				>
 					<!-- Header -->
 					<div class="flex items-center justify-between border-b pb-2 px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<div class="flex items-center gap-1.5">
-							<Sparkles class="w-4 h-4 text-pink-500" />
+							<Sparkles class="w-4 h-4 text-pink-500 animate-pulse" />
 							<span class="font-bold text-xs tracking-wide {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-								{i18n.t('expressions_title')}
+								Ekspresi Wajah & Panggung
 							</span>
 						</div>
-						<span class="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono border border-pink-500/30">
-							{rigging.availableExpressions.length} {i18n.t('expressions_variations')}
-						</span>
+						{#if rigging.activeExpression}
+							<button
+								type="button"
+								onclick={() => handleSelectExpression('', 'Netral')}
+								class="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-pink-500/20 text-pink-400 border border-pink-500/30 text-[10px] font-mono cursor-pointer hover:bg-pink-500/30 transition-colors"
+								title="Reset ke Netral"
+							>
+								<span>{rigging.activeExpression}</span>
+								<X class="w-3 h-3" />
+							</button>
+						{:else}
+							<span class="text-[9px] px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-500 font-mono">
+								Netral
+							</span>
+						{/if}
 					</div>
 
-					<!-- Reset / Neutral Button -->
-					<button
-						onclick={() => {
-							playSfx('click');
-							rigging.setExpression('');
-							isExpressionMenuOpen = false;
-						}}
-						class="w-full px-3 py-1.5 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
-							!rigging.activeExpression
-								? isLightTheme
-									? 'bg-zinc-100 text-cyan-700 font-semibold border border-cyan-500/30'
-									: 'bg-zinc-800/90 text-cyan-300 font-semibold border border-cyan-500/30'
-								: isLightTheme
-									? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border border-transparent'
-									: 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 border border-transparent'
-						}"
-					>
-						<span>{i18n.t('expressions_reset')}</span>
-						{#if !rigging.activeExpression}
-							<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-						{/if}
-					</button>
+					<!-- Section 1: Kamera Framing Presets -->
+					<div class="space-y-1">
+						<span class="text-[10px] font-bold text-zinc-400 block px-1">FRAMING KAMERA</span>
+						<div class="grid grid-cols-3 gap-1 text-[11px]">
+							<button
+								type="button"
+								onclick={() => handleSelectFraming('full')}
+								class="p-1.5 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer {
+									rigging.framingMode === 'full'
+										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm'
+										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+								}"
+							>
+								<span>🧍</span>
+								<span>Full Body</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => handleSelectFraming('half')}
+								class="p-1.5 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer {
+									rigging.framingMode === 'half'
+										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm'
+										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+								}"
+							>
+								<span>🥋</span>
+								<span>Half Body</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => handleSelectFraming('closeup')}
+								class="p-1.5 rounded-xl border font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer {
+									rigging.framingMode === 'closeup'
+										? 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm'
+										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+								}"
+							>
+								<span>👤</span>
+								<span>Close-Up</span>
+							</button>
+						</div>
+					</div>
 
-					<!-- Expressions List -->
-					<div class="max-h-56 overflow-y-auto space-y-1 custom-scrollbar pr-1">
-						{#if rigging.availableExpressions.length === 0}
-							<div class="p-3 text-center text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-500'}">
-								{i18n.t('expressions_empty')}
-							</div>
-						{:else}
-							{#each rigging.availableExpressions as exp}
+					<!-- Section 2: Universal Facial Expressions Grid -->
+					<div class="space-y-1">
+						<span class="text-[10px] font-bold text-pink-400 block px-1">EKSPRESI WAJAH</span>
+						<div class="grid grid-cols-3 gap-1.5 max-h-44 overflow-y-auto custom-scrollbar pr-0.5">
+							{#each DEFAULT_EXPRESSIONS as exp}
 								<button
-									onclick={() => {
-										playSfx('expression');
-										rigging.setExpression(exp.name);
-										isExpressionMenuOpen = false;
-									}}
-									class="w-full px-3 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
-										rigging.activeExpression === exp.name
-											? 'bg-pink-500/20 text-pink-600 dark:text-pink-300 font-semibold border border-pink-500/40 shadow-sm'
+									type="button"
+									onclick={() => handleSelectExpression(exp.id, exp.label)}
+									class="p-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer truncate {
+										rigging.activeExpression === exp.id
+											? 'bg-pink-500/25 border-pink-500/60 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/40'
 											: isLightTheme
-												? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 border border-transparent'
-												: 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white border border-transparent'
+												? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100'
+												: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
 									}"
 								>
-									<span class="truncate">{exp.label}</span>
-									{#if rigging.activeExpression === exp.name}
-										<span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
-									{/if}
+									<span>{exp.emoji}</span>
+									<span class="truncate text-[11px]">{exp.label}</span>
 								</button>
 							{/each}
-						{/if}
+						</div>
 					</div>
+
+					<!-- Section 3: 3D Turntable & Orbit Controls (Only shown for 3D engine) -->
+					{#if rigging.avatarEngine === '3d'}
+						<div class="space-y-1 pt-1 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+							<span class="text-[10px] font-bold text-amber-400 block px-1">ROTASI 3D STAGE</span>
+							<div class="flex items-center gap-1.5">
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('toggle');
+										rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
+										rigging.showToast(rigging.is3DAutoSpin ? '🔄 3D Auto-Spin 360° Aktif' : 'Auto-Spin Dihentikan');
+									}}
+									class="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border {
+										rigging.is3DAutoSpin
+											? 'bg-amber-500/25 border-amber-500 text-amber-300 shadow-sm ring-1 ring-amber-500/50'
+											: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+									}"
+									title="Putar Otomatis 360° Turntable"
+								>
+									<span class="{rigging.is3DAutoSpin ? 'animate-spin' : ''}">🔄</span>
+									<span class="text-[11px]">{rigging.is3DAutoSpin ? 'Stop Spin' : '360° Spin'}</span>
+								</button>
+
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										threeStage.rotateOrbitDegrees(-45);
+										rigging.showToast('↺ Putar Sudut 3D -45°');
+									}}
+									class="p-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+										isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+									}"
+									title="Putar Kiri 45°"
+								>
+									↺ -45°
+								</button>
+
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										threeStage.rotateOrbitDegrees(45);
+										rigging.showToast('↻ Putar Sudut 3D +45°');
+									}}
+									class="p-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+										isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+									}"
+									title="Putar Kanan 45°"
+								>
+									↻ +45°
+								</button>
+
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										threeStage.resetOrbit();
+										rigging.is3DAutoSpin = false;
+										rigging.showToast('🎯 Sudut 3D Direset ke Depan');
+									}}
+									class="p-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+										isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+									}"
+									title="Reset Poros 3D ke Depan"
+								>
+									🎯 Reset
+								</button>
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>

@@ -73,6 +73,7 @@ export class RiggingStore {
 	isCameraActive = $state<boolean>(false);
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
+	cameraViewMode = $state<'wireframe' | 'rig' | 'raw'>('wireframe');
 	enableHandTracking = $state<boolean>(false);
 	showFpsCounter = $state<boolean>(true);
 
@@ -317,6 +318,7 @@ export class RiggingStore {
 			enableHandTracking: this.enableHandTracking,
 			showCameraPip: this.showCameraPip,
 			showLandmarksMesh: this.showLandmarksMesh,
+			cameraViewMode: this.cameraViewMode,
 			poseLoopMode: this.poseLoopMode,
 			poseLoopSpeed: this.poseLoopSpeed,
 			calibrationYaw: this.calibrationYaw,
@@ -404,6 +406,7 @@ export class RiggingStore {
 		if (saved.enableHandTracking !== undefined) this.enableHandTracking = saved.enableHandTracking;
 		if (saved.showCameraPip !== undefined) this.showCameraPip = saved.showCameraPip;
 		if (saved.showLandmarksMesh !== undefined) this.showLandmarksMesh = saved.showLandmarksMesh;
+		if (saved.cameraViewMode) this.cameraViewMode = saved.cameraViewMode;
 		if (saved.poseLoopMode) this.poseLoopMode = saved.poseLoopMode as any;
 		if (saved.poseLoopSpeed !== undefined) this.poseLoopSpeed = saved.poseLoopSpeed;
 		if (saved.calibrationYaw !== undefined) this.calibrationYaw = saved.calibrationYaw;
@@ -656,6 +659,21 @@ export class RiggingStore {
 	setVoiceFilter(filter: VoiceFilterType) {
 		this.voiceFilter = filter;
 		this.persist();
+	}
+
+	cycleCameraViewMode(): 'wireframe' | 'rig' | 'raw' {
+		if (this.cameraViewMode === 'wireframe') {
+			this.cameraViewMode = 'rig';
+			this.showToast('📹 Mode Kamera: Webcam + Rig Overlay');
+		} else if (this.cameraViewMode === 'rig') {
+			this.cameraViewMode = 'raw';
+			this.showToast('📷 Mode Kamera: Raw Webcam Bersih');
+		} else {
+			this.cameraViewMode = 'wireframe';
+			this.showToast('🕸️ Mode Kamera: 3D Face Wireframe (Kalidoface)');
+		}
+		this.persist();
+		return this.cameraViewMode;
 	}
 
 	playMotion(name: string) {

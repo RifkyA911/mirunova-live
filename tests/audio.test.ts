@@ -63,5 +63,7 @@ describe('VoiceEngine & Voice Changer DSP Presets', () => {
 		expect(rawRes).toBe(false);
 		const convRes = await voice.playConvertedSample();
 		expect(convRes).toBe(false);
+		const ttsRes = await voice.synthesizeVoiceText('Halo');
+		expect(ttsRes).toBe(false);
 	});
 });

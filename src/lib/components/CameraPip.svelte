@@ -71,17 +71,17 @@
 
 {#if rigging.showCameraPip}
 	{#if isMinimized}
-		<!-- Minimal View: Hanya Icon Face & Status Dot Hijau dengan 30% Non-Hover Transparency -->
+		<!-- Minimal View: Hanya Icon Face & Status Dot Hijau (Solid Opacity) -->
 		<button
 			type="button"
 			onclick={() => {
 				playSfx('click');
 				isMinimized = false;
 			}}
-			class="fixed top-4 left-4 z-30 flex items-center gap-1.5 p-2 rounded-full backdrop-blur-xl border shadow-xl cursor-pointer opacity-30 hover:opacity-100 transition-all duration-300 group {
+			class="fixed top-4 left-4 z-30 flex items-center gap-1.5 p-2 rounded-full backdrop-blur-xl border shadow-xl cursor-pointer transition-all duration-200 group {
 				isLightTheme
-					? 'bg-white/90 border-zinc-200 text-zinc-800 hover:shadow-cyan-500/20'
-					: 'bg-zinc-950/85 border-zinc-800 text-zinc-200 hover:border-cyan-500/50'
+					? 'bg-white border-zinc-200 text-zinc-800 hover:shadow-cyan-500/20'
+					: 'bg-zinc-950 border-zinc-800 text-zinc-200 hover:border-cyan-500/50'
 			}"
 			title="Buka Preview Tracking Kamera (Klik untuk Maximize)"
 			aria-label="Maximize Tracking Camera"
@@ -98,17 +98,17 @@
 			></span>
 		</button>
 	{:else}
-		<!-- Expanded View: Fitur Lengkap Tracking Pojok Kiri Atas dengan 30% Non-Hover Transparency -->
+		<!-- Expanded View: Fitur Lengkap Tracking Pojok Kiri Atas (Solid Opacity Tanpa Transparansi) -->
 		<div
-			class="fixed top-4 left-4 z-30 flex flex-col backdrop-blur-md border rounded-xl overflow-hidden shadow-2xl transition-all duration-300 select-none w-64 opacity-30 hover:opacity-100 {
+			class="fixed top-4 left-4 z-30 flex flex-col backdrop-blur-xl border rounded-2xl overflow-hidden shadow-2xl transition-all duration-200 select-none w-72 {
 				isLightTheme
-					? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl'
-					: 'bg-zinc-950/90 border-zinc-800/90 text-zinc-100 shadow-2xl'
+					? 'bg-white border-zinc-200 text-zinc-900 shadow-xl'
+					: 'bg-zinc-950 border-zinc-800 text-zinc-100 shadow-2xl'
 			}"
 		>
 			<!-- PIP Header -->
 			<div class="px-3 py-2 border-b flex items-center justify-between text-xs {
-				isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-800' : 'bg-zinc-900/60 border-zinc-800 text-zinc-300'
+				isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-800' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300'
 			}">
 				<div class="flex items-center gap-2">
 					<!-- Status dot -->
@@ -122,17 +122,46 @@
 						}"
 						title={rigging.isFaceDetected ? i18n.t('face_detected') : i18n.t('searching_face')}
 					></span>
-					<span class="font-medium text-[11px] {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
+					<span class="font-bold text-[11px] {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
 						{rigging.isCameraActive
-							? rigging.isFaceDetected
-								? i18n.t('tracking_active')
-								: i18n.t('searching_face')
+							? rigging.cameraViewMode === 'wireframe'
+								? '3D Mesh (Kalidoface)'
+								: rigging.cameraViewMode === 'rig'
+									? 'Webcam + Rig'
+									: 'Webcam Raw'
 							: i18n.t('camera_off')}
 					</span>
 				</div>
 
-				<div class="flex items-center gap-1">
-					<!-- Minimize button: Mengecilkan jadi icon face dan dot hijau -->
+				<div class="flex items-center gap-1.5">
+					<!-- Camera View Mode Cycle Button (Icon Kamera Pojok Atas seperti Screenshot 230534.png) -->
+					<button
+						onclick={() => {
+							playSfx('click');
+							rigging.cycleCameraViewMode();
+						}}
+						class="flex items-center gap-1 px-1.5 py-0.5 rounded-lg border text-[10px] font-mono transition-colors cursor-pointer {
+							rigging.cameraViewMode === 'wireframe'
+								? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
+								: rigging.cameraViewMode === 'rig'
+									? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+									: 'bg-zinc-800 border-zinc-700 text-zinc-400'
+						}"
+						title="Ganti Mode Tampilan Kamera: 3D Wireframe / Rig Overlay / Raw"
+					>
+						{#if rigging.cameraViewMode === 'wireframe'}
+							<CameraOff class="w-3 h-3 text-cyan-400" />
+							<span>3D</span>
+						{:else if rigging.cameraViewMode === 'rig'}
+							<Camera class="w-3 h-3 text-emerald-400" />
+							<span>Rig</span>
+						{:else}
+							<Camera class="w-3 h-3 text-zinc-400" />
+							<span>Raw</span>
+						{/if}
+					</button>
+
+					<!-- Minimize button -->
 					<button
 						onclick={() => {
 							playSfx('click');
@@ -150,29 +179,49 @@
 			</div>
 
 			<!-- Camera Stream & Landmarks Viewport -->
-			<div class="relative w-full aspect-video bg-zinc-900 flex items-center justify-center overflow-hidden">
+			<div class="relative w-full aspect-video bg-[#202024] flex items-center justify-center overflow-hidden">
 				<video
 					bind:this={videoElement}
 					autoplay
 					playsinline
 					muted
-					class="w-full h-full object-cover -scale-x-100"
+					class="w-full h-full object-cover -scale-x-100 {rigging.cameraViewMode === 'wireframe' ? 'hidden' : 'block'}"
 				></video>
 
 				<canvas
 					bind:this={canvasElement}
 					width="640"
 					height="480"
-					class="absolute inset-0 w-full h-full -scale-x-100 pointer-events-none {rigging.isCameraActive ? 'block' : 'hidden'}"
+					class="absolute inset-0 w-full h-full -scale-x-100 {rigging.isCameraActive ? 'block' : 'hidden'}"
 				></canvas>
 
+				<!-- Screenshot Kalidoface Mode Top-Right Camera Icon Button Overlay -->
+				{#if rigging.isCameraActive}
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.cycleCameraViewMode();
+						}}
+						class="absolute top-2 right-2 z-20 p-1.5 rounded-lg bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-700/80 text-zinc-300 hover:text-cyan-300 transition-all cursor-pointer shadow-md"
+						title="Mode Kamera Aktif: {rigging.cameraViewMode.toUpperCase()} (Klik untuk Ganti Mode)"
+						aria-label="Cycle Camera Mode"
+					>
+						{#if rigging.cameraViewMode === 'wireframe'}
+							<CameraOff class="w-4 h-4 text-cyan-400" />
+						{:else}
+							<Camera class="w-4 h-4 text-emerald-400" />
+						{/if}
+					</button>
+				{/if}
+
 				{#if !rigging.isCameraActive}
-					<div class="absolute inset-0 bg-zinc-950/90 flex flex-col items-center justify-center gap-2 text-zinc-500 p-4 text-center z-10">
-						<CameraOff class="w-6 h-6 stroke-1" />
+					<div class="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center gap-2 text-zinc-500 p-4 text-center z-10">
+						<CameraOff class="w-6 h-6 stroke-1 text-zinc-400" />
 						<p class="text-[11px] leading-tight">{i18n.t('cam_instructions')}</p>
 						<button
 							onclick={toggleCamera}
-							class="mt-1 px-3 py-1 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold text-xs rounded-md shadow-sm transition-colors cursor-pointer"
+							class="mt-1 px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
 						>
 							{i18n.t('enable_cam')}
 						</button>
@@ -245,17 +294,17 @@
 					type="button"
 					onclick={() => {
 						playSfx('toggle');
-						rigging.showLandmarksMesh = !rigging.showLandmarksMesh;
+						rigging.cycleCameraViewMode();
 					}}
 					class="flex flex-col items-center py-1 px-0.5 rounded-lg border transition-all cursor-pointer {
-						rigging.showLandmarksMesh
+						rigging.cameraViewMode === 'wireframe'
 							? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 font-semibold shadow-sm'
 							: isLightTheme ? 'bg-zinc-200/60 border-zinc-300 text-zinc-500' : 'bg-zinc-950/80 border-zinc-800 text-zinc-500'
 					}"
-					title="Toggle Wireframe Mesh Wajah"
+					title="Mode Kamera: 3D Wireframe / Rig Overlay / Raw"
 				>
 					<Eye class="w-3 h-3 mb-0.5" />
-					<span class="leading-none text-[9px]">Mesh</span>
+					<span class="leading-none text-[9px]">{rigging.cameraViewMode === 'wireframe' ? '3D' : rigging.cameraViewMode === 'rig' ? 'Rig' : 'Raw'}</span>
 				</button>
 			</div>
 

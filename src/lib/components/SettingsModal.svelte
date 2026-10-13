@@ -66,6 +66,7 @@
 	let hasTestSample = $state<boolean>(false);
 	let isPlayingTest = $state<boolean>(false);
 	let testPlaybackMode = $state<'raw' | 'converted' | null>(null);
+	let testTtsText = $state<string>('Halo halo! Tes suara anime kawaii.');
 
 	async function handleRecordSample() {
 		if (isRecordingTest) return;
@@ -133,6 +134,29 @@
 		isPlayingTest = false;
 		testPlaybackMode = null;
 		playSfx('click');
+	}
+
+	async function handleTestByText() {
+		if (isPlayingTest) return;
+		isPlayingTest = true;
+		testPlaybackMode = 'converted';
+		hasTestSample = true;
+
+		if (rigging.voiceFilter === 'none') {
+			rigging.setVoiceFilter('anime-girl');
+			voice.setFilter('anime-girl');
+			rigging.showToast('✓ Model Suara aktif: Kawaii Anime Girl (+5 Semitones)');
+		}
+
+		playSfx('click');
+		const played = await voice.synthesizeVoiceText(testTtsText, rigging.voiceFilter);
+		isPlayingTest = false;
+		testPlaybackMode = null;
+		if (!played) {
+			rigging.showToast('Gagal memproses sintesis suara teks');
+		} else {
+			rigging.showToast('✓ Teks selesai disintesis lewat DSP Voice Changer!');
+		}
 	}
 
 	// Group themes by category
@@ -1821,6 +1845,61 @@
 											</div>
 										{/if}
 									{/if}
+								</div>
+
+								<!-- Test Voice Changer by Text (TTS Formant Synthesis) -->
+								<div class="pt-2.5 border-t border-zinc-800/80 space-y-2">
+									<div class="flex items-center justify-between">
+										<span class="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
+											<Sparkles class="w-3.5 h-3.5 text-cyan-400" />
+											Uji Voice Changer Lewat Teks (Tanpa Mic)
+										</span>
+										<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-cyan-500/20 text-cyan-300">Formant TTS</span>
+									</div>
+
+									<div class="flex gap-1.5">
+										<input
+											type="text"
+											bind:value={testTtsText}
+											placeholder="Ketik kalimat untuk uji suara..."
+											class="flex-1 bg-zinc-900 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
+										/>
+										<button
+											type="button"
+											onclick={handleTestByText}
+											disabled={isPlayingTest}
+											class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1 shadow-sm shrink-0"
+										>
+											<Play class="w-3 h-3" />
+											<span>Tes Teks</span>
+										</button>
+									</div>
+
+									<!-- Quick preset phrases -->
+									<div class="flex items-center gap-1.5 flex-wrap">
+										<span class="text-[9px] text-zinc-500 font-medium">Contoh:</span>
+										<button
+											type="button"
+											onclick={() => { testTtsText = 'Halo halo! Tes suara anime kawaii.'; handleTestByText(); }}
+											class="text-[9px] px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-pink-300 border border-pink-500/30 cursor-pointer"
+										>
+											🌸 Anime Kawaii
+										</button>
+										<button
+											type="button"
+											onclick={() => { testTtsText = 'Konnichiwa! Selamat datang di stream live.'; handleTestByText(); }}
+											class="text-[9px] px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-cyan-300 border border-cyan-500/30 cursor-pointer"
+										>
+											🎙️ Ikemen Boy
+										</button>
+										<button
+											type="button"
+											onclick={() => { testTtsText = 'Sistem online. Mode cyber robot terhubung.'; handleTestByText(); }}
+											class="text-[9px] px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-violet-300 border border-violet-500/30 cursor-pointer"
+										>
+											🤖 Cyber Robot
+										</button>
+									</div>
 								</div>
 							</div>
 						</div>

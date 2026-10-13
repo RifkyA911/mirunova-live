@@ -27,6 +27,7 @@ export interface SavedUserConfig {
 	enableHandTracking?: boolean;
 	showCameraPip?: boolean;
 	showLandmarksMesh?: boolean;
+	cameraViewMode?: 'wireframe' | 'rig' | 'raw';
 	poseLoopMode?: string;
 	poseLoopSpeed?: number;
 	calibrationYaw?: number;
