@@ -535,8 +535,155 @@ export class ThreeStage {
 		this.setFraming(this.currentFraming);
 	}
 
-	// 4. Load Any External Generic FBX Model
+	// 4. Load Humanoid Manhattan Cafe Model with Uma Musume Horse Ears & Dark Palette
+	async loadManhattanCafe() {
+		const token = ++this.activeLoadToken;
+		this.clearCurrentModel();
+		this.modelType = 'fbx';
+
+		const loader = new FBXLoader();
+		const group = await loader.loadAsync('/models/neurosama/neuro-sama.fbx');
+		if (token !== this.activeLoadToken) return;
+		this.clearCurrentModel();
+		this.currentModelGroup = group;
+
+		// Load textures with SRGBColorSpace
+		const texLoader = new THREE.TextureLoader();
+		const loadTex = (url: string) => {
+			const t = texLoader.load(url);
+			t.colorSpace = THREE.SRGBColorSpace;
+			return t;
+		};
+
+		const textures = {
+			expressions: loadTex('/models/neurosama/textures/neuroexpresions_vrc.png'),
+			secondaryClothes: loadTex('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
+			clothes: loadTex('/models/neurosama/textures/clothes_neuro_vrc.png'),
+			hair: loadTex('/models/neurosama/textures/neuro_hair_vrc.png'),
+			body: loadTex('/models/neurosama/textures/body_neuro_vrc.png')
+		};
+
+		group.traverse((child) => {
+			if ((child as any).isMesh) {
+				const mesh = child as THREE.SkinnedMesh;
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+
+				if (mesh.morphTargetDictionary) {
+					this.morphMesh = mesh;
+					this.morphDict = mesh.morphTargetDictionary;
+				}
+
+				if (Array.isArray(mesh.material)) {
+					mesh.material.forEach((mat: THREE.Material, idx: number) => {
+						const m = mat as THREE.MeshPhongMaterial;
+						if (idx === 0) {
+							m.map = textures.expressions;
+							m.transparent = true;
+							m.alphaTest = 0.05;
+							m.color = new THREE.Color(0xfff8ee);
+						} else if (idx === 1) {
+							m.map = textures.secondaryClothes;
+							m.transparent = true;
+							m.alphaTest = 0.5;
+							m.color = new THREE.Color(0x282a36); // dark navy trim
+						} else if (idx === 2) {
+							m.map = textures.clothes;
+							m.transparent = false;
+							m.color = new THREE.Color(0x181824); // Manhattan Cafe dark elegant dress
+						} else if (idx === 3) {
+							m.map = textures.hair;
+							m.transparent = true;
+							m.alphaTest = 0.5;
+							m.color = new THREE.Color(0x1e1b26); // raven black/dark coffee long hair
+						} else if (idx === 4) {
+							m.map = textures.body;
+							m.transparent = false;
+							m.color = new THREE.Color(0xfffaf5); // porcelain anime skin
+						}
+						m.shininess = 16;
+						m.needsUpdate = true;
+					});
+				}
+			}
+		});
+
+		// Attach Uma Musume Horse Ears to head bone node!
+		const head = group.getObjectByName('head');
+		if (head) {
+			const earMat = new THREE.MeshPhongMaterial({
+				color: 0x1a1824, // dark coffee ear fur
+				shininess: 12
+			});
+			const innerEarMat = new THREE.MeshPhongMaterial({
+				color: 0xe07a8c, // soft pink inner ear
+				shininess: 8
+			});
+
+			const createHorseEar = (isLeft: boolean) => {
+				const earGroup = new THREE.Group();
+				const earGeo = new THREE.ConeGeometry(0.045, 0.16, 16);
+				earGeo.rotateZ(isLeft ? 0.35 : -0.35);
+				earGeo.rotateX(-0.1);
+				const outerMesh = new THREE.Mesh(earGeo, earMat);
+				earGroup.add(outerMesh);
+
+				const innerGeo = new THREE.ConeGeometry(0.028, 0.12, 16);
+				innerGeo.rotateZ(isLeft ? 0.35 : -0.35);
+				innerGeo.rotateX(-0.08);
+				innerGeo.translate(0, -0.01, 0.01);
+				const innerMesh = new THREE.Mesh(innerGeo, innerEarMat);
+				earGroup.add(innerMesh);
+
+				earGroup.position.set(isLeft ? -0.085 : 0.085, 0.17, -0.02);
+				return earGroup;
+			};
+
+			head.add(createHorseEar(true));
+			head.add(createHorseEar(false));
+		}
+
+		// Discover humanoid bones
+		this.headNode = group.getObjectByName('head') || null;
+		this.neckNode = group.getObjectByName('neck') || null;
+		this.eyeRNode = group.getObjectByName('EyeR') || null;
+		this.eyeLNode = group.getObjectByName('EyeL') || null;
+		this.hipsNode = group.getObjectByName('hips') || null;
+		this.spineNode = group.getObjectByName('spine') || null;
+		this.torsoNode = group.getObjectByName('torso') || null;
+		this.shoulderLNode = group.getObjectByName('shoulderL') || null;
+		this.shoulderRNode = group.getObjectByName('shoulderR') || null;
+		this.armLNode = group.getObjectByName('armL') || null;
+		this.armRNode = group.getObjectByName('armR') || null;
+		this.forearmLNode = group.getObjectByName('ForearmL') || null;
+		this.forearmRNode = group.getObjectByName('ForearmR') || null;
+		this.handLNode = group.getObjectByName('handL') || null;
+		this.handRNode = group.getObjectByName('handR') || null;
+
+		// Cache secondary bones
+		this.hairBones = [];
+		this.skirtBones = [];
+		this.initialRotations.clear();
+
+		group.traverse((c) => {
+			if ((c as any).isBone) {
+				const name = c.name.toLowerCase();
+				if (name.includes('hair') || name.includes('pigtail')) this.hairBones.push(c);
+				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie')) this.skirtBones.push(c);
+				this.initialRotations.set(c, c.rotation.clone());
+			}
+		});
+
+		if (token !== this.activeLoadToken) return;
+		this.scene.add(group);
+		this.setFraming(this.currentFraming);
+	}
+
+	// 5. Load Any External Generic FBX Model
 	async loadFBX(url: string) {
+		if (url.includes('manhattan') || url.includes('cafe')) {
+			return this.loadManhattanCafe();
+		}
 		if (url.includes('neuro') || url.includes('vedal')) {
 			return this.loadNeuroSama();
 		}

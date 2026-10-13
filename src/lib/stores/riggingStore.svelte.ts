@@ -168,7 +168,16 @@ export class RiggingStore {
 		{ id: 'studio-mic', name: 'Mikrofon Broadcast Studio', category: 'prop', icon: 'Mic', emoji: '🎤', visible: false, scale: 1.0, offsetX: 80, offsetY: 70, rotation: -10, opacity: 1.0 },
 		{ id: 'mustache', name: 'Kumis Retro Gentleman', category: 'face', icon: 'Smile', emoji: '🥸', visible: false, scale: 0.85, offsetX: 0, offsetY: -40, rotation: 0, opacity: 1.0 },
 		{ id: 'halo', name: 'Halo Cahaya Emas', category: 'head', icon: 'Sparkles', emoji: '😇', visible: false, scale: 1.1, offsetX: 0, offsetY: -310, rotation: 0, opacity: 1.0 },
-		{ id: 'heart-aura', name: 'Floating Heart Aura', category: 'prop', icon: 'Heart', emoji: '💖', visible: false, scale: 1.0, offsetX: 120, offsetY: -160, rotation: 15, opacity: 0.9 }
+		{ id: 'heart-aura', name: 'Floating Heart Aura', category: 'prop', icon: 'Heart', emoji: '💖', visible: false, scale: 1.0, offsetX: 120, offsetY: -160, rotation: 15, opacity: 0.9 },
+		// Little Rose (小玫瑰) Animated Emoji & Meme Props
+		{ id: 'rose-popcorn', name: 'Little Rose - Makan Popcorn', category: 'prop', icon: 'Sparkles', emoji: '🍿', visible: false, scale: 0.95, offsetX: 220, offsetY: 120, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_popcorn.gif', attachTo: 'screen' },
+		{ id: 'rose-cheer', name: 'Little Rose - Lightstick Cheer', category: 'prop', icon: 'Sparkles', emoji: '✨', visible: false, scale: 0.9, offsetX: 180, offsetY: 60, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_cheer.gif', attachTo: 'body' },
+		{ id: 'rose-love', name: 'Little Rose - Floating Love', category: 'prop', icon: 'Heart', emoji: '💖', visible: false, scale: 0.85, offsetX: 120, offsetY: -180, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_love.gif', attachTo: 'head' },
+		{ id: 'rose-cool', name: 'Little Rose - Keren Kacamata', category: 'prop', icon: 'Glasses', emoji: '😎', visible: false, scale: 0.95, offsetX: -200, offsetY: 100, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_cool.gif', attachTo: 'screen' },
+		{ id: 'rose-ghost', name: 'Little Rose - Hantu Melayang', category: 'prop', icon: 'Sparkles', emoji: '👻', visible: false, scale: 0.85, offsetX: -130, offsetY: -200, rotation: 0, opacity: 0.9, imageUrl: '/props/rose/rose_ghost.gif', attachTo: 'head' },
+		{ id: 'rose-bonk', name: 'Little Rose - Kena Pukul (Bonk)', category: 'prop', icon: 'Smile', emoji: '💥', visible: false, scale: 0.9, offsetX: 90, offsetY: -150, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_bonk.gif', attachTo: 'head' },
+		{ id: 'rose-derp', name: 'Little Rose - Bengong (Derp)', category: 'prop', icon: 'Smile', emoji: '😶', visible: false, scale: 0.85, offsetX: 0, offsetY: -240, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_derp.gif', attachTo: 'head' },
+		{ id: 'rose-lol', name: 'Little Rose - Ketawa Ngakak', category: 'prop', icon: 'Smile', emoji: '🤣', visible: false, scale: 0.95, offsetX: 0, offsetY: 150, rotation: 0, opacity: 1.0, imageUrl: '/props/rose/rose_lol.gif', attachTo: 'screen' }
 	]);
 
 	// Photoshop Layer Manager Stacking Order (Top to bottom)

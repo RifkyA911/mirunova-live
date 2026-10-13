@@ -281,6 +281,14 @@
 
 		rigging.persist();
 	});
+
+	$effect(() => {
+		if (rigging.isMicActive && voice.isRunning) {
+			voice.setFilter(rigging.voiceFilter);
+			voice.setGain(rigging.micGain);
+			voice.setMonitor(rigging.isMicMonitorActive);
+		}
+	});
 </script>
 
 <svelte:head>

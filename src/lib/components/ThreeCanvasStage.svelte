@@ -110,6 +110,17 @@
 					{ id: 'vrc.aa', name: 'vrc.aa', label: '🗣️ Mulut Terbuka (Mouth Open)' }
 				];
 				rigging.showToast("✓ Model 3D Neuro-sama (Vedal's Version) dimuat!");
+			} else if (id === 'manhattan-cafe') {
+				await threeStage.loadManhattanCafe();
+				rigging.availableExpressions = [
+					{ id: 'stars', name: 'stars', label: '✨ Tatapan Misterius (Mysterious)' },
+					{ id: 'vrc.ee', name: 'vrc.ee', label: '😊 Senyum Lembut (Gentle Smile)' },
+					{ id: 'blush', name: 'blush', label: '😳 Malu Merona (Blush)' },
+					{ id: 'vrc.blink', name: 'vrc.blink', label: '😉 Kedipan Manis (Wink)' },
+					{ id: 'vrc.oh', name: 'vrc.oh', label: '😮 Terkesiap (Soft Gasp)' },
+					{ id: 'vrc.aa', name: 'vrc.aa', label: '🗣️ Bicara Kalem (Speaking)' }
+				];
+				rigging.showToast('✓ Model 3D Manhattan Cafe (Uma Musume) dimuat!');
 			} else if (id === 'mochi-cat') {
 				threeStage.loadProceduralCat('mochi');
 			} else if (id === 'kuro-cat') {

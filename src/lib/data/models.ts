@@ -137,6 +137,15 @@ export const MODEL_3D_CATALOG: Model3DItem[] = [
 		tags: ['3D Humanoid', 'Neuro-sama', 'Vedal', 'Full Body', 'Face Tracking', 'Starry Eyes', 'Visemes', 'VRChat FBX']
 	},
 	{
+		id: 'manhattan-cafe',
+		name: 'Manhattan Cafe (マンハッタンカフェ - Uma Musume)',
+		type: 'fbx',
+		url: '/models/manhattan-cafe/manhattan-cafe.vroid',
+		avatarUrl: '/models/previews/manhattan-cafe.jpg',
+		description: 'Model 3D humanoid Manhattan Cafe karya Uma Musume Pretty Derby dengan rambut raven hitam panjang, telinga kuda (uma mimi), full-body humanoid rig, dan estetika anime elegan.',
+		tags: ['3D Humanoid', 'VRoid', 'Uma Musume', 'Manhattan Cafe', 'Horse Ears', 'Full Body Rig', 'MediaPipe Tracking']
+	},
+	{
 		id: 'mochi-cat',
 		name: 'Mochi The Cat (Shiro Neko)',
 		type: 'procedural',

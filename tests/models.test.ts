@@ -47,6 +47,7 @@ describe('Model Catalog Validation', () => {
 		expect(catIds).toContain('kuro-cat');
 		expect(catIds).toContain('tora-cat');
 		expect(catIds).toContain('neuro-sama');
+		expect(catIds).toContain('manhattan-cafe');
 
 		const proceduralCats = MODEL_3D_CATALOG.filter((m) => m.type === 'procedural');
 		for (const cat of proceduralCats) {
@@ -61,6 +62,11 @@ describe('Model Catalog Validation', () => {
 		expect(neuro?.type).toBe('fbx');
 		expect(neuro?.url).toBe('/models/neurosama/neuro-sama.fbx');
 		expect(neuro?.avatarUrl).toBeTruthy();
+
+		const manhattan = MODEL_3D_CATALOG.find((m) => m.id === 'manhattan-cafe');
+		expect(manhattan).toBeDefined();
+		expect(manhattan?.name).toContain('Manhattan Cafe');
+		expect(manhattan?.avatarUrl).toBe('/models/previews/manhattan-cafe.jpg');
 	});
 
 	it('should provide preview visual assets for all 2D catalog models', () => {

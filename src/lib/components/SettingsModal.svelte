@@ -1701,22 +1701,30 @@
 									/>
 								</div>
 
-								<div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/60 text-xs">
-									<span class="text-zinc-300 font-medium">{i18n.t('mic_monitor_label')}</span>
-									<button
-										onclick={toggleMicMonitor}
-										class="p-1.5 rounded-lg transition-colors {
-											rigging.isMicMonitorActive
-												? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-												: 'bg-zinc-800 text-zinc-400'
-										}"
-									>
-										{#if rigging.isMicMonitorActive}
-											<Volume2 class="w-4 h-4" />
-										{:else}
-											<VolumeX class="w-4 h-4" />
-										{/if}
-									</button>
+								<div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs space-y-1.5">
+									<div class="flex items-center justify-between">
+										<div class="flex items-center gap-2">
+											{#if rigging.isMicMonitorActive}
+												<Volume2 class="w-4 h-4 text-emerald-400" />
+											{:else}
+												<VolumeX class="w-4 h-4 text-zinc-500" />
+											{/if}
+											<span class="text-zinc-200 font-semibold">{i18n.t('mic_monitor_label')}</span>
+										</div>
+										<button
+											onclick={toggleMicMonitor}
+											class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1.5 {
+												rigging.isMicMonitorActive
+													? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-sm'
+													: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700/60'
+											}"
+										>
+											<span>{rigging.isMicMonitorActive ? '✓ Menyala (Mendengar)' : 'Mute Monitor'}</span>
+										</button>
+									</div>
+									<p class="text-[10px] text-zinc-400 leading-normal">
+										Nyalakan monitor untuk mendengar vokal Anda yang telah diubah oleh Voice Changer di headphone secara real-time.
+									</p>
 								</div>
 							</div>
 
@@ -1830,7 +1838,10 @@
 												<span class="font-bold text-xs">{model.name}</span>
 												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-pink-500/20 text-pink-300">{model.badge}</span>
 											</div>
-											<p class="text-[10px] text-zinc-400 leading-tight line-clamp-2">{model.desc}</p>
+											<p class="text-[10px] text-zinc-400 leading-tight mb-1.5">{model.desc}</p>
+											<div class="flex items-center gap-1">
+												<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 text-pink-300 border border-pink-500/30 font-semibold">{model.pitchInfo}</span>
+											</div>
 										</button>
 									{/each}
 								</div>
@@ -1856,7 +1867,10 @@
 												<span class="font-bold text-xs">{model.name}</span>
 												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-cyan-500/20 text-cyan-300">{model.badge}</span>
 											</div>
-											<p class="text-[10px] text-zinc-400 leading-tight line-clamp-2">{model.desc}</p>
+											<p class="text-[10px] text-zinc-400 leading-tight mb-1.5">{model.desc}</p>
+											<div class="flex items-center gap-1">
+												<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 text-cyan-300 border border-cyan-500/30 font-semibold">{model.pitchInfo}</span>
+											</div>
 										</button>
 									{/each}
 								</div>
@@ -1882,7 +1896,10 @@
 												<span class="font-bold text-xs">{model.name}</span>
 												<span class="text-[9px] px-1.5 py-0.2 rounded font-mono bg-violet-500/20 text-violet-300">{model.badge}</span>
 											</div>
-											<p class="text-[10px] text-zinc-400 leading-tight line-clamp-2">{model.desc}</p>
+											<p class="text-[10px] text-zinc-400 leading-tight mb-1.5">{model.desc}</p>
+											<div class="flex items-center gap-1">
+												<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 text-violet-300 border border-violet-500/30 font-semibold">{model.pitchInfo}</span>
+											</div>
 										</button>
 									{/each}
 								</div>

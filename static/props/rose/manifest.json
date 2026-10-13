@@ -1,0 +1,142 @@
+[
+  {
+    "id": "rose_appear",
+    "name": "Little Rose - Muncul (Appear)",
+    "filename": "rose_appear.gif",
+    "url": "/props/rose/rose_appear.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_popcorn",
+    "name": "Little Rose - Makan Melon (Chilling)",
+    "filename": "rose_popcorn.gif",
+    "url": "/props/rose/rose_popcorn.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_derp",
+    "name": "Little Rose - Bengong (Derp)",
+    "filename": "rose_derp.gif",
+    "url": "/props/rose/rose_derp.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_stunned",
+    "name": "Little Rose - Melongo (Stunned)",
+    "filename": "rose_stunned.gif",
+    "url": "/props/rose/rose_stunned.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_crying",
+    "name": "Little Rose - Menangis (Crying)",
+    "filename": "rose_crying.gif",
+    "url": "/props/rose/rose_crying.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_cool",
+    "name": "Little Rose - Keren Kacamata (Cool)",
+    "filename": "rose_cool.gif",
+    "url": "/props/rose/rose_cool.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_sob",
+    "name": "Little Rose - Nangis Kejer (Sob)",
+    "filename": "rose_sob.gif",
+    "url": "/props/rose/rose_sob.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_ghost",
+    "name": "Little Rose - Hantu (Ghost)",
+    "filename": "rose_ghost.gif",
+    "url": "/props/rose/rose_ghost.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_shocked",
+    "name": "Little Rose - Terkejut (Shocked)",
+    "filename": "rose_shocked.gif",
+    "url": "/props/rose/rose_shocked.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_cheer",
+    "name": "Little Rose - Lightstick Cheer",
+    "filename": "rose_cheer.gif",
+    "url": "/props/rose/rose_cheer.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_punch",
+    "name": "Little Rose - Tinju (Punch)",
+    "filename": "rose_punch.gif",
+    "url": "/props/rose/rose_punch.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_bonk",
+    "name": "Little Rose - Kena Pukul (Bonk)",
+    "filename": "rose_bonk.gif",
+    "url": "/props/rose/rose_bonk.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_headpat",
+    "name": "Little Rose - Elus Kepala (Headpat)",
+    "filename": "rose_headpat.gif",
+    "url": "/props/rose/rose_headpat.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_speechless",
+    "name": "Little Rose - Terdiam (...)",
+    "filename": "rose_speechless.gif",
+    "url": "/props/rose/rose_speechless.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_love",
+    "name": "Little Rose - Cinta Hati (Love)",
+    "filename": "rose_love.gif",
+    "url": "/props/rose/rose_love.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_sleep",
+    "name": "Little Rose - Tidur (Sleep)",
+    "filename": "rose_sleep.gif",
+    "url": "/props/rose/rose_sleep.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_lol",
+    "name": "Little Rose - Ketawa Ngakak (LOL)",
+    "filename": "rose_lol.gif",
+    "url": "/props/rose/rose_lol.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_lick",
+    "name": "Little Rose - Cium Layar (Lick)",
+    "filename": "rose_lick.gif",
+    "url": "/props/rose/rose_lick.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_mute",
+    "name": "Little Rose - Hening / Mute",
+    "filename": "rose_mute.gif",
+    "url": "/props/rose/rose_mute.gif",
+    "format": "gif"
+  },
+  {
+    "id": "rose_fisheye",
+    "name": "Little Rose - Mata Ikan (Fisheye)",
+    "filename": "rose_fisheye.gif",
+    "url": "/props/rose/rose_fisheye.gif",
+    "format": "gif"
+  }
+]

@@ -5,6 +5,8 @@ export interface VoiceModelPreset {
 	name: string;
 	desc: string;
 	badge: string;
+	pitchInfo: string;
+	pitchRatio: number;
 	category: 'anime' | 'effects' | 'studio';
 }
 
@@ -14,34 +16,44 @@ export const VOICE_MODELS: VoiceModelPreset[] = [
 		name: 'Natural Passthrough',
 		desc: 'Suara asli jernih tanpa pemrosesan efek atau filter',
 		badge: 'Clean',
+		pitchInfo: 'Pitch Normal (1.0x)',
+		pitchRatio: 1.0,
 		category: 'studio'
 	},
 	{
 		id: 'anime-girl',
 		name: 'Kawaii Anime Girl',
-		desc: 'Treble boost & formant resonansi cerah untuk suara imut ala anime girl',
+		desc: 'Pitch shift +5 semitone, formant resonansi cerah & treble boost ala anime girl',
 		badge: 'Kawaii',
+		pitchInfo: 'Pitch +5 Semitones (+34%)',
+		pitchRatio: 1.335,
 		category: 'anime'
 	},
 	{
 		id: 'ikemen',
 		name: 'Ikemen / Deep Anime Boy',
-		desc: 'Resonansi bass sub-harmonic tebal & de-esser hangat untuk vokal maskulin',
+		desc: 'Pitch shift -5 semitone, resonansi bass sub-harmonic tebal & de-esser maskulin',
 		badge: 'Deep',
+		pitchInfo: 'Pitch -5 Semitones (-25%)',
+		pitchRatio: 0.749,
 		category: 'anime'
 	},
 	{
 		id: 'chipmunk',
 		name: 'Chipmunk Helium FX',
-		desc: 'Formant frekuensi tinggi ekstrim ala kartun tupai helium',
-		badge: 'Funny',
+		desc: 'Pitch shift tinggi +9 semitone ala kartun tupai helium menggemaskan',
+		badge: 'Helium',
+		pitchInfo: 'Pitch +9 Semitones (+68%)',
+		pitchRatio: 1.682,
 		category: 'effects'
 	},
 	{
 		id: 'robot',
 		name: 'Cyber Robot (Ring Modulator)',
-		desc: 'Modulasi amplitudo sci-fi 55Hz menghasilkan efek suara robotik cybernetic',
+		desc: 'Modulasi amplitudo sci-fi 55Hz & pitch -2 semitone untuk vokal cybernetic',
 		badge: 'Sci-Fi',
+		pitchInfo: 'Ring Mod 55Hz (Pitch -2st)',
+		pitchRatio: 0.891,
 		category: 'effects'
 	},
 	{
@@ -49,13 +61,17 @@ export const VOICE_MODELS: VoiceModelPreset[] = [
 		name: 'Vintage Walkie-Talkie',
 		desc: 'Bandpass telepon militer 1980-an dengan saturasi harmonik retro',
 		badge: 'Retro',
+		pitchInfo: 'Bandpass Lo-Fi + Saturation',
+		pitchRatio: 1.0,
 		category: 'effects'
 	},
 	{
 		id: 'echo-hall',
 		name: 'Concert Hall Echo',
 		desc: 'Delay panggung live concert dengan peredaman reverb akustik 220ms',
-		badge: 'Stage',
+		badge: 'Echo',
+		pitchInfo: 'Delay 220ms + Reverb Curve',
+		pitchRatio: 1.0,
 		category: 'effects'
 	},
 	{
@@ -63,6 +79,8 @@ export const VOICE_MODELS: VoiceModelPreset[] = [
 		name: 'Studio Broadcast Vocal',
 		desc: 'Optimasi kehadiran vokal studio podcast hangat, jernih & berwibawa',
 		badge: 'Studio',
+		pitchInfo: 'Warm Presence & Sub-Bass',
+		pitchRatio: 1.0,
 		category: 'studio'
 	}
 ];
@@ -87,6 +105,7 @@ class VoiceEngine {
 	private audioCtx: AudioContext | null = null;
 	private micStream: MediaStream | null = null;
 	private sourceNode: MediaStreamAudioSourceNode | null = null;
+	private pitchNode: ScriptProcessorNode | null = null;
 	private gainNode: GainNode | null = null;
 	private analyserNode: AnalyserNode | null = null;
 	private filterNode: BiquadFilterNode | null = null;
@@ -102,7 +121,16 @@ class VoiceEngine {
 	private lastGain: number = 1.0;
 	private lastMonitor: boolean = false;
 	private lastFilter: VoiceFilterType = 'none';
+	private currentPitchRatio: number = 1.0;
 	private lastOnVolumeChange?: (vol: number) => void;
+
+	public getPitchRatio(filter: VoiceFilterType): number {
+		const model = VOICE_MODELS.find((m) => m.id === filter);
+		if (model) return model.pitchRatio;
+		if (filter === 'pitch-high') return 1.335;
+		if (filter === 'pitch-low') return 0.749;
+		return 1.0;
+	}
 
 	public isRunning: boolean = false;
 	public currentVolume: number = 0; // 0.0 to 1.0
@@ -160,6 +188,45 @@ class VoiceEngine {
 			this.micStream = await navigator.mediaDevices.getUserMedia(constraints);
 			this.sourceNode = this.audioCtx.createMediaStreamSource(this.micStream);
 
+			// DSP Node 0: Realtime Granular Pitch Shifter
+			const bufferSize = 8192;
+			const ringBuffer = new Float32Array(bufferSize);
+			let writeIdx = 0;
+			const grainSize = 1024;
+			let grainPos0 = 0;
+			let grainPos1 = 512;
+
+			this.pitchNode = this.audioCtx.createScriptProcessor(2048, 1, 1);
+			this.pitchNode.onaudioprocess = (e) => {
+				const input = e.inputBuffer.getChannelData(0);
+				const output = e.outputBuffer.getChannelData(0);
+				const pitch = this.currentPitchRatio;
+
+				if (Math.abs(pitch - 1.0) < 0.02) {
+					output.set(input);
+					return;
+				}
+
+				for (let i = 0; i < input.length; i++) {
+					ringBuffer[writeIdx] = input[i];
+					writeIdx = (writeIdx + 1) % bufferSize;
+
+					grainPos0 += pitch;
+					if (grainPos0 >= grainSize) grainPos0 -= grainSize;
+
+					grainPos1 += pitch;
+					if (grainPos1 >= grainSize) grainPos1 -= grainSize;
+
+					const w0 = 0.5 * (1 - Math.cos((2 * Math.PI * grainPos0) / grainSize));
+					const w1 = 0.5 * (1 - Math.cos((2 * Math.PI * grainPos1) / grainSize));
+
+					const r0 = (writeIdx - grainSize + Math.floor(grainPos0) + bufferSize) % bufferSize;
+					const r1 = (writeIdx - grainSize + Math.floor(grainPos1) + bufferSize) % bufferSize;
+
+					output[i] = ringBuffer[r0] * w0 + ringBuffer[r1] * w1;
+				}
+			};
+
 			// DSP Node 1: Primary Biquad Filter
 			this.filterNode = this.audioCtx.createBiquadFilter();
 			this.filterNode.type = 'allpass';
@@ -182,6 +249,16 @@ class VoiceEngine {
 			this.delayNode.connect(this.delayGain);
 			this.delayGain.connect(this.delayNode);
 
+			// DSP Node 5: Ring Modulator for Sci-Fi Robot
+			this.ringOsc = this.audioCtx.createOscillator();
+			this.ringOsc.type = 'sine';
+			this.ringOsc.frequency.setValueAtTime(55, this.audioCtx.currentTime);
+			this.ringGain = this.audioCtx.createGain();
+			this.ringGain.gain.value = 1.0;
+			try {
+				this.ringOsc.start();
+			} catch {}
+
 			// Master Gain Node
 			this.gainNode = this.audioCtx.createGain();
 			this.gainNode.gain.value = 1.0;
@@ -196,11 +273,14 @@ class VoiceEngine {
 			this.monitorNode.gain.value = 0.0;
 
 			// Routing graph:
-			// sourceNode -> filterNode -> secondaryFilterNode -> gainNode -> analyserNode -> monitorNode -> destination
-			// with parallel wet connections for delay and ring-mod
-			this.sourceNode.connect(this.filterNode);
+			// sourceNode -> pitchNode -> filterNode -> secondaryFilterNode -> distortionNode -> ringGain -> gainNode -> analyserNode -> monitorNode -> destination
+			// with parallel wet connections for delay
+			this.sourceNode.connect(this.pitchNode);
+			this.pitchNode.connect(this.filterNode);
 			this.filterNode.connect(this.secondaryFilterNode);
-			this.secondaryFilterNode.connect(this.gainNode);
+			this.secondaryFilterNode.connect(this.distortionNode);
+			this.distortionNode.connect(this.ringGain);
+			this.ringGain.connect(this.gainNode);
 			this.secondaryFilterNode.connect(this.delayNode);
 			this.delayGain.connect(this.gainNode);
 
@@ -252,6 +332,10 @@ class VoiceEngine {
 			cancelAnimationFrame(this.animFrameId);
 			this.animFrameId = null;
 		}
+		if (this.pitchNode) {
+			try { this.pitchNode.disconnect(); } catch {}
+			this.pitchNode = null;
+		}
 		if (this.ringOsc) {
 			try { this.ringOsc.stop(); } catch {}
 			this.ringOsc = null;
@@ -293,6 +377,7 @@ class VoiceEngine {
 
 	setFilter(type: VoiceFilterType) {
 		this.lastFilter = type;
+		this.currentPitchRatio = this.getPitchRatio(type);
 		if (!this.filterNode || !this.secondaryFilterNode || !this.audioCtx) return;
 		const now = this.audioCtx.currentTime;
 
@@ -303,6 +388,13 @@ class VoiceEngine {
 		// Reset distortion curve
 		if (this.distortionNode) {
 			this.distortionNode.curve = null;
+		}
+		// Reset ring modulator
+		if (this.ringOsc && this.ringGain) {
+			try {
+				this.ringOsc.disconnect();
+				this.ringGain.gain.setValueAtTime(1.0, now);
+			} catch {}
 		}
 
 		switch (type) {
@@ -356,6 +448,13 @@ class VoiceEngine {
 				this.secondaryFilterNode.frequency.setValueAtTime(2400, now);
 				this.secondaryFilterNode.gain.setValueAtTime(10.0, now);
 				this.secondaryFilterNode.Q.setValueAtTime(5.0, now);
+
+				if (this.ringOsc && this.ringGain) {
+					try {
+						this.ringOsc.frequency.setValueAtTime(55, now);
+						this.ringOsc.connect(this.ringGain.gain);
+					} catch {}
+				}
 				break;
 			}
 
@@ -546,6 +645,10 @@ class VoiceEngine {
 		try {
 			const source = this.audioCtx.createBufferSource();
 			source.buffer = this.testAudioBuffer;
+
+			// Apply real pitch transposition factor
+			const pitch = this.getPitchRatio(this.lastFilter);
+			source.playbackRate.value = pitch;
 
 			// Route through active DSP filter chain directly to destination
 			source.connect(this.filterNode);
