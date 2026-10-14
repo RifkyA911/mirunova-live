@@ -140,6 +140,7 @@
 			threeStage.setExpression(expId);
 		}
 		rigging.showToast(expId ? `Ekspresi: ${label}` : 'Ekspresi Netral');
+		isExpressionMenuOpen = false;
 	}
 
 	function handleSelectFraming(mode: AvatarFramingMode) {
@@ -250,6 +251,15 @@
 		tracker.calibrate();
 	}
 </script>
+
+<svelte:window
+	onkeydown={(e) => {
+		if (e.key === 'Escape' && isExpressionMenuOpen) {
+			isExpressionMenuOpen = false;
+		}
+	}}
+/>
+
 
 {#if rigging.isDockHidden}
 	<!-- Collapsed Floating Pill to Restore Menu Dock -->
@@ -902,18 +912,20 @@
 
 			<!-- Unified Floating Expression & Stage Controls Popover -->
 			{#if isExpressionMenuOpen}
-				<!-- Click-outside backdrop closer -->
+				<!-- Click-outside backdrop closer: Covers entire screen at z-[80] -->
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="fixed inset-0 z-[80]"
+					class="fixed inset-0 z-[80] bg-black/25 backdrop-blur-[0.5px]"
 					onclick={() => (isExpressionMenuOpen = false)}
 				></div>
 
 				<div
+					id="expression-popover-menu"
 					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[820px] max-w-[calc(100vw-1rem)] sm:max-w-[820px] min-w-0 sm:min-w-[340px] max-h-[78dvh] overflow-y-auto backdrop-blur-3xl border rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.65)] p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none sm:resize {
 						isLightTheme ? 'bg-white/85 border-white/40 text-zinc-900 shadow-2xl' : 'bg-zinc-950/75 border-white/20 text-zinc-100 shadow-2xl'
 					}"
+					onclick={(e) => e.stopPropagation()}
 					style="min-height: 290px;"
 				>
 					<!-- Header Bar with Tabs, Status, and Close -->
@@ -924,7 +936,7 @@
 								type="button"
 								onclick={() => (expressionActiveTab = 'expressions')}
 								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap {
-									expressionActiveTab === 'expressions'
+								expressionActiveTab === 'expressions'
 										? 'bg-pink-500/25 border border-pink-500/60 text-pink-300 font-bold shadow-sm'
 										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
 								}"
@@ -1002,51 +1014,54 @@
 						<!-- Main Tab Content (8 cols) -->
 						<div class="md:col-span-8 space-y-2">
 							{#if expressionActiveTab === 'expressions'}
-								<!-- TAB 1: FACIAL EXPRESSIONS -->
-								<div class="space-y-2">
-									<div class="flex items-center justify-between px-1 text-[10px] font-bold text-pink-400">
-										<span>EKSPRESI UTAMA ({DEFAULT_EXPRESSIONS.length})</span>
-										<span class="text-[9px] text-zinc-500 font-mono">Hotkey [E] / [Alt + 1..8]</span>
+								<!-- TAB 1: FACIAL EXPRESSIONS (Unified Single Scroll Area: No Nested Scrollbar!) -->
+								<div class="space-y-3.5 pr-1">
+									<!-- Section 1: Ekspresi Utama -->
+									<div class="space-y-1.5">
+										<div class="flex items-center justify-between px-1 text-[10px] font-bold text-pink-400">
+											<span>EKSPRESI UTAMA ({DEFAULT_EXPRESSIONS.length})</span>
+											<span class="text-[9px] text-zinc-500 font-mono">Hotkey [E] / [Alt + 1..8]</span>
+										</div>
+
+										<!-- 4-column compact expression chip grid (no separate scrollbar!) -->
+										<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+											{#each DEFAULT_EXPRESSIONS as exp}
+												<button
+													type="button"
+													onclick={() => handleSelectExpression(exp.id, exp.label)}
+													class="p-1.5 sm:p-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all cursor-pointer group active:scale-95 {
+														rigging.activeExpression === exp.id
+															? 'bg-pink-500/25 border-pink-500/70 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/50'
+															: isLightTheme
+																? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100 hover:border-zinc-300'
+																: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
+													}"
+												>
+													<span class="flex items-center gap-1.5 truncate">
+														<span class="text-base shrink-0">{exp.emoji}</span>
+														<span class="truncate font-semibold text-[11px]">{exp.label}</span>
+													</span>
+													<span class="text-[9px] px-1 py-0.2 rounded font-mono shrink-0 {
+														rigging.activeExpression === exp.id ? 'bg-pink-500/30 text-pink-200' : 'bg-zinc-800 text-zinc-400'
+													}">{exp.badge}</span>
+												</button>
+											{/each}
+										</div>
 									</div>
 
-									<!-- 4-column compact expression chip grid -->
-									<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-										{#each DEFAULT_EXPRESSIONS as exp}
-											<button
-												type="button"
-												onclick={() => handleSelectExpression(exp.id, exp.label)}
-												class="p-1.5 sm:p-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all cursor-pointer group active:scale-95 {
-													rigging.activeExpression === exp.id
-														? 'bg-pink-500/25 border-pink-500/70 text-pink-300 font-bold shadow-sm ring-1 ring-pink-500/50'
-														: isLightTheme
-															? 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:bg-zinc-100 hover:border-zinc-300'
-															: 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-white'
-												}"
-											>
-												<span class="flex items-center gap-1.5 truncate">
-													<span class="text-base shrink-0">{exp.emoji}</span>
-													<span class="truncate font-semibold text-[11px]">{exp.label}</span>
-												</span>
-												<span class="text-[9px] px-1 py-0.2 rounded font-mono shrink-0 {
-													rigging.activeExpression === exp.id ? 'bg-pink-500/30 text-pink-200' : 'bg-zinc-800 text-zinc-400'
-												}">{exp.badge}</span>
-											</button>
-										{/each}
-									</div>
-
-									<!-- Model-Specific Blendshapes row if present -->
+									<!-- Section 2: Model-Specific Blendshapes (Unified into same scroll container) -->
 									{#if rigging.availableExpressions && rigging.availableExpressions.length > 0}
-										<div class="pt-1.5 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
-											<div class="flex items-center justify-between px-1 mb-1 text-[10px] font-bold text-cyan-400">
+										<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'} space-y-1.5">
+											<div class="flex items-center justify-between px-1 text-[10px] font-bold text-cyan-400">
 												<span>EKSPRESI KHUSUS MODEL ({rigging.availableExpressions.length})</span>
 												<span class="text-[9px] text-zinc-500">Live2D / 3D Morph</span>
 											</div>
-											<div class="flex flex-wrap gap-1 max-h-16 overflow-y-auto custom-scrollbar pr-1">
+											<div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
 												{#each rigging.availableExpressions as mExp}
 													<button
 														type="button"
 														onclick={() => handleSelectExpression(mExp.name, mExp.label)}
-														class="px-2 py-1 rounded-lg border text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer truncate active:scale-95 {
+														class="p-1.5 rounded-xl border text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer truncate active:scale-95 {
 															rigging.activeExpression === mExp.name
 																? 'bg-cyan-500/25 border-cyan-500/70 text-cyan-300 font-bold shadow-sm ring-1 ring-cyan-500/50'
 																: isLightTheme
@@ -1055,8 +1070,8 @@
 														}"
 														title={mExp.label}
 													>
-														<span>✨</span>
-														<span class="truncate">{mExp.label}</span>
+														<span class="shrink-0">✨</span>
+														<span class="truncate font-medium">{mExp.label}</span>
 													</button>
 												{/each}
 											</div>
@@ -1080,6 +1095,7 @@
 													playSfx('click');
 													rigging.poseLoopMode = loop.id;
 													rigging.showToast(`Loop Pose: ${loop.label}`);
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95 {
 													rigging.poseLoopMode === loop.id
@@ -1127,6 +1143,7 @@
 															playSfx('click');
 															threeStage.setFullBodyPose(fbPose.id);
 															rigging.showToast(`Pose 3D: ${fbPose.label}`);
+															isExpressionMenuOpen = false;
 														}}
 														class="p-2 rounded-xl border text-center transition-all cursor-pointer active:scale-95 {
 															threeStage.activeFullBodyPose === fbPose.id
@@ -1151,7 +1168,7 @@
 									</div>
 
 									{#if rigging.availableMotions && rigging.availableMotions.length > 0}
-										<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+										<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pr-1">
 											{#each rigging.availableMotions as motion}
 												<button
 													type="button"
@@ -1159,6 +1176,7 @@
 														playSfx('click');
 														rigging.playMotion(motion);
 														rigging.showToast(`▶ Putar Gerakan: ${motion}`);
+														isExpressionMenuOpen = false;
 													}}
 													class="p-2 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 {
 														isLightTheme ? 'bg-zinc-50 border-zinc-200 hover:bg-cyan-50 text-zinc-800' : 'bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300'
@@ -1178,6 +1196,7 @@
 													playSfx('click');
 													rigging.playMotion('wave');
 													rigging.showToast('👋 Melambai ke Penonton');
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
@@ -1194,6 +1213,7 @@
 													playSfx('click');
 													rigging.playMotion('bow');
 													rigging.showToast('🙇 Membungkuk Hormat');
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
@@ -1210,6 +1230,7 @@
 													playSfx('click');
 													rigging.playMotion('cheer');
 													rigging.showToast('🎉 Sorak Semangat!');
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
@@ -1226,6 +1247,7 @@
 													playSfx('click');
 													rigging.playMotion('nod');
 													rigging.showToast('🙂 Mengangguk Setuju');
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
@@ -1242,6 +1264,7 @@
 													playSfx('click');
 													rigging.playMotion('shake');
 													rigging.showToast('🙅 Menggeleng Kepala');
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
@@ -1258,6 +1281,7 @@
 													playSfx('click');
 													rigging.playMotion('blink_fast');
 													rigging.showToast('✨ Kedip Mata Cepat');
+													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>

@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.21.0-beta] - 2026-10-14
 
-- **Futuristic 3D Cube Model Loader Overhaul (`CubeLoader.svelte`, `+page.svelte`, `CanvasStage.svelte`, `ModelCatalogModal.svelte`):**
+- **Expressions Menu Single Unified Scroll & One-Click Dismiss (`ControlDock.svelte`):**
+  - **Single Smooth Scroll Area:** Completely removed nested inner scroll containers (`max-h-[380px] overflow-y-auto`) so "Ekspresi Utama" and "Ekspresi Khusus Model" sit together in a single smoothly flowing list without annoying double scrollbars.
+  - **Full-Screen Outer Click Backdrop:** Added a high-priority backdrop closer (`z-[80] fixed inset-0`) with event stop-propagation on the modal card, ensuring that clicking anywhere outside immediately closes the expression menu.
+  - **Single-Click Action & Close:** All expression chips, pose loops, 3D body poses, and motion triggers now dismiss the popup immediately on single click (`isExpressionMenuOpen = false`), while applying the action smoothly.
+- **3D Neuro-sama Cel-Shaded Anime YouTube Broadcast Tone Overhaul (`threeStage.ts`):**
+  - **Broadcast-Accurate 2-Tone Cel Shading:** Replaced realistic `MeshPhongMaterial` and white emissive haze with dedicated anime cel-shading using `MeshToonMaterial` and a stepped 2-tone `toonGradient` ([192, 255] with `NearestFilter`), reproducing the vibrant cel-shaded look from Vedal987 / Neuro-sama YouTube streams.
+  - **True-Tone Color Space Fidelity:** Switched Three.js renderer tone mapping to `THREE.NoToneMapping` with `SRGBColorSpace`, preventing highlights from being compressed or desaturated by PBR curves and restoring deep rich dark navy clothes, warm chestnut brown hair, and luminous peach skin.
+  - **Unlit Crystal-Clear Expressions:** Bound face expressions (eyes, star eyes, blush, open mouth) to `MeshBasicMaterial` with `depthWrite = false` and `depthTest = true` so eyes and blushing cheeks are permanently self-illuminated and radiant without z-fighting.
+  - **Eye-Level Studio Frontal Key Lighting:** Adjusted key light to face height (`y = 1.45`) with soft warm ambient fill (`0xfff8f2, 1.2`), eliminating harsh downward facial shadows, nose shadow triangles, and dark cheek gouraud shading.
   - Integrated 3D spinning Cube Loader inspired by Daiwiik Harihar (`@daiwiikharihar/components/cube-loader` on 21st.dev).
   - Built with pure CSS 3D transforms (`perspective: 1200px`, `transform-style: preserve-3d`) featuring infinite multi-axis spin (`cubeSpin`), breathing translucent face panels (Cyan, Purple, Indigo), a hyper-luminous white core with pulsing aura, and ambient floor breathing shadows.
   - Added futuristic microcopy with subtle glitch effect, dynamic avatar model title with engine badge (`2D Live2D` / `3D`), and real-time audio rhythm equalizer bars.

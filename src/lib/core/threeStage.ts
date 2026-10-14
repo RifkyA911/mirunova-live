@@ -75,6 +75,20 @@ export class ThreeStage {
 	private gltfBones: Map<string, THREE.Bone> = new Map();
 	private lastFrameTime = performance.now();
 	private activeLoadToken = 0;
+	private toonGradient: THREE.DataTexture | null = null;
+
+	public getOrCreateToonGradient(): THREE.DataTexture {
+		if (!this.toonGradient) {
+			// Clean 2-tone anime cel-shading ramp: 192/255 (75%) soft warm shadow, 255/255 (100%) lit
+			const colors = new Uint8Array([192, 255]);
+			this.toonGradient = new THREE.DataTexture(colors, 2, 1, THREE.RedFormat);
+			this.toonGradient.minFilter = THREE.NearestFilter;
+			this.toonGradient.magFilter = THREE.NearestFilter;
+			this.toonGradient.generateMipmaps = false;
+			this.toonGradient.needsUpdate = true;
+		}
+		return this.toonGradient;
+	}
 
 	constructor() {
 		this.scene = new THREE.Scene();
@@ -99,25 +113,31 @@ export class ThreeStage {
 		this.renderer.setSize(width, height);
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+		// Use NoToneMapping so vibrant anime colors, skin tones, and rich darks are never dulled or desaturated
+		this.renderer.toneMapping = THREE.NoToneMapping;
 		container.appendChild(this.renderer.domElement);
 
 		this.camera.aspect = width / height;
 		this.camera.updateProjectionMatrix();
 
-		// Studio Lights
-		const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+		// Studio Lights: Clean broadcast-grade anime lighting (matches YouTube/Twitch stream tone)
+		// 1. Soft warm ambient fill gives character luminous presence without pitch-black crevices
+		const ambientLight = new THREE.AmbientLight(0xfff8f2, 1.2);
 		this.scene.add(ambientLight);
 
-		const mainLight = new THREE.DirectionalLight(0xffffff, 2.2);
-		mainLight.position.set(2, 4, 3);
+		// 2. Frontal eye-level key light directly illuminates face & chest, eliminating harsh nose/bangs shadows
+		const mainLight = new THREE.DirectionalLight(0xfffefa, 1.15);
+		mainLight.position.set(0.1, 1.45, 2.8);
 		this.scene.add(mainLight);
 
-		const fillLight = new THREE.DirectionalLight(0x06b6d4, 1.2); // Cyan rim light
-		fillLight.position.set(-3, 2, -1);
+		// 3. Gentle fill light from side-left softens contours
+		const fillLight = new THREE.DirectionalLight(0xf5f8ff, 0.45);
+		fillLight.position.set(-2.2, 1.4, 2.0);
 		this.scene.add(fillLight);
 
-		const rimLight = new THREE.DirectionalLight(0xec4899, 1.0); // Pink rim light
-		rimLight.position.set(3, -1, -2);
+		// 4. Subtle warm rim backlight gives clean edge separation from stage background
+		const rimLight = new THREE.DirectionalLight(0xfffaf0, 0.35);
+		rimLight.position.set(0, 2.8, -2.2);
 		this.scene.add(rimLight);
 
 		this.setStageEnvironment(this.currentStageEnv);
@@ -685,11 +705,13 @@ export class ThreeStage {
 			body: loadTex('/models/neurosama/textures/body_neuro_vrc.png')
 		};
 
+		const toonGradient = this.getOrCreateToonGradient();
+
 		group.traverse((child) => {
 			if ((child as any).isMesh) {
 				const mesh = child as THREE.SkinnedMesh;
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
+				mesh.castShadow = false;
+				mesh.receiveShadow = false; // Prevent harsh polygonal self-shadow artifacts across anime face
 
 				if (mesh.morphTargetDictionary) {
 					this.morphMesh = mesh;
@@ -697,45 +719,55 @@ export class ThreeStage {
 				}
 
 				if (Array.isArray(mesh.material)) {
-					mesh.material.forEach((mat: THREE.Material, idx: number) => {
-						const m = mat as THREE.MeshPhongMaterial;
-						m.color.setHex(0xffffff); // Override FBX #cccccc dimming with vibrant clean white
-						m.side = THREE.DoubleSide; // Render both sides of anime hair, skirt folds & ribbons
-						m.specular = new THREE.Color(0x222222);
-						m.shininess = 10;
+					// Build dedicated anime cel-shaded toon materials that match YouTube/Twitch stream look:
+					// Slot 0: Expressions (eyes, blush, open mouth) - unlit basic material for crystal-clear vibrant eyes & expressions
+					// Slot 1: Secondary clothes (ribbons, collar tie, cuffs, gold trim) - cel-shaded toon
+					// Slot 2: Main clothes (school uniform, dark navy sailor skirt, shoes) - crisp navy without milky wash
+					// Slot 3: Hair (chestnut brown twin-tails, bangs, strands) - rich warm brown with cel highlights
+					// Slot 4: Body (face, skin, base eyes) - luminous warm anime skin tone without dirty shadows
+					const toonMaterials: THREE.Material[] = [
+						new THREE.MeshBasicMaterial({
+							map: textures.expressions,
+							transparent: true,
+							alphaTest: 0.02,
+							depthWrite: false, // Prevents z-fighting with facial skin geometry
+							depthTest: true,
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.secondaryClothes,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0xffffff),
+							transparent: true,
+							alphaTest: 0.5,
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.clothes,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0xffffff),
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.hair,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0xffffff),
+							transparent: true,
+							alphaTest: 0.5,
+							depthWrite: true,
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.body,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0xffffff),
+							side: THREE.DoubleSide
+						})
+					];
 
-						if (idx === 0) {
-							// Expressions texture (eyes, blush, open mouth)
-							m.map = textures.expressions;
-							m.transparent = true;
-							m.alphaTest = 0.02;
-							m.depthWrite = false; // Prevent z-fighting with face skin mesh
-							m.depthTest = true;
-						} else if (idx === 1) {
-							// Secondary clothes (ribbons, cuffs, tie, accents)
-							m.map = textures.secondaryClothes;
-							m.transparent = true;
-							m.alphaTest = 0.5;
-							m.depthWrite = true;
-						} else if (idx === 2) {
-							// Main clothes (school uniform, socks, shoes)
-							m.map = textures.clothes;
-							m.transparent = false;
-							m.depthWrite = true;
-						} else if (idx === 3) {
-							// Hair (pigtails, bangs, strands)
-							m.map = textures.hair;
-							m.transparent = true;
-							m.alphaTest = 0.5;
-							m.depthWrite = true; // Essential for hair depth sorting!
-						} else if (idx === 4) {
-							// Body (face, skin, base eyes)
-							m.map = textures.body;
-							m.transparent = false;
-							m.depthWrite = true;
-						}
-						m.needsUpdate = true;
-					});
+					// Dispose old default FBX materials to prevent texture/GPU leaks
+					mesh.material.forEach((oldMat) => oldMat.dispose());
+					mesh.material = toonMaterials;
 				}
 			}
 		});
@@ -811,11 +843,13 @@ export class ThreeStage {
 			body: loadTex('/models/neurosama/textures/body_neuro_vrc.png')
 		};
 
+		const toonGradient = this.getOrCreateToonGradient();
+
 		group.traverse((child) => {
 			if ((child as any).isMesh) {
 				const mesh = child as THREE.SkinnedMesh;
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
+				mesh.castShadow = false;
+				mesh.receiveShadow = false;
 
 				if (mesh.morphTargetDictionary) {
 					this.morphMesh = mesh;
@@ -823,35 +857,48 @@ export class ThreeStage {
 				}
 
 				if (Array.isArray(mesh.material)) {
-					mesh.material.forEach((mat: THREE.Material, idx: number) => {
-						const m = mat as THREE.MeshPhongMaterial;
-						if (idx === 0) {
-							m.map = textures.expressions;
-							m.transparent = true;
-							m.alphaTest = 0.05;
-							m.color = new THREE.Color(0xfff8ee);
-						} else if (idx === 1) {
-							m.map = textures.secondaryClothes;
-							m.transparent = true;
-							m.alphaTest = 0.5;
-							m.color = new THREE.Color(0x282a36); // dark navy trim
-						} else if (idx === 2) {
-							m.map = textures.clothes;
-							m.transparent = false;
-							m.color = new THREE.Color(0x181824); // Manhattan Cafe dark elegant dress
-						} else if (idx === 3) {
-							m.map = textures.hair;
-							m.transparent = true;
-							m.alphaTest = 0.5;
-							m.color = new THREE.Color(0x1e1b26); // raven black/dark coffee long hair
-						} else if (idx === 4) {
-							m.map = textures.body;
-							m.transparent = false;
-							m.color = new THREE.Color(0xfffaf5); // porcelain anime skin
-						}
-						m.shininess = 16;
-						m.needsUpdate = true;
-					});
+					const toonMaterials: THREE.Material[] = [
+						new THREE.MeshBasicMaterial({
+							map: textures.expressions,
+							color: new THREE.Color(0xfff8ee),
+							transparent: true,
+							alphaTest: 0.05,
+							depthWrite: false,
+							depthTest: true,
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.secondaryClothes,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0x383a48),
+							transparent: true,
+							alphaTest: 0.5,
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.clothes,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0x222230),
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.hair,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0x282432),
+							transparent: true,
+							alphaTest: 0.5,
+							depthWrite: true,
+							side: THREE.DoubleSide
+						}),
+						new THREE.MeshToonMaterial({
+							map: textures.body,
+							gradientMap: toonGradient,
+							color: new THREE.Color(0xfffaf5),
+							side: THREE.DoubleSide
+						})
+					];
+					mesh.material.forEach((oldMat) => oldMat.dispose());
+					mesh.material = toonMaterials;
 				}
 			}
 		});
