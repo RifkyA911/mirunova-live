@@ -36,6 +36,9 @@ export interface TrackingResults {
 	eyeSmileR?: number;    // 0 to 1
 	isHighFiveL?: boolean;
 	isHighFiveR?: boolean;
+	rawYaw?: number;       // Raw uncalibrated yaw for zero-overhead calibration snapshot
+	rawPitch?: number;     // Raw uncalibrated pitch
+	rawRoll?: number;      // Raw uncalibrated roll
 }
 
 export interface TrackingConfig {

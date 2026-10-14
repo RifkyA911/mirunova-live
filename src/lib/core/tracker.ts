@@ -688,19 +688,7 @@ export class FaceTracker {
 					// Sync smoother configuration with real user slider values
 					globalSmoother.setSmoothingConfig(rigging.smoothingAmount, rigging.jitterReduction);
 
-					// Capture raw uncalibrated pose for precise calibration snapshot
-					const rawPose = solveFaceLandmarks(
-						landmarks,
-						this.blendshapesMap,
-						{ yaw: 0, pitch: 0, roll: 0 },
-						matrix,
-						{ sensitivity: 1.0, deadzone: 0 }
-					);
-					this.lastRawYaw = rawPose.yaw;
-					this.lastRawPitch = rawPose.pitch;
-					this.lastRawRoll = rawPose.roll;
-
-					// Solve parameters with high-precision matrix, mouth expressions, and hand data
+					// Solve parameters with high-precision matrix, mouth expressions, and hand data (Single Pass)
 					const solved = solveFaceLandmarks(
 						landmarks,
 						this.blendshapesMap,
@@ -724,6 +712,11 @@ export class FaceTracker {
 						},
 						handData
 					);
+
+					// Zero-overhead raw uncalibrated pose snapshot for instant calibration
+					this.lastRawYaw = solved.rawYaw ?? solved.yaw;
+					this.lastRawPitch = solved.rawPitch ?? solved.pitch;
+					this.lastRawRoll = solved.rawRoll ?? solved.roll;
 
 					// Apply profile-specific adaptive smoothing & store to rigging store
 					const isFaceActive = rigging.enableFaceTracking;

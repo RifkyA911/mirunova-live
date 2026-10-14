@@ -279,6 +279,13 @@ export class RiggingStore {
 		}
 		if (typeof window !== 'undefined') {
 			this.loadFromStorage();
+			window.addEventListener('beforeunload', () => {
+				if (this.persistDebounceTimer) {
+					clearTimeout(this.persistDebounceTimer);
+					this.persistDebounceTimer = null;
+					this.doPersist();
+				}
+			});
 		}
 	}
 
@@ -294,7 +301,26 @@ export class RiggingStore {
 		this.screenshotSignal = performance.now();
 	}
 
-	persist() {
+	private persistDebounceTimer: any = null;
+
+	persist(immediate: boolean = false) {
+		if (immediate || typeof window === 'undefined') {
+			if (this.persistDebounceTimer) {
+				clearTimeout(this.persistDebounceTimer);
+				this.persistDebounceTimer = null;
+			}
+			this.doPersist();
+			return;
+		}
+
+		if (this.persistDebounceTimer) clearTimeout(this.persistDebounceTimer);
+		this.persistDebounceTimer = setTimeout(() => {
+			this.persistDebounceTimer = null;
+			this.doPersist();
+		}, 200);
+	}
+
+	private doPersist() {
 		savePreferences({
 			modelUrl: this.modelUrl,
 			modelName: this.modelName,

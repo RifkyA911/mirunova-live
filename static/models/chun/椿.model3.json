@@ -1,0 +1,54 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "椿.moc3",
+    "Textures": [
+      "椿.4096/texture_00.png",
+      "椿.4096/texture_01.png",
+      "椿.4096/texture_02.png"
+    ],
+    "Physics": "椿.physics3.json",
+    "DisplayInfo": "椿.cdi3.json",
+    "Motions": {
+      "Idle": [
+        {
+          "File": "motions/idle.motion3.json"
+        }
+      ]
+    },
+    "Expressions": [
+      {
+        "Name": "cry",
+        "File": "EXP3/哭.exp3.json"
+      },
+      {
+        "Name": "heart",
+        "File": "EXP3/爱心眼.exp3.json"
+      },
+      {
+        "Name": "darkeyes",
+        "File": "EXP3/眼高光消失.exp3.json"
+      },
+      {
+        "Name": "blush",
+        "File": "EXP3/脸红.exp3.json"
+      },
+      {
+        "Name": "dark",
+        "File": "EXP3/黑脸.exp3.json"
+      }
+    ]
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": []
+    },
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": []
+    }
+  ]
+}

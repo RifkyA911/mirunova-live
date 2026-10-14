@@ -397,11 +397,24 @@
 				avatarTickerFn = null;
 			}
 			if (currentModel) {
-				if (currentModel.destroy) currentModel.destroy();
+				if (currentModel.destroy) {
+					try {
+						currentModel.destroy({ children: true, texture: true, baseTexture: true });
+					} catch {
+						currentModel.destroy();
+					}
+				}
 				if (currentModel.container) app.stage.removeChild(currentModel.container);
 				else app.stage.removeChild(currentModel);
 				currentModel = null;
 			}
+			// Purge PIXI WebGL texture cache to reclaim VRAM from previous 4K/8K models
+			try {
+				const PIXI = (window as any).PIXI;
+				if (PIXI?.utils?.clearTextureCache) {
+					PIXI.utils.clearTextureCache();
+				}
+			} catch {}
 
 			const Live2D = Live2DModelClass || (await import('pixi-live2d-display/cubism4')).Live2DModel;
 			const model = await Live2D.from(url, {
@@ -1310,17 +1323,35 @@
 			avatarTickerFn = null;
 		}
 		if (currentModel?.destroy) {
-			currentModel.destroy();
+			try {
+				currentModel.destroy({ children: true, texture: true, baseTexture: true });
+			} catch {
+				currentModel.destroy();
+			}
 			currentModel = null;
 		}
 		if (collabModel?.destroy) {
-			collabModel.destroy();
+			try {
+				collabModel.destroy({ children: true, texture: true, baseTexture: true });
+			} catch {
+				collabModel.destroy();
+			}
 			collabModel = null;
 		}
 		if (collabModel2?.destroy) {
-			collabModel2.destroy();
+			try {
+				collabModel2.destroy({ children: true, texture: true, baseTexture: true });
+			} catch {
+				collabModel2.destroy();
+			}
 			collabModel2 = null;
 		}
+		try {
+			const PIXI = (window as any).PIXI;
+			if (PIXI?.utils?.clearTextureCache) {
+				PIXI.utils.clearTextureCache();
+			}
+		} catch {}
 		if (app) {
 			app.destroy(true, { children: true, texture: true, baseTexture: true });
 			app = null;

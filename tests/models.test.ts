@@ -33,6 +33,30 @@ describe('Model Catalog Validation', () => {
 		expect(jian?.name).toContain('简');
 		expect(jian?.url).toBe('/models/jian/简.model3.json');
 		expect(jian?.avatarUrl).toBeTruthy();
+
+		const changli = MODEL_CATALOG.find((m) => m.id === 'changli');
+		expect(changli).toBeDefined();
+		expect(changli?.name).toContain('长离');
+		expect(changli?.url).toBe('/models/changli/长离.model3.json');
+		expect(changli?.avatarUrl).toBeTruthy();
+
+		const chun = MODEL_CATALOG.find((m) => m.id === 'chun');
+		expect(chun).toBeDefined();
+		expect(chun?.name).toContain('椿');
+		expect(chun?.url).toBe('/models/chun/椿.model3.json');
+		expect(chun?.avatarUrl).toBeTruthy();
+
+		const tingyun = MODEL_CATALOG.find((m) => m.id === 'tingyun');
+		expect(tingyun).toBeDefined();
+		expect(tingyun?.name).toContain('停云');
+		expect(tingyun?.url).toBe('/models/tingyun/停云.model3.json');
+		expect(tingyun?.avatarUrl).toBeTruthy();
+
+		const ruanMei = MODEL_CATALOG.find((m) => m.id === 'ruan-mei');
+		expect(ruanMei).toBeDefined();
+		expect(ruanMei?.name).toContain('阮·梅');
+		expect(ruanMei?.url).toBe('/models/ruan-mei/1208阮梅1-12.20 - 动画.model3.json');
+		expect(ruanMei?.avatarUrl).toBeTruthy();
 	});
 
 	it('should not contain blocked or dead CDN repositories', () => {

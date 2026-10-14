@@ -354,6 +354,9 @@ export function solveFaceLandmarks(
 		eyeSmileL,
 		eyeSmileR,
 		isHighFiveL: handData?.isHighFiveL,
-		isHighFiveR: handData?.isHighFiveR
+		isHighFiveR: handData?.isHighFiveR,
+		rawYaw,
+		rawPitch,
+		rawRoll
 	};
 }

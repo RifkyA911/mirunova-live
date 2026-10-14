@@ -24,6 +24,50 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		tags: ['ZZZ', 'Jane Doe', 'Cubism 4', '8K Ultra HD', '10 Expressions', 'Zenless Zone Zero', 'Anime VTuber']
 	},
 	{
+		id: 'changli',
+		name: '长离 (Changli - Wuthering Waves)',
+		url: '/models/changli/长离.model3.json',
+		description: 'Model Live2D Cubism 4 Changli (长离) dari Wuthering Waves (鸣潮) dengan 4 tekstur 4K HD, 7 ekspresi lengkap (jacket, heart, angry, eyeroll, eyepatch, blush, dark), dan fisika bulu & jubah dinamis.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/changli.png',
+		source: 'booth',
+		author: 'Wuthering Waves Community',
+		tags: ['Wuthering Waves', 'Changli', 'Cubism 4', '4K HD', '7 Expressions', 'Kuro Games', 'Anime VTuber']
+	},
+	{
+		id: 'chun',
+		name: '椿 (Camellya - Wuthering Waves)',
+		url: '/models/chun/椿.model3.json',
+		description: 'Model Live2D Cubism 4 Camellya / Chun (椿) dari Wuthering Waves dengan 3 tekstur 4K, 5 ekspresi emosional (cry, heart eyes, yandere, blush, dark), dan animasi idle looping dinamis.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/chun.png',
+		source: 'booth',
+		author: 'Wuthering Waves Community',
+		tags: ['Wuthering Waves', 'Camellya', 'Chun', 'Cubism 4', '4K HD', '5 Expressions', 'Idle Motion', 'Kuro Games']
+	},
+	{
+		id: 'tingyun',
+		name: '停云 (Tingyun - Honkai: Star Rail)',
+		url: '/models/tingyun/停云.model3.json',
+		description: 'Model Live2D Cubism 4 Tingyun (停云) dari Honkai: Star Rail dengan tekstur 4K, rigging telinga & ekor rubah berbulu yang reaktif, serta 4 ekspresi (tail, heart eyes, blush, dark shock).',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/tingyun.png',
+		source: 'booth',
+		author: 'HSR Community',
+		tags: ['Honkai Star Rail', 'Tingyun', 'Cubism 4', 'Foxian', 'Tail Physics', 'Heart Eyes', 'Hoyoverse']
+	},
+	{
+		id: 'ruan-mei',
+		name: '阮·梅 (Ruan Mei - Honkai: Star Rail)',
+		url: '/models/ruan-mei/1208阮梅1-12.20 - 动画.model3.json',
+		description: 'Model Live2D Cubism 4 Ruan Mei (阮·梅) dari Honkai: Star Rail dengan 4 tekstur 8K ultra HD, instrumen ruan tradisional, fisika kain sutra halus, dan latar belakang pemandangan studio.',
+		version: 'Cubism 3/4',
+		avatarUrl: '/models/previews/ruan-mei.png',
+		source: 'booth',
+		author: 'HSR Community',
+		tags: ['Honkai Star Rail', 'Ruan Mei', 'Cubism 4', '8K Ultra HD', 'Hoyoverse', 'Anime VTuber']
+	},
+	{
 		id: 'mihari',
 		name: 'Mihari (绪山美波里)',
 		url: '/models/mihari/Mihari_V1.model3.json',
