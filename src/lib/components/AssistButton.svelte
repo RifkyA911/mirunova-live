@@ -149,18 +149,18 @@
 			onclick={toggleOpen}
 			aria-label="AssistiveTouch"
 			title="AssistiveTouch (Pusat Kontrol Cepat)"
-			class="relative w-14 h-14 rounded-full overflow-hidden aspect-square flex items-center justify-center backdrop-blur-2xl border border-white/25 shadow-2xl transition-all duration-300 ease-out cursor-pointer active:scale-95 shrink-0 bg-black/65 {
+			class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden aspect-square flex items-center justify-center backdrop-blur-2xl border border-white/25 shadow-2xl transition-all duration-300 ease-out cursor-pointer active:scale-95 shrink-0 bg-black/65 {
 				isVisible
 					? 'translate-x-0 opacity-100 ring-4 ring-cyan-500/50 shadow-cyan-500/40 scale-105'
 					: 'translate-x-[55%] opacity-40 hover:translate-x-0 hover:opacity-100 hover:scale-105 hover:shadow-cyan-500/30'
 			}"
 		>
 			<!-- Apple AssistiveTouch Concentric Outer Ring -->
-			<div class="w-9 h-9 rounded-full bg-white/20 border border-white/40 flex items-center justify-center transition-all duration-300 {
+			<div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 border border-white/40 flex items-center justify-center transition-all duration-300 {
 				isVisible ? 'scale-110 bg-cyan-400/20 border-cyan-400/60' : ''
 			}">
 				<!-- Apple AssistiveTouch Concentric Inner Solid Core -->
-				<div class="w-4 h-4 rounded-full transition-all duration-300 {
+				<div class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full transition-all duration-300 {
 					isVisible ? 'bg-cyan-300 shadow-[0_0_10px_#22d3ee]' : 'bg-white/95 shadow-[0_0_8px_rgba(255,255,255,0.85)]'
 				}"></div>
 			</div>
@@ -181,7 +181,7 @@
 
 			<div
 				transition:fly={{ x: 24, duration: 220, easing: cubicOut }}
-				class="absolute right-16 top-1/2 -translate-y-1/2 w-80 sm:w-96 p-4 rounded-3xl backdrop-blur-3xl border shadow-2xl transition-colors duration-150 {
+				class="fixed sm:absolute right-3 sm:right-16 top-1/2 -translate-y-1/2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm max-h-[85dvh] overflow-y-auto p-3.5 sm:p-4 rounded-3xl backdrop-blur-3xl border shadow-2xl transition-colors duration-150 {
 					isLightTheme
 						? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl'
 						: 'bg-zinc-950/92 border-white/15 text-zinc-100 shadow-2xl'
@@ -233,7 +233,7 @@
 				</div>
 
 				<!-- 8-Tile Apple AssistiveTouch Action Grid (4 columns x 2 rows) -->
-				<div class="grid grid-cols-4 gap-2 mb-3">
+				<div class="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3">
 					<!-- Tile 1: Kalibrasi Tracking -->
 					<button
 						type="button"

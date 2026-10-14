@@ -35,6 +35,9 @@
 	}
 
 	onMount(() => {
+		if (typeof window !== 'undefined' && window.innerWidth < 640) {
+			isMinimized = true;
+		}
 		refreshCameras(false);
 		const onDeviceChange = () => refreshCameras(false);
 		if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
@@ -78,7 +81,7 @@
 				playSfx('click');
 				isMinimized = false;
 			}}
-			class="fixed top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-2xl backdrop-blur-2xl border shadow-2xl cursor-pointer transition-all duration-200 group active:scale-95 {
+			class="fixed top-3 left-3 sm:top-4 sm:left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-2xl backdrop-blur-2xl border shadow-2xl cursor-pointer transition-all duration-200 group active:scale-95 {
 				isLightTheme
 					? 'bg-white border-zinc-200 text-zinc-800 hover:shadow-cyan-500/20'
 					: 'bg-zinc-950 border-zinc-800 text-zinc-100 hover:border-cyan-500/50 shadow-black/80'
@@ -101,7 +104,7 @@
 	{:else}
 		<!-- Expanded View: Sleek Modern Streamer Telemetry & Camera Card -->
 		<div
-			class="fixed top-4 left-4 z-30 flex flex-col backdrop-blur-2xl border rounded-2xl overflow-hidden shadow-2xl transition-all duration-200 select-none w-80 {
+			class="fixed top-3 left-3 sm:top-4 sm:left-4 z-30 flex flex-col backdrop-blur-2xl border rounded-2xl overflow-hidden shadow-2xl transition-all duration-200 select-none w-[calc(100vw-1.5rem)] sm:w-80 max-w-sm {
 				isLightTheme
 					? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl'
 					: 'bg-zinc-950/98 border-zinc-800/90 text-zinc-100 shadow-2xl'

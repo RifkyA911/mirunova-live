@@ -268,17 +268,17 @@
 {:else}
 	<div
 		transition:fly={{ y: 60, duration: 260, easing: cubicOut }}
-		class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 select-none max-w-[98vw]"
+		class="fixed bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center select-none max-w-[calc(100vw-1rem)] sm:max-w-max"
 	>
 		<nav
 			aria-label="Main Dock Controls"
-			class="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl relative overflow-visible max-w-full"
+			class="flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl shadow-2xl relative overflow-x-auto sm:overflow-visible max-w-full scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x"
 		>
 		<!-- 1. Camera Toggle (Icon Only + Hover Tooltip) -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={toggleCamera}
-				class="p-2.5 rounded-xl transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95 {
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
 					rigging.isCameraActive
 						? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 shadow-md shadow-rose-500/10'
 						: 'bg-cyan-500 text-zinc-950 hover:bg-cyan-400 shadow-md shadow-cyan-500/25'
@@ -292,17 +292,17 @@
 				{/if}
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				{rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
 			</div>
 		</div>
 
 		<!-- 2. Microphone Toggle -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={toggleMicrophone}
-				class="p-2.5 rounded-xl transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95 {
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
 					rigging.isMicActive
 						? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 shadow-md shadow-emerald-500/10'
 						: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
@@ -316,20 +316,20 @@
 				{/if}
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				{rigging.isMicActive ? i18n.t('mic_active') : i18n.t('mic_muted')} [V]
 			</div>
 		</div>
 
 		<!-- 3. Quick Device Selector Popover -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					isDeviceMenuOpen = !isDeviceMenuOpen;
 					if (isDeviceMenuOpen) refreshDevices(false);
 				}}
-				class="p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
 					isDeviceMenuOpen
 						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-md'
 						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
@@ -339,7 +339,7 @@
 				<SlidersHorizontal class="w-5 h-5 {isDeviceMenuOpen ? 'text-indigo-300' : 'text-zinc-400'}" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border hidden sm:block {
 					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
 				} {isDeviceMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
 			>
@@ -357,7 +357,7 @@
 				></div>
 
 				<div
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-84 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-4 z-[85] space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left {
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-84 max-w-sm backdrop-blur-2xl border rounded-2xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left max-h-[75dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -468,27 +468,27 @@
 			{/if}
 		</div>
 
-		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+		<div class="w-px h-6 bg-zinc-800 mx-0.5 shrink-0"></div>
 
 		<!-- 2. Calibrate Center Pose -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={handleCalibrate}
 				disabled={!rigging.isCameraActive}
-				class="p-2.5 rounded-xl transition-all text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400 cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400 cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
 				aria-label={i18n.t('calibrate')}
 			>
 				<Crosshair class="w-5 h-5 text-cyan-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				{i18n.t('calibrate')} [C]
 			</div>
 		</div>
 
 		<!-- 3. Cursor Tool Mode Selector (Pan / Move Layer & Props / Hand Tracking) -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					playSfx('click');
@@ -496,7 +496,7 @@
 					isDeviceMenuOpen = false;
 					isExpressionMenuOpen = false;
 				}}
-				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
 					rigging.cursorToolMode === 'select-layer'
 						? 'text-amber-400 bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/20'
 						: rigging.cursorToolMode === 'hand-tracking'
@@ -521,7 +521,7 @@
 			</button>
 
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				{i18n.t('cursor_mode_title')}: {
 					rigging.cursorToolMode === 'select-layer'
@@ -545,7 +545,7 @@
 
 				<div
 					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-1.5rem)] backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-1.5 cursor-default text-left {
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-64 max-w-xs backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-1.5 cursor-default text-left max-h-[75dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -729,7 +729,7 @@
 		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
 
 		<!-- 7. Themes & Background Manager Modal Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
@@ -737,20 +737,20 @@
 					rigging.isObsModalOpen = false;
 					isDeviceMenuOpen = false;
 				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
 				aria-label={i18n.t('themes_bg')}
 			>
 				<Palette class="w-5 h-5 text-cyan-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				{i18n.t('themes_bg')} [T]
 			</div>
 		</div>
 
 		<!-- 7b. Stage Environment Selector Popover & Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					playSfx('click');
@@ -761,7 +761,7 @@
 					rigging.isModelModalOpen = false;
 					rigging.isThemeModalOpen = false;
 				}}
-				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
 					isStageMenuOpen
 						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 shadow-sm'
 						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
@@ -771,7 +771,7 @@
 				<Compass class="w-5 h-5 text-indigo-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				Panggung 3D (Stage) [B]
 			</div>
@@ -785,7 +785,7 @@
 
 				<div
 					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
-					class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-80 sm:w-96 backdrop-blur-3xl border rounded-3xl shadow-2xl p-4 z-[85] space-y-3 cursor-default text-left {
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm backdrop-blur-3xl border rounded-3xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3 cursor-default text-left max-h-[75dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/90 border-white/15 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -852,7 +852,7 @@
 		</div>
 
 		<!-- 8. Model Catalog & Motions Modal Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					rigging.isModelModalOpen = !rigging.isModelModalOpen;
@@ -860,27 +860,27 @@
 					rigging.isObsModalOpen = false;
 					isDeviceMenuOpen = false;
 				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label={i18n.t('models')}
 			>
 				<Box class="w-5 h-5 text-pink-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				{i18n.t('models')} [M]
 			</div>
 		</div>
 
 		<!-- 8b. Live2D Model Expression Variations Selector -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					playSfx('click');
 					isExpressionMenuOpen = !isExpressionMenuOpen;
 					isDeviceMenuOpen = false;
 				}}
-				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
 					isExpressionMenuOpen || rigging.activeExpression
 						? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
 						: 'text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60'
@@ -893,7 +893,7 @@
 				{/if}
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
 					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
 				} {isExpressionMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
 			>
@@ -911,19 +911,19 @@
 				></div>
 
 				<div
-					class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[760px] sm:w-[820px] max-w-[calc(100vw-1.5rem)] min-w-[340px] backdrop-blur-3xl border rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.65)] p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none resize overflow-auto {
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[820px] max-w-[calc(100vw-1rem)] sm:max-w-[820px] min-w-0 sm:min-w-[340px] max-h-[78dvh] overflow-y-auto backdrop-blur-3xl border rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.65)] p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none sm:resize {
 						isLightTheme ? 'bg-white/85 border-white/40 text-zinc-900 shadow-2xl' : 'bg-zinc-950/75 border-white/20 text-zinc-100 shadow-2xl'
 					}"
-					style="min-height: 290px; max-height: 82vh;"
+					style="min-height: 290px;"
 				>
 					<!-- Header Bar with Tabs, Status, and Close -->
-					<div class="flex items-center justify-between border-b pb-2.5 px-1 mb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+					<div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 border-b pb-2.5 px-1 mb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<!-- Tab Switcher Pills -->
-						<div class="flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-white/10">
+						<div class="flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-white/10 overflow-x-auto scrollbar-none max-w-full">
 							<button
 								type="button"
 								onclick={() => (expressionActiveTab = 'expressions')}
-								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer {
+								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap {
 									expressionActiveTab === 'expressions'
 										? 'bg-pink-500/25 border border-pink-500/60 text-pink-300 font-bold shadow-sm'
 										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
@@ -937,7 +937,7 @@
 							<button
 								type="button"
 								onclick={() => (expressionActiveTab = 'poses')}
-								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer {
+								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap {
 									expressionActiveTab === 'poses'
 										? 'bg-violet-500/25 border border-violet-500/60 text-violet-300 font-bold shadow-sm'
 										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
@@ -950,7 +950,7 @@
 							<button
 								type="button"
 								onclick={() => (expressionActiveTab = 'motions')}
-								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer {
+								class="px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap {
 									expressionActiveTab === 'motions'
 										? 'bg-cyan-500/25 border border-cyan-500/60 text-cyan-300 font-bold shadow-sm'
 										: 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
@@ -965,7 +965,7 @@
 						</div>
 
 						<!-- Right Status & Controls -->
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
 							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold {
 								rigging.activeExpression
 									? 'bg-pink-500/20 text-pink-300 border border-pink-500/40'
@@ -1403,7 +1403,7 @@
 		</div>
 
 		<!-- 8c. Photoshop Layers, Props & Collab Manager Modal Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					rigging.toggleLayerManager();
@@ -1414,7 +1414,7 @@
 					isDeviceMenuOpen = false;
 					isExpressionMenuOpen = false;
 				}}
-				class="p-2.5 rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
 					rigging.isLayerManagerOpen
 						? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
 						: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
@@ -1424,30 +1424,30 @@
 				<Layers class="w-5 h-5 text-cyan-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				{i18n.t('layer_manager_title')} [P]
 			</div>
 		</div>
 
 		<!-- 9. Screenshot & Download Avatar -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => rigging.triggerScreenshot()}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label="Screenshot Avatar"
 			>
 				<Aperture class="w-5 h-5 text-amber-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				{i18n.t('screenshot_btn')} [S]
 			</div>
 		</div>
 
 		<!-- 10. Settings Modal Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
 					rigging.isSettingsModalOpen = !rigging.isSettingsModalOpen;
@@ -1457,45 +1457,45 @@
 					rigging.isDrawerOpen = false;
 					isDeviceMenuOpen = false;
 				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label={i18n.t('settings_title')}
 			>
 				<Settings class="w-5 h-5 text-cyan-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				{i18n.t('settings_title')} [F2]
 			</div>
 		</div>
 
 		<!-- 11. Clear GUI / Lock Screen Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => rigging.toggleGuiLock()}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label={i18n.t('clear_gui_btn')}
 			>
 				<Lock class="w-5 h-5 text-amber-400" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				{i18n.t('clear_gui_btn')} [L]
 			</div>
 		</div>
 
 		<!-- 12. Sembunyikan Panel Dock Button -->
-		<div class="group relative flex items-center justify-center">
+		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => rigging.toggleDock(true)}
-				class="p-2.5 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label="Toggle Dock"
 			>
 				<ChevronDown class="w-5 h-5" />
 			</button>
 			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
 			>
 				Dock [H]
 			</div>

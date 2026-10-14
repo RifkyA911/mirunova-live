@@ -27,9 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added dedicated Stage Environment button (`Compass` icon) on the main bottom dock.
   - Interactive selection between Cyber Grid, 3D Studio Room, Open Field, and Void Minimal stages, along with turntable spin toggle.
   - Added keyboard shortcut `[B]` to quickly cycle 3D stage environments.
-- **iOS AssistiveTouch FAB & Natural TTS Voice (`ControlDock.svelte`, `VoiceEngine.ts`):**
-  - Redesigned circular assistive FAB with 40% resting opacity on hover and full quick-action popup.
-  - Naturalized TTS pitch and speech inflection for smoother voice changer test playback.
+- **Comprehensive Mobile UI/UX Responsiveness Overhaul (`ControlDock.svelte`, `AssistButton.svelte`, `CameraPip.svelte`, `LayerManagerModal.svelte`, `+page.svelte`):**
+  - **Bottom Dock Bar:** Added horizontal touch panning (`overflow-x-auto touch-pan-x scrollbar-none`) with bounded max-width (`max-w-[calc(100vw-1rem)] sm:max-w-max`). Each dock item is safeguarded with `shrink-0`, 40px+ touch target hitboxes (`min-w-[40px] min-h-[40px]`), and hover tooltips hidden on touch viewports (`hidden sm:block`) to prevent persistent tooltip artifacts.
+  - **Adaptive Popovers & Menus:** Upgraded all dock flyout menus (Device Selector, Cursor Tools, 3D Stage Environment, and Unified Expressions Studio) to switch seamlessly between `fixed` on mobile viewports (`bottom-20 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] max-h-[78dvh] overflow-y-auto`) and `absolute` on desktop viewports, avoiding clipping issues when parent containers use overflow scroll.
+  - **Unified Expressions Popover:** Added responsive horizontal pill scroll (`overflow-x-auto scrollbar-none flex-nowrap`) for category tabs and adaptive stacking for header status badges.
+  - **Apple AssistiveTouch FAB & Menu:** Scaled button for mobile screens (`w-12 h-12 sm:w-14 sm:h-14`) and positioned menu card dynamically (`w-[calc(100vw-1.5rem)] sm:w-96 max-h-[85dvh] overflow-y-auto right-3 sm:right-16`) to guarantee zero horizontal clipping on narrow phone displays (360px-430px).
+  - **Camera PiP Card:** Configured automatic minimization on mobile viewports (< 640px) on initial mount to keep the avatar stage unobstructed, and bounded expanded width to `w-[calc(100vw-1.5rem)] sm:w-80`.
+  - **Header & Telemetry Badges:** Responsive text truncation and compact padding (`max-w-[calc(100vw-6rem)]`) to prevent overlap between telemetry badges and avatar watermark on mobile screens.
 
 ---
 

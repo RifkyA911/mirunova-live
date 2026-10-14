@@ -442,11 +442,11 @@
 	<!-- 3. Normal UI Controls (Hidden when in OBS Screen Mode or when GUI is locked) -->
 	{#if !rigging.isObsMode && !rigging.isGuiLocked}
 		<!-- Header Brand Watermark & Real-Time FPS Telemetry HUD (Solid Opacity) -->
-		<header class="absolute top-4 right-4 z-40 flex items-center gap-2 pointer-events-auto select-none">
+		<header class="absolute top-3 right-3 sm:top-4 sm:right-4 z-40 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none max-w-[calc(100vw-6rem)] justify-end">
 			<!-- Live HUD FPS Counter Badge -->
 			{#if rigging.showFpsCounter}
 				<div
-					class="px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 font-mono text-[11px] shadow-xl backdrop-blur-xl select-none {
+					class="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border flex items-center gap-1.5 font-mono text-[10px] sm:text-[11px] shadow-xl backdrop-blur-xl select-none shrink-0 {
 						isLightTheme
 							? 'bg-white border-zinc-200 text-zinc-800 shadow-md'
 							: 'bg-zinc-950/95 border-zinc-800/80 text-zinc-200 shadow-xl'
@@ -475,16 +475,16 @@
 					playSfx('modal');
 					rigging.toggleAboutModal(true);
 				}}
-				class="px-2.5 py-1.5 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-xl flex items-center gap-1.5 shadow-xl hover:border-cyan-500/50 transition-all cursor-pointer group text-left {
+				class="px-2 py-1 sm:px-2.5 sm:py-1.5 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-xl flex items-center gap-1.5 shadow-xl hover:border-cyan-500/50 transition-all cursor-pointer group text-left max-w-full overflow-hidden {
 					isLightTheme ? 'bg-white border-zinc-200 text-zinc-900 shadow-md' : ''
 				}"
 				title="{i18n.t('about_title')} • MiruNova Live"
 			>
-				<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-				<span class="text-[11px] font-bold tracking-wide {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+				<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0"></span>
+				<span class="text-[10px] sm:text-[11px] font-bold tracking-wide shrink-0 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 					MiruNova <span class="text-cyan-400 font-extrabold">Live</span>
 				</span>
-				<span class="text-[10px] px-1.5 py-0.2 rounded font-mono truncate max-w-[140px] {
+				<span class="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-mono truncate max-w-[70px] sm:max-w-[140px] {
 					isLightTheme ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-900 text-zinc-400 group-hover:text-cyan-300'
 				}">
 					{rigging.avatarEngine === '3d' ? rigging.selected3DModelId : rigging.modelName}
@@ -561,7 +561,7 @@
 	<!-- Floating Toast Notification (Theme-Aware, High Contrast, Ultra-Legible) -->
 	{#if rigging.toastMessage}
 		<div
-			class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-2.5 rounded-2xl border-2 pointer-events-none select-none animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-xl shadow-2xl {
+			class="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100vw-2rem)] flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-2xl border-2 pointer-events-none select-none animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-xl shadow-2xl {
 				isLightTheme
 					? 'bg-white/98 border-zinc-900 text-zinc-950 shadow-[0_12px_36px_rgba(0,0,0,0.18)]'
 					: 'bg-zinc-950/98 border-cyan-400 text-zinc-50 shadow-[0_12px_40px_rgba(0,0,0,0.95)] shadow-cyan-950/40'
@@ -570,7 +570,7 @@
 			<span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-md animate-pulse {
 				isLightTheme ? 'bg-cyan-600 shadow-cyan-500/50' : 'bg-cyan-400 shadow-[0_0_12px_#22d3ee]'
 			}"></span>
-			<span class="text-xs sm:text-sm font-bold tracking-wide select-none drop-shadow-xs {
+			<span class="text-xs sm:text-sm font-bold tracking-wide select-none drop-shadow-xs truncate {
 				isLightTheme ? 'text-zinc-950' : 'text-zinc-50'
 			}">{rigging.toastMessage}</span>
 		</div>

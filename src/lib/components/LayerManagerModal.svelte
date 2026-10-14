@@ -322,7 +322,7 @@
 				: 'bg-zinc-950/98 text-zinc-100 border-zinc-800/90 shadow-2xl shadow-cyan-950/20'
 		}"
 		style={rigging.layerManagerViewMode === 'windowed'
-			? `left: ${rigging.layerWindowX}px; top: ${rigging.layerWindowY}px; width: ${rigging.layerWindowWidth}px; height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`}; min-width: 380px; min-height: 280px; max-width: 95vw; max-height: 95vh;`
+			? `left: ${rigging.layerWindowX}px; top: ${rigging.layerWindowY}px; width: min(${rigging.layerWindowWidth}px, calc(100vw - 1rem)); height: ${rigging.isLayerMinimized ? 'auto' : `${rigging.layerWindowHeight}px`}; min-width: min(340px, calc(100vw - 1rem)); min-height: 280px; max-width: calc(100vw - 1rem); max-height: 95vh;`
 			: `width: min(540px, 95vw); height: 100vh;`}
 	>
 		<!-- Window Header (Drag Handle in Windowed mode) -->
