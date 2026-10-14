@@ -147,9 +147,9 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(gradient).toBeDefined();
 		expect(gradient.image.width).toBe(2);
 		expect(gradient.image.height).toBe(1);
-		// Stepped 2-tone ramp: ~53% soft natural shadow (135) and 100% lit highlight (255)
+		// Stepped 2-tone ramp: ~59% vibrant anime shadow (150) and 100% lit highlight (255)
 		const data = gradient.image.data;
-		expect(data[0]).toBe(135);
+		expect(data[0]).toBe(150);
 		expect(data[1]).toBe(255);
 		// NearestFilter for crisp anime cel edges without blurry gouraud gradient
 		expect(gradient.minFilter).toBe(1003); // THREE.NearestFilter
@@ -185,6 +185,57 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(stage.modelRotationY).toBe(0);
 		expect(modelGroup!.rotation.y).toBe(0);
 		expect(stage.isAutoSpin).toBe(false);
+	});
+
+	it('should support translating and repositioning 3D model with moveModel and resetModelPosition', () => {
+		const stage = new ThreeStage();
+		stage.loadProceduralCat('mochi');
+
+		const modelGroup = stage['currentModelGroup'];
+		expect(modelGroup).not.toBeNull();
+
+		// Initial offsets
+		expect(stage.modelOffsetX).toBe(0);
+		expect(stage.modelOffsetY).toBe(0);
+		expect(modelGroup!.position.x).toBe(0);
+
+		// Move model right and up
+		stage.moveModel(0.5, 0.3);
+		expect(stage.modelOffsetX).toBeCloseTo(0.5, 3);
+		expect(stage.modelOffsetY).toBeCloseTo(0.3, 3);
+		expect(modelGroup!.position.x).toBeCloseTo(0.5, 3);
+		expect(modelGroup!.position.y).toBeCloseTo(0.3, 3);
+
+		// Set explicit position
+		stage.setModelPosition(-1.2, 0.8);
+		expect(stage.modelOffsetX).toBeCloseTo(-1.2, 3);
+		expect(stage.modelOffsetY).toBeCloseTo(0.8, 3);
+		expect(modelGroup!.position.x).toBeCloseTo(-1.2, 3);
+		expect(modelGroup!.position.y).toBeCloseTo(0.8, 3);
+
+		// Reset position
+		stage.resetModelPosition();
+		expect(stage.modelOffsetX).toBe(0);
+		expect(stage.modelOffsetY).toBe(0);
+		expect(modelGroup!.position.x).toBe(0);
+		expect(modelGroup!.position.y).toBe(0);
+	});
+
+	it('should construct cozy girl room environment with soft cream yellow walls, zinc cream floor, and furniture', () => {
+		const stage = new ThreeStage();
+		stage.setStageEnvironment('room');
+
+		expect(stage.currentStageEnv).toBe('room');
+		const envGroup = stage['stageEnvironmentGroup'];
+		expect(envGroup.children.length).toBeGreaterThan(5);
+
+		// Check floor plane
+		const floor = envGroup.children.find((c) => (c as any).isMesh && c.rotation.x === -Math.PI / 2);
+		expect(floor).toBeDefined();
+
+		// Check back wall
+		const backWall = envGroup.children.find((c) => (c as any).isMesh && c.position.z === -8);
+		expect(backWall).toBeDefined();
 	});
 
 	it('should lock skirt bones firmly to authored rest pose to prevent skirt flipping or lifting', () => {

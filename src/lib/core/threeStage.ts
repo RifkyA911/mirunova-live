@@ -52,6 +52,12 @@ export class ThreeStage {
 	private initialPositions: Map<THREE.Object3D, THREE.Vector3> = new Map();
 	public modelRotationY: number = 0;
 
+	// Model Translation / Position Offsets
+	public modelOffsetX: number = 0;
+	public modelOffsetY: number = 0;
+	public modelOffsetZ: number = 0;
+	private modelBasePosition: THREE.Vector3 = new THREE.Vector3();
+
 	// Morph Targets / BlendShapes for Expressions & Lip-Sync
 	private morphMesh: THREE.SkinnedMesh | null = null;
 	private morphDict: Record<string, number> = {};
@@ -81,8 +87,8 @@ export class ThreeStage {
 
 	public getOrCreateToonGradient(): THREE.DataTexture {
 		if (!this.toonGradient) {
-			// Clean 2-tone anime cel-shading ramp: 135/255 (~53%) soft natural shadow, 255/255 (100%) lit
-			const colors = new Uint8Array([135, 255]);
+			// Clean 2-tone vibrant anime cel-shading ramp: 150/255 (~59%) bright colorful shadow, 255/255 (100%) lit
+			const colors = new Uint8Array([150, 255]);
 			this.toonGradient = new THREE.DataTexture(colors, 2, 1, THREE.RedFormat);
 			this.toonGradient.minFilter = THREE.NearestFilter;
 			this.toonGradient.magFilter = THREE.NearestFilter;
@@ -115,30 +121,31 @@ export class ThreeStage {
 		this.renderer.setSize(width, height);
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-		// Use NoToneMapping so vibrant anime colors, skin tones, and rich darks are never dulled or desaturated
-		this.renderer.toneMapping = THREE.NoToneMapping;
+		// ACESFilmicToneMapping with vibrant exposure ensures colors are bright, saturated, and punchy without chalky blowout
+		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+		this.renderer.toneMappingExposure = 1.08;
 		container.appendChild(this.renderer.domElement);
 
 		this.camera.aspect = width / height;
 		this.camera.updateProjectionMatrix();
 
-		// Studio Lights: Balanced soft anime lighting (eliminates harsh spotlight wash and prevents overexposure)
-		// 1. Soft warm ambient fill gives character luminous presence without pitch-black crevices
-		const ambientLight = new THREE.AmbientLight(0xfff8f4, 0.65);
+		// Studio Lights: Bright, colorful, broadcast-grade anime lighting
+		// 1. Soft warm ambient fill gives character bright, luminous presence
+		const ambientLight = new THREE.AmbientLight(0xfffbf2, 0.85);
 		this.scene.add(ambientLight);
 
-		// 2. Frontal eye-level key light gently illuminates face & chest without blinding spotlight glare
-		const mainLight = new THREE.DirectionalLight(0xffffff, 0.65);
+		// 2. Frontal eye-level key light provides crisp, colorful definition
+		const mainLight = new THREE.DirectionalLight(0xffffff, 0.85);
 		mainLight.position.set(0.1, 1.45, 2.8);
 		this.scene.add(mainLight);
 
-		// 3. Gentle fill light from side-left softens contours
-		const fillLight = new THREE.DirectionalLight(0xf0f4ff, 0.25);
+		// 3. Gentle pastel fill light from side-left softens contours with colorful contrast
+		const fillLight = new THREE.DirectionalLight(0xf0f7ff, 0.35);
 		fillLight.position.set(-2.2, 1.4, 2.0);
 		this.scene.add(fillLight);
 
-		// 4. Subtle warm rim backlight gives clean edge separation from stage background
-		const rimLight = new THREE.DirectionalLight(0xfffaee, 0.2);
+		// 4. Subtle warm champagne rim backlight gives clean edge separation from background
+		const rimLight = new THREE.DirectionalLight(0xfff5e6, 0.35);
 		rimLight.position.set(0, 2.8, -2.2);
 		this.scene.add(rimLight);
 
@@ -227,6 +234,41 @@ export class ThreeStage {
 		this.isAutoSpin = false;
 	}
 
+	public moveModel(deltaX: number, deltaY: number, deltaZ: number = 0) {
+		this.modelOffsetX = Math.max(-4.0, Math.min(4.0, this.modelOffsetX + deltaX));
+		this.modelOffsetY = Math.max(-2.5, Math.min(3.5, this.modelOffsetY + deltaY));
+		this.modelOffsetZ = Math.max(-4.0, Math.min(4.0, this.modelOffsetZ + deltaZ));
+		if (this.currentModelGroup) {
+			this.currentModelGroup.position.set(
+				this.modelBasePosition.x + this.modelOffsetX,
+				this.modelBasePosition.y + this.modelOffsetY,
+				this.modelBasePosition.z + this.modelOffsetZ
+			);
+		}
+	}
+
+	public setModelPosition(x: number, y: number, z: number = 0) {
+		this.modelOffsetX = Math.max(-4.0, Math.min(4.0, x));
+		this.modelOffsetY = Math.max(-2.5, Math.min(3.5, y));
+		this.modelOffsetZ = Math.max(-4.0, Math.min(4.0, z));
+		if (this.currentModelGroup) {
+			this.currentModelGroup.position.set(
+				this.modelBasePosition.x + this.modelOffsetX,
+				this.modelBasePosition.y + this.modelOffsetY,
+				this.modelBasePosition.z + this.modelOffsetZ
+			);
+		}
+	}
+
+	public resetModelPosition() {
+		this.modelOffsetX = 0;
+		this.modelOffsetY = 0;
+		this.modelOffsetZ = 0;
+		if (this.currentModelGroup) {
+			this.currentModelGroup.position.copy(this.modelBasePosition);
+		}
+	}
+
 	public adjustCameraPitch(deltaPhi: number) {
 		// Clamp polar angle phi strictly between ~0.6 rad and 1.85 rad
 		this.orbitPhi = Math.max(0.6, Math.min(1.85, this.orbitPhi + deltaPhi));
@@ -246,6 +288,7 @@ export class ThreeStage {
 		this.orbitTheta = 0;
 		this.orbitPhi = 1.55;
 		this.resetModelBody();
+		this.resetModelPosition();
 		this.setFraming(this.currentFraming);
 	}
 
@@ -340,76 +383,308 @@ export class ThreeStage {
 			ring.position.y = 0.008;
 			this.stageEnvironmentGroup.add(ring);
 		} else if (env === 'room') {
-			// 3D Studio Room (Floor, back wall, side walls & neon accents)
+			// Cozy Streamer Girl Room: Cat cream kuning soft, lantai zinc cream, perabotan rumah cewek
+
+			// 1. Lantai Zinc Cream (Warm zinc-tinted cream wood flooring)
 			const floorGeo = new THREE.PlaneGeometry(16, 16);
 			const floorMat = new THREE.MeshStandardMaterial({
-				color: 0x18181b,
-				roughness: 0.4,
-				metalness: 0.2
+				color: 0xeee7db, // zinc cream
+				roughness: 0.45,
+				metalness: 0.08
 			});
 			const floor = new THREE.Mesh(floorGeo, floorMat);
 			floor.rotation.x = -Math.PI / 2;
 			floor.position.y = 0;
 			this.stageEnvironmentGroup.add(floor);
 
+			// Baseboard trim (White wooden baseboards along wall perimeter)
+			const baseboardMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+			const baseboardBack = new THREE.Mesh(new THREE.BoxGeometry(16, 0.25, 0.08), baseboardMat);
+			baseboardBack.position.set(0, 0.125, -7.96);
+			this.stageEnvironmentGroup.add(baseboardBack);
+
+			const baseboardLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25, 16), baseboardMat);
+			baseboardLeft.position.set(-7.96, 0.125, 0);
+			this.stageEnvironmentGroup.add(baseboardLeft);
+
+			const baseboardRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25, 16), baseboardMat);
+			baseboardRight.position.set(7.96, 0.125, 0);
+			this.stageEnvironmentGroup.add(baseboardRight);
+
+			// 2. Dinding Cat Cream Kuning Soft (Soft warm pastel cream yellow walls)
+			const wallMat = new THREE.MeshStandardMaterial({
+				color: 0xfef9e7, // cat cream kuning soft
+				roughness: 0.85,
+				metalness: 0.02
+			});
+
 			// Back Wall
 			const backWallGeo = new THREE.PlaneGeometry(16, 10);
-			const backWallMat = new THREE.MeshStandardMaterial({
-				color: 0x121215,
-				roughness: 0.8,
-				metalness: 0.1
-			});
-			const backWall = new THREE.Mesh(backWallGeo, backWallMat);
+			const backWall = new THREE.Mesh(backWallGeo, wallMat);
 			backWall.position.set(0, 5, -8);
 			this.stageEnvironmentGroup.add(backWall);
 
 			// Left Wall
 			const leftWallGeo = new THREE.PlaneGeometry(16, 10);
-			const leftWallMat = new THREE.MeshStandardMaterial({
-				color: 0x141418,
-				roughness: 0.8,
-				metalness: 0.1
-			});
-			const leftWall = new THREE.Mesh(leftWallGeo, leftWallMat);
+			const leftWall = new THREE.Mesh(leftWallGeo, wallMat);
 			leftWall.position.set(-8, 5, 0);
 			leftWall.rotation.y = Math.PI / 2;
 			this.stageEnvironmentGroup.add(leftWall);
 
 			// Right Wall
 			const rightWallGeo = new THREE.PlaneGeometry(16, 10);
-			const rightWallMat = new THREE.MeshStandardMaterial({
-				color: 0x141418,
-				roughness: 0.8,
-				metalness: 0.1
-			});
-			const rightWall = new THREE.Mesh(rightWallGeo, rightWallMat);
+			const rightWall = new THREE.Mesh(rightWallGeo, wallMat);
 			rightWall.position.set(8, 5, 0);
 			rightWall.rotation.y = -Math.PI / 2;
 			this.stageEnvironmentGroup.add(rightWall);
 
-			// Stage Floor Circular Platform
-			const platformGeo = new THREE.CylinderGeometry(2.8, 3.0, 0.1, 32);
-			const platformMat = new THREE.MeshStandardMaterial({
-				color: 0x27272a,
-				roughness: 0.3,
-				metalness: 0.6
+			// 3. Karpet Bundar Cewek (Cute Soft Pastel Pink Fluffy Rug) under avatar
+			const rugGeo = new THREE.CircleGeometry(2.6, 48);
+			const rugMat = new THREE.MeshStandardMaterial({
+				color: 0xfce7f3, // soft pastel pink
+				roughness: 0.9,
+				metalness: 0.02
 			});
-			const platform = new THREE.Mesh(platformGeo, platformMat);
-			platform.position.set(0, 0.05, 0);
-			this.stageEnvironmentGroup.add(platform);
+			const rug = new THREE.Mesh(rugGeo, rugMat);
+			rug.rotation.x = -Math.PI / 2;
+			rug.position.set(0, 0.005, 0);
+			this.stageEnvironmentGroup.add(rug);
 
-			// Neon strip accent on wall
-			const stripGeo = new THREE.PlaneGeometry(12, 0.08);
-			const stripMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
-			const strip = new THREE.Mesh(stripGeo, stripMat);
-			strip.position.set(0, 2.8, -7.98);
-			this.stageEnvironmentGroup.add(strip);
+			const rugBorderGeo = new THREE.RingGeometry(2.45, 2.58, 48);
+			const rugBorderMat = new THREE.MeshBasicMaterial({ color: 0xfbcfe8, side: THREE.DoubleSide });
+			const rugBorder = new THREE.Mesh(rugBorderGeo, rugBorderMat);
+			rugBorder.rotation.x = -Math.PI / 2;
+			rugBorder.position.set(0, 0.008, 0);
+			this.stageEnvironmentGroup.add(rugBorder);
 
-			const strip2Geo = new THREE.PlaneGeometry(12, 0.08);
-			const strip2Mat = new THREE.MeshBasicMaterial({ color: 0xec4899 });
-			const strip2 = new THREE.Mesh(strip2Geo, strip2Mat);
-			strip2.position.set(0, 3.2, -7.98);
-			this.stageEnvironmentGroup.add(strip2);
+			// 4. Perabotan Cewek: Tempat Tidur Aesthetic di Kiri Belakang (X: -4.8, Z: -4.5)
+			const bedGroup = new THREE.Group();
+			bedGroup.position.set(-4.8, 0, -4.6);
+
+			const bedFrameMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+			const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.35, 3.2), bedFrameMat);
+			bedFrame.position.set(0, 0.175, 0);
+			bedGroup.add(bedFrame);
+
+			const headboard = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.4, 0.15), bedFrameMat);
+			headboard.position.set(0, 0.7, -1.55);
+			bedGroup.add(headboard);
+
+			const mattressMat = new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.6 });
+			const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.32, 2.95), mattressMat);
+			mattress.position.set(0, 0.5, 0.05);
+			bedGroup.add(mattress);
+
+			const duvetMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.7 });
+			const duvet = new THREE.Mesh(new THREE.BoxGeometry(2.08, 0.16, 2.0), duvetMat);
+			duvet.position.set(0, 0.7, 0.5);
+			bedGroup.add(duvet);
+
+			const pillowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+			const pillow1 = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.18, 0.55), pillowMat);
+			pillow1.position.set(-0.5, 0.75, -1.05);
+			pillow1.rotation.x = 0.15;
+			bedGroup.add(pillow1);
+
+			const pillow2 = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.18, 0.55), pillowMat);
+			pillow2.position.set(0.5, 0.75, -1.05);
+			pillow2.rotation.x = 0.15;
+			bedGroup.add(pillow2);
+
+			const accentPillowMat = new THREE.MeshStandardMaterial({ color: 0xfb7185, roughness: 0.5 });
+			const accentPillow = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), accentPillowMat);
+			accentPillow.scale.set(1.2, 0.6, 1.0);
+			accentPillow.position.set(0, 0.75, -0.6);
+			bedGroup.add(accentPillow);
+
+			// Boneka Teddy Bear Plushie imut
+			const bearMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.8 });
+			const bearBody = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), bearMat);
+			bearBody.position.set(0.65, 0.8, -0.2);
+			const bearHead = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), bearMat);
+			bearHead.position.set(0.65, 1.05, -0.2);
+			bedGroup.add(bearBody);
+			bedGroup.add(bearHead);
+
+			this.stageEnvironmentGroup.add(bedGroup);
+
+			// 5. Nakas Samping Ranjang + Lampu Tidur Aesthetic (X: -3.0, Z: -6.1)
+			const nightstand = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.65, 0.8), bedFrameMat);
+			nightstand.position.set(-3.0, 0.325, -6.1);
+			this.stageEnvironmentGroup.add(nightstand);
+
+			const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.35, 16), new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.6, roughness: 0.3 }));
+			lampBase.position.set(-3.0, 0.825, -6.1);
+			this.stageEnvironmentGroup.add(lampBase);
+
+			const lampShade = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 0.3, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0xfffbeb, roughness: 0.3, emissive: 0xfef08a, emissiveIntensity: 0.4 }));
+			lampShade.position.set(-3.0, 1.08, -6.1);
+			this.stageEnvironmentGroup.add(lampShade);
+
+			// 6. Meja Streamer / Belajar Cewek di Kanan Belakang (X: 4.8, Z: -4.5)
+			const deskGroup = new THREE.Group();
+			deskGroup.position.set(4.8, 0, -4.5);
+
+			const deskTop = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 1.2), bedFrameMat);
+			deskTop.position.set(0, 0.95, 0);
+			deskGroup.add(deskTop);
+
+			const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.95, 12);
+			[-1.2, 1.2].forEach((x) => {
+				[-0.5, 0.5].forEach((z) => {
+					const leg = new THREE.Mesh(legGeo, bedFrameMat);
+					leg.position.set(x, 0.475, z);
+					deskGroup.add(leg);
+				});
+			});
+
+			// Monitor streaming tipis
+			const monitorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.2 }));
+			monitorFrame.position.set(0, 1.48, -0.3);
+			deskGroup.add(monitorFrame);
+
+			const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.65), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+			screenMesh.position.set(0, 1.48, -0.278);
+			deskGroup.add(screenMesh);
+
+			const monitorStand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.22, 0.08), bedFrameMat);
+			monitorStand.position.set(0, 1.06, -0.3);
+			deskGroup.add(monitorStand);
+
+			const monitorFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.02, 16), bedFrameMat);
+			monitorFoot.position.set(0, 0.96, -0.3);
+			deskGroup.add(monitorFoot);
+
+			// Keyboard & mousepad pastel pink
+			const padMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.4), new THREE.MeshStandardMaterial({ color: 0xfbcfe8, roughness: 0.6 }));
+			padMesh.rotation.x = -Math.PI / 2;
+			padMesh.position.set(0, 0.995, 0.15);
+			deskGroup.add(padMesh);
+
+			const kbMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.025, 0.2), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+			kbMesh.position.set(-0.1, 1.01, 0.15);
+			deskGroup.add(kbMesh);
+
+			// Cermin rias bundar (Vanity Mirror) berbingkai emas
+			const mirrorFrame = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.03, 16, 32), new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8, roughness: 0.2 }));
+			mirrorFrame.position.set(0.9, 1.4, -0.2);
+			deskGroup.add(mirrorFrame);
+
+			const mirrorGlass = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32), new THREE.MeshStandardMaterial({ color: 0xf1f5f9, metalness: 0.95, roughness: 0.05 }));
+			mirrorGlass.position.set(0.9, 1.4, -0.2);
+			deskGroup.add(mirrorGlass);
+
+			// Kursi aesthetic cewek dengan bantalan pink
+			const chairGroup = new THREE.Group();
+			chairGroup.position.set(0, 0, 0.9);
+			const seatMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.08, 24), new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.5 }));
+			seatMesh.position.set(0, 0.58, 0);
+			chairGroup.add(seatMesh);
+
+			const backrestMesh = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.65, 0.06), new THREE.MeshStandardMaterial({ color: 0xfbcfe8, roughness: 0.5 }));
+			backrestMesh.position.set(0, 0.95, 0.32);
+			chairGroup.add(backrestMesh);
+
+			const chairLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.54, 12), bedFrameMat);
+			chairLeg.position.set(0, 0.27, 0);
+			chairGroup.add(chairLeg);
+
+			const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.03, 16), bedFrameMat);
+			chairBase.position.set(0, 0.02, 0);
+			chairGroup.add(chairBase);
+
+			deskGroup.add(chairGroup);
+			this.stageEnvironmentGroup.add(deskGroup);
+
+			// 7. Jendela Kamar Aesthetic di Dinding Kiri (Left Wall Window with Sky & Curtains)
+			const windowGroup = new THREE.Group();
+			windowGroup.position.set(-7.94, 5.2, -1.0);
+			windowGroup.rotation.y = Math.PI / 2;
+
+			const winFrame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.4, 0.1), bedFrameMat);
+			windowGroup.add(winFrame);
+
+			const winGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 3.1), new THREE.MeshBasicMaterial({ color: 0xbae6fd }));
+			winGlass.position.z = 0.052;
+			windowGroup.add(winGlass);
+
+			const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 3.8, 16), new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.7 }));
+			rod.rotation.z = Math.PI / 2;
+			rod.position.set(0, 1.85, 0.16);
+			windowGroup.add(rod);
+
+			const curtainMat = new THREE.MeshStandardMaterial({ color: 0xfce7f3, roughness: 0.6, transparent: true, opacity: 0.88 });
+			const curtainL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 3.6, 0.1), curtainMat);
+			curtainL.position.set(-1.45, 0, 0.16);
+			windowGroup.add(curtainL);
+
+			const curtainR = new THREE.Mesh(new THREE.BoxGeometry(0.65, 3.6, 0.1), curtainMat);
+			curtainR.position.set(1.45, 0, 0.16);
+			windowGroup.add(curtainR);
+
+			this.stageEnvironmentGroup.add(windowGroup);
+
+			// 8. Rak Dinding Gantung & Buku-buku Pastel di Dinding Belakang (Z: -7.94)
+			const shelfMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+			const shelf1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.06, 0.4), shelfMat);
+			shelf1.position.set(0, 4.2, -7.8);
+			this.stageEnvironmentGroup.add(shelf1);
+
+			const bookColors = [0xf472b6, 0x60a5fa, 0x34d399, 0xfbbf24, 0xa78bfa, 0xf87171];
+			bookColors.forEach((color, i) => {
+				const book = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.32, 0.28), new THREE.MeshStandardMaterial({ color }));
+				book.position.set(-0.8 + i * 0.14, 4.4, -7.8);
+				this.stageEnvironmentGroup.add(book);
+			});
+
+			const potMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.09, 0.18, 16), shelfMat);
+			potMesh.position.set(0.7, 4.33, -7.8);
+			const plantMesh = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.6 }));
+			plantMesh.scale.set(1, 0.7, 1);
+			plantMesh.position.set(0.7, 4.45, -7.8);
+			this.stageEnvironmentGroup.add(potMesh);
+			this.stageEnvironmentGroup.add(plantMesh);
+
+			// 9. Poster Seni Aesthetic di Dinding Belakang
+			const posterFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.02), bedFrameMat);
+			posterFrame.position.set(-2.4, 4.5, -7.95);
+			const posterArt = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.7), new THREE.MeshBasicMaterial({ color: 0xfbcfe8 }));
+			posterArt.position.set(-2.4, 4.5, -7.935);
+			this.stageEnvironmentGroup.add(posterFrame);
+			this.stageEnvironmentGroup.add(posterArt);
+
+			// 10. String Fairy Lights (Lampu Tumblr Hangat) di Dinding Atas
+			const stringPoints: THREE.Vector3[] = [];
+			for (let i = -7; i <= 7; i += 0.5) {
+				const sag = Math.sin((i + 7) * 0.8) * 0.18;
+				stringPoints.push(new THREE.Vector3(i, 6.8 - sag, -7.93));
+			}
+			const stringGeo = new THREE.BufferGeometry().setFromPoints(stringPoints);
+			const stringLine = new THREE.Line(stringGeo, new THREE.LineBasicMaterial({ color: 0xfef08a, linewidth: 2 }));
+			this.stageEnvironmentGroup.add(stringLine);
+
+			const bulbGeo = new THREE.SphereGeometry(0.045, 8, 8);
+			const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffedd5 });
+			for (let i = -6.5; i <= 6.5; i += 1.0) {
+				const sag = Math.sin((i + 7) * 0.8) * 0.18;
+				const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+				bulb.position.set(i, 6.8 - sag, -7.92);
+				this.stageEnvironmentGroup.add(bulb);
+			}
+
+			// 11. Tanaman Hias Sudut Ruangan (Tall Potted Indoor Plant di X: 6.8, Z: -6.8)
+			const bigPot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 16), shelfMat);
+			bigPot.position.set(6.8, 0.3, -6.8);
+			this.stageEnvironmentGroup.add(bigPot);
+
+			const foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
+			for (let a = 0; a < 6; a++) {
+				const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), foliageMat);
+				leaf.scale.set(0.4, 1.2, 0.1);
+				leaf.rotation.set(0.4 * Math.sin(a), a * 1.05, 0.4 * Math.cos(a));
+				leaf.position.set(6.8 + Math.sin(a) * 0.25, 1.1 + (a % 3) * 0.2, -6.8 + Math.cos(a) * 0.25);
+				this.stageEnvironmentGroup.add(leaf);
+			}
 		} else if (env === 'field') {
 			// Open Field / Horizon Stage
 			const fieldGeo = new THREE.PlaneGeometry(40, 40);
@@ -646,6 +921,8 @@ export class ThreeStage {
 		tailGroup.position.set(0, -0.5, -0.45);
 		this.tailNode = tailGroup;
 		if (token !== this.activeLoadToken) return;
+		this.modelBasePosition.set(0, 0, 0);
+		catGroup.position.set(this.modelOffsetX, this.modelOffsetY, this.modelOffsetZ);
 		catGroup.rotation.y = this.modelRotationY;
 		this.scene.add(catGroup);
 		this.setFraming(this.currentFraming);
@@ -672,9 +949,12 @@ export class ThreeStage {
 		model.scale.set(scale, scale, scale);
 
 		const center = box.getCenter(new THREE.Vector3());
-		model.position.x = -center.x * scale;
-		model.position.y = -box.min.y * scale - 0.7;
-		model.position.z = -center.z * scale;
+		this.modelBasePosition.set(-center.x * scale, -box.min.y * scale - 0.7, -center.z * scale);
+		model.position.set(
+			this.modelBasePosition.x + this.modelOffsetX,
+			this.modelBasePosition.y + this.modelOffsetY,
+			this.modelBasePosition.z + this.modelOffsetZ
+		);
 
 		// Discover bone nodes (Head, Neck, Eyes)
 		this.gltfBones.clear();
@@ -804,9 +1084,12 @@ export class ThreeStage {
 		// Ground model on floor and center along X and Z
 		const box = new THREE.Box3().setFromObject(group);
 		const center = box.getCenter(new THREE.Vector3());
-		group.position.x = -center.x;
-		group.position.y = -box.min.y;
-		group.position.z = -center.z;
+		this.modelBasePosition.set(-center.x, -box.min.y, -center.z);
+		group.position.set(
+			this.modelBasePosition.x + this.modelOffsetX,
+			this.modelBasePosition.y + this.modelOffsetY,
+			this.modelBasePosition.z + this.modelOffsetZ
+		);
 
 		// Discover humanoid bones
 		this.headNode = group.getObjectByName('head') || null;
@@ -1004,9 +1287,12 @@ export class ThreeStage {
 		// Ground model on floor and center along X and Z
 		const box = new THREE.Box3().setFromObject(group);
 		const center = box.getCenter(new THREE.Vector3());
-		group.position.x = -center.x;
-		group.position.y = -box.min.y;
-		group.position.z = -center.z;
+		this.modelBasePosition.set(-center.x, -box.min.y, -center.z);
+		group.position.set(
+			this.modelBasePosition.x + this.modelOffsetX,
+			this.modelBasePosition.y + this.modelOffsetY,
+			this.modelBasePosition.z + this.modelOffsetZ
+		);
 
 		if (token !== this.activeLoadToken) return;
 		group.rotation.y = this.modelRotationY;
@@ -1041,9 +1327,12 @@ export class ThreeStage {
 		group.scale.set(scale, scale, scale);
 
 		const center = box.getCenter(new THREE.Vector3());
-		group.position.x = -center.x * scale;
-		group.position.y = -box.min.y * scale;
-		group.position.z = -center.z * scale;
+		this.modelBasePosition.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+		group.position.set(
+			this.modelBasePosition.x + this.modelOffsetX,
+			this.modelBasePosition.y + this.modelOffsetY,
+			this.modelBasePosition.z + this.modelOffsetZ
+		);
 
 		this.initialRotations.clear();
 		group.traverse((child) => {

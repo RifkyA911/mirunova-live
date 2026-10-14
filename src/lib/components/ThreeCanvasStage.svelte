@@ -163,13 +163,15 @@
 	});
 
 	let isDragging = $state(false);
+	let dragButton = 0;
 	let prevPointerX = 0;
 	let prevPointerY = 0;
 
 	function handlePointerDown(e: PointerEvent) {
 		if (rigging.isGuiLocked || isHostLayerLocked) return;
-		if (e.button !== 0) return;
+		if (e.button !== 0 && e.button !== 2) return;
 		isDragging = true;
+		dragButton = e.button;
 		prevPointerX = e.clientX;
 		prevPointerY = e.clientY;
 		(e.currentTarget as HTMLElement)?.setPointerCapture(e.pointerId);
@@ -186,8 +188,14 @@
 			rigging.is3DAutoSpin = false;
 		}
 
-		const sensitivity = 0.005;
-		threeStage.rotateOrbit(deltaX * sensitivity, -deltaY * sensitivity, true);
+		if (dragButton === 2 || e.shiftKey) {
+			// Pan / Translate 3D model position
+			threeStage.moveModel(deltaX * 0.0035, -deltaY * 0.0035);
+		} else {
+			// Rotate body & tilt pitch
+			const sensitivity = 0.005;
+			threeStage.rotateOrbit(deltaX * sensitivity, -deltaY * sensitivity, true);
+		}
 	}
 
 	function handlePointerUp(e: PointerEvent) {
@@ -226,6 +234,7 @@
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
+	oncontextmenu={(e) => e.preventDefault()}
 	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"
 	class="absolute inset-0 w-full h-full overflow-hidden select-none {isDragging ? 'cursor-grabbing' : 'cursor-grab'} z-0"
 ></div>

@@ -1413,6 +1413,94 @@
 											🎯 Hadap Depan (0°)
 										</button>
 									</div>
+
+									<!-- Posisi Model 3D (Pan / Move D-Pad) -->
+									<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+										<div class="flex items-center justify-between text-[10px] font-bold text-cyan-400 mb-1.5">
+											<span>POSISI MODEL 3D</span>
+											<span class="text-[9px] text-zinc-500 font-mono">R-Click/Shift Drag</span>
+										</div>
+										<div class="grid grid-cols-3 gap-1">
+											<div></div>
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													threeStage.moveModel(0, 0.15);
+													rigging.showToast('↑ Geser Atas (+Y)');
+												}}
+												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
+													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+												}"
+												title="Geser Karakter ke Atas"
+											>
+												▲
+											</button>
+											<div></div>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													threeStage.moveModel(-0.15, 0);
+													rigging.showToast('← Geser Kiri (-X)');
+												}}
+												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
+													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+												}"
+												title="Geser Karakter ke Kiri"
+											>
+												◀
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													threeStage.resetModelPosition();
+													rigging.showToast('🎯 Posisi Karakter Direset (Tengah)');
+												}}
+												class="p-1.5 rounded-xl text-xs font-bold border flex items-center justify-center transition-all cursor-pointer active:scale-95 text-cyan-400 {
+													isLightTheme ? 'bg-zinc-100 border-zinc-200 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800'
+												}"
+												title="Reset Posisi ke Tengah (0, 0)"
+											>
+												•
+											</button>
+
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													threeStage.moveModel(0.15, 0);
+													rigging.showToast('→ Geser Kanan (+X)');
+												}}
+												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
+													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+												}"
+												title="Geser Karakter ke Kanan"
+											>
+												▶
+											</button>
+
+											<div></div>
+											<button
+												type="button"
+												onclick={() => {
+													playSfx('click');
+													threeStage.moveModel(0, -0.15);
+													rigging.showToast('↓ Geser Bawah (-Y)');
+												}}
+												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
+													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+												}"
+												title="Geser Karakter ke Bawah"
+											>
+												▼
+											</button>
+											<div></div>
+										</div>
+									</div>
 								</div>
 							{/if}
 						</div>
