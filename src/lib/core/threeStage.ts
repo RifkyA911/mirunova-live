@@ -81,8 +81,8 @@ export class ThreeStage {
 
 	public getOrCreateToonGradient(): THREE.DataTexture {
 		if (!this.toonGradient) {
-			// Clean 2-tone anime cel-shading ramp: 192/255 (75%) soft warm shadow, 255/255 (100%) lit
-			const colors = new Uint8Array([192, 255]);
+			// Clean 2-tone anime cel-shading ramp: 135/255 (~53%) soft natural shadow, 255/255 (100%) lit
+			const colors = new Uint8Array([135, 255]);
 			this.toonGradient = new THREE.DataTexture(colors, 2, 1, THREE.RedFormat);
 			this.toonGradient.minFilter = THREE.NearestFilter;
 			this.toonGradient.magFilter = THREE.NearestFilter;
@@ -122,23 +122,23 @@ export class ThreeStage {
 		this.camera.aspect = width / height;
 		this.camera.updateProjectionMatrix();
 
-		// Studio Lights: Clean broadcast-grade anime lighting (matches YouTube/Twitch stream tone)
+		// Studio Lights: Balanced soft anime lighting (eliminates harsh spotlight wash and prevents overexposure)
 		// 1. Soft warm ambient fill gives character luminous presence without pitch-black crevices
-		const ambientLight = new THREE.AmbientLight(0xfff8f2, 1.2);
+		const ambientLight = new THREE.AmbientLight(0xfff8f4, 0.65);
 		this.scene.add(ambientLight);
 
-		// 2. Frontal eye-level key light directly illuminates face & chest, eliminating harsh nose/bangs shadows
-		const mainLight = new THREE.DirectionalLight(0xfffefa, 1.15);
+		// 2. Frontal eye-level key light gently illuminates face & chest without blinding spotlight glare
+		const mainLight = new THREE.DirectionalLight(0xffffff, 0.65);
 		mainLight.position.set(0.1, 1.45, 2.8);
 		this.scene.add(mainLight);
 
 		// 3. Gentle fill light from side-left softens contours
-		const fillLight = new THREE.DirectionalLight(0xf5f8ff, 0.45);
+		const fillLight = new THREE.DirectionalLight(0xf0f4ff, 0.25);
 		fillLight.position.set(-2.2, 1.4, 2.0);
 		this.scene.add(fillLight);
 
 		// 4. Subtle warm rim backlight gives clean edge separation from stage background
-		const rimLight = new THREE.DirectionalLight(0xfffaf0, 0.35);
+		const rimLight = new THREE.DirectionalLight(0xfffaee, 0.2);
 		rimLight.position.set(0, 2.8, -2.2);
 		this.scene.add(rimLight);
 

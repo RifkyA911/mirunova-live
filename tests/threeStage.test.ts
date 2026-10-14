@@ -147,9 +147,9 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(gradient).toBeDefined();
 		expect(gradient.image.width).toBe(2);
 		expect(gradient.image.height).toBe(1);
-		// Stepped 2-tone ramp: 75% warm shadow (192) and 100% lit highlight (255)
+		// Stepped 2-tone ramp: ~53% soft natural shadow (135) and 100% lit highlight (255)
 		const data = gradient.image.data;
-		expect(data[0]).toBe(192);
+		expect(data[0]).toBe(135);
 		expect(data[1]).toBe(255);
 		// NearestFilter for crisp anime cel edges without blurry gouraud gradient
 		expect(gradient.minFilter).toBe(1003); // THREE.NearestFilter

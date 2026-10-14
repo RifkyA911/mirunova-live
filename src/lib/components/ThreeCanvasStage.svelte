@@ -187,7 +187,7 @@
 		}
 
 		const sensitivity = 0.005;
-		threeStage.rotateOrbit(deltaX * sensitivity, deltaY * sensitivity, true);
+		threeStage.rotateOrbit(deltaX * sensitivity, -deltaY * sensitivity, true);
 	}
 
 	function handlePointerUp(e: PointerEvent) {
