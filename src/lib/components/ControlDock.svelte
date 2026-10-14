@@ -1374,8 +1374,8 @@
 											type="button"
 											onclick={() => {
 												playSfx('click');
-												threeStage.rotateOrbitDegrees(-45);
-												rigging.showToast('↺ Putar Sudut 3D -45°');
+												threeStage.rotateModelBodyDegrees(-45);
+												rigging.showToast('↺ Putar Karakter 3D -45°');
 											}}
 											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
@@ -1388,8 +1388,8 @@
 											type="button"
 											onclick={() => {
 												playSfx('click');
-												threeStage.rotateOrbitDegrees(45);
-												rigging.showToast('↻ Putar Sudut 3D +45°');
+												threeStage.rotateModelBodyDegrees(45);
+												rigging.showToast('↻ Putar Karakter 3D +45°');
 											}}
 											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
@@ -1404,7 +1404,7 @@
 												playSfx('click');
 												threeStage.resetOrbit();
 												rigging.is3DAutoSpin = false;
-												rigging.showToast('🎯 Sudut 3D Direset ke Depan');
+												rigging.showToast('🎯 Karakter Hadap Depan (0°)');
 											}}
 											class="col-span-2 p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'

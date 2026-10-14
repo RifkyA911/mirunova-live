@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test';
+import * as THREE from 'three';
 import { ThreeStage } from '#lib/core/threeStage';
 
 describe('ThreeStage 3D Cat Procedural Rigging', () => {
@@ -153,5 +154,78 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		// NearestFilter for crisp anime cel edges without blurry gouraud gradient
 		expect(gradient.minFilter).toBe(1003); // THREE.NearestFilter
 		expect(gradient.magFilter).toBe(1003); // THREE.NearestFilter
+	});
+
+	it('should rotate character model body directly while keeping stage environment and camera front-aligned', () => {
+		const stage = new ThreeStage();
+		stage.loadProceduralCat('mochi');
+
+		const modelGroup = stage['currentModelGroup'];
+		expect(modelGroup).not.toBeNull();
+
+		// Initial rotation
+		expect(stage.modelRotationY).toBe(0);
+		expect(modelGroup!.rotation.y).toBe(0);
+		expect(stage['cameraTargetPos'].x).toBe(0);
+
+		// Rotate model body 45 degrees
+		stage.rotateModelBodyDegrees(45);
+		expect(stage.modelRotationY).toBeCloseTo(Math.PI / 4, 3);
+		expect(modelGroup!.rotation.y).toBeCloseTo(Math.PI / 4, 3);
+		// Camera X stays at 0 (front-aligned to stage, stage environment does not spin)
+		expect(stage['cameraTargetPos'].x).toBe(0);
+
+		// Rotate model body further via delta radians
+		stage.rotateModelBody(0.5);
+		expect(stage.modelRotationY).toBeCloseTo(Math.PI / 4 + 0.5, 3);
+		expect(modelGroup!.rotation.y).toBeCloseTo(Math.PI / 4 + 0.5, 3);
+
+		// Reset model body to front
+		stage.resetModelBody();
+		expect(stage.modelRotationY).toBe(0);
+		expect(modelGroup!.rotation.y).toBe(0);
+		expect(stage.isAutoSpin).toBe(false);
+	});
+
+	it('should lock skirt bones firmly to authored rest pose to prevent skirt flipping or lifting', () => {
+		const stage = new ThreeStage();
+		stage.modelType = 'fbx';
+
+		// Create mock skirt bones matching Neuro-sama FBX structure
+		const skirtControl = new THREE.Bone();
+		skirtControl.name = 'skirt_control';
+		skirtControl.rotation.x = -Math.PI; // -180 deg rest pose in FBX
+		skirtControl.rotation.y = 0;
+		skirtControl.rotation.z = 0;
+
+		const skirtChild = new THREE.Bone();
+		skirtChild.name = 'Skirt_front_2R';
+		skirtChild.rotation.x = -0.1004;
+		skirtChild.rotation.y = 0.1745;
+		skirtChild.rotation.z = 0.0001;
+
+		stage['skirtBones'] = [skirtControl, skirtChild];
+		stage['initialRotations'].set(skirtControl, skirtControl.rotation.clone());
+		stage['initialRotations'].set(skirtChild, skirtChild.rotation.clone());
+
+		// Call updateParameters across 50 frames
+		for (let i = 0; i < 50; i++) {
+			stage.updateParameters({
+				ParamAngleX: Math.sin(i * 0.1) * 15,
+				ParamAngleY: Math.cos(i * 0.1) * 10,
+				ParamEyeLOpen: 1.0,
+				ParamEyeROpen: 1.0,
+				ParamMouthOpenY: 0.5
+			});
+		}
+
+		// Skirt control must NOT flip towards 0 or lift up; it must strictly match -Math.PI
+		expect(skirtControl.rotation.x).toBeCloseTo(-Math.PI, 4);
+		expect(skirtControl.rotation.y).toBeCloseTo(0, 4);
+		expect(skirtControl.rotation.z).toBeCloseTo(0, 4);
+
+		// Child skirt bone must strictly maintain authored drape
+		expect(skirtChild.rotation.x).toBeCloseTo(-0.1004, 4);
+		expect(skirtChild.rotation.y).toBeCloseTo(0.1745, 4);
 	});
 });

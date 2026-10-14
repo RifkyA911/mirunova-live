@@ -49,6 +49,8 @@ export class ThreeStage {
 	private hairBones: THREE.Object3D[] = [];
 	private skirtBones: THREE.Object3D[] = [];
 	private initialRotations: Map<THREE.Object3D, THREE.Euler> = new Map();
+	private initialPositions: Map<THREE.Object3D, THREE.Vector3> = new Map();
+	public modelRotationY: number = 0;
 
 	// Morph Targets / BlendShapes for Expressions & Lip-Sync
 	private morphMesh: THREE.SkinnedMesh | null = null;
@@ -190,19 +192,45 @@ export class ThreeStage {
 	}
 
 	public rotateOrbit(deltaTheta: number, deltaPhi: number = 0, immediate: boolean = false) {
-		this.orbitTheta += deltaTheta;
-		const twoPi = Math.PI * 2;
-		this.orbitTheta = ((this.orbitTheta % twoPi) + twoPi) % twoPi;
-		// Clamp polar angle phi strictly between ~0.35 rad (30° elevation) and 1.85 rad (ground level)
-		// This guarantees the vertical axis (poros) never wobbles, camera never inverts, and lookAt never encounters singularity
-		this.orbitPhi = Math.max(0.35, Math.min(1.85, this.orbitPhi + deltaPhi));
-		this.updateCameraTargetPos();
+		// Rotates the character model body directly so the stage environment/scene stays stable
+		this.rotateModelBody(deltaTheta);
+
+		// Adjust camera elevation/pitch without swinging sideways around the room
+		this.adjustCameraPitch(deltaPhi);
 
 		if (immediate && this.camera) {
 			this.camera.position.copy(this.cameraTargetPos);
 			this.camera.up.set(0, 1, 0);
 			this.camera.lookAt(this.cameraLookTarget);
 		}
+	}
+
+	public rotateModelBody(deltaRadians: number) {
+		const twoPi = Math.PI * 2;
+		this.modelRotationY = ((this.modelRotationY + deltaRadians) % twoPi + twoPi) % twoPi;
+		this.orbitTheta = this.modelRotationY;
+		if (this.currentModelGroup) {
+			this.currentModelGroup.rotation.y = this.modelRotationY;
+		}
+	}
+
+	public rotateModelBodyDegrees(degrees: number) {
+		this.rotateModelBody(degrees * (Math.PI / 180));
+	}
+
+	public resetModelBody() {
+		this.modelRotationY = 0;
+		this.orbitTheta = 0;
+		if (this.currentModelGroup) {
+			this.currentModelGroup.rotation.y = 0;
+		}
+		this.isAutoSpin = false;
+	}
+
+	public adjustCameraPitch(deltaPhi: number) {
+		// Clamp polar angle phi strictly between ~0.6 rad and 1.85 rad
+		this.orbitPhi = Math.max(0.6, Math.min(1.85, this.orbitPhi + deltaPhi));
+		this.updateCameraTargetPos();
 	}
 
 	public rotateOrbitDegrees(degrees: number) {
@@ -217,20 +245,19 @@ export class ThreeStage {
 	public resetOrbit() {
 		this.orbitTheta = 0;
 		this.orbitPhi = 1.55;
-		this.isAutoSpin = false;
+		this.resetModelBody();
 		this.setFraming(this.currentFraming);
 	}
 
 	public updateCameraTargetPos() {
 		const sinPhi = Math.sin(this.orbitPhi);
 		const cosPhi = Math.cos(this.orbitPhi);
-		const sinTheta = Math.sin(this.orbitTheta);
-		const cosTheta = Math.cos(this.orbitTheta);
 
+		// Camera stays front-aligned to stage (X = 0), so the stage environment never spins sideways
 		this.cameraTargetPos.set(
-			this.cameraLookTarget.x + this.orbitRadius * sinPhi * sinTheta,
+			this.cameraLookTarget.x,
 			this.cameraLookTarget.y + this.orbitRadius * cosPhi,
-			this.cameraLookTarget.z + this.orbitRadius * sinPhi * cosTheta
+			this.cameraLookTarget.z + this.orbitRadius * sinPhi
 		);
 	}
 
@@ -619,6 +646,7 @@ export class ThreeStage {
 		tailGroup.position.set(0, -0.5, -0.45);
 		this.tailNode = tailGroup;
 		if (token !== this.activeLoadToken) return;
+		catGroup.rotation.y = this.modelRotationY;
 		this.scene.add(catGroup);
 		this.setFraming(this.currentFraming);
 	}
@@ -668,6 +696,7 @@ export class ThreeStage {
 		}
 
 		if (token !== this.activeLoadToken) return;
+		model.rotation.y = this.modelRotationY;
 		this.scene.add(model);
 		this.setFraming(this.currentFraming);
 	}
@@ -807,10 +836,12 @@ export class ThreeStage {
 				if (name.includes('hair') || name.includes('pigtail')) this.hairBones.push(c);
 				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie')) this.skirtBones.push(c);
 				this.initialRotations.set(c, c.rotation.clone());
+				this.initialPositions.set(c, c.position.clone());
 			}
 		});
 
 		if (token !== this.activeLoadToken) return;
+		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
 	}
@@ -966,6 +997,7 @@ export class ThreeStage {
 				if (name.includes('hair') || name.includes('pigtail')) this.hairBones.push(c);
 				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie')) this.skirtBones.push(c);
 				this.initialRotations.set(c, c.rotation.clone());
+				this.initialPositions.set(c, c.position.clone());
 			}
 		});
 
@@ -977,6 +1009,7 @@ export class ThreeStage {
 		group.position.z = -center.z;
 
 		if (token !== this.activeLoadToken) return;
+		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
 	}
@@ -1027,10 +1060,12 @@ export class ThreeStage {
 				if (name.includes('neck') && !this.neckNode) this.neckNode = child;
 				if (name.includes('hips') && !this.hipsNode) this.hipsNode = child;
 				this.initialRotations.set(child, child.rotation.clone());
+				this.initialPositions.set(child, child.position.clone());
 			}
 		});
 
 		if (token !== this.activeLoadToken) return;
+		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
 	}
@@ -1226,20 +1261,29 @@ export class ThreeStage {
 				this.torsoNode.rotation.x = initTorso.x + breathOffset * 1.2;
 			}
 			if (this.hipsNode && initHips) {
-				this.hipsNode.position.y = 0.86 + Math.sin(time * 0.002) * 0.004;
+				const initHipsPos = this.initialPositions.get(this.hipsNode);
+				if (initHipsPos) {
+					this.hipsNode.position.y = initHipsPos.y + Math.sin(time * 0.002) * 0.004;
+				}
 				this.hipsNode.rotation.y = initHips.y + Math.sin(time * 0.001) * 0.015;
 			}
 
 			// 5. Humanoid Arms (Gestures & Idle)
 			this.updateHumanoidArms(params, time);
 
-			// 6. Secondary Hair & Skirt Sway
+			// 6. Secondary Hair & Skirt Rest Pose (Skirt firmly locked to authored drape)
 			const sway = Math.sin(time * 0.003) * 0.035;
 			for (const b of this.hairBones) {
-				b.rotation.z += (sway - b.rotation.z * 0.04) * 0.08;
+				const initRot = this.initialRotations.get(b);
+				if (initRot) {
+					b.rotation.z = initRot.z + sway;
+				}
 			}
 			for (const b of this.skirtBones) {
-				b.rotation.x += (-breathOffset * 0.4 - b.rotation.x * 0.04) * 0.08;
+				const initRot = this.initialRotations.get(b);
+				if (initRot) {
+					b.rotation.copy(initRot);
+				}
 			}
 			return;
 		}
@@ -1346,6 +1390,7 @@ export class ThreeStage {
 		this.hairBones = [];
 		this.skirtBones = [];
 		this.initialRotations.clear();
+		this.initialPositions.clear();
 		this.gltfBones.clear();
 	}
 
@@ -1356,9 +1401,7 @@ export class ThreeStage {
 			this.lastFrameTime = now;
 
 			if (this.isAutoSpin) {
-				const twoPi = Math.PI * 2;
-				this.orbitTheta = (this.orbitTheta + this.autoSpinSpeed * delta) % twoPi;
-				this.updateCameraTargetPos();
+				this.rotateModelBody(this.autoSpinSpeed * delta);
 			}
 
 			if (this.camera) {
