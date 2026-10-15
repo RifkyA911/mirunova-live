@@ -5,7 +5,7 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 export type CatVariant = 'mochi' | 'kuro' | 'tora';
 export type FramingMode3D = 'full' | 'half' | 'closeup';
 export type FullBodyPose3D = 'idle' | 'wave' | 'peace' | 'heart' | 'stand';
-export type StageEnvironment3D = 'grid' | 'room' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void';
+export type StageEnvironment3D = 'grid' | 'room' | 'cafe' | 'beach' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void';
 
 export class ThreeStage {
 	private scene: THREE.Scene;
@@ -713,6 +713,299 @@ export class ThreeStage {
 				leaf.position.set(6.8 + Math.sin(a) * 0.25, 1.1 + (a % 3) * 0.2, -6.8 + Math.cos(a) * 0.25);
 				this.stageEnvironmentGroup.add(leaf);
 			}
+		} else if (env === 'cafe') {
+			// Cozy Japanese/Korean Coffee Cafe Shop
+			// 1. Warm Walnut Parquet Flooring
+			const floorGeo = new THREE.PlaneGeometry(16, 16);
+			const floorMat = new THREE.MeshStandardMaterial({
+				color: 0x3d271d, // rich dark roasted coffee wood parquet
+				roughness: 0.38,
+				metalness: 0.08
+			});
+			const floor = new THREE.Mesh(floorGeo, floorMat);
+			floor.rotation.x = -Math.PI / 2;
+			floor.position.y = 0;
+			this.stageEnvironmentGroup.add(floor);
+
+			// Warm Cozy Cafe Rug under Avatar
+			const rugGeo = new THREE.CircleGeometry(2.8, 36);
+			const rugMat = new THREE.MeshStandardMaterial({
+				color: 0xd4b996, // warm oat/cappuccino foam tone
+				roughness: 0.9,
+				metalness: 0.02
+			});
+			const rug = new THREE.Mesh(rugGeo, rugMat);
+			rug.rotation.x = -Math.PI / 2;
+			rug.position.set(0, 0.005, 0);
+			this.stageEnvironmentGroup.add(rug);
+
+			// Baseboard & Wood Moulding
+			const baseboardMat = new THREE.MeshStandardMaterial({ color: 0x271912, roughness: 0.5 });
+			const baseboardBack = new THREE.Mesh(new THREE.BoxGeometry(16, 0.3, 0.1), baseboardMat);
+			baseboardBack.position.set(0, 0.15, -7.95);
+			this.stageEnvironmentGroup.add(baseboardBack);
+
+			// 2. Cafe Walls (Warm Charcoal / Espresso Wood Slat & Brick Wall)
+			const wallMat = new THREE.MeshStandardMaterial({
+				color: 0x231d19, // deep espresso cafe accent wall
+				roughness: 0.85,
+				metalness: 0.05
+			});
+			const backWall = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), wallMat);
+			backWall.position.set(0, 5, -8);
+			this.stageEnvironmentGroup.add(backWall);
+
+			const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), wallMat);
+			leftWall.position.set(-8, 5, 0);
+			leftWall.rotation.y = Math.PI / 2;
+			this.stageEnvironmentGroup.add(leftWall);
+
+			const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), wallMat);
+			rightWall.position.set(8, 5, 0);
+			rightWall.rotation.y = -Math.PI / 2;
+			this.stageEnvironmentGroup.add(rightWall);
+
+			// 3. Cafe Menu Board / Chalkboard on Back Wall
+			const boardFrame = new THREE.Mesh(
+				new THREE.BoxGeometry(3.6, 2.2, 0.08),
+				new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 })
+			);
+			boardFrame.position.set(0, 4.2, -7.94);
+			this.stageEnvironmentGroup.add(boardFrame);
+
+			const boardChalk = new THREE.Mesh(
+				new THREE.PlaneGeometry(3.3, 1.9),
+				new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.95 })
+			);
+			boardChalk.position.set(0, 4.2, -7.89);
+			this.stageEnvironmentGroup.add(boardChalk);
+
+			// Decorative Coffee Cafe Sign on the Chalkboard
+			const signMat = new THREE.MeshBasicMaterial({ color: 0xfef08a }); // warm chalk yellow
+			const signLine1 = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.12), signMat);
+			signLine1.position.set(0, 4.7, -7.88);
+			this.stageEnvironmentGroup.add(signLine1);
+
+			const signLine2 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.08), new THREE.MeshBasicMaterial({ color: 0xfcd34d }));
+			signLine2.position.set(0, 4.35, -7.88);
+			this.stageEnvironmentGroup.add(signLine2);
+
+			const signLine3 = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.06), new THREE.MeshBasicMaterial({ color: 0xe2e8f0 }));
+			signLine3.position.set(0, 3.8, -7.88);
+			this.stageEnvironmentGroup.add(signLine3);
+
+			// 4. Cafe Bar Counter & Espresso Station (Left Side)
+			const counterGroup = new THREE.Group();
+			counterGroup.position.set(-4.5, 0, -4.5);
+
+			// Main wooden counter body
+			const counterBody = new THREE.Mesh(
+				new THREE.BoxGeometry(4.5, 1.8, 1.6),
+				new THREE.MeshStandardMaterial({ color: 0x4a2e18, roughness: 0.6 })
+			);
+			counterBody.position.set(0, 0.9, 0);
+			counterGroup.add(counterBody);
+
+			// Counter Marble / Stone Top
+			const counterTop = new THREE.Mesh(
+				new THREE.BoxGeometry(4.8, 0.12, 1.9),
+				new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.2, metalness: 0.1 })
+			);
+			counterTop.position.set(0, 1.86, 0);
+			counterGroup.add(counterTop);
+
+			// Espresso Machine (Retro Italian Chrome & Red/Black)
+			const espressoMachine = new THREE.Mesh(
+				new THREE.BoxGeometry(1.2, 0.9, 0.9),
+				new THREE.MeshStandardMaterial({ color: 0x991b1b, metalness: 0.8, roughness: 0.2 })
+			);
+			espressoMachine.position.set(-0.8, 2.37, 0);
+			counterGroup.add(espressoMachine);
+
+			const machineDrip = new THREE.Mesh(
+				new THREE.BoxGeometry(0.8, 0.15, 0.7),
+				new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.9, roughness: 0.1 })
+			);
+			machineDrip.position.set(-0.8, 1.98, 0.1);
+			counterGroup.add(machineDrip);
+
+			// Coffee Cups with saucers on counter
+			const cupMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+			[-0.1, 0.6, 1.2].forEach((cx) => {
+				const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.09, 0.18, 16), cupMat);
+				cup.position.set(cx, 2.01, 0.3);
+				counterGroup.add(cup);
+
+				const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 16), cupMat);
+				saucer.position.set(cx, 1.93, 0.3);
+				counterGroup.add(saucer);
+			});
+			this.stageEnvironmentGroup.add(counterGroup);
+
+			// 5. Warm Cafe Brass Pendant Lamps Hanging from Ceiling
+			const brassMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8, roughness: 0.2 });
+			const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffedd5 }); // warm incandescent bulb
+			[-2.2, 0, 2.2].forEach((lx) => {
+				// Cord
+				const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.5, 8), new THREE.MeshBasicMaterial({ color: 0x18181b }));
+				cord.position.set(lx, 6.25, -2.5);
+				this.stageEnvironmentGroup.add(cord);
+
+				// Brass Shade Cone
+				const shade = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.4, 24, 1, true), brassMat);
+				shade.rotation.x = Math.PI;
+				shade.position.set(lx, 5.0, -2.5);
+				this.stageEnvironmentGroup.add(shade);
+
+				// Glowing Bulb
+				const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16), bulbMat);
+				bulb.position.set(lx, 4.9, -2.5);
+				this.stageEnvironmentGroup.add(bulb);
+			});
+
+			// 6. Indoor Cafe Potted Monster Plant (Right Side)
+			const pot = new THREE.Mesh(
+				new THREE.CylinderGeometry(0.55, 0.4, 0.9, 24),
+				new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
+			);
+			pot.position.set(5.2, 0.45, -4.5);
+			this.stageEnvironmentGroup.add(pot);
+
+			const plantFoliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+			for (let i = 0; i < 7; i++) {
+				const ang = (i / 7) * Math.PI * 2;
+				const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 12), plantFoliageMat);
+				leaf.scale.set(0.35, 1.1, 0.08);
+				leaf.rotation.set(0.35 * Math.sin(ang), ang, 0.35 * Math.cos(ang));
+				leaf.position.set(5.2 + Math.sin(ang) * 0.3, 1.2 + (i % 3) * 0.15, -4.5 + Math.cos(ang) * 0.3);
+				this.stageEnvironmentGroup.add(leaf);
+			}
+
+			// Atmospheric Cozy Cafe Fog
+			this.scene.fog = new THREE.FogExp2(0x2d1b10, 0.022);
+		} else if (env === 'beach') {
+			// Vivid Happy Vibe Tropical Beach Field
+			// 1. Sunlit Golden Tropical Sand Field
+			const sandGeo = new THREE.PlaneGeometry(36, 36);
+			const sandMat = new THREE.MeshStandardMaterial({
+				color: 0xfde047, // bright vivid golden sunlit sand
+				roughness: 0.75,
+				metalness: 0.02
+			});
+			const sand = new THREE.Mesh(sandGeo, sandMat);
+			sand.rotation.x = -Math.PI / 2;
+			sand.position.set(0, 0, 4);
+			this.stageEnvironmentGroup.add(sand);
+
+			// 2. Crystal Clear Vivid Turquoise Ocean Water (Backdrop)
+			const oceanGeo = new THREE.PlaneGeometry(60, 30);
+			const oceanMat = new THREE.MeshStandardMaterial({
+				color: 0x06b6d4, // crystal cyan / turquoise vivid tropical ocean
+				roughness: 0.15,
+				metalness: 0.65,
+				transparent: true,
+				opacity: 0.95
+			});
+			const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+			ocean.rotation.x = -Math.PI / 2;
+			ocean.position.set(0, 0.02, -14);
+			this.stageEnvironmentGroup.add(ocean);
+
+			// Ocean Wave Foam Crest (White sparkling water edge)
+			const foamGeo = new THREE.PlaneGeometry(60, 0.6);
+			const foamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+			const foam = new THREE.Mesh(foamGeo, foamMat);
+			foam.rotation.x = -Math.PI / 2;
+			foam.position.set(0, 0.04, -2.5);
+			this.stageEnvironmentGroup.add(foam);
+
+			// 3. Round Wooden Beach Stage Deck under Avatar
+			const deckGeo = new THREE.CylinderGeometry(3.0, 3.2, 0.14, 36);
+			const deckMat = new THREE.MeshStandardMaterial({
+				color: 0xd97706, // warm bright teak sun deck
+				roughness: 0.45,
+				metalness: 0.05
+			});
+			const deck = new THREE.Mesh(deckGeo, deckMat);
+			deck.position.set(0, 0.07, 0);
+			this.stageEnvironmentGroup.add(deck);
+
+			// 4. Vibrant Candy-Striped Beach Umbrella (Left Side)
+			const umbrellaGroup = new THREE.Group();
+			umbrellaGroup.position.set(-3.6, 0, -1.8);
+			umbrellaGroup.rotation.z = 0.12; // tilted playfully
+
+			// Umbrella Wooden Pole
+			const pole = new THREE.Mesh(
+				new THREE.CylinderGeometry(0.045, 0.045, 3.6, 12),
+				new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 })
+			);
+			pole.position.set(0, 1.8, 0);
+			umbrellaGroup.add(pole);
+
+			// Canopy - Vivid Coral Pink & Turquoise alternating candy stripes
+			const canopyMat1 = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.4 }); // vivid coral
+			const canopyMat2 = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.4 }); // vivid sky cyan
+			const segments = 12;
+			for (let i = 0; i < segments; i++) {
+				const thetaStart = (i / segments) * Math.PI * 2;
+				const thetaLength = (1 / segments) * Math.PI * 2;
+				const segGeo = new THREE.ConeGeometry(1.9, 0.85, 4, 1, false, thetaStart, thetaLength);
+				const seg = new THREE.Mesh(segGeo, i % 2 === 0 ? canopyMat1 : canopyMat2);
+				seg.position.set(0, 3.3, 0);
+				umbrellaGroup.add(seg);
+			}
+			this.stageEnvironmentGroup.add(umbrellaGroup);
+
+			// 5. Colorful Beach Surfboard propped in the sand
+			const boardGeo = new THREE.BoxGeometry(0.65, 2.5, 0.1);
+			const boardMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2, metalness: 0.1 });
+			const surfboard = new THREE.Mesh(boardGeo, boardMat);
+			surfboard.position.set(-2.6, 1.1, -1.6);
+			surfboard.rotation.set(-0.25, 0.35, -0.2);
+			this.stageEnvironmentGroup.add(surfboard);
+
+			// Surfboard Stripe
+			const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.52, 0.11), new THREE.MeshStandardMaterial({ color: 0x06b6d4 }));
+			stripe.position.set(-2.6, 1.1, -1.59);
+			stripe.rotation.set(-0.25, 0.35, -0.2);
+			this.stageEnvironmentGroup.add(stripe);
+
+			// 6. Tropical Coconut Palm Tree (Right Side)
+			const palmGroup = new THREE.Group();
+			palmGroup.position.set(4.6, 0, -3.2);
+
+			// Palm Trunk (segments curved slightly)
+			const trunkMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.8 });
+			for (let j = 0; j < 8; j++) {
+				const trunkSeg = new THREE.Mesh(new THREE.CylinderGeometry(0.24 - j * 0.015, 0.28 - j * 0.015, 0.55, 12), trunkMat);
+				trunkSeg.position.set(Math.sin(j * 0.18) * 0.45, 0.28 + j * 0.52, Math.cos(j * 0.18) * 0.2);
+				trunkSeg.rotation.z = -0.08 * j;
+				palmGroup.add(trunkSeg);
+			}
+
+			// Palm Fronds / Green Leaves
+			const frondMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.5, side: THREE.DoubleSide });
+			for (let f = 0; f < 6; f++) {
+				const frondAngle = (f / 6) * Math.PI * 2;
+				const frond = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 2.2), frondMat);
+				frond.scale.set(0.5, 1.0, 1.0);
+				frond.rotation.set(0.7, frondAngle, 0);
+				frond.position.set(1.1 + Math.sin(frondAngle) * 0.8, 4.3, 0.4 + Math.cos(frondAngle) * 0.8);
+				palmGroup.add(frond);
+			}
+			this.stageEnvironmentGroup.add(palmGroup);
+
+			// 7. Radiant Golden Sun Disc in Azure Blue Sky
+			const sunDisc = new THREE.Mesh(
+				new THREE.CircleGeometry(3.6, 32),
+				new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.95 })
+			);
+			sunDisc.position.set(7.0, 8.5, -20);
+			this.stageEnvironmentGroup.add(sunDisc);
+
+			// Happy Clear Atmosphere Fog
+			this.scene.fog = new THREE.FogExp2(0x38bdf8, 0.018);
 		} else if (env === 'field') {
 			// Open Field / Horizon Stage
 			const fieldGeo = new THREE.PlaneGeometry(40, 40);

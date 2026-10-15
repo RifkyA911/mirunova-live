@@ -230,7 +230,7 @@
 						rigging.riggingViewMode = rigging.riggingViewMode === 'stay' ? 'drawer' : 'stay';
 						rigging.isRiggingPinned = rigging.riggingViewMode === 'stay';
 						rigging.persist();
-						rigging.showToast(rigging.riggingViewMode === 'stay' ? '✓ Mode Stay Aktif (Panel terkunci)' : 'Mode Drawer Aktif');
+						rigging.showToast(rigging.riggingViewMode === 'stay' ? '✓ ' + i18n.t('rigging_stay') : i18n.t('rigging_drawer'));
 					}}
 					class="p-1.5 rounded-lg transition-colors {
 						rigging.riggingViewMode === 'stay'
@@ -238,7 +238,7 @@
 							: 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 					}"
 					title={i18n.t('pin_tooltip')}
-					aria-label="Toggle Stay Mode"
+					aria-label={i18n.t('pin_tooltip')}
 				>
 					{#if rigging.riggingViewMode === 'stay'}
 						<Pin class="w-3.5 h-3.5 fill-current" />
@@ -259,7 +259,7 @@
 							: 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 					}"
 					title={i18n.t('window_tooltip')}
-					aria-label="Toggle Windowed Mode"
+					aria-label={i18n.t('window_tooltip')}
 				>
 					{#if rigging.riggingViewMode === 'windowed'}
 						<Minimize2 class="w-3.5 h-3.5" />
@@ -369,14 +369,14 @@
 				<button
 					onclick={() => toggleAll(false)}
 					class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
-					title="Buka Semua Accordion"
+					title={i18n.t('expand_all')}
 				>
 					<Maximize2 class="w-3.5 h-3.5" />
 				</button>
 				<button
 					onclick={() => toggleAll(true)}
 					class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
-					title="Tutup Semua Accordion"
+					title={i18n.t('collapse_all')}
 				>
 					<Minimize2 class="w-3.5 h-3.5" />
 				</button>
@@ -397,7 +397,7 @@
 						</div>
 						<span class="font-semibold text-xs text-zinc-200">{i18n.t('framing_parts_title')}</span>
 						<span class="text-[10px] px-1.5 py-0.2 rounded-full bg-violet-900/60 text-violet-300 font-mono">
-							{rigging.availableParts.length > 0 ? rigging.availableParts.length : 'Preset'}
+							{rigging.availableParts.length > 0 ? rigging.availableParts.length : i18n.t('presets')}
 						</span>
 					</div>
 					<div class="flex items-center gap-1.5 text-zinc-400">
@@ -515,7 +515,7 @@
 														? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
 														: 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
 												}"
-												title={isHidden ? 'Tampilkan Bagian Ini' : 'Sembunyikan Bagian Ini'}
+												title={isHidden ? i18n.t('show_part') : i18n.t('hide_part')}
 											>
 												{#if isHidden}
 													<EyeOff class="w-3 h-3" />

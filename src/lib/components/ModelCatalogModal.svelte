@@ -77,12 +77,12 @@
 		)
 	);
 
-	const poseLoops: Array<{ id: PoseLoopMode; label: string; desc: string }> = [
-		{ id: 'none', label: 'Mati', desc: 'Hanya ikuti tracking webcam' },
-		{ id: 'idle-breath', label: 'Breathing', desc: 'Siklus nafas halus' },
-		{ id: 'gentle-sway', label: 'Gentle Sway', desc: 'Goyangan santai kiri-kanan' },
-		{ id: 'head-nod', label: 'Head Nod', desc: 'Anggukan kepala ritmis' }
-	];
+	const poseLoops = $derived<Array<{ id: PoseLoopMode; label: string; desc: string }>>([
+		{ id: 'none', label: i18n.t('pose_mode_off'), desc: i18n.t('pose_mode_off_desc') },
+		{ id: 'idle-breath', label: i18n.t('pose_loop_breath'), desc: i18n.t('pose_loop_breath_desc') },
+		{ id: 'gentle-sway', label: i18n.t('pose_loop_sway'), desc: i18n.t('pose_loop_sway_desc') },
+		{ id: 'head-nod', label: i18n.t('pose_loop_nod'), desc: i18n.t('pose_loop_nod_desc') }
+	]);
 
 	onMount(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,7 +99,7 @@
 		rigging.isModelModalOpen = false;
 		rigging.avatarEngine = 'live2d';
 		rigging.setModel(m.id, m.name, m.url);
-		rigging.showToast(`Memuat avatar 2D: ${m.name}`);
+		rigging.showToast(`${i18n.t('model_load_2d')} ${m.name}`);
 	}
 
 	function handleSelect3DModel(m: Model3DItem) {
@@ -108,7 +108,7 @@
 		rigging.avatarEngine = '3d';
 		rigging.selected3DModelId = m.id;
 		rigging.modelName = m.name;
-		rigging.showToast(`Memuat avatar 3D: ${m.name}`);
+		rigging.showToast(`${i18n.t('model_load_3d')} ${m.name}`);
 	}
 
 	async function downloadAndInstallFromUrl(url: string, name?: string, id?: string) {
@@ -117,8 +117,8 @@
 		playSfx('click');
 		isDownloadingModel = true;
 		const displayName = name || 'Model Live2D';
-		downloadProgressText = `Mengunduh & memasang ${displayName}...`;
-		rigging.showToast(`Memasang model: ${displayName}`);
+		downloadProgressText = `${i18n.t('model_download_installing')} ${displayName}...`;
+		rigging.showToast(`${i18n.t('model_installing')} ${displayName}`);
 
 		try {
 			// If URL is direct .model3.json or .model.json
@@ -189,7 +189,7 @@
 		playSfx('click');
 		activeTargetModelName = item.name;
 		activeTargetModelId = item.id;
-		rigging.showToast(`Pilih file ZIP atau folder hasil unduh untuk: ${item.name}`);
+		rigging.showToast(`${i18n.t('model_select_zip_folder')} ${item.name}`);
 		zipInputEl?.click();
 	}
 
@@ -221,7 +221,7 @@
 		// Handle ZIP file directly in memory via fflate
 		if (fileArr.length === 1 && fileArr[0].name.toLowerCase().endsWith('.zip')) {
 			try {
-				rigging.showToast(`Mengekstrak file ZIP di memori: ${fileArr[0].name}...`);
+				rigging.showToast(`${i18n.t('model_zip_extracting')} ${fileArr[0].name}...`);
 				const zipBuf = await fileArr[0].arrayBuffer();
 				const unzippedFiles: File[] = await new Promise((resolve, reject) => {
 					unzip(new Uint8Array(zipBuf), (err, data) => {
@@ -240,13 +240,13 @@
 					});
 				});
 				if (unzippedFiles.length === 0) {
-					rigging.showToast('⚠️ Arsip ZIP kosong atau tidak memuat file model!');
+					rigging.showToast(i18n.t('model_zip_empty'));
 					return;
 				}
 				fileArr = unzippedFiles;
 			} catch (zipErr: any) {
 				console.error('ZIP unpack error:', zipErr);
-				rigging.showToast(`⚠️ Gagal membuka ZIP: ${zipErr.message || zipErr}`);
+				rigging.showToast(`${i18n.t('model_zip_error')} ${zipErr.message || zipErr}`);
 				return;
 			}
 		}
@@ -262,7 +262,7 @@
 		);
 
 		if (!modelFile) {
-			rigging.showToast('⚠️ File .model3.json tidak ditemukan dalam file yang dipilih!');
+			rigging.showToast(i18n.t('model_file_not_found'));
 			return;
 		}
 
@@ -272,14 +272,14 @@
 			try {
 				modelJson = JSON.parse(text);
 			} catch {
-				rigging.showToast('⚠️ File .model3.json rusak atau bukan format JSON valid!');
+				rigging.showToast(i18n.t('model_file_invalid_json'));
 				return;
 			}
 
 			// Single file check: if user only chose a single file and textures are referenced
 			const textures = modelJson.FileReferences?.Textures || [];
 			if (fileArr.length === 1 && textures.length > 0) {
-				rigging.showToast('⚠️ Live2D butuh file tekstur! Mohon pilih Folder model atau semua file bersamaan.');
+				rigging.showToast(i18n.t('model_need_textures'));
 				folderInputEl?.click();
 				return;
 			}
@@ -339,13 +339,13 @@
 			rigging.isModelModalOpen = false;
 			rigging.setModel(modelId, modelName, finalUrl);
 			playSfx('success');
-			rigging.showToast(`✓ Model Live2D aktif: ${modelName}`);
+			rigging.showToast(`${i18n.t('model_active_toast')} ${modelName}`);
 
 			activeTargetModelName = '';
 			activeTargetModelId = '';
 		} catch (err: any) {
 			console.error('Failed to unpack Live2D files:', err);
-			rigging.showToast('Gagal memproses file model: ' + (err?.message || err));
+			rigging.showToast(`${i18n.t('model_process_error')} ${err?.message || err}`);
 		}
 	}
 
@@ -359,7 +359,7 @@
 		rigging.customGlbUrl = url;
 		rigging.selected3DModelId = 'custom-glb';
 		rigging.modelName = file.name.replace(/\.[^/.]+$/, '');
-		rigging.showToast(`Model 3D GLB dimuat: ${file.name}`);
+		rigging.showToast(`${i18n.t('model_glb_loaded_toast')} ${file.name}`);
 	}
 </script>
 
@@ -400,7 +400,7 @@
 							</span>
 						</h2>
 						<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-							Pilih model avatar 2D/3D dengan visual preview lengkap, pose looping, dan kontrol gerakan
+							{i18n.t('catalog_subtitle')}
 						</p>
 					</div>
 				</div>
@@ -414,10 +414,10 @@
 								? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
 								: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700/80'
 						}"
-						title="Posisikan ulang avatar ke tengah layar"
+						title={i18n.t('catalog_reset_pos_title')}
 					>
 						<RotateCcw class="w-3.5 h-3.5 text-cyan-500" />
-						<span>Reset Posisi Avatar</span>
+						<span>{i18n.t('catalog_reset_pos')}</span>
 					</button>
 
 					<button
@@ -425,7 +425,7 @@
 						class="p-1.5 rounded-md transition-colors cursor-pointer {
 							isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 						}"
-						aria-label="Close"
+						aria-label={i18n.t('close_btn')}
 					>
 						<X class="w-4 h-4" />
 					</button>
@@ -448,7 +448,7 @@
 						}"
 					>
 						<Layers class="w-4 h-4 text-pink-500" />
-						<span>2D Live2D Resmi & Sampel ({officialPreinstalledModels.length + OFFICIAL_SAMPLE_CATALOG.length})</span>
+						<span>{i18n.t('catalog_tab_2d')} ({officialPreinstalledModels.length + OFFICIAL_SAMPLE_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = 'booth')}
@@ -461,7 +461,7 @@
 						}"
 					>
 						<Heart class="w-4 h-4 text-purple-500 fill-purple-500/30" />
-						<span>BOOTH.pm Koleksi ({boothPreinstalledModels.length + BOOTH_SHOWCASE_CATALOG.length})</span>
+						<span>{i18n.t('catalog_tab_booth')} ({boothPreinstalledModels.length + BOOTH_SHOWCASE_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = '3d')}
@@ -474,13 +474,13 @@
 						}"
 					>
 						<Box class="w-4 h-4 text-cyan-500" />
-						<span>3D WebGL Avatar ({MODEL_3D_CATALOG.length})</span>
+						<span>{i18n.t('catalog_tab_3d')} ({MODEL_3D_CATALOG.length})</span>
 					</button>
 				</div>
 
 				<!-- Active Status Tag -->
 				<div class="hidden sm:flex items-center gap-2 text-[11px] text-zinc-400">
-					<span>Avatar Aktif:</span>
+					<span>{i18n.t('catalog_active_avatar')}</span>
 					<span class="px-2 py-0.5 rounded bg-zinc-800 text-cyan-300 font-semibold font-mono border border-zinc-700">
 						{rigging.avatarEngine === '3d'
 							? (MODEL_3D_CATALOG.find((m) => m.id === rigging.selected3DModelId)?.name || rigging.selected3DModelId)
@@ -494,7 +494,7 @@
 				<div class="px-6 py-2.5 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 border-b border-pink-500/30 flex items-center justify-between text-xs text-pink-300 animate-pulse shadow-inner">
 					<div class="flex items-center gap-2.5">
 						<Sparkles class="w-4 h-4 text-pink-400 animate-spin" />
-						<span class="font-semibold text-zinc-100">{downloadProgressText || 'Sedang memproses model...'}</span>
+						<span class="font-semibold text-zinc-100">{downloadProgressText || i18n.t('catalog_processing_model')}</span>
 					</div>
 					<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-medium">
 						Auto-Installer In-Memory
@@ -569,7 +569,7 @@
 										class="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 cursor-pointer"
 									>
 										<ExternalLink class="w-3.5 h-3.5" />
-										<span>Sampel live2d.com</span>
+										<span>{i18n.t('catalog_download_live2d')}</span>
 									</a>
 								</div>
 							</div>
@@ -721,9 +721,9 @@
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
 								<h3 class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
 									<Download class="w-3.5 h-3.5 text-sky-400" />
-									Sampel Gratis Live2D Inc. (live2d.com/learn/sample)
+									{i18n.t('catalog_official_samples_title')}
 								</h3>
-								<span class="text-[10px] text-zinc-400">Unduh paket resmi dari Live2D lalu klik <strong>Pasang Folder Model</strong></span>
+								<span class="text-[10px] text-zinc-400">{i18n.t('catalog_download_official_tip')}</span>
 							</div>
 
 							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -735,7 +735,7 @@
 										{#if isActive}
 											<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
 												<Check class="w-3 h-3 stroke-[3]" />
-												AKTIF
+												{i18n.t('theme_active_badge').toUpperCase()}
 											</div>
 										{/if}
 
@@ -750,7 +750,7 @@
 													</span>
 												</div>
 												<span class="text-[10px] text-zinc-400 truncate mb-1">
-													Kreator: <strong class="text-sky-400 font-semibold">{sample.author}</strong>
+													{i18n.t('catalog_creator_label')} <strong class="text-sky-400 font-semibold">{sample.author}</strong>
 												</span>
 												<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed">
 													{sample.description}
@@ -759,7 +759,7 @@
 										</div>
 
 										<div class="p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/80 text-[9px] text-zinc-400 leading-tight mb-2.5">
-											<span class="text-zinc-500 block font-mono font-semibold uppercase mb-0.5">Lisensi Resmi:</span>
+											<span class="text-zinc-500 block font-mono font-semibold uppercase mb-0.5">{i18n.t('catalog_license_label')}</span>
 											{sample.copyright}
 										</div>
 
@@ -776,10 +776,10 @@
 												type="button"
 												onclick={() => triggerInstallModel(sample)}
 												class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-sky-300 hover:text-white border border-sky-500/40 rounded-xl text-[11px] font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
-												title="Pasang folder model hasil download dari Live2D"
+												title={i18n.t('catalog_folder_tooltip')}
 											>
 												<UploadCloud class="w-3.5 h-3.5 text-sky-400" />
-												<span>Pasang Model Ini</span>
+												<span>{i18n.t('catalog_install_this')}</span>
 											</button>
 
 											<a
@@ -789,7 +789,7 @@
 												class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600/90 hover:bg-sky-500 text-white rounded-xl text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
 											>
 												<ExternalLink class="w-3 h-3" />
-												<span>Unduh live2d.com</span>
+												<span>{i18n.t('catalog_download_live2d')}</span>
 											</a>
 										</div>
 									</div>
@@ -802,24 +802,24 @@
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 								<span class="text-xs font-semibold text-zinc-200 flex items-center gap-2">
 									<FolderOpen class="w-4 h-4 text-pink-400" />
-									Muat Model Live2D Sendiri (Folder / Multi-File / Unduh Otomatis URL)
+									{i18n.t('catalog_load_custom_title')}
 								</span>
 								<div class="flex items-center gap-2">
 									<button
 										onclick={() => folderInputEl?.click()}
 										class="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
-										title="Pilih folder model unzipped yang berisi .model3.json dan folder tekstur"
+										title={i18n.t('catalog_folder_tooltip')}
 									>
 										<FolderOpen class="w-3.5 h-3.5" />
-										<span>Pilih Folder Model</span>
+										<span>{i18n.t('catalog_folder_btn')}</span>
 									</button>
 									<button
 										onclick={() => multiFileInputEl?.click()}
 										class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium flex items-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
-										title="Pilih semua file di dalam folder (.model3.json, .moc3, .png)"
+										title={i18n.t('catalog_multifile_tooltip')}
 									>
 										<FileCode class="w-3.5 h-3.5 text-cyan-400" />
-										<span>Pilih Multi-File</span>
+										<span>{i18n.t('catalog_multifile_btn')}</span>
 									</button>
 								</div>
 							</div>
@@ -828,7 +828,7 @@
 								<input
 									type="text"
 									bind:value={customUrlInput}
-									placeholder="Unduh & Pasang Otomatis dari URL (.zip atau .model3.json): https://..."
+									placeholder={i18n.t('catalog_url_placeholder')}
 									class="flex-1 bg-zinc-950/80 px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-pink-500"
 								/>
 								<button
@@ -837,7 +837,7 @@
 									class="px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-lg text-xs transition-colors border border-pink-500/50 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
 								>
 									<Download class="w-3.5 h-3.5" />
-									<span>Unduh & Pasang Auto</span>
+									<span>{i18n.t('catalog_url_btn')}</span>
 								</button>
 							</div>
 						</div>
@@ -853,13 +853,13 @@
 								</div>
 								<div>
 									<h3 class="text-sm font-bold text-pink-200 flex items-center gap-2">
-										Koleksi Kreator BOOTH.pm (Siap Pakai & Showcase)
+										{i18n.t('catalog_booth_collection_title')}
 										<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-semibold">
 											{boothPreinstalledModels.length + BOOTH_SHOWCASE_CATALOG.length} Model
 										</span>
 									</h3>
 									<p class="text-xs text-zinc-300 mt-0.5 leading-relaxed">
-										Koleksi avatar Live2D dari kreator BOOTH.pm. Model siap pakai dapat langsung Anda klik, sedangkan model showcase terkurasi dapat diunduh dari BOOTH dan dipasang via folder.
+										{i18n.t('catalog_booth_collection_desc')}
 									</p>
 								</div>
 							</div>
@@ -871,7 +871,7 @@
 									class="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
 								>
 									<ExternalLink class="w-3.5 h-3.5" />
-									<span>Katalog BOOTH Free</span>
+									<span>{i18n.t('booth_open_btn')}</span>
 								</a>
 							</div>
 						</div>
@@ -956,14 +956,14 @@
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
 								<h3 class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
 									<Sparkles class="w-3.5 h-3.5 text-purple-400" />
-									Showcase Terkurasi BOOTH.pm ({BOOTH_SHOWCASE_CATALOG.length} Model)
+									{i18n.t('catalog_booth_showcase')} ({BOOTH_SHOWCASE_CATALOG.length} {i18n.t('models')})
 								</h3>
-								<span class="text-[10px] text-zinc-400">Unduh paket resmi dari BOOTH lalu pasang folder model di sini</span>
+								<span class="text-[10px] text-zinc-400">{i18n.t('catalog_booth_download_tip')}</span>
 							</div>
 
 							<!-- Category Group Filter Pills -->
 							<div class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
-								<span class="text-zinc-400 font-medium text-[11px] mr-1">Kelompok:</span>
+								<span class="text-zinc-400 font-medium text-[11px] mr-1">{i18n.t('filter_group')}</span>
 								<button
 									type="button"
 									onclick={() => (boothCategoryFilter = 'all')}
@@ -1079,10 +1079,10 @@
 												type="button"
 												onclick={() => triggerInstallModel(item)}
 												class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-pink-300 hover:text-white border border-pink-500/40 rounded-xl text-[11px] font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
-												title="Unduh gratis di BOOTH lalu pasang file ZIP untuk {item.name}"
+												title="{i18n.t('catalog_booth_download_title')} {item.name}"
 											>
 												<UploadCloud class="w-3.5 h-3.5 text-pink-400" />
-												<span>Pasang ZIP Model Ini</span>
+												<span>{i18n.t('catalog_install_this')}</span>
 											</button>
 
 											<a
@@ -1092,7 +1092,7 @@
 												class="flex items-center gap-1.5 px-3 py-1.5 bg-pink-600/90 hover:bg-pink-500 text-white rounded-xl text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
 											>
 												<ExternalLink class="w-3 h-3" />
-												<span>Unduh BOOTH</span>
+												<span>{i18n.t('catalog_download_booth')}</span>
 											</a>
 										</div>
 									</div>
@@ -1105,24 +1105,24 @@
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 								<span class="text-xs font-semibold text-zinc-200 flex items-center gap-2">
 									<FolderOpen class="w-4 h-4 text-purple-400" />
-									Pasang Model BOOTH Anda Sendiri (Folder / Multi-File / Unduh Otomatis URL)
+									{i18n.t('catalog_booth_load_custom')}
 								</span>
 								<div class="flex items-center gap-2">
 									<button
 										onclick={() => folderInputEl?.click()}
 										class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
-										title="Pilih folder model unzipped yang berisi .model3.json dan folder tekstur"
+										title={i18n.t('catalog_folder_tooltip')}
 									>
 										<FolderOpen class="w-3.5 h-3.5" />
-										<span>Pilih Folder Model</span>
+										<span>{i18n.t('catalog_folder_btn')}</span>
 									</button>
 									<button
 										onclick={() => multiFileInputEl?.click()}
 										class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium flex items-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
-										title="Pilih semua file di dalam folder (.model3.json, .moc3, .png)"
+										title={i18n.t('catalog_multifile_tooltip')}
 									>
 										<FileCode class="w-3.5 h-3.5 text-cyan-400" />
-										<span>Pilih Multi-File</span>
+										<span>{i18n.t('catalog_multifile_btn')}</span>
 									</button>
 								</div>
 							</div>
@@ -1131,7 +1131,7 @@
 								<input
 									type="text"
 									bind:value={customUrlInput}
-									placeholder="Unduh & Pasang Otomatis dari URL (.zip atau .model3.json): https://..."
+									placeholder={i18n.t('catalog_url_placeholder')}
 									class="flex-1 bg-zinc-950/80 px-3 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500"
 								/>
 								<button
@@ -1140,7 +1140,7 @@
 									class="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg text-xs transition-colors border border-purple-500/50 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
 								>
 									<Download class="w-3.5 h-3.5" />
-									<span>Unduh & Pasang Auto</span>
+									<span>{i18n.t('catalog_url_btn')}</span>
 								</button>
 							</div>
 						</div>
@@ -1151,9 +1151,9 @@
 						<div class="flex items-center justify-between mb-3">
 							<h3 class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
 								<Box class="w-3.5 h-3.5 text-cyan-400" />
-								Pilih Avatar 3D (Procedural Rigged Cats & GLTF)
+								{i18n.t('catalog_3d_header')}
 							</h3>
-							<span class="text-[10px] text-zinc-500">Avatar 3D WebGL Three.js dengan reactive tracking</span>
+							<span class="text-[10px] text-zinc-500">{i18n.t('catalog_3d_sub')}</span>
 						</div>
 
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -1231,8 +1231,8 @@
 									<Box class="w-5 h-5" />
 								</div>
 								<div>
-									<p class="font-semibold text-zinc-200 text-xs">Unggah Model 3D Sendiri (.GLB / .GLTF)</p>
-									<p class="text-[10px] text-zinc-400">Ekspor langsung model karakter dari Blender atau Sketchfab untuk ditampilkan</p>
+									<p class="font-semibold text-zinc-200 text-xs">{i18n.t('catalog_upload_glb')}</p>
+									<p class="text-[10px] text-zinc-400">{i18n.t('catalog_upload_glb_desc')}</p>
 								</div>
 							</div>
 							<button
@@ -1240,7 +1240,7 @@
 								class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-zinc-950 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-sm"
 							>
 								<UploadCloud class="w-4 h-4" />
-								Pilih File GLB...
+								{i18n.t('catalog_select_glb_btn')}
 							</button>
 							<input
 								type="file"
@@ -1262,11 +1262,11 @@
 							</div>
 							<div>
 								<span class="font-semibold text-xs text-zinc-200">{i18n.t('pose_loop')} Studio</span>
-								<p class="text-[10px] text-zinc-400">Gerakan otomatis looping agar avatar terlihat hidup saat diam</p>
+								<p class="text-[10px] text-zinc-400">{i18n.t('pose_loop_studio_desc')}</p>
 							</div>
 						</div>
 						<span class="text-xs font-mono font-semibold text-violet-400 px-2 py-0.5 bg-violet-500/10 rounded border border-violet-500/20">
-							{rigging.poseLoopSpeed.toFixed(1)}x Kecepatan
+							{rigging.poseLoopSpeed.toFixed(1)}x {i18n.t('catalog_speed_unit')}
 						</span>
 					</div>
 
@@ -1288,7 +1288,7 @@
 
 					{#if rigging.poseLoopMode !== 'none'}
 						<div class="flex items-center gap-3 pt-2">
-							<span class="text-[11px] font-medium text-zinc-400 shrink-0">Kecepatan Loop:</span>
+							<span class="text-[11px] font-medium text-zinc-400 shrink-0">{i18n.t('pose_loop_speed')}</span>
 							<input
 								type="range"
 								min="0.2"
@@ -1308,9 +1308,9 @@
 						<div class="flex items-center justify-between">
 							<h3 class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
 								<Play class="w-3.5 h-3.5 text-pink-400" />
-								{i18n.t('motion_list')} ({rigging.availableMotions.length} Gerakan)
+								{i18n.t('motion_list')} ({rigging.availableMotions.length} {i18n.t('motion_unit')})
 							</h3>
-							<span class="text-[10px] text-zinc-500">Klik untuk memutar animasi bawaan model</span>
+							<span class="text-[10px] text-zinc-500">{i18n.t('motion_play_hint')}</span>
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each rigging.availableMotions as motion}

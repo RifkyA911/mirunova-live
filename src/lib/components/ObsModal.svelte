@@ -208,7 +208,7 @@
 						<span class="w-2 h-2 rounded-full {rigging.isCameraActive ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-zinc-600'}"></span>
 						<span>Webcam:</span>
 						<strong class="font-mono {rigging.isCameraActive ? 'text-emerald-400' : 'text-zinc-500'}">
-							{rigging.activeCameraLabel || (rigging.isCameraActive ? 'Webcam Aktif' : 'Standby')}
+							{rigging.activeCameraLabel || (rigging.isCameraActive ? i18n.t('tracking_active') : 'Standby')}
 						</strong>
 					</div>
 
@@ -216,7 +216,7 @@
 						<span class="w-2 h-2 rounded-full {rigging.isMicActive ? 'bg-cyan-400' : 'bg-zinc-600'}"></span>
 						<span>Audio DSP:</span>
 						<strong class="font-mono {rigging.isMicActive ? 'text-cyan-400' : 'text-zinc-500'}">
-							{rigging.isMicActive ? 'Mic Active' : 'Bypass'}
+							{rigging.isMicActive ? i18n.t('mic_active') : 'Bypass'}
 						</strong>
 					</div>
 
@@ -244,7 +244,7 @@
 								<Monitor class="w-3.5 h-3.5 text-emerald-400" />
 								Profil Resolusi & Framerate Canvas
 							</span>
-							<span class="text-[10px] text-zinc-500">Pilih format siaran Anda</span>
+							<span class="text-[10px] text-zinc-500">{i18n.t('obs_choose_format')}</span>
 						</div>
 
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -310,7 +310,7 @@
 					<div class="space-y-2.5">
 						<span class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
 							<Layers class="w-3.5 h-3.5 text-cyan-400" />
-							Pipeline Transparansi Panggung
+							{i18n.t('obs_transparency')}
 						</span>
 
 						<div class="grid grid-cols-2 gap-2.5">
@@ -389,9 +389,9 @@
 								target="_blank"
 								rel="noopener noreferrer"
 								class="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold"
-								title="Buka langsung di tab baru"
+								title={i18n.t('obs_open_tab')}
 							>
-								<span>Buka di Tab</span>
+								<span>{i18n.t('obs_open_tab')}</span>
 								<ExternalLink class="w-3 h-3" />
 							</a>
 						</div>
@@ -414,10 +414,10 @@
 							>
 								{#if copiedUrl}
 									<Check class="w-3.5 h-3.5" />
-									<span>Tersalin!</span>
+									<span>{i18n.t('obs_copied')}</span>
 								{:else}
 									<Copy class="w-3.5 h-3.5" />
-									<span>Salin URL</span>
+									<span>{i18n.t('copy_obs_url')}</span>
 								{/if}
 							</button>
 						</div>
@@ -437,10 +437,10 @@
 							>
 								{#if copiedCss}
 									<Check class="w-3 h-3" />
-									<span>CSS Tersalin!</span>
+									<span>{i18n.t('obs_copied')}</span>
 								{:else}
 									<Copy class="w-3 h-3" />
-									<span>Salin CSS</span>
+									<span>{i18n.t('copy_obs_url')}</span>
 								{/if}
 							</button>
 						</div>
@@ -452,28 +452,28 @@
 					<div class="p-4 rounded-2xl border bg-zinc-900/50 border-zinc-800/80 space-y-2.5">
 						<h3 class="font-bold text-xs text-zinc-200 flex items-center gap-1.5">
 							<ShieldCheck class="w-4 h-4 text-emerald-400" />
-							Panduan 4 Langkah Pasang di OBS Studio:
+							{i18n.t('obs_instructions_title')}
 						</h3>
 
 						<div class="space-y-2 text-[11px] leading-relaxed text-zinc-300">
 							<div class="flex items-start gap-2.5 p-2 rounded-xl bg-zinc-950/60 border border-zinc-800/60">
 								<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold flex items-center justify-center text-[10px] shrink-0">1</span>
-								<span>Di OBS Studio > Panel <strong>Sources (Sumber)</strong> > Klik tombol <strong>+</strong> > Pilih <strong>Browser</strong>.</span>
+								<span>{i18n.t('obs_step_1')}</span>
 							</div>
 
 							<div class="flex items-start gap-2.5 p-2 rounded-xl bg-zinc-950/60 border border-zinc-800/60">
 								<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold flex items-center justify-center text-[10px] shrink-0">2</span>
-								<span>Beri nama "MiruNova VTuber", lalu <strong>Paste URL</strong> yang Anda salin di atas ke kolom URL.</span>
+								<span>{i18n.t('obs_step_2')}</span>
 							</div>
 
 							<div class="flex items-start gap-2.5 p-2 rounded-xl bg-zinc-950/60 border border-zinc-800/60">
 								<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold flex items-center justify-center text-[10px] shrink-0">3</span>
-								<span>Atur Width: <strong>{streamWidth}</strong>, Height: <strong>{streamHeight}</strong>, FPS: <strong>{streamFps}</strong>.</span>
+								<span>{i18n.t('obs_step_3')}</span>
 							</div>
 
 							<div class="flex items-start gap-2.5 p-2 rounded-xl bg-zinc-950/60 border border-zinc-800/60">
 								<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold flex items-center justify-center text-[10px] shrink-0">4</span>
-								<span>Centang <em>"Shutdown source when not visible"</em> dan <em>"Refresh browser when scene becomes active"</em>.</span>
+								<span>{i18n.t('obs_step_4')}</span>
 							</div>
 						</div>
 					</div>
@@ -485,11 +485,11 @@
 				isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/80 border-zinc-800'
 			}">
 				<div class="flex items-center gap-2 text-[11px] text-zinc-400">
-					<span>Tips: Tekan tombol</span>
+					<span>{i18n.t('obs_tip_prefix')}</span>
 					<kbd class="px-1.5 py-0.5 rounded border font-mono font-bold {isLightTheme ? 'bg-white border-zinc-300 text-zinc-800' : 'bg-zinc-800 text-zinc-200 border-zinc-700'}">
 						ESC
 					</kbd>
-					<span>untuk keluar dari Mode Full OBS kapan saja.</span>
+					<span>{i18n.t('obs_tip_suffix')}</span>
 				</div>
 
 				<div class="flex items-center gap-2 w-full sm:w-auto">
@@ -498,7 +498,7 @@
 						onclick={() => (rigging.isObsModalOpen = false)}
 						class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 transition-colors cursor-pointer"
 					>
-						Tutup
+						{i18n.t('close_btn')}
 					</button>
 
 					<button
@@ -507,7 +507,7 @@
 						class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-zinc-950 font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer"
 					>
 						<Tv class="w-4 h-4" />
-						<span>Masuk Full OBS Mode Sekarang</span>
+						<span>{i18n.t('obs_enter_mode_btn')}</span>
 					</button>
 				</div>
 			</div>

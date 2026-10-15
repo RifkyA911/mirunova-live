@@ -86,8 +86,8 @@
 					? 'bg-white border-zinc-200 text-zinc-800 hover:shadow-cyan-500/20'
 					: 'bg-zinc-950 border-zinc-800 text-zinc-100 hover:border-cyan-500/50 shadow-black/80'
 			}"
-			title="Buka Preview Tracking Kamera (Klik untuk Maximize)"
-			aria-label="Maximize Tracking Camera"
+			title={i18n.t('pip_maximize_tooltip')}
+			aria-label={i18n.t('maximize')}
 		>
 			<Camera class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
 			<span class="text-xs font-bold font-mono tracking-wide">CAM</span>
@@ -252,17 +252,17 @@
 						playSfx('toggle');
 						rigging.enableFaceTracking = !rigging.enableFaceTracking;
 						rigging.persist();
-						rigging.showToast(rigging.enableFaceTracking ? '✓ Deteksi Wajah Aktif' : 'Deteksi Wajah Dimatikan');
+						rigging.showToast(rigging.enableFaceTracking ? i18n.t('pip_face_active') : i18n.t('pip_face_disabled'));
 					}}
 					class="flex items-center justify-center gap-1.5 py-1 px-1 rounded-lg border transition-all cursor-pointer {
 						rigging.enableFaceTracking
 							? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 font-semibold shadow-sm'
 							: isLightTheme ? 'bg-zinc-200/60 border-zinc-300 text-zinc-500' : 'bg-zinc-950/80 border-zinc-800 text-zinc-500'
 					}"
-					title="Toggle Deteksi Wajah MediaPipe"
+					title={i18n.t('pip_toggle_face')}
 				>
 					<Smile class="w-3.5 h-3.5" />
-					<span class="font-bold">Wajah</span>
+					<span class="font-bold">{i18n.t('filter_head')}</span>
 				</button>
 
 				<button
@@ -271,17 +271,17 @@
 						playSfx('toggle');
 						rigging.enableBodyTracking = !rigging.enableBodyTracking;
 						rigging.persist();
-						rigging.showToast(rigging.enableBodyTracking ? '✓ Kinematika Tubuh Aktif' : 'Kinematika Tubuh Dimatikan');
+						rigging.showToast(rigging.enableBodyTracking ? i18n.t('pip_body_active') : i18n.t('pip_body_disabled'));
 					}}
 					class="flex items-center justify-center gap-1.5 py-1 px-1 rounded-lg border transition-all cursor-pointer {
 						rigging.enableBodyTracking
 							? 'bg-purple-500/20 border-purple-500/50 text-purple-400 font-semibold shadow-sm'
 							: isLightTheme ? 'bg-zinc-200/60 border-zinc-300 text-zinc-500' : 'bg-zinc-950/80 border-zinc-800 text-zinc-500'
 					}"
-					title="Toggle Deteksi Goyangan Badan"
+					title={i18n.t('pip_toggle_body')}
 				>
 					<User class="w-3.5 h-3.5" />
-					<span class="font-bold">Tubuh</span>
+					<span class="font-bold">{i18n.t('filter_body')}</span>
 				</button>
 
 				<button
@@ -290,17 +290,17 @@
 						playSfx('toggle');
 						rigging.enableHandTracking = !rigging.enableHandTracking;
 						rigging.persist();
-						rigging.showToast(rigging.enableHandTracking ? '✓ Deteksi Tangan Aktif' : 'Deteksi Tangan Dimatikan');
+						rigging.showToast(rigging.enableHandTracking ? i18n.t('pip_hands_active') : i18n.t('pip_hands_disabled'));
 					}}
 					class="flex items-center justify-center gap-1.5 py-1 px-1 rounded-lg border transition-all cursor-pointer {
 						rigging.enableHandTracking
 							? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-semibold shadow-sm'
 							: isLightTheme ? 'bg-zinc-200/60 border-zinc-300 text-zinc-500' : 'bg-zinc-950/80 border-zinc-800 text-zinc-500'
 					}"
-					title="Toggle Deteksi Tangan MediaPipe"
+					title={i18n.t('pip_toggle_hands')}
 				>
 					<Hand class="w-3.5 h-3.5" />
-					<span class="font-bold">Tangan</span>
+					<span class="font-bold">{i18n.t('filter_hands')}</span>
 				</button>
 			</div>
 

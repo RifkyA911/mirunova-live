@@ -410,10 +410,10 @@
 			link.download = `mirunova-${cleanName}-${dateStr}.png`;
 			link.href = dataUrl;
 			link.click();
-			rigging.showToast(`Screenshot tersimpan: ${link.download}`);
+			rigging.showToast(`${i18n.t('screenshot_saved')} ${link.download}`);
 		} catch (e) {
 			console.error('Screenshot extraction error:', e);
-			rigging.showToast('Gagal mengambil screenshot');
+			rigging.showToast(i18n.t('screenshot_failed'));
 		}
 	}
 
@@ -686,7 +686,7 @@
 			playSfx('loadingSuccess');
 		} catch (err: any) {
 			console.error('Failed to load Live2D model:', err);
-			alert(`Gagal memuat model Live2D: ${err?.message || err}. Silakan pilih model lain.`);
+			alert(`${i18n.t('model_load_2d_failed_alert')} ${err?.message || err}. ${i18n.t('model_select_another')}`);
 		} finally {
 			rigging.isLoadingModel = false;
 		}
@@ -1183,7 +1183,7 @@
 		playSfx('click');
 		rigging.persist();
 		recordDragSnapshot();
-		rigging.showToast('✓ Posisi elemen berhasil diterapkan!');
+		rigging.showToast(i18n.t('layer_element_applied'));
 	}
 
 	function handleCancelLayerTransform() {
@@ -1208,16 +1208,16 @@
 			}
 		}
 		rigging.persist();
-		rigging.showToast('Posisi elemen dibatalkan ke posisi awal');
+		rigging.showToast(i18n.t('layer_element_canceled'));
 	}
 
 	function getSelectedElementName(): string {
 		const targetId = rigging.selectedLayerElementId;
 		if (targetId === 'collab') return rigging.collabModelName || 'Partner 1';
 		if (targetId === 'collab-2' || targetId === 'model-collab-2') return rigging.collab2ModelName || 'Partner 2';
-		if (targetId === 'host' || !targetId) return rigging.modelName || 'Avatar Utama';
+		if (targetId === 'host' || !targetId) return rigging.modelName || i18n.t('settings_participant_host');
 		const acc = rigging.activeAccessories.find((a) => a.id === targetId);
-		return acc ? acc.name : 'Elemen Panggung';
+		return acc ? acc.name : i18n.t('stage_element_default');
 	}
 
 	function handleMouseDown(e: MouseEvent) {
@@ -1272,7 +1272,7 @@
 			const targetAcc = rigging.activeAccessories.find((a) => a.id === targetId);
 			if (targetAcc) {
 				if (accLayer?.locked) {
-					rigging.showToast('🔒 Layer Props / Aksesoris terkunci');
+					rigging.showToast(i18n.t('toast_layer_props_locked'));
 					return;
 				}
 				if (!accLayer?.visible) return;
@@ -1280,7 +1280,7 @@
 		} else {
 			// Mode 'pan': panning host model
 			if (hostLayer?.locked) {
-				rigging.showToast('🔒 Layer Avatar Utama terkunci');
+				rigging.showToast(i18n.t('toast_layer_host_locked'));
 				return;
 			}
 			if (!hostLayer?.visible) return;
@@ -1499,7 +1499,7 @@
 							e.stopPropagation();
 							e.preventDefault();
 							if (accLayer?.locked) {
-								rigging.showToast('🔒 Layer Props / Aksesoris terkunci');
+								rigging.showToast(i18n.t('toast_layer_props_locked'));
 								return;
 							}
 							playSfx('click');
@@ -1669,22 +1669,22 @@
 			<button
 				type="button"
 				onclick={handleApplyLayerTransform}
-				title="Simpan posisi elemen saat ini"
+				title={i18n.t('layer_save_element_title')}
 				class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-xl transition-all active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm"
 			>
 				<Check class="w-3.5 h-3.5" />
-				<span>Terapkan</span>
+				<span>{i18n.t('apply_btn')}</span>
 			</button>
 
 			<!-- Cancel Button -->
 			<button
 				type="button"
 				onclick={handleCancelLayerTransform}
-				title="Batalkan perubahan posisi ke awal"
+				title={i18n.t('layer_revert_element_title')}
 				class="px-2.5 py-1 bg-zinc-800 hover:bg-rose-500/20 text-zinc-300 hover:text-rose-300 hover:border-rose-500/40 border border-zinc-700 font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer flex items-center gap-1"
 			>
 				<X class="w-3.5 h-3.5" />
-				<span>Batal</span>
+				<span>{i18n.t('cancel_btn')}</span>
 			</button>
 
 			<!-- Finish / Pan Switch -->
@@ -1695,9 +1695,9 @@
 					rigging.setCursorToolMode('pan');
 				}}
 				class="px-2 py-1 text-zinc-400 hover:text-zinc-200 text-[11px] rounded-lg transition-colors cursor-pointer"
-				title="Kembali ke Mode Panning Panggung"
+				title={i18n.t('layer_pan_return_title')}
 			>
-				Selesai
+				{i18n.t('done')}
 			</button>
 		</div>
 	{/if}

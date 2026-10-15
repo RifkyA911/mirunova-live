@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { threeStage } from '#lib/core/threeStage';
+	import { i18n } from '#lib/i18n/index.svelte';
 
 	let containerEl = $state<HTMLDivElement>();
 	let animFrameId: number | null = null;
@@ -86,13 +87,13 @@
 				link.download = `mirunova-3d-${rigging.selected3DModelId}-${dateStr}.png`;
 				link.href = dataUrl;
 				link.click();
-				rigging.showToast(`Screenshot 3D tersimpan: ${link.download}`);
+				rigging.showToast(`${i18n.t('screenshot_saved')} ${link.download}`);
 			} else {
-				rigging.showToast('Gagal mengambil screenshot 3D');
+				rigging.showToast(i18n.t('screenshot_failed'));
 			}
 		} catch (e) {
 			console.error('Screenshot error:', e);
-			rigging.showToast('Gagal mengambil screenshot 3D');
+			rigging.showToast(i18n.t('screenshot_failed'));
 		}
 	}
 
@@ -104,25 +105,25 @@
 			if (id === 'neuro-sama') {
 				await threeStage.loadNeuroSama();
 				rigging.availableExpressions = [
-					{ id: 'stars', name: 'stars', label: '⭐ Mata Bintang (Starry Eyes)' },
-					{ id: 'vrc.ee', name: 'vrc.ee', label: '😊 Senyum (Smile)' },
-					{ id: 'blush', name: 'blush', label: '😳 Pipi Merona (Blush)' },
-					{ id: 'vrc.blink', name: 'vrc.blink', label: '😉 Kedipan (Wink)' },
-					{ id: 'vrc.oh', name: 'vrc.oh', label: '😮 Terkejut (Surprised O)' },
-					{ id: 'vrc.aa', name: 'vrc.aa', label: '🗣️ Mulut Terbuka (Mouth Open)' }
+					{ id: 'stars', name: 'stars', label: `⭐ ${i18n.t('exp_starry_eyes')}` },
+					{ id: 'vrc.ee', name: 'vrc.ee', label: `😊 ${i18n.t('preset_smile')}` },
+					{ id: 'blush', name: 'blush', label: `😳 ${i18n.t('exp_blush')}` },
+					{ id: 'vrc.blink', name: 'vrc.blink', label: `😉 ${i18n.t('exp_wink')}` },
+					{ id: 'vrc.oh', name: 'vrc.oh', label: `😮 ${i18n.t('exp_surprised')}` },
+					{ id: 'vrc.aa', name: 'vrc.aa', label: `🗣️ ${i18n.t('exp_mouth_open')}` }
 				];
-				rigging.showToast("✓ Model 3D Neuro-sama (Vedal's Version) dimuat!");
+				rigging.showToast(`✓ ${i18n.t('model_glb_loaded_toast')} Neuro-sama (Vedal's Version)`);
 			} else if (id === 'manhattan-cafe') {
 				await threeStage.loadManhattanCafe();
 				rigging.availableExpressions = [
-					{ id: 'stars', name: 'stars', label: '✨ Tatapan Misterius (Mysterious)' },
-					{ id: 'vrc.ee', name: 'vrc.ee', label: '😊 Senyum Lembut (Gentle Smile)' },
-					{ id: 'blush', name: 'blush', label: '😳 Malu Merona (Blush)' },
-					{ id: 'vrc.blink', name: 'vrc.blink', label: '😉 Kedipan Manis (Wink)' },
-					{ id: 'vrc.oh', name: 'vrc.oh', label: '😮 Terkesiap (Soft Gasp)' },
-					{ id: 'vrc.aa', name: 'vrc.aa', label: '🗣️ Bicara Kalem (Speaking)' }
+					{ id: 'stars', name: 'stars', label: `✨ ${i18n.t('exp_mysterious')}` },
+					{ id: 'vrc.ee', name: 'vrc.ee', label: `😊 ${i18n.t('exp_gentle_smile')}` },
+					{ id: 'blush', name: 'blush', label: `😳 ${i18n.t('exp_blush')}` },
+					{ id: 'vrc.blink', name: 'vrc.blink', label: `😉 ${i18n.t('exp_wink')}` },
+					{ id: 'vrc.oh', name: 'vrc.oh', label: `😮 ${i18n.t('exp_soft_gasp')}` },
+					{ id: 'vrc.aa', name: 'vrc.aa', label: `🗣️ ${i18n.t('exp_speaking')}` }
 				];
-				rigging.showToast('✓ Model 3D Manhattan Cafe (Uma Musume) dimuat!');
+				rigging.showToast(`✓ ${i18n.t('model_glb_loaded_toast')} Manhattan Cafe (Uma Musume)`);
 			} else if (id === 'mochi-cat') {
 				threeStage.loadProceduralCat('mochi');
 			} else if (id === 'kuro-cat') {
@@ -136,7 +137,7 @@
 			}
 		} catch (err) {
 			console.error('Failed to load 3D model:', err);
-			rigging.showToast('Gagal memuat model 3D');
+			rigging.showToast(i18n.t('model_process_error'));
 		} finally {
 			rigging.isLoadingModel = false;
 		}
@@ -256,11 +257,11 @@
 					type="button"
 					onclick={() => {
 						threeStage.moveModel(0, 0.15);
-						rigging.showToast('↑ Geser Atas (+Y)');
+						rigging.showToast(`↑ ${i18n.t('stage_move_up')}`);
 					}}
 					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
-					title="Geser Karakter Atas"
-					aria-label="Geser Karakter Atas"
+					title={i18n.t('stage_move_up')}
+					aria-label={i18n.t('stage_move_up')}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
 				</button>
@@ -270,11 +271,11 @@
 					type="button"
 					onclick={() => {
 						threeStage.moveModel(-0.15, 0);
-						rigging.showToast('← Geser Kiri (-X)');
+						rigging.showToast(`← ${i18n.t('stage_move_left')}`);
 					}}
 					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
-					title="Geser Karakter Kiri"
-					aria-label="Geser Karakter Kiri"
+					title={i18n.t('stage_move_left')}
+					aria-label={i18n.t('stage_move_left')}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
 				</button>
@@ -283,11 +284,11 @@
 					type="button"
 					onclick={() => {
 						threeStage.resetModelPosition();
-						rigging.showToast('🎯 Reset Posisi Tengah');
+						rigging.showToast(`🎯 ${i18n.t('stage_center_pos')}`);
 					}}
 					class="p-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-400 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
-					title="Reset Posisi Tengah (0, 0)"
-					aria-label="Reset Posisi Tengah"
+					title={i18n.t('stage_center_pos')}
+					aria-label={i18n.t('stage_center_pos')}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
 				</button>
@@ -296,11 +297,11 @@
 					type="button"
 					onclick={() => {
 						threeStage.moveModel(0.15, 0);
-						rigging.showToast('→ Geser Kanan (+X)');
+						rigging.showToast(`→ ${i18n.t('stage_move_right')}`);
 					}}
 					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
-					title="Geser Karakter Kanan"
-					aria-label="Geser Karakter Kanan"
+					title={i18n.t('stage_move_right')}
+					aria-label={i18n.t('stage_move_right')}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
 				</button>
@@ -310,11 +311,11 @@
 					type="button"
 					onclick={() => {
 						threeStage.moveModel(0, -0.15);
-						rigging.showToast('↓ Geser Bawah (-Y)');
+						rigging.showToast(`↓ ${i18n.t('stage_move_down')}`);
 					}}
 					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
-					title="Geser Karakter Bawah"
-					aria-label="Geser Karakter Bawah"
+					title={i18n.t('stage_move_down')}
+					aria-label={i18n.t('stage_move_down')}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
 				</button>
@@ -327,10 +328,10 @@
 					type="button"
 					onclick={() => {
 						threeStage.rotateModelBodyDegrees(-45);
-						rigging.showToast('Putar Karakter -45°');
+						rigging.showToast(`${i18n.t('stage_rotate_toast')} -45°`);
 					}}
 					class="flex-1 py-1 px-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono font-medium flex items-center justify-center gap-1 cursor-pointer transition-colors"
-					title="Putar Kiri -45°"
+					title={i18n.t('stage_rotate_left_title')}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
 					<span>-45°</span>
@@ -339,10 +340,10 @@
 					type="button"
 					onclick={() => {
 						threeStage.resetOrbit();
-						rigging.showToast('🎯 Hadap Depan (0°)');
+						rigging.showToast(`🎯 ${i18n.t('stage_face_front')}`);
 					}}
 					class="py-1 px-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono font-medium text-cyan-400 cursor-pointer transition-colors"
-					title="Reset Hadap Depan"
+					title={i18n.t('stage_face_front')}
 				>
 					0°
 				</button>
@@ -350,10 +351,10 @@
 					type="button"
 					onclick={() => {
 						threeStage.rotateModelBodyDegrees(45);
-						rigging.showToast('Putar Karakter +45°');
+						rigging.showToast(`${i18n.t('stage_rotate_toast')} +45°`);
 					}}
 					class="flex-1 py-1 px-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono font-medium flex items-center justify-center gap-1 cursor-pointer transition-colors"
-					title="Putar Kanan +45°"
+					title={i18n.t('stage_rotate_right_title')}
 				>
 					<span>+45°</span>
 					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>

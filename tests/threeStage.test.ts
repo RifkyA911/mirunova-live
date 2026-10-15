@@ -239,13 +239,24 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(((backWall.material as THREE.MeshStandardMaterial).color).getHex()).toBe(0xf9e4bc);
 	});
 
-	it('should support switching between all 7 stage environments', () => {
+	it('should support switching between all 9 stage environments', () => {
 		const stage = new ThreeStage();
-		const environments = ['grid', 'room', 'field', 'sunset', 'studio', 'dojo', 'void'] as const;
+		const environments = ['grid', 'room', 'cafe', 'beach', 'field', 'sunset', 'studio', 'dojo', 'void'] as const;
 		for (const env of environments) {
 			stage.setStageEnvironment(env);
 			expect(stage.currentStageEnv).toBe(env);
 		}
+
+		// Specifically verify cafe constructs cafe meshes
+		stage.setStageEnvironment('cafe');
+		const cafeFloor = stage['stageEnvironmentGroup'].children.find((c) => (c as any).isMesh && c.rotation.x === -Math.PI / 2);
+		expect(cafeFloor).toBeDefined();
+
+		// Specifically verify beach constructs sand, ocean, and sunny fog
+		stage.setStageEnvironment('beach');
+		const beachSand = stage['stageEnvironmentGroup'].children.find((c) => (c as any).isMesh && c.rotation.x === -Math.PI / 2);
+		expect(beachSand).toBeDefined();
+		expect(stage['scene'].fog).toBeDefined();
 	});
 
 	it('should lock skirt bones firmly to authored rest pose to prevent skirt flipping or lifting', () => {

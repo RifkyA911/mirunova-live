@@ -99,7 +99,7 @@
 					class="p-2.5 rounded-xl transition-colors cursor-pointer {
 						isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 					}"
-					aria-label="Tutup"
+					aria-label={i18n.t('close_btn')}
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -245,7 +245,7 @@
 						isLightTheme ? 'bg-zinc-200 hover:bg-zinc-300 text-zinc-900' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
 					}"
 				>
-					Tutup
+					{i18n.t('close_btn')}
 				</button>
 			</div>
 		</div>

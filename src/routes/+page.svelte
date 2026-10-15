@@ -156,37 +156,37 @@
 				rigging.persist();
 			} else if (e.key === 'b' || e.key === 'B') {
 				rigging.eyeBlinkLinked = !rigging.eyeBlinkLinked;
-				rigging.showToast(`Sinkronisasi mata: ${rigging.eyeBlinkLinked ? 'Aktif' : 'Nonaktif'}`);
+				rigging.showToast(`${i18n.t('eye_blink_sync_status')} ${rigging.eyeBlinkLinked ? i18n.t('theme_active_badge') : i18n.t('loop_none')}`);
 			} else if (e.key === '1') {
 				rigging.setUITheme('cyber-dark');
-				rigging.showToast('Tema: Cyber Dark');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} Cyber Dark`);
 			} else if (e.key === '2') {
 				rigging.setUITheme('light');
-				rigging.showToast('Tema: Light Crisp');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} ${i18n.t('theme_light')}`);
 			} else if (e.key === '3') {
 				rigging.setUITheme('cyan');
-				rigging.showToast('Tema: Neo Cyan');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} ${i18n.t('theme_cyan')}`);
 			} else if (e.key === '4') {
 				rigging.setUITheme('pink');
-				rigging.showToast('Tema: Sakura Pink');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} ${i18n.t('theme_pink')}`);
 			} else if (e.key === '5') {
 				rigging.setUITheme('matcha');
-				rigging.showToast('Tema: Matcha Green');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} ${i18n.t('theme_matcha')}`);
 			} else if (e.key === '6') {
 				rigging.setUITheme('midnight');
-				rigging.showToast('Tema: Midnight Blue');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} Midnight Blue`);
 			} else if (e.key === '7') {
 				rigging.setUITheme('synthwave');
-				rigging.showToast('Tema: Synthwave');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} Synthwave`);
 			} else if (e.key === '8') {
 				rigging.setUITheme('monochrome');
-				rigging.showToast('Tema: Monochrome');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} Monochrome`);
 			} else if (e.key === '9') {
 				rigging.setUITheme('sakura-sweet');
-				rigging.showToast('Tema: Sakura Sweet (Evanescia)');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} ${i18n.t('theme_sakura_sweet')}`);
 			} else if (e.key === '0') {
 				rigging.setUITheme('light-cyan-sea');
-				rigging.showToast('Tema: Light Cyan Sea');
+				rigging.showToast(`${i18n.t('theme_switched_toast')} ${i18n.t('theme_light_cyan_sea')}`);
 			} else if (e.key === '=' || e.key === '+') {
 				rigging.zoomIn();
 			} else if (e.key === '-' || e.key === '_') {
@@ -381,7 +381,7 @@
 	{#if rigging.isObsMode}
 		<div
 			role="toolbar"
-			aria-label="OBS Mode Controls"
+			aria-label={i18n.t('obs_mode')}
 			tabindex="0"
 			onmouseenter={() => (isPillHovered = true)}
 			onmouseleave={() => (isPillHovered = false)}

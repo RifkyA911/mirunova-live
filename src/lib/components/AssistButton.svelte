@@ -71,17 +71,17 @@
 		const nextMode = modes[(currentIdx + 1) % modes.length];
 		rigging.cameraViewMode = nextMode;
 		rigging.persist();
-		rigging.showToast(`📹 Mode Kamera: ${nextMode === 'rig' ? 'Webcam + Titik Rig' : nextMode === 'wireframe' ? '3D Mesh' : 'Raw Cam'}`);
+		rigging.showToast(`📹 ${i18n.t('cam_mode_toast')} ${nextMode === 'rig' ? 'Webcam + Rig' : nextMode === 'wireframe' ? '3D Mesh' : 'Raw Cam'}`);
 	}
 
 	function cycleStageEnv() {
 		playSfx('click');
-		const envs: StageEnvironment3D[] = ['grid', 'room', 'field', 'sunset', 'studio', 'dojo', 'void'];
+		const envs: StageEnvironment3D[] = ['grid', 'room', 'cafe', 'beach', 'field', 'sunset', 'studio', 'dojo', 'void'];
 		const currentIdx = envs.indexOf(rigging.stageEnvironment);
 		const nextEnv = envs[(currentIdx + 1) % envs.length];
 		rigging.setStageEnvironment(nextEnv);
 		threeStage.setStageEnvironment(nextEnv);
-		rigging.showToast(`🪐 Panggung 3D: ${nextEnv.toUpperCase()}`);
+		rigging.showToast(`🪐 ${i18n.t('stage_3d_env_toast')} ${nextEnv.toUpperCase()}`);
 	}
 
 	function cycleVoiceFilter() {
@@ -91,7 +91,7 @@
 		const nextFilter = filters[(currentIdx + 1) % filters.length];
 		rigging.setVoiceFilter(nextFilter);
 		voice.setFilter(nextFilter);
-		rigging.showToast(`✨ Model Suara: ${nextFilter}`);
+		rigging.showToast(`✨ ${i18n.t('voice_model_toast')} ${nextFilter}`);
 	}
 
 	async function toggleMic() {
@@ -104,15 +104,15 @@
 			if (ok) {
 				voice.setGain(rigging.micGain);
 				voice.setFilter(rigging.voiceFilter);
-				rigging.showToast('🎙️ Mikrofon aktif');
+				rigging.showToast('🎙️ ' + i18n.t('mic_active'));
 			} else {
 				rigging.isMicActive = false;
-				rigging.showToast('Gagal mengakses mikrofon');
+				rigging.showToast(i18n.t('mic_access_failed'));
 			}
 		} else {
 			voice.stop();
 			rigging.micVolumeLevel = 0;
-			rigging.showToast('Mikrofon dimatikan');
+			rigging.showToast(i18n.t('mic_muted'));
 		}
 		rigging.persist();
 	}
@@ -127,13 +127,13 @@
 				a.href = dataUrl;
 				a.download = `mirunova-stage-${Date.now()}.png`;
 				a.click();
-				rigging.showToast('📸 Screenshot panggung berhasil diunduh!');
+				rigging.showToast('📸 ' + i18n.t('screenshot_success'));
 			} else {
-				rigging.showToast('Gagal menemukan kanvas panggung');
+				rigging.showToast(i18n.t('screenshot_canvas_not_found'));
 			}
 		} catch (e) {
 			console.warn('Screenshot error:', e);
-			rigging.showToast('Gagal mengambil tangkapan layar');
+			rigging.showToast(i18n.t('screenshot_failed'));
 		}
 	}
 </script>
@@ -223,7 +223,7 @@
 								isOpen = false;
 								isPinned = false;
 							}}
-							title="Tutup"
+							title={i18n.t('close_btn')}
 							class="p-1.5 rounded-xl transition-colors cursor-pointer {
 								isLightTheme ? 'text-zinc-500 hover:text-rose-600 hover:bg-zinc-100' : 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800'
 							}"
@@ -248,8 +248,8 @@
 						<div class="p-2 rounded-xl bg-cyan-500/15 text-cyan-400 group-hover:scale-110 transition-transform mb-1">
 							<Crosshair class="w-4 h-4" />
 						</div>
-						<span class="text-[10px] font-bold leading-tight">Kalibrasi</span>
-						<span class="text-[8px] text-zinc-400 font-mono">Tengah</span>
+						<span class="text-[10px] font-bold leading-tight">{i18n.t('calibrate')}</span>
+						<span class="text-[8px] text-zinc-400 font-mono">0, 0</span>
 					</button>
 
 					<!-- Tile 2: Mode Kamera View -->
@@ -265,9 +265,9 @@
 						<div class="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 group-hover:scale-110 transition-transform mb-1">
 							<Camera class="w-4 h-4" />
 						</div>
-						<span class="text-[10px] font-bold leading-tight">Kamera</span>
+						<span class="text-[10px] font-bold leading-tight">{i18n.t('badge_webcam')}</span>
 						<span class="text-[8px] text-emerald-400 font-mono capitalize truncate max-w-full">
-							{rigging.cameraViewMode === 'rig' ? 'Titik Rig' : rigging.cameraViewMode === 'wireframe' ? '3D Mesh' : 'Raw'}
+							{rigging.cameraViewMode === 'rig' ? 'Rig' : rigging.cameraViewMode === 'wireframe' ? 'Mesh' : 'Raw'}
 						</span>
 					</button>
 
@@ -288,9 +288,9 @@
 								<MicOff class="w-4 h-4" />
 							{/if}
 						</div>
-						<span class="text-[10px] font-bold leading-tight">Mikrofon</span>
+						<span class="text-[10px] font-bold leading-tight">{i18n.t('badge_audio')}</span>
 						<span class="text-[8px] font-mono {rigging.isMicActive ? 'text-emerald-400' : 'text-zinc-500'}">
-							{rigging.isMicActive ? 'Aktif' : 'Muted'}
+							{rigging.isMicActive ? i18n.t('theme_active_badge') : i18n.t('mic_muted')}
 						</span>
 					</button>
 
@@ -401,7 +401,7 @@
 					<div class="flex items-center justify-between text-[11px] font-medium">
 						<span class="flex items-center gap-1.5 text-zinc-400">
 							<ZoomIn class="w-3.5 h-3.5 text-cyan-400" />
-							<span>Zoom Skala Panggung</span>
+							<span>{i18n.t('assist_zoom_stage')}</span>
 						</span>
 						<span class="font-mono text-xs font-bold text-cyan-400">{displayZoomPercent}%</span>
 					</div>
@@ -504,7 +504,7 @@
 						<span class="w-2 h-2 rounded-full {
 							rigging.isFaceDetected ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-amber-400 animate-pulse'
 						}"></span>
-						<span>{rigging.isFaceDetected ? 'Wajah Terdeteksi' : 'Mencari Wajah'}</span>
+						<span>{rigging.isFaceDetected ? i18n.t('face_detected') : i18n.t('searching_face')}</span>
 					</div>
 					<div class="flex items-center gap-2">
 						<span class="text-cyan-400">{rigging.fps || 60} FPS</span>

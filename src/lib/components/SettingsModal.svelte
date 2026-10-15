@@ -124,7 +124,7 @@
 		voice.synthesizeVoiceText(txt, rigging.voiceFilter, ttsVoice, () => {
 			isTtsSpeaking = false;
 		});
-		rigging.showToast(`✨ Memutar Suara Alami (Preset: ${rigging.voiceFilter})`);
+		rigging.showToast(`${i18n.t('settings_voice_playback')} (${i18n.t('presets')}: ${rigging.voiceFilter})`);
 	}
 
 	async function handleRecordSample() {
@@ -145,7 +145,7 @@
 			playSfx('success');
 			rigging.showToast('✓ ' + i18n.t('mic_record_done'));
 		} else {
-			rigging.showToast('Gagal merekam sampel mikrofon');
+			rigging.showToast(i18n.t('settings_rec_sample_failed'));
 		}
 	}
 
@@ -161,7 +161,7 @@
 		if (!played) {
 			isPlayingTest = false;
 			testPlaybackMode = null;
-			rigging.showToast('Gagal memutar sampel audio');
+			rigging.showToast(i18n.t('settings_play_sample_failed'));
 		}
 	}
 
@@ -174,7 +174,7 @@
 		if (rigging.voiceFilter === 'none') {
 			rigging.setVoiceFilter('anime-girl');
 			voice.setFilter('anime-girl');
-			rigging.showToast('✓ Model Suara aktif: Kawaii Anime Girl (+5 Semitones)');
+			rigging.showToast(`${i18n.t('settings_voice_active')} Kawaii Anime Girl (+5 Semitones)`);
 		}
 
 		const played = await voice.playConvertedSample(() => {
@@ -184,7 +184,7 @@
 		if (!played) {
 			isPlayingTest = false;
 			testPlaybackMode = null;
-			rigging.showToast('Gagal memutar sampel audio');
+			rigging.showToast(i18n.t('settings_play_sample_failed'));
 		}
 	}
 
@@ -204,7 +204,7 @@
 		if (rigging.voiceFilter === 'none') {
 			rigging.setVoiceFilter('anime-girl');
 			voice.setFilter('anime-girl');
-			rigging.showToast('✓ Model Suara aktif: Kawaii Anime Girl (+5 Semitones)');
+			rigging.showToast(`${i18n.t('settings_voice_active')} Kawaii Anime Girl (+5 Semitones)`);
 		}
 
 		playSfx('click');
@@ -220,9 +220,9 @@
 		if (!played) {
 			isPlayingTest = false;
 			testPlaybackMode = null;
-			rigging.showToast('Gagal memproses sintesis suara teks');
+			rigging.showToast(i18n.t('settings_tts_failed'));
 		} else {
-			rigging.showToast('✓ Uji suara alami selesai!');
+			rigging.showToast(i18n.t('settings_voice_test_done'));
 		}
 	}
 
@@ -309,67 +309,73 @@
 		{ id: 'monochrome', label: 'Monochrome Minimal', desc: 'Clean, distraction-free neutral slate & silver', color: 'bg-zinc-400' }
 	];
 
-	const languages: Array<{ code: Locale; label: string }> = [
-		{ code: 'id', label: 'Bahasa Indonesia' },
-		{ code: 'en', label: 'English' },
-		{ code: 'ja', label: '日本語' }
-	];
+	const languages = $derived<Array<{ code: Locale; label: string }>>([
+		{ code: 'id', label: i18n.t('lang_id') },
+		{ code: 'en', label: i18n.t('lang_en') },
+		{ code: 'ja', label: i18n.t('lang_ja') }
+	]);
 
-	const backgroundStyleCards: Array<{
-		id: BackgroundStyle;
-		label: string;
-		desc: string;
-		previewClass: string;
-	}> = [
+	const backgroundStyleCards = $derived<
+		Array<{
+			id: BackgroundStyle;
+			label: string;
+			desc: string;
+			previewClass: string;
+		}>
+	>([
 		{
 			id: 'solid',
-			label: 'Solid Color',
-			desc: 'Warna studio polos (hex kustom)',
+			label: i18n.t('bg_solid_title'),
+			desc: i18n.t('bg_solid_desc'),
 			previewClass: 'border-zinc-700'
 		},
 		{
 			id: 'mesh',
-			label: 'Mesh Kotak-kotak',
-			desc: 'Wireframe perspektif 3D cyan sci-fi',
-			previewClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:14px_14px]'
+			label: i18n.t('bg_mesh_title'),
+			desc: i18n.t('bg_mesh_desc'),
+			previewClass:
+				'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:14px_14px]'
 		},
 		{
 			id: 'grid',
-			label: 'Studio Blueprint',
-			desc: 'Garis grid arsitektur studio bersih',
-			previewClass: 'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4640_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4640_1px,transparent_1px)] bg-[size:10px_10px]'
+			label: i18n.t('bg_grid_title'),
+			desc: i18n.t('bg_grid_desc'),
+			previewClass:
+				'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4640_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4640_1px,transparent_1px)] bg-[size:10px_10px]'
 		},
 		{
 			id: 'dots',
-			label: 'Dot Matrix',
-			desc: 'Pola titik matriks modern futuristik',
-			previewClass: 'bg-zinc-950 bg-[radial-gradient(#38bdf840_1.5px,transparent_1.5px)] bg-[size:10px_10px]'
+			label: i18n.t('bg_dots_title'),
+			desc: i18n.t('bg_dots_desc'),
+			previewClass:
+				'bg-zinc-950 bg-[radial-gradient(#38bdf840_1.5px,transparent_1.5px)] bg-[size:10px_10px]'
 		},
 		{
 			id: 'cosmic',
-			label: 'Cosmic Nebula',
-			desc: 'Gradasi kosmik violet, ungu & pink',
+			label: i18n.t('bg_cosmic_title'),
+			desc: i18n.t('bg_cosmic_desc'),
 			previewClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950'
 		},
 		{
 			id: 'transparent',
-			label: 'Alpha Transparent',
-			desc: 'Papan catur transparan untuk OBS Overlay',
-			previewClass: 'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:12px_12px]'
+			label: i18n.t('bg_transparent_title'),
+			desc: i18n.t('bg_transparent_desc'),
+			previewClass:
+				'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:12px_12px]'
 		},
 		{
 			id: 'chroma',
-			label: 'Chroma Key Green',
-			desc: 'Hijau murni #00FF00 untuk Color Key OBS',
+			label: i18n.t('bg_chroma_title'),
+			desc: i18n.t('bg_chroma_desc'),
 			previewClass: 'bg-[#00FF00]'
 		},
 		{
 			id: 'custom-image',
-			label: 'Custom Wallpaper',
-			desc: 'Gunakan wallpaper gambar dari komputer',
+			label: i18n.t('bg_custom_title'),
+			desc: i18n.t('bg_custom_desc'),
 			previewClass: 'bg-gradient-to-r from-violet-900 to-indigo-900'
 		}
-	];
+	]);
 
 	let stageWallpaperInput = $state<HTMLInputElement>();
 
@@ -381,7 +387,7 @@
 		rigging.customBgUrl = url;
 		rigging.backgroundStyle = 'custom-image';
 		rigging.persist();
-		rigging.showToast(`✓ Wallpaper dipasang: ${file.name}`);
+		rigging.showToast(`✓ ${i18n.t('wallpaper_applied_toast')} ${file.name}`);
 	}
 
 	async function refreshDevices(requestPermission = false) {
@@ -469,15 +475,15 @@
 				voice.setGain(rigging.micGain);
 				voice.setMonitor(rigging.isMicMonitorActive);
 				voice.setFilter(rigging.voiceFilter);
-				rigging.showToast('✓ Mikrofon aktif');
+				rigging.showToast('✓ ' + i18n.t('mic_active'));
 			} else {
 				rigging.isMicActive = false;
-				rigging.showToast('Gagal mengakses mikrofon');
+				rigging.showToast(i18n.t('mic_access_failed'));
 			}
 		} else {
 			voice.stop();
 			rigging.micVolumeLevel = 0;
-			rigging.showToast('Mikrofon dimatikan');
+			rigging.showToast(i18n.t('mic_muted'));
 		}
 		rigging.persist();
 	}
@@ -538,19 +544,19 @@
 			rigging.smoothingAmount = 0.20;
 			rigging.deadzoneThreshold = 0.10;
 			rigging.jitterReduction = 0.35;
-			rigging.showToast('✓ Preset Responsif (Low-End Cam)');
+			rigging.showToast(`✓ ${i18n.t('preset_low_end')}`);
 		} else if (preset === 'balanced') {
 			rigging.trackingSensitivity = 1.0;
 			rigging.smoothingAmount = 0.35;
 			rigging.deadzoneThreshold = 0.25;
 			rigging.jitterReduction = 0.50;
-			rigging.showToast('✓ Preset Seimbang (Default)');
+			rigging.showToast(`✓ ${i18n.t('preset_balanced')}`);
 		} else if (preset === 'smooth') {
 			rigging.trackingSensitivity = 0.90;
 			rigging.smoothingAmount = 0.60;
 			rigging.deadzoneThreshold = 0.45;
 			rigging.jitterReduction = 0.75;
-			rigging.showToast('✓ Preset Ultra Halus (Cinematic)');
+			rigging.showToast(`✓ ${i18n.t('preset_smooth')}`);
 		}
 		rigging.persist();
 	}
@@ -636,9 +642,9 @@
 				if (parsed.currentLocale) i18n.setLocale(parsed.currentLocale as any);
 
 				rigging.persist();
-				rigging.showToast('✓ Pengaturan berhasil diimpor!');
+				rigging.showToast(i18n.t('settings_import_success'));
 			} else {
-				alert('Gagal mengimpor file: Format JSON tidak valid atau korup.');
+				alert(i18n.t('settings_import_invalid_json'));
 			}
 		};
 		reader.readAsText(file);
@@ -665,7 +671,7 @@
 			rigging.isRiggingPinned = true;
 			rigging.riggingViewMode = 'stay';
 			rigging.persist();
-			rigging.showToast('✓ Pengaturan telah di-reset ke nilai bawaan');
+			rigging.showToast(i18n.t('settings_reset_done'));
 		}
 	}
 </script>
@@ -720,7 +726,7 @@
 					class="p-2 rounded-xl transition-colors cursor-pointer {
 						isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 					}"
-					aria-label="Tutup"
+					aria-label={i18n.t('close_btn')}
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -914,8 +920,8 @@
 									isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/80'
 								}">
 									<div>
-										<span class="font-semibold block text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Indikator FPS Layar (HUD Telemetry)</span>
-										<span class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Tampilkan counter frame rate dan latensi realtime di sudut kanvas panggung</span>
+										<span class="font-semibold block text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('settings_fps_counter_title')}</span>
+										<span class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('settings_fps_counter_desc')}</span>
 									</div>
 									<button
 										onclick={() => {
@@ -1010,7 +1016,7 @@
 							<div class="flex items-center justify-between">
 								<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
 									<Camera class="w-4 h-4 text-indigo-500" />
-									<span>Kamera &amp; Orientasi Sumbu</span>
+									<span>{i18n.t('settings_cam_axes')}</span>
 								</h3>
 								<button
 									onclick={() => refreshDevices(true)}
@@ -1018,7 +1024,7 @@
 									title={i18n.t('refresh_devices')}
 								>
 									<RefreshCw class="w-3 h-3" />
-									<span>Pindai Kamera</span>
+									<span>{i18n.t('scan_camera')}</span>
 								</button>
 							</div>
 
@@ -1034,7 +1040,7 @@
 									}"
 								>
 									<Smile class="w-3.5 h-3.5" />
-									<span>Host Utama</span>
+									<span>{i18n.t('settings_participant_host')}</span>
 								</button>
 								<button
 									type="button"
@@ -1074,7 +1080,7 @@
 									<!-- Camera Picker for Host -->
 									<div>
 										<label for="cam-select-host" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
-											Perangkat Kamera Host Utama:
+											{i18n.t('settings_host_cam')}
 										</label>
 										<select
 											id="cam-select-host"
@@ -1084,7 +1090,7 @@
 												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
 											}"
 										>
-											<option value="">📸 Auto Deteksi Kamera Hardware Laptop</option>
+											<option value="">{i18n.t('cam_auto_detect')}</option>
 											{#each availableCameras as cam}
 												<option value={cam.deviceId}>
 													{formatCameraBadge(cam.label)}
@@ -1104,7 +1110,7 @@
 									<!-- Resolution Picker -->
 									<div>
 										<label for="res-select" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
-											Resolusi Input Kamera:
+											{i18n.t('settings_cam_input_res')}
 										</label>
 										<select
 											id="res-select"
@@ -1114,9 +1120,9 @@
 												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
 											}"
 										>
-											<option value="480p">480p (640x480 — Ultra Ringan)</option>
-											<option value="720p">720p (1280x720 — Seimbang Standar)</option>
-											<option value="1080p">1080p (1920x1080 — Detail Tinggi)</option>
+											<option value="480p">480p (640x480 — {i18n.t('res_ultra_light')})</option>
+											<option value="720p">720p (1280x720 — {i18n.t('res_balanced')})</option>
+											<option value="1080p">1080p (1920x1080 — {i18n.t('res_high_detail')})</option>
 										</select>
 									</div>
 
@@ -1167,8 +1173,8 @@
 										<!-- Deteksi Wajah MediaPipe (Face Recognition) -->
 										<div class="flex items-center justify-between p-2.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800/60'}">
 											<div>
-												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">Deteksi Wajah &amp; Ekspresi (Live2D &amp; 3D)</span>
-												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Lacak rotasi kepala, kedipan mata, alis, dan gerak bibir via MediaPipe (berlaku penuh untuk model Live2D Cubism &amp; avatar 3D)</span>
+												<span class="font-semibold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">{i18n.t('tracking_face_title')}</span>
+												<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('tracking_face_desc')}</span>
 											</div>
 											<button
 												onclick={() => {
@@ -1176,7 +1182,7 @@
 													rigging.persist();
 													playSfx('toggle');
 												}}
-												aria-label="Deteksi Wajah"
+												aria-label={i18n.t('pip_toggle_face')}
 												class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer {
 													rigging.enableFaceTracking ? 'bg-indigo-500' : isLightTheme ? 'bg-zinc-300' : 'bg-zinc-700'
 												}"
@@ -1271,14 +1277,14 @@
 												rigging.isCollabModeActive ? 'bg-purple-600 text-white shadow-xs' : 'bg-zinc-800 text-zinc-300'
 											}"
 										>
-											{rigging.isCollabModeActive ? '✓ Aktif' : '+ Aktifkan'}
+											{rigging.isCollabModeActive ? i18n.t('btn_activated') : i18n.t('btn_activate')}
 										</button>
 									</div>
 
 									<!-- Camera Device Picker for Guest 1 -->
 									<div>
 										<label for="cam-select-guest1" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
-											Perangkat Kamera Khusus Guest 1:
+											{i18n.t('settings_guest1_cam')}
 										</label>
 										<select
 											id="cam-select-guest1"
@@ -1292,7 +1298,7 @@
 												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
 											}"
 										>
-											<option value="">Gunakan Kamera Sekunder (Pilih dari daftar...)</option>
+											<option value="">{i18n.t('guest_camera_placeholder')}</option>
 											{#each availableCameras as cam}
 												<option value={cam.deviceId}>
 													{formatCameraBadge(cam.label)}
@@ -1304,7 +1310,7 @@
 									<!-- Model Avatar Selection for Guest 1 -->
 									<div>
 										<span class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
-											Pilih Model Avatar Live2D Guest 1:
+											{i18n.t('settings_guest1_model')}
 										</span>
 										<div class="grid grid-cols-3 gap-1.5">
 											{#each MODEL_CATALOG.slice(0, 6) as model}
@@ -1339,7 +1345,7 @@
 												rigging.collabSyncTracking ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400'
 											}"
 										>
-											{rigging.collabSyncTracking ? '✓ Sync Kamera' : '💤 Idle Breath'}
+											{rigging.collabSyncTracking ? i18n.t('collab_sync_cam') : i18n.t('collab_idle_breath')}
 										</button>
 									</div>
 								</div>
@@ -1359,14 +1365,14 @@
 												rigging.isCollab2Active ? 'bg-indigo-600 text-white shadow-xs' : 'bg-zinc-800 text-zinc-300'
 											}"
 										>
-											{rigging.isCollab2Active ? '✓ Aktif' : '+ Aktifkan'}
+											{rigging.isCollab2Active ? i18n.t('btn_activated') : i18n.t('btn_activate')}
 										</button>
 									</div>
 
 									<!-- Camera Device Picker for Guest 2 -->
 									<div>
 										<label for="cam-select-guest2" class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
-											Perangkat Kamera Khusus Guest 2:
+											{i18n.t('settings_guest2_cam')}
 										</label>
 										<select
 											id="cam-select-guest2"
@@ -1380,7 +1386,7 @@
 												isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-200'
 											}"
 										>
-											<option value="">Gunakan Kamera Tersier (Pilih dari daftar...)</option>
+											<option value="">{i18n.t('guest_camera_placeholder')}</option>
 											{#each availableCameras as cam}
 												<option value={cam.deviceId}>
 													{formatCameraBadge(cam.label)}
@@ -1392,7 +1398,7 @@
 									<!-- Model Avatar Selection for Guest 2 -->
 									<div>
 										<span class="block font-medium mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-400'}">
-											Pilih Model Avatar Live2D Guest 2:
+											{i18n.t('settings_guest2_model')}
 										</span>
 										<div class="grid grid-cols-3 gap-1.5">
 											{#each MODEL_CATALOG.slice(0, 6) as model}
@@ -1427,7 +1433,7 @@
 												rigging.collab2SyncTracking ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400'
 											}"
 										>
-											{rigging.collab2SyncTracking ? '✓ Sync Kamera' : '💤 Idle Breath'}
+											{rigging.collab2SyncTracking ? i18n.t('collab_sync_cam') : i18n.t('collab_idle_breath')}
 										</button>
 									</div>
 								</div>
@@ -1661,9 +1667,9 @@
 								<div class="flex items-center justify-between">
 									<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
 										<Tv class="w-4 h-4 text-purple-500" />
-										<span>Framing Panggung Avatar (Live2D &amp; 3D)</span>
+										<span>{i18n.t('framing_title')}</span>
 									</h3>
-									<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Mode Kamera</span>
+									<span class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('framing_mode_label')}</span>
 								</div>
 
 								<div class="grid grid-cols-3 gap-2">
@@ -1673,7 +1679,7 @@
 											rigging.framingMode = 'full';
 											rigging.persist();
 											playSfx('click');
-											rigging.showToast('Framing: Full Body (Seluruh Badan)');
+											rigging.showToast(`Framing: ${i18n.t('framing_full')}`);
 										}}
 										class="p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 {
 											rigging.framingMode === 'full'
@@ -1683,7 +1689,7 @@
 									>
 										<span class="text-lg">🧍</span>
 										<span class="text-xs">Full Body</span>
-										<span class="text-[9px] opacity-70">Kepala - Kaki</span>
+										<span class="text-[9px] opacity-70">{i18n.t('framing_full_sub')}</span>
 									</button>
 
 									<button
@@ -1692,7 +1698,7 @@
 											rigging.framingMode = 'half';
 											rigging.persist();
 											playSfx('click');
-											rigging.showToast('Framing: Half Body (Setengah Badan)');
+											rigging.showToast(`Framing: ${i18n.t('framing_half')}`);
 										}}
 										class="p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 {
 											rigging.framingMode === 'half'
@@ -1702,7 +1708,7 @@
 									>
 										<span class="text-lg">🥋</span>
 										<span class="text-xs">Half Body</span>
-										<span class="text-[9px] opacity-70">Pinggang ke Atas</span>
+										<span class="text-[9px] opacity-70">{i18n.t('framing_half_sub')}</span>
 									</button>
 
 									<button
@@ -1711,7 +1717,7 @@
 											rigging.framingMode = 'closeup';
 											rigging.persist();
 											playSfx('click');
-											rigging.showToast('Framing: Close-Up (Fokus Wajah)');
+											rigging.showToast(`Framing: ${i18n.t('framing_closeup')}`);
 										}}
 										class="p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 {
 											rigging.framingMode === 'closeup'
@@ -1721,7 +1727,7 @@
 									>
 										<span class="text-lg">🔍</span>
 										<span class="text-xs">Close-Up</span>
-										<span class="text-[9px] opacity-70">Fokus Ekspresi</span>
+										<span class="text-[9px] opacity-70">{i18n.t('framing_closeup_sub')}</span>
 									</button>
 								</div>
 							</div>
@@ -1742,13 +1748,13 @@
 									</div>
 									<div>
 										<h3 class="text-sm sm:text-base font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-											<span>Text-to-Speech (TTS) Studio &amp; Sintesis Suara</span>
+											<span>{i18n.t('settings_tts_section_title')}</span>
 											<span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
 												AI Speech + DSP
 											</span>
 										</h3>
 										<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-											Ketik kalimat untuk diucapkan otomatis oleh avatar Anda lewat Speech Synthesis atau DSP Voice Changer
+											{i18n.t('settings_tts_desc')}
 										</p>
 									</div>
 								</div>
@@ -1756,7 +1762,7 @@
 								{#if isTtsSpeaking}
 									<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-mono animate-pulse">
 										<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-										<span>Sedang Berbicara...</span>
+										<span>{i18n.t('settings_speaking')}</span>
 									</div>
 								{/if}
 							</div>
@@ -1765,9 +1771,9 @@
 							<div class="space-y-2">
 								<div class="flex items-center justify-between text-xs">
 									<label for="tts-input" class="font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-										Teks Yang Ingin Diucapkan (Speech Prompt):
+										{i18n.t('settings_tts_prompt_label')}
 									</label>
-									<span class="text-[10px] text-zinc-500 font-mono">{ttsText.length} karakter</span>
+									<span class="text-[10px] text-zinc-500 font-mono">{ttsText.length} {i18n.t('settings_chars_unit')}</span>
 								</div>
 
 								<div class="flex gap-2">
@@ -1775,7 +1781,7 @@
 										id="tts-input"
 										type="text"
 										bind:value={ttsText}
-										placeholder="Ketik kalimat apapun yang ingin diucapkan avatar..."
+										placeholder={i18n.t('settings_tts_placeholder')}
 										class="flex-1 px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-cyan-500 transition-all {
 											isLightTheme ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400' : 'bg-zinc-950 border-zinc-800 text-zinc-100 placeholder-zinc-600'
 										}"
@@ -1790,7 +1796,7 @@
 										class="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-zinc-950 font-bold text-xs rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
 									>
 										<Play class="w-3.5 h-3.5" />
-										<span>Bicara (TTS)</span>
+										<span>{i18n.t('tts_speak')}</span>
 									</button>
 
 									{#if isTtsSpeaking}
@@ -1800,14 +1806,14 @@
 											class="px-3 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0"
 										>
 											<StopSquare class="w-3.5 h-3.5" />
-											<span>Stop</span>
+											<span>{i18n.t('tts_stop')}</span>
 										</button>
 									{/if}
 								</div>
 
 								<!-- Quick Preset Chips -->
 								<div class="flex items-center gap-1.5 flex-wrap pt-1">
-									<span class="text-[10px] font-medium {isLightTheme ? 'text-zinc-500' : 'text-zinc-500'}">Contoh Cepat:</span>
+									<span class="text-[10px] font-medium {isLightTheme ? 'text-zinc-500' : 'text-zinc-500'}">{i18n.t('settings_quick_examples')}</span>
 									<button
 										type="button"
 										onclick={() => { ttsText = 'Halo halo semuanya! Selamat datang di live streaming!'; handleSpeakTts(); }}
@@ -1852,7 +1858,7 @@
 								<!-- Voice Picker -->
 								<div>
 									<label for="tts-voice-select" class="block text-[11px] font-semibold mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-										Suara Sistem (Browser Voice):
+										{i18n.t('settings_system_voice')}
 									</label>
 									<select
 										id="tts-voice-select"
@@ -1874,7 +1880,7 @@
 								<!-- Pitch Slider -->
 								<div>
 									<div class="flex justify-between text-[11px] font-semibold mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-										<span>Nada Suara (Pitch):</span>
+										<span>{i18n.t('settings_voice_pitch')}</span>
 										<span class="font-mono text-cyan-400 font-bold">{ttsPitch.toFixed(1)}x</span>
 									</div>
 									<input
@@ -1886,16 +1892,16 @@
 										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
 									/>
 									<div class="flex justify-between text-[9px] text-zinc-500 font-mono mt-0.5">
-										<span>Berat (0.5x)</span>
-										<span>Normal (1.0x)</span>
-										<span>Tinggi/Chibi (2.0x)</span>
+										<span>{i18n.t('settings_pitch_deep')}</span>
+										<span>{i18n.t('settings_pitch_normal')}</span>
+										<span>{i18n.t('settings_pitch_high')}</span>
 									</div>
 								</div>
 
 								<!-- Speed / Rate Slider -->
 								<div>
 									<div class="flex justify-between text-[11px] font-semibold mb-1 {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-										<span>Kecepatan Bicara (Speed):</span>
+										<span>{i18n.t('settings_voice_speed')}</span>
 										<span class="font-mono text-pink-400 font-bold">{ttsRate.toFixed(1)}x</span>
 									</div>
 									<input
@@ -1907,9 +1913,9 @@
 										class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-pink-400"
 									/>
 									<div class="flex justify-between text-[9px] text-zinc-500 font-mono mt-0.5">
-										<span>Lambat (0.5x)</span>
-										<span>Normal (1.0x)</span>
-										<span>Cepat (2.0x)</span>
+										<span>{i18n.t('settings_speed_slow')}</span>
+										<span>{i18n.t('settings_speed_normal')}</span>
+										<span>{i18n.t('settings_speed_fast')}</span>
 									</div>
 								</div>
 							</div>
@@ -1953,10 +1959,10 @@
 								>
 									{#if rigging.isMicActive}
 										<Mic class="w-3.5 h-3.5" />
-										<span>Aktif</span>
+										<span>{i18n.t('badge_active')}</span>
 									{:else}
 										<MicOff class="w-3.5 h-3.5" />
-										<span>Nonaktif</span>
+										<span>{i18n.t('badge_inactive')}</span>
 									{/if}
 								</button>
 							</div>
@@ -2039,11 +2045,11 @@
 													: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700/60'
 											}"
 										>
-											<span>{rigging.isMicMonitorActive ? '✓ Menyala (Mendengar)' : 'Mute Monitor'}</span>
+											<span>{rigging.isMicMonitorActive ? i18n.t('settings_monitor_on') : i18n.t('settings_monitor_mute')}</span>
 										</button>
 									</div>
 									<p class="text-[10px] text-zinc-400 leading-normal">
-										Nyalakan monitor untuk mendengar vokal Anda yang telah diubah oleh Voice Changer di headphone secara real-time.
+										{i18n.t('settings_monitor_desc')}
 									</p>
 								</div>
 							</div>
@@ -2058,11 +2064,11 @@
 									{#if isRecordingTest}
 										<span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800 font-mono text-[10px] animate-pulse">
 											<span class="w-2 h-2 rounded-full bg-rose-500"></span>
-											{testRecordSeconds}s Rekam...
+											{testRecordSeconds}s {i18n.t('settings_recording_short')}
 										</span>
 									{:else if hasTestSample}
 										<span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono text-[10px]">
-											Sample 4s Tersimpan
+											{i18n.t('settings_sample_saved')}
 										</span>
 									{/if}
 								</div>
@@ -2079,11 +2085,11 @@
 											class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
 										>
 											<Mic class="w-3.5 h-3.5 text-emerald-400" />
-											<span>{hasTestSample ? 'Rekam Ulang Sampel 4 Detik' : i18n.t('mic_record_btn')}</span>
+											<span>{hasTestSample ? i18n.t('settings_rerecord_sample') : i18n.t('mic_record_btn')}</span>
 										</button>
 									{:else}
 										<div class="w-full py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 rounded-xl text-xs font-bold text-center animate-pulse">
-											Sedang Merekam Suara... Bicara sekarang! ({testRecordSeconds}s)
+											{i18n.t('settings_recording_in_progress')} ({testRecordSeconds}s)
 										</div>
 									{/if}
 
@@ -2156,27 +2162,27 @@
 
 									<!-- Quick preset phrases -->
 									<div class="flex items-center gap-1.5 flex-wrap">
-										<span class="text-[9px] text-zinc-500 font-medium">Contoh:</span>
+										<span class="text-[9px] text-zinc-500 font-medium">{i18n.t('settings_quick_examples')}</span>
 										<button
 											type="button"
-											onclick={() => { testTtsText = 'Halo halo! Tes suara anime kawaii.'; handleTestByText(); }}
+											onclick={() => { testTtsText = i18n.t('tts_sample_kawaii'); handleTestByText(); }}
 											class="text-[9px] px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-pink-300 border border-pink-500/30 cursor-pointer"
 										>
-											🌸 Anime Kawaii
+											🌸 {i18n.t('tts_preset_kawaii')}
 										</button>
 										<button
 											type="button"
-											onclick={() => { testTtsText = 'Konnichiwa! Selamat datang di stream live.'; handleTestByText(); }}
+											onclick={() => { testTtsText = i18n.t('tts_sample_ikemen'); handleTestByText(); }}
 											class="text-[9px] px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-cyan-300 border border-cyan-500/30 cursor-pointer"
 										>
-											🎙️ Ikemen Boy
+											🎙️ {i18n.t('tts_preset_ikemen')}
 										</button>
 										<button
 											type="button"
-											onclick={() => { testTtsText = 'Sistem online. Mode cyber robot terhubung.'; handleTestByText(); }}
+											onclick={() => { testTtsText = i18n.t('tts_sample_robot'); handleTestByText(); }}
 											class="text-[9px] px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-violet-300 border border-violet-500/30 cursor-pointer"
 										>
-											🤖 Cyber Robot
+											🤖 {i18n.t('tts_preset_robot')}
 										</button>
 									</div>
 								</div>
@@ -2309,13 +2315,13 @@
 								</div>
 								<div>
 									<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-										Katalog Palet Warna Antarmuka
+										{i18n.t('themes_palette_catalog')}
 										<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold bg-pink-500/15 text-pink-500 border border-pink-500/30">
-											{UI_THEMES.length} Tema Tersedia
+											{UI_THEMES.length} {i18n.t('themes_available')}
 										</span>
 									</h3>
 									<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5">
-										Pilih skema warna studio untuk tombol, menu, dock, dan dialog dengan kontras tinggi & palet harmonis
+										{i18n.t('settings_theme_palette_desc')}
 									</p>
 								</div>
 							</div>
@@ -2484,9 +2490,9 @@
 								<div>
 									<div class="flex items-center justify-between mb-2">
 										<span class="text-xs font-bold uppercase tracking-wider {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
-											Preset Warna Cepat
+											{i18n.t('themes_presets_1click')}
 										</span>
-										<span class="text-[10px] text-zinc-500">Klik salah satu untuk memuat palet harmonis</span>
+										<span class="text-[10px] text-zinc-500">{i18n.t('themes_presets_sub')}</span>
 									</div>
 									<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
 										{#each customPresets as preset}
@@ -2658,10 +2664,10 @@
 											>
 												{#if rigging.uiTheme === 'custom'}
 													<Check class="w-4 h-4 stroke-[3]" />
-													<span>Tema Kustom Aktif</span>
+													<span>{i18n.t('themes_applied_badge')}</span>
 												{:else}
 													<Wand2 class="w-4 h-4" />
-													<span>Terapkan Kustom</span>
+													<span>{i18n.t('themes_apply_btn')}</span>
 												{/if}
 											</button>
 										</div>
@@ -2675,7 +2681,7 @@
 										<div class="flex items-center justify-between border-b pb-2 mb-3" style="border-color: {rigging.customThemeConfig.border};">
 											<div class="flex items-center gap-2">
 												<div class="w-3 h-3 rounded-full" style="background-color: {rigging.customThemeConfig.accent};"></div>
-												<span class="font-bold text-xs font-mono" style="color: {rigging.customThemeConfig.text};">Live Theme Preview</span>
+												<span class="font-bold text-xs font-mono" style="color: {rigging.customThemeConfig.text};">{i18n.t('themes_preview_title')}</span>
 											</div>
 											<span class="text-[9px] px-2 py-0.5 rounded-full font-mono font-bold" style="background-color: {rigging.customThemeConfig.surface}; color: {rigging.customThemeConfig.accent}; border: 1px solid {rigging.customThemeConfig.border};">
 												CUSTOM
@@ -2688,23 +2694,23 @@
 											style="background-color: {rigging.customThemeConfig.surface}; border-color: {rigging.customThemeConfig.border};"
 										>
 											<div class="flex items-center justify-between">
-												<span class="text-xs font-semibold" style="color: {rigging.customThemeConfig.text};">Surface Panel Card</span>
+												<span class="text-xs font-semibold" style="color: {rigging.customThemeConfig.text};">{i18n.t('themes_palette_card')}</span>
 												<div class="w-5 h-2.5 rounded-full flex items-center px-0.5" style="background-color: {rigging.customThemeConfig.accent};">
 													<div class="w-1.5 h-1.5 rounded-full ml-auto" style="background-color: {rigging.customThemeConfig.bg};"></div>
 												</div>
 											</div>
 											<p class="text-[10px] opacity-80 leading-relaxed" style="color: {rigging.customThemeConfig.text};">
-												Ini adalah pratinjau tampilan dialog dan kartu dengan warna yang Anda atur.
+												{i18n.t('themes_mock_desc')}
 											</p>
 										</div>
 
 										<!-- Mock Buttons -->
 										<div class="flex items-center gap-2">
 											<div class="flex-1 py-1.5 rounded-lg text-center text-xs font-bold" style="background-color: {rigging.customThemeConfig.accent}; color: {rigging.customThemeConfig.bg};">
-												Tombol Aksi
+												{i18n.t('themes_mock_action')}
 											</div>
 											<div class="py-1.5 px-3 rounded-lg border text-center text-xs" style="background-color: {rigging.customThemeConfig.surface}; border-color: {rigging.customThemeConfig.border}; color: {rigging.customThemeConfig.text};">
-												Batal
+												{i18n.t('cancel_btn')}
 											</div>
 										</div>
 									</div>
@@ -2727,10 +2733,10 @@
 									</div>
 									<div>
 										<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-											Lingkungan Panggung 3D (Virtual 3D Stage Environment)
+											{i18n.t('stage_title')}
 										</h3>
 										<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-											Pilihan lantai, ruangan studio, dan arena panggung virtual untuk model 3D (Neuro-sama, Manhattan Cafe, Kucing, dsb)
+											{i18n.t('stage_environments_desc')}
 										</p>
 									</div>
 								</div>
@@ -2748,7 +2754,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('grid');
-										rigging.showToast('✓ Panggung 3D: Cyber Grid & Lantai Reflektif');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_grid_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'grid'
@@ -2762,9 +2768,9 @@
 										<div class="absolute inset-0 bg-[radial-gradient(#06b6d4_1px,transparent_1px)] [background-size:12px_12px] opacity-40"></div>
 										<span class="text-2xl">🌐</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Cyber Grid &amp; Floor</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_grid_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Lantai reflektif gelap dengan grid neon cyan dan ring panggung futuristik
+										{i18n.t('stage_grid_desc')}
 									</p>
 								</button>
 
@@ -2774,7 +2780,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('room');
-										rigging.showToast('✓ Panggung 3D: Cozy Room');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_room_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'room'
@@ -2789,9 +2795,63 @@
 										<div class="absolute top-2 right-3 w-3 h-3 rounded-full bg-amber-400/70 shadow-[0_0_8px_#fbbf24]"></div>
 										<span class="text-2xl">🏠</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Cozy Anime Room</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_room_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Kamar cat cream lembut, lantai zinc cream, rak hiasan &amp; lampu meja cewek
+										{i18n.t('stage_room_desc')}
+									</p>
+								</button>
+
+								<!-- Cafe / Coffee Cafe Shop -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('cafe');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_cafe_name')}`);
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'cafe'
+											? 'bg-amber-600/15 border-amber-500 ring-2 ring-amber-500/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-[#3e2723] via-[#4a2e18] to-[#1c1917] border border-amber-700/50 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute top-1 left-2 w-5 h-3 rounded-sm bg-amber-500/30 border border-amber-400/40"></div>
+										<div class="absolute bottom-1 right-2 w-3 h-3 rounded-full bg-amber-300/40 shadow-[0_0_6px_#f59e0b]"></div>
+										<span class="text-2xl relative z-10">☕</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_cafe_name')}</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										{i18n.t('stage_cafe_desc')}
+									</p>
+								</button>
+
+								<!-- Beach / Vivid Happy Vibe Field -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('beach');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_beach_name')}`);
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'beach'
+											? 'bg-cyan-500/15 border-cyan-400 ring-2 ring-cyan-400/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-sky-400 via-cyan-300 to-amber-200 border border-cyan-400/50 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute bottom-0 inset-x-0 h-4 bg-amber-200"></div>
+										<div class="absolute top-1 right-2 w-4 h-4 rounded-full bg-amber-300 shadow-[0_0_10px_#fde047]"></div>
+										<span class="text-2xl relative z-10">🏖️</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_beach_name')}</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										{i18n.t('stage_beach_desc')}
 									</p>
 								</button>
 
@@ -2801,7 +2861,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('field');
-										rigging.showToast('✓ Panggung 3D: Open Field (Taman Terbuka)');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_field_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'field'
@@ -2815,9 +2875,9 @@
 										<div class="absolute bottom-0 inset-x-0 h-6 rounded-t-full bg-gradient-to-b from-emerald-500 to-emerald-700"></div>
 										<span class="text-2xl relative z-10">🌱</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Open Meadow &amp; Horizon</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_field_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Panggung terbuka dengan hamparan rumput hijau, pedestal batu, dan langit sejuk
+										{i18n.t('stage_field_desc')}
 									</p>
 								</button>
 
@@ -2827,7 +2887,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('sunset');
-										rigging.showToast('✓ Panggung 3D: Sunset Coast');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_sunset_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'sunset'
@@ -2841,9 +2901,9 @@
 										<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-amber-200 shadow-[0_0_12px_#fde047]"></div>
 										<span class="text-2xl relative z-10">🌅</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Sunset Coast</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_sunset_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Suasana pantai senja keemasan dengan horizon laut, matahari terbenam &amp; dek kayu
+										{i18n.t('stage_sunset_desc')}
 									</p>
 								</button>
 
@@ -2853,7 +2913,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('studio');
-										rigging.showToast('✓ Panggung 3D: Live Idol Concert Studio');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_studio_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'studio'
@@ -2868,9 +2928,9 @@
 										<div class="absolute top-0 right-2 w-10 h-16 bg-gradient-to-bl from-pink-500/25 to-transparent rotate-12 pointer-events-none"></div>
 										<span class="text-2xl relative z-10">🎤</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Idol Live Concert</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_studio_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Lantai panggung konser glossy dengan lampu sorot spotlight kerucut &amp; truss neon
+										{i18n.t('stage_studio_desc')}
 									</p>
 								</button>
 
@@ -2880,7 +2940,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('dojo');
-										rigging.showToast('✓ Panggung 3D: Sakura Dojo');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_dojo_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'dojo'
@@ -2895,9 +2955,9 @@
 										<div class="absolute inset-y-0 right-2 w-5 border-l border-stone-400/60 bg-white/40"></div>
 										<span class="text-2xl relative z-10">⛩️</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Sakura Dojo Tatami</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_dojo_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Ruang tatami tradisional Jepang, dinding pintu shoji geser &amp; lampion gantung
+										{i18n.t('stage_dojo_desc')}
 									</p>
 								</button>
 
@@ -2907,7 +2967,7 @@
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('void');
-										rigging.showToast('✓ Panggung 3D: Deep Void Minimal');
+										rigging.showToast(`✓ ${i18n.t('stage_3d_env_toast')} ${i18n.t('stage_void_name')}`);
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'void'
@@ -2922,9 +2982,9 @@
 										<div class="absolute top-4 right-5 w-1 h-1 rounded-full bg-cyan-300/80"></div>
 										<span class="text-2xl relative z-10">🌌</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Deep Void Minimal</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">{i18n.t('stage_void_name')}</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Tanpa lantai atau dinding 3D, cocok untuk OBS browser source / background kustom 2D
+										{i18n.t('stage_void_desc')}
 									</p>
 								</button>
 							</div>
@@ -2940,10 +3000,10 @@
 								</div>
 								<div>
 									<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-										Latar Belakang Panggung
+										{i18n.t('stage_backdrop_title')}
 									</h3>
 									<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-										Mode tampilan kanvas untuk streaming OBS, preview, atau green screen
+										{i18n.t('stage_backdrop_desc')}
 									</p>
 								</div>
 							</div>
@@ -3032,9 +3092,9 @@
 							{#if rigging.backgroundStyle === 'custom-image'}
 								<div class="p-3 rounded-xl border flex items-center justify-between gap-3 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
 									<div class="text-xs">
-										<span class="font-semibold block {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">Wallpaper Komputer</span>
+										<span class="font-semibold block {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">{i18n.t('settings_custom_bg_label')}</span>
 										<span class="text-[11px] text-zinc-400">
-											{rigging.customBgUrl ? '✓ File gambar aktif terpasang' : 'Pilih gambar lokal untuk dijadikan latar kanvas'}
+											{rigging.customBgUrl ? i18n.t('settings_custom_bg_active') : i18n.t('settings_custom_bg_empty')}
 										</span>
 									</div>
 									<button
@@ -3043,7 +3103,7 @@
 										class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
 									>
 										<Upload class="w-3.5 h-3.5" />
-										<span>{rigging.customBgUrl ? 'Ganti Gambar' : 'Pilih Gambar'}</span>
+										<span>{rigging.customBgUrl ? i18n.t('settings_custom_bg_change') : i18n.t('settings_custom_bg_pick')}</span>
 									</button>
 								</div>
 							{/if}
@@ -3052,7 +3112,7 @@
 							{#if rigging.backgroundStyle === 'solid'}
 								<div class="p-3 rounded-xl border space-y-2 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
 									<span class="text-xs font-semibold block {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-										Warna Background Solid (Hex)
+										{i18n.t('settings_solid_color_label')}
 									</span>
 									<div class="flex items-center gap-2">
 										<input
@@ -3074,7 +3134,7 @@
 							<!-- Screen Effects Selector -->
 							<div class="space-y-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/60'}">
 								<label for="screen-effect-select" class="block text-xs font-semibold {isLightTheme ? 'text-zinc-700' : 'text-zinc-300'}">
-									Efek Layar Visual (Shader / Post-Processing)
+									{i18n.t('settings_screen_effects_label')}
 								</label>
 								<select
 									id="screen-effect-select"
@@ -3084,11 +3144,11 @@
 										isLightTheme ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-zinc-950 border-zinc-800 text-zinc-100'
 									}"
 								>
-									<option value="none">Tanpa Efek (Normal)</option>
-									<option value="vignette">Vignette (Bayangan Tepi Layar)</option>
-									<option value="scanlines">Scanlines (Garis TV Retro)</option>
-									<option value="crt">CRT Monitor Glow</option>
-									<option value="blur">Subtle Background Blur</option>
+									<option value="none">{i18n.t('fx_none')}</option>
+									<option value="vignette">{i18n.t('fx_vignette')}</option>
+									<option value="scanlines">{i18n.t('fx_scanlines')}</option>
+									<option value="crt">{i18n.t('fx_crt')}</option>
+									<option value="blur">{i18n.t('fx_blur')}</option>
 								</select>
 							</div>
 						</div>
@@ -3103,10 +3163,10 @@
 								</div>
 								<div>
 									<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-										Framing & Pengaturan Suara
+										{i18n.t('settings_framing_audio')}
 									</h3>
 									<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-										Preset framing kamera avatar, rasio 1:1, dan sound effect studio
+										{i18n.t('settings_framing_audio_desc')}
 									</p>
 								</div>
 							</div>

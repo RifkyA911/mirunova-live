@@ -97,6 +97,22 @@
 			icon: '🏠'
 		},
 		{
+			id: 'cafe' as StageEnvironment3D,
+			name: i18n.t('stage_cafe_name'),
+			desc: i18n.t('stage_cafe_desc'),
+			badge: 'Coffee Shop',
+			color: 'border-yellow-600/50 bg-amber-950/40 text-amber-200',
+			icon: '☕'
+		},
+		{
+			id: 'beach' as StageEnvironment3D,
+			name: i18n.t('stage_beach_name'),
+			desc: i18n.t('stage_beach_desc'),
+			badge: 'Happy Vibe',
+			color: 'border-cyan-400/50 bg-cyan-950/40 text-cyan-200',
+			icon: '🏖️'
+		},
+		{
 			id: 'field' as StageEnvironment3D,
 			name: i18n.t('stage_field_name'),
 			desc: i18n.t('stage_field_desc'),
@@ -195,7 +211,7 @@
 		if (rigging.avatarEngine === '3d') {
 			threeStage.setExpression(expId);
 		}
-		rigging.showToast(expId ? `Ekspresi: ${label}` : 'Ekspresi Netral');
+		rigging.showToast(expId ? `${i18n.t('expressions_title')}: ${label}` : i18n.t('exp_neutral_pose'));
 		isExpressionMenuOpen = false;
 	}
 
@@ -205,7 +221,7 @@
 		if (rigging.avatarEngine === '3d') {
 			threeStage.setFraming(mode as FramingMode3D);
 		}
-		rigging.showToast(`Kamera: ${mode === 'full' ? '🧍 Full Body' : mode === 'half' ? '🥋 Half Body' : '👤 Close-Up Face'}`);
+		rigging.showToast(`${i18n.t('framing_cam_title')}: ${mode === 'full' ? `🧍 ${i18n.t('framing_full')}` : mode === 'half' ? `🥋 ${i18n.t('framing_half')}` : `👤 ${i18n.t('framing_closeup')}`}`);
 	}
 
 	async function refreshDevices(requestPermission = false) {
@@ -292,7 +308,7 @@
 				rigging.showToast('✓ ' + i18n.t('mic_active'));
 			} else {
 				rigging.isMicActive = false;
-				rigging.showToast('Gagal mengakses mikrofon');
+				rigging.showToast(i18n.t('mic_access_failed'));
 			}
 		} else {
 			voice.stop();
@@ -328,7 +344,7 @@
 			class="flex items-center gap-2 px-3.5 py-1.5 bg-zinc-950/85 hover:bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 rounded-full text-zinc-300 hover:text-cyan-300 text-xs shadow-2xl backdrop-blur-md transition-all active:scale-95 group"
 		>
 			<ChevronUp class="w-3.5 h-3.5 text-cyan-400 group-hover:-translate-y-0.5 transition-transform" />
-			<span class="font-medium text-[11px] tracking-wide">Tampilkan Menu <span class="font-mono text-[10px] text-zinc-500">[H]</span></span>
+			<span class="font-medium text-[11px] tracking-wide">{i18n.t('dock_show_menu')} <span class="font-mono text-[10px] text-zinc-500">[H]</span></span>
 		</button>
 	</div>
 {:else}
@@ -432,16 +448,27 @@
 							<Video class="w-3.5 h-3.5 text-cyan-500" />
 							{i18n.t('devices_menu_title')}
 						</span>
-						<button
-							onclick={() => refreshDevices(true)}
-							class="flex items-center gap-1 text-[10px] transition-colors cursor-pointer {
-								isLightTheme ? 'text-zinc-500 hover:text-cyan-600' : 'text-zinc-400 hover:text-cyan-300'
-							}"
-							title={i18n.t('refresh_devices')}
-						>
-							<RefreshCw class="w-3 h-3" />
-							<span>{i18n.t('refresh_devices')}</span>
-						</button>
+						<div class="flex items-center gap-2">
+							<button
+								onclick={() => refreshDevices(true)}
+								class="flex items-center gap-1 text-[10px] transition-colors cursor-pointer {
+									isLightTheme ? 'text-zinc-500 hover:text-cyan-600' : 'text-zinc-400 hover:text-cyan-300'
+								}"
+								title={i18n.t('refresh_devices')}
+							>
+								<RefreshCw class="w-3 h-3" />
+								<span>{i18n.t('refresh_devices')}</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => (isDeviceMenuOpen = false)}
+								class="p-1 rounded-lg hover:bg-zinc-800/60 {isLightTheme ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'} transition-colors cursor-pointer"
+								title={i18n.t('close_tooltip')}
+								aria-label={i18n.t('close_tooltip')}
+							>
+								<X class="w-3.5 h-3.5" />
+							</button>
+						</div>
 					</div>
 
 					<!-- Camera Section -->
@@ -461,7 +488,7 @@
 								isLightTheme ? 'bg-zinc-50 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-800 text-zinc-200'
 							}"
 						>
-							<option value="">📸 Auto Deteksi Kamera Hardware Laptop</option>
+							<option value="">{i18n.t('cam_auto_detect')}</option>
 							{#each availableCameras as cam}
 								<option value={cam.deviceId}>
 									{formatCameraBadge(cam.label)}
@@ -620,9 +647,20 @@
 							<MousePointer class="w-3.5 h-3.5 text-cyan-500" />
 							{i18n.t('cursor_mode_title')}
 						</span>
-						<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
-							Tools
-						</span>
+						<div class="flex items-center gap-1.5">
+							<span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+								Tools
+							</span>
+							<button
+								type="button"
+								onclick={() => (isCursorToolMenuOpen = false)}
+								class="p-1 rounded-lg hover:bg-zinc-800/60 {isLightTheme ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'} transition-colors cursor-pointer"
+								title={i18n.t('close_tooltip')}
+								aria-label={i18n.t('close_tooltip')}
+							>
+								<X class="w-3.5 h-3.5" />
+							</button>
+						</div>
 					</div>
 
 					<!-- Option 1: Pan Stage & Avatar -->
@@ -650,7 +688,7 @@
 							</div>
 							<div>
 								<div class="font-bold text-xs">{i18n.t('cursor_mode_pan')}</div>
-								<div class="text-[10px] text-zinc-400">Geser kanvas panggung & zoom</div>
+								<div class="text-[10px] text-zinc-400">{i18n.t('cursor_mode_pan_desc')}</div>
 							</div>
 						</div>
 						{#if rigging.cursorToolMode === 'pan'}
@@ -683,7 +721,7 @@
 							</div>
 							<div>
 								<div class="font-bold text-xs">{i18n.t('cursor_mode_select_layer')}</div>
-								<div class="text-[10px] text-zinc-400">Pilih & drag elemen, collab, aksesoris</div>
+								<div class="text-[10px] text-zinc-400">{i18n.t('cursor_mode_select_layer_desc')}</div>
 							</div>
 						</div>
 						{#if rigging.cursorToolMode === 'select-layer'}
@@ -716,7 +754,7 @@
 							</div>
 							<div>
 								<div class="font-bold text-xs">{i18n.t('cursor_mode_hand_tracking')}</div>
-								<div class="text-[10px] text-zinc-400">Pelacakan pose tangan MediaPipe AI</div>
+								<div class="text-[10px] text-zinc-400">{i18n.t('cursor_mode_hand_tracking_desc')}</div>
 							</div>
 						</div>
 						{#if rigging.cursorToolMode === 'hand-tracking'}
@@ -832,14 +870,14 @@
 						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 shadow-sm'
 						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
 				}"
-				aria-label="Lingkungan Panggung 3D"
+				aria-label={i18n.t('stage_title')}
 			>
 				<Compass class="w-5 h-5 text-indigo-400" />
 			</button>
 			<div
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
-				Panggung 3D (Stage) [B]
+				{i18n.t('stage_title')} [B]
 			</div>
 
 			<!-- Floating Stage Environment Popover -->
@@ -858,11 +896,22 @@
 					<div class="flex items-center justify-between border-b pb-2 px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<div class="flex items-center gap-2">
 							<Compass class="w-4 h-4 text-indigo-400" />
-							<span class="font-bold text-xs uppercase tracking-wide">Panggung 3D ({STAGE_ENVIRONMENTS.length} Stages)</span>
+							<span class="font-bold text-xs uppercase tracking-wide">{i18n.t('stage_title')} ({STAGE_ENVIRONMENTS.length} Stages)</span>
 						</div>
-						<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-							{rigging.stageEnvironment}
-						</span>
+						<div class="flex items-center gap-2">
+							<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+								{rigging.stageEnvironment}
+							</span>
+							<button
+								type="button"
+								onclick={() => (isStageMenuOpen = false)}
+								class="p-1 rounded-lg hover:bg-zinc-800/60 {isLightTheme ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-200'} transition-colors cursor-pointer"
+								title={i18n.t('close_tooltip')}
+								aria-label={i18n.t('close_tooltip')}
+							>
+								<X class="w-4 h-4" />
+							</button>
+						</div>
 					</div>
 
 					<!-- 7 Environments Grid with Visual Thumbnails -->
@@ -874,7 +923,7 @@
 									playSfx('click');
 									rigging.setStageEnvironment(stageEnv.id);
 									threeStage.setStageEnvironment(stageEnv.id);
-									rigging.showToast(`🪐 Panggung 3D: ${stageEnv.name}`);
+									rigging.showToast(`🪐 ${i18n.t('stage_3d_env_toast')} ${stageEnv.name}`);
 								}}
 								class="p-2 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 flex flex-col justify-between {
 									rigging.stageEnvironment === stageEnv.id
@@ -951,7 +1000,7 @@
 							onclick={() => {
 								playSfx('toggle');
 								rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
-								rigging.showToast(rigging.is3DAutoSpin ? '3D Auto-Spin Aktif' : 'Auto-Spin Nonaktif');
+								rigging.showToast(rigging.is3DAutoSpin ? i18n.t('stage_auto_spin') : i18n.t('stage_stop_spin'));
 							}}
 							class="px-3 py-1 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer {
 								rigging.is3DAutoSpin
@@ -961,10 +1010,10 @@
 						>
 							{#if rigging.is3DAutoSpin}
 								<RefreshCw class="w-3.5 h-3.5 animate-spin text-amber-400" />
-								<span>Stop Spin</span>
+								<span>{i18n.t('stage_stop_spin')}</span>
 							{:else}
 								<Play class="w-3.5 h-3.5 text-zinc-400" />
-								<span>Putar 360°</span>
+								<span>{i18n.t('stage_auto_spin')}</span>
 							{/if}
 						</button>
 					</div>
@@ -1006,7 +1055,7 @@
 						? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
 						: 'text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60'
 				}"
-				aria-label="Ekspresi Wajah Model"
+				aria-label={i18n.t('expressions_title')}
 			>
 				<Smile class="w-5 h-5 text-pink-400" />
 				{#if rigging.activeExpression}
@@ -1738,7 +1787,18 @@
 				>
 					<div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border-b border-white/10 flex items-center justify-between">
 						<span>{i18n.t('switch_language')}</span>
-						<span class="font-mono text-[9px] text-zinc-400">{i18n.locale.toUpperCase()}</span>
+						<div class="flex items-center gap-1.5">
+							<span class="font-mono text-[9px] text-zinc-400">{i18n.locale.toUpperCase()}</span>
+							<button
+								type="button"
+								onclick={() => (isLanguageMenuOpen = false)}
+								class="p-0.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+								title={i18n.t('close_tooltip')}
+								aria-label={i18n.t('close_tooltip')}
+							>
+								<X class="w-3.5 h-3.5" />
+							</button>
+						</div>
 					</div>
 
 					<button
@@ -1756,7 +1816,7 @@
 					>
 						<span class="flex items-center gap-2">
 							<span class="text-sm">🇮🇩</span>
-							<span>Bahasa Indonesia</span>
+							<span>{i18n.t('lang_id')}</span>
 						</span>
 						{#if i18n.locale === 'id'}
 							<Check class="w-3.5 h-3.5 text-emerald-400" />

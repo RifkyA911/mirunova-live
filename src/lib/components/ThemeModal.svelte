@@ -121,25 +121,25 @@
 		{ hex: '#f8fafc', name: 'Studio White' }
 	];
 
-	const bgStyles: Array<{ id: BackgroundStyle; label: string; desc: string; previewClass: string }> = [
-		{ id: 'solid', label: 'Solid Color', desc: 'Warna latar bersih sesuai palet', previewClass: 'border-zinc-700' },
-		{ id: 'transparent', label: 'Transparent', desc: 'OBS Browser overlay stream', previewClass: 'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:10px_10px]' },
-		{ id: 'mesh', label: 'Cyber Mesh Grid', desc: 'Wireframe kotak-kotak kontras', previewClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:12px_12px]' },
-		{ id: 'grid', label: 'Tech Grid Paper', desc: 'Wireframe grafik presisi cyber', previewClass: 'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4640_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4640_1px,transparent_1px)] bg-[size:8px_8px]' },
-		{ id: 'dots', label: 'Anime Polka Dots', desc: 'Pola titik estetik anime', previewClass: 'bg-zinc-950 bg-[radial-gradient(#38bdf840_1.5px,transparent_1.5px)] bg-[size:8px_8px]' },
-		{ id: 'cosmic', label: 'Cosmic Animated', desc: 'Drifting nebula panggung', previewClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950' },
-		{ id: 'gradient', label: 'Deep Gradient', desc: 'Gradien halus ke luar angkasa', previewClass: 'bg-gradient-to-b from-zinc-900 via-indigo-950 to-zinc-950' },
-		{ id: 'chroma', label: 'Chroma Key Green', desc: 'Layar hijau jernih untuk OBS', previewClass: 'bg-[#00FF00]' },
-		{ id: 'custom-image', label: 'Custom Wallpaper', desc: 'Upload file gambar Anda', previewClass: 'bg-gradient-to-r from-violet-900 to-indigo-900' }
-	];
+	const bgStyles = $derived<Array<{ id: BackgroundStyle; label: string; desc: string; previewClass: string }>>([
+		{ id: 'solid', label: i18n.t('bg_solid_title'), desc: i18n.t('bg_solid_desc'), previewClass: 'border-zinc-700' },
+		{ id: 'transparent', label: i18n.t('bg_transparent_title'), desc: i18n.t('bg_transparent_desc'), previewClass: 'bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] bg-[size:10px_10px]' },
+		{ id: 'mesh', label: i18n.t('bg_mesh_title'), desc: i18n.t('bg_mesh_desc'), previewClass: 'bg-zinc-950 bg-[linear-gradient(to_right,#06b6d433_1px,transparent_1px),linear-gradient(to_bottom,#06b6d433_1px,transparent_1px)] bg-[size:12px_12px]' },
+		{ id: 'grid', label: i18n.t('bg_grid_title'), desc: i18n.t('bg_grid_desc'), previewClass: 'bg-zinc-900 bg-[linear-gradient(to_right,#3f3f4640_1px,transparent_1px),linear-gradient(to_bottom,#3f3f4640_1px,transparent_1px)] bg-[size:8px_8px]' },
+		{ id: 'dots', label: i18n.t('bg_dots_title'), desc: i18n.t('bg_dots_desc'), previewClass: 'bg-zinc-950 bg-[radial-gradient(#38bdf840_1.5px,transparent_1.5px)] bg-[size:8px_8px]' },
+		{ id: 'cosmic', label: i18n.t('bg_cosmic_title'), desc: i18n.t('bg_cosmic_desc'), previewClass: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-950' },
+		{ id: 'gradient', label: i18n.t('bg_cosmic_title'), desc: i18n.t('bg_cosmic_desc'), previewClass: 'bg-gradient-to-b from-zinc-900 via-indigo-950 to-zinc-950' },
+		{ id: 'chroma', label: i18n.t('bg_chroma_title'), desc: i18n.t('bg_chroma_desc'), previewClass: 'bg-[#00FF00]' },
+		{ id: 'custom-image', label: i18n.t('bg_custom_title'), desc: i18n.t('bg_custom_desc'), previewClass: 'bg-gradient-to-r from-violet-900 to-indigo-900' }
+	]);
 
-	const screenEffects: Array<{ id: ScreenEffect; label: string }> = [
-		{ id: 'none', label: 'None' },
-		{ id: 'vignette', label: 'Vignette' },
-		{ id: 'scanlines', label: 'Scanlines' },
-		{ id: 'crt', label: 'CRT Glow' },
-		{ id: 'blur', label: 'Subtle Blur' }
-	];
+	const screenEffects = $derived<Array<{ id: ScreenEffect; label: string }>>([
+		{ id: 'none', label: i18n.t('fx_none') },
+		{ id: 'vignette', label: i18n.t('fx_vignette') },
+		{ id: 'scanlines', label: i18n.t('fx_scanlines') },
+		{ id: 'crt', label: i18n.t('fx_crt') },
+		{ id: 'blur', label: i18n.t('fx_blur') }
+	]);
 
 	function handleImageUpload(e: Event) {
 		const target = e.target as HTMLInputElement;

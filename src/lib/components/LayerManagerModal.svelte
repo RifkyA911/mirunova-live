@@ -143,12 +143,12 @@
 			return {
 				bgClass: 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300',
 				icon: Users,
-				label: rigging.isCollab2Active ? rigging.collab2ModelName : 'Partner 2 (Nonaktif)',
+				label: rigging.isCollab2Active ? rigging.collab2ModelName : i18n.t('collab_partner_inactive'),
 				avatarUrl: rigging.isCollab2Active ? collab2ModelItem?.avatarUrl : undefined
 			};
 		}
 		if (type === 'accessories') {
-			return { bgClass: 'bg-amber-500/20 border-amber-500/40 text-amber-300', icon: Sparkles, label: `${activeAccCount} Aktif` };
+			return { bgClass: 'bg-amber-500/20 border-amber-500/40 text-amber-300', icon: Sparkles, label: `${activeAccCount} ${i18n.t('theme_active_badge')}` };
 		}
 		// shader-fx
 		let shaderBg = 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300';
@@ -292,7 +292,7 @@
 
 	function handleAddCustomPropSubmit() {
 		if (!customPropImageUrl) {
-			rigging.showToast('Pilih gambar prop terlebih dahulu');
+			rigging.showToast(i18n.t('prop_select_prompt'));
 			return;
 		}
 		const name = customPropName.trim() || 'Custom Prop';
@@ -355,7 +355,7 @@
 						{/if}
 					</div>
 					<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} truncate">
-						{rigging.layerManagerViewMode === 'windowed' ? 'Drag header untuk geser • Sudut kanan bawah untuk resize' : 'Mode Sticky (Full Height Sisi Kanan)'}
+						{rigging.layerManagerViewMode === 'windowed' ? i18n.t('layer_mode_windowed_hint') : i18n.t('layer_mode_sticky_hint')}
 					</p>
 				</div>
 			</div>
@@ -366,13 +366,13 @@
 				<button
 					type="button"
 					onclick={() => rigging.toggleLayerManagerViewMode()}
-					title={rigging.layerManagerViewMode === 'sticky' ? 'Ganti ke Window Bebas (Windowed Resizable)' : 'Tempelkan ke Sisi Kanan (Sticky Full Height)'}
+					title={rigging.layerManagerViewMode === 'sticky' ? i18n.t('layer_toggle_windowed') : i18n.t('layer_toggle_sticky')}
 					class="p-1.5 rounded-xl transition-colors cursor-pointer {
 						rigging.layerManagerViewMode === 'sticky'
 							? 'text-cyan-400 bg-cyan-500/15 border border-cyan-500/30'
 							: 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
 					}"
-					aria-label="Toggle View Mode"
+					aria-label={i18n.t('layer_toggle_view_mode')}
 				>
 					{#if rigging.layerManagerViewMode === 'sticky'}
 						<Pin class="w-3.5 h-3.5 text-cyan-400" />
@@ -385,9 +385,9 @@
 				<button
 					type="button"
 					onclick={() => (rigging.isLayerMinimized = !rigging.isLayerMinimized)}
-					title={rigging.isLayerMinimized ? 'Buka Penuh' : 'Kecilkan Window'}
+					title={rigging.isLayerMinimized ? i18n.t('window_fullscreen_toggle') : i18n.t('window_minimize_toggle')}
 					class="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer"
-					aria-label="Minimize Window"
+					aria-label={i18n.t('minimize')}
 				>
 					{#if rigging.isLayerMinimized}
 						<Maximize2 class="w-3.5 h-3.5" />
@@ -400,9 +400,9 @@
 				<button
 					type="button"
 					onclick={() => (rigging.isLayerManagerOpen = false)}
-					title="Tutup Panel Layer"
+					title={i18n.t('layer_close_panel')}
 					class="p-1.5 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-zinc-800/60 transition-colors cursor-pointer"
-					aria-label="Tutup"
+					aria-label={i18n.t('close_btn')}
 				>
 					<X class="w-3.5 h-3.5" />
 				</button>
@@ -470,7 +470,7 @@
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
 							<Upload class="w-3.5 h-3.5" />
-							Upload Custom Prop / Aksesoris Gambar
+							{i18n.t('layer_upload_custom_prop_title')}
 						</span>
 						<span class="text-[10px] text-zinc-400">PNG, WebP, SVG, GIF, JPEG</span>
 					</div>
@@ -486,13 +486,13 @@
 								class="w-14 h-14 rounded-xl border-2 border-dashed border-amber-500/40 hover:border-amber-400 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden shrink-0 {
 									isLightTheme ? 'bg-zinc-50' : 'bg-zinc-950'
 								}"
-								title="Pilih gambar dari komputer"
+								title={i18n.t('prop_upload_local')}
 							>
 								{#if customPropImageUrl}
 									<img src={customPropImageUrl} alt="Preview" class="w-full h-full object-contain p-1" />
 								{:else}
 									<Image class="w-5 h-5 text-amber-400/80 mb-0.5" />
-									<span class="text-[8px] font-bold text-amber-300">PILIH</span>
+									<span class="text-[8px] font-bold text-amber-300">{i18n.t('select')}</span>
 								{/if}
 							</div>
 							<input
@@ -508,7 +508,7 @@
 								<input
 									type="text"
 									bind:value={customPropName}
-									placeholder="Nama aksesoris / prop..."
+									placeholder={i18n.t('prop_name_placeholder')}
 									class="w-full px-2.5 py-1 rounded-xl text-xs border {
 										isLightTheme
 											? 'bg-white border-zinc-300 text-zinc-900'
@@ -518,7 +518,7 @@
 
 								<!-- Body Attachment Selector -->
 								<div class="flex items-center gap-1 text-[10px]">
-									<span class="text-zinc-400 mr-1 shrink-0">Tempel di:</span>
+									<span class="text-zinc-400 mr-1 shrink-0">{i18n.t('prop_attach_to_label')}</span>
 									<button
 										type="button"
 										onclick={() => (customPropAttachTo = 'head')}
@@ -528,7 +528,7 @@
 												: 'bg-zinc-800 text-zinc-300 border-zinc-700'
 										}"
 									>
-										Kepala (Head)
+										{i18n.t('prop_attach_head')}
 									</button>
 									<button
 										type="button"
@@ -539,7 +539,7 @@
 												: 'bg-zinc-800 text-zinc-300 border-zinc-700'
 										}"
 									>
-										Badan (Body)
+										{i18n.t('prop_attach_body')}
 									</button>
 									<button
 										type="button"
@@ -550,7 +550,7 @@
 												: 'bg-zinc-800 text-zinc-300 border-zinc-700'
 										}"
 									>
-										Layar (HUD)
+										{i18n.t('prop_attach_screen')}
 									</button>
 								</div>
 							</div>
@@ -563,7 +563,7 @@
 								class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
 							>
 								<Check class="w-3.5 h-3.5" />
-								<span>Pasang ke Panggung</span>
+								<span>{i18n.t('layer_attach_to_stage')}</span>
 							</button>
 						</div>
 					</div>
@@ -571,7 +571,7 @@
 					<!-- Quick Preset Props Selection -->
 					<div class="space-y-1.5 pt-1">
 						<span class="text-[11px] font-bold text-zinc-400 block">
-							Atau Pilih Preset Cepat:
+							{i18n.t('prop_quick_presets')}
 						</span>
 						<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
 							{#each rigging.activeAccessories.slice(0, 10) as item}
@@ -613,7 +613,7 @@
 							class="text-[10px] text-purple-300 hover:text-purple-200 flex items-center gap-1 cursor-pointer"
 						>
 							<RefreshCw class="w-3 h-3" />
-							<span>Pindai Kamera</span>
+							<span>{i18n.t('scan_camera')}</span>
 						</button>
 					</div>
 
@@ -637,7 +637,7 @@
 										: 'bg-zinc-800 text-zinc-300'
 								}"
 							>
-								{rigging.isCollabModeActive ? '✓ Aktif' : '+ Aktifkan'}
+								{rigging.isCollabModeActive ? '✓ ' + i18n.t('theme_active_badge') : '+ ' + i18n.t('apply_btn')}
 							</button>
 						</div>
 
@@ -654,7 +654,7 @@
 										isLightTheme ? 'bg-white border-zinc-300 text-zinc-800' : 'bg-zinc-950 border-zinc-700 text-zinc-200'
 									}"
 								>
-									<option value="">Pilih Kamera Mandiri Guest 1...</option>
+									<option value="">{i18n.t('guest_camera_placeholder')}</option>
 									{#each availableCameras as cam}
 										<option value={cam.deviceId}>{cam.label || `Webcam (${cam.deviceId.slice(0, 8)})`}</option>
 									{/each}
@@ -683,7 +683,7 @@
 										: 'bg-zinc-800 text-zinc-300'
 								}"
 							>
-								{rigging.isCollab2Active ? '✓ Aktif' : '+ Aktifkan'}
+								{rigging.isCollab2Active ? '✓ ' + i18n.t('theme_active_badge') : '+ ' + i18n.t('apply_btn')}
 							</button>
 						</div>
 
@@ -700,7 +700,7 @@
 										isLightTheme ? 'bg-white border-zinc-300 text-zinc-800' : 'bg-zinc-950 border-zinc-700 text-zinc-200'
 									}"
 								>
-									<option value="">Pilih Kamera Mandiri Guest 2...</option>
+									<option value="">{i18n.t('guest_camera_placeholder')}</option>
 									{#each availableCameras as cam}
 										<option value={cam.deviceId}>{cam.label || `Webcam (${cam.deviceId.slice(0, 8)})`}</option>
 									{/each}
@@ -714,8 +714,8 @@
 			<!-- UNIFIED LAYER STACK (Core View: Photoshop Style) -->
 			<div class="p-3.5 overflow-y-auto space-y-2 custom-scrollbar flex-1 min-h-0">
 				<div class="flex items-center justify-between text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
-					<span>Urutan Layer Panggung:</span>
-					<span class="font-mono text-[10px]">Atas = Paling Depan (Z-Index Tertinggi)</span>
+					<span>{i18n.t('layer_order_title')}</span>
+					<span class="font-mono text-[10px]">{i18n.t('layer_order_hint')}</span>
 				</div>
 
 				<div class="space-y-2">
@@ -798,15 +798,15 @@
 												{#if layer.type === 'model-host'}
 													Host: {rigging.modelName}
 												{:else if layer.type === 'model-collab'}
-													Collab 1: {rigging.isCollabModeActive ? rigging.collabModelName : '(Nonaktif)'}
+													Collab 1: {rigging.isCollabModeActive ? rigging.collabModelName : `(${i18n.t('badge_inactive')})`}
 												{:else if layer.type === 'model-collab-2'}
-													Collab 2: {rigging.isCollab2Active ? rigging.collab2ModelName : '(Nonaktif)'}
+													Collab 2: {rigging.isCollab2Active ? rigging.collab2ModelName : `(${i18n.t('badge_inactive')})`}
 												{:else if layer.type === 'accessories'}
-													Aksesoris & Props ({activeAccCount})
+													{i18n.t('layer_props_name')} ({activeAccCount})
 												{:else if layer.type === 'shader-fx'}
-													Filter Layar ({rigging.screenEffect.toUpperCase()})
+													{i18n.t('layer_shader_name')} ({rigging.screenEffect.toUpperCase()})
 												{:else if layer.type === 'background'}
-													Latar Belakang ({rigging.backgroundStyle.toUpperCase()})
+													{i18n.t('stage_backdrop_title')} ({rigging.backgroundStyle.toUpperCase()})
 												{:else}
 													{layer.name}
 												{/if}
@@ -829,40 +829,40 @@
 													<span class="opacity-80">• Zoom {rigging.zoomLevel.toFixed(2)}x</span>
 												</div>
 												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
-													<span>{rigging.isCameraActive ? `Tracking Kamera (${rigging.fps || 60} FPS)` : 'Manual Rig'}</span>
+													<span>{rigging.isCameraActive ? `${i18n.t('tracking_active')} (${rigging.fps || 60} FPS)` : i18n.t('layer_manual_rig')}</span>
 													<span>• Opacity: {Math.round(layer.opacity * 100)}%</span>
 												</div>
 											{:else if layer.type === 'model-collab'}
 												<div class="flex items-center gap-1.5 flex-wrap">
-													<span class="text-purple-400 font-semibold">{rigging.isCollabModeActive ? rigging.collabModelName : 'Guest 1 (Nonaktif)'}</span>
+													<span class="text-purple-400 font-semibold">{rigging.isCollabModeActive ? rigging.collabModelName : i18n.t('collab_guest1_inactive')}</span>
 													{#if rigging.isCollabModeActive}
 														<span class="opacity-80">• Pos: {rigging.collabPosition.toUpperCase()}</span>
 														<span class="opacity-80">• Cam: {rigging.collabCameraLabel || 'Webcam Utama'}</span>
 													{/if}
 												</div>
 												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
-													<span>{rigging.isCollabModeActive ? (rigging.collabSyncTracking ? 'Sync Tracking: On' : 'Idle Motion') : 'Buka Collab Studio untuk pasang'}</span>
+													<span>{rigging.isCollabModeActive ? (rigging.collabSyncTracking ? i18n.t('collab_sync_on') : i18n.t('collab_idle_motion')) : i18n.t('collab_open_studio_prompt')}</span>
 													<span>• Opacity: {Math.round(layer.opacity * 100)}%</span>
 												</div>
 											{:else if layer.type === 'model-collab-2'}
 												<div class="flex items-center gap-1.5 flex-wrap">
-													<span class="text-indigo-400 font-semibold">{rigging.isCollab2Active ? rigging.collab2ModelName : 'Guest 2 (Nonaktif)'}</span>
+													<span class="text-indigo-400 font-semibold">{rigging.isCollab2Active ? rigging.collab2ModelName : i18n.t('collab_guest2_inactive')}</span>
 													{#if rigging.isCollab2Active}
 														<span class="opacity-80">• Pos: {rigging.collab2Position.toUpperCase()}</span>
 														<span class="opacity-80">• Cam: {rigging.collab2CameraLabel || 'Webcam Utama'}</span>
 													{/if}
 												</div>
 												<div class="flex items-center gap-1.5 opacity-80 flex-wrap">
-													<span>{rigging.isCollab2Active ? (rigging.collab2SyncTracking ? 'Sync Tracking: On' : 'Idle Motion') : 'Buka Collab Studio untuk pasang'}</span>
+													<span>{rigging.isCollab2Active ? (rigging.collab2SyncTracking ? i18n.t('collab_sync_on') : i18n.t('collab_idle_motion')) : i18n.t('collab_open_studio_prompt')}</span>
 													<span>• Opacity: {Math.round(layer.opacity * 100)}%</span>
 												</div>
 											{:else if layer.type === 'accessories'}
 												<div class="flex items-center gap-1.5 flex-wrap">
-													<span class="text-amber-500 font-semibold">{activeAccCount} Prop Terpasang</span>
-													<span class="opacity-80">• Total {rigging.activeAccessories.length} Koleksi</span>
+													<span class="text-amber-500 font-semibold">{activeAccCount} {i18n.t('layer_props_attached')}</span>
+													<span class="opacity-80">• {i18n.t('layer_total_collection')}: {rigging.activeAccessories.length}</span>
 												</div>
 												<div class="opacity-80 truncate">
-													{activeAccCount > 0 ? rigging.activeAccessories.filter(a => a.visible).map(a => a.name).join(', ') : 'Klik + Upload / Pasang Prop'}
+													{activeAccCount > 0 ? rigging.activeAccessories.filter(a => a.visible).map(a => a.name).join(', ') : i18n.t('layer_upload_prop_prompt')}
 												</div>
 											{:else if layer.type === 'shader-fx'}
 												<div class="flex items-center gap-1.5 flex-wrap">
@@ -913,7 +913,7 @@
 											playSfx('toggle');
 											rigging.toggleLayer(layer.id);
 										}}
-										title={layer.visible ? 'Sembunyikan' : 'Tampilkan'}
+										title={layer.visible ? i18n.t('layer_hide') : i18n.t('layer_show')}
 										class="p-1.5 rounded-lg border transition-colors cursor-pointer {
 											layer.visible
 												? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400'
@@ -935,7 +935,7 @@
 											playSfx('click');
 											rigging.setLayerLock(layer.id);
 										}}
-										title={layer.locked ? 'Buka Kunci' : 'Kunci Layer'}
+										title={layer.locked ? i18n.t('layer_unlock') : i18n.t('layer_lock')}
 										class="p-1.5 rounded-lg border transition-colors cursor-pointer {
 											layer.locked
 												? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
@@ -959,7 +959,7 @@
 												playSfx('click');
 												rigging.moveLayer(layer.id, 'up');
 											}}
-											title="Naikkan Layer"
+											title={i18n.t('layer_move_up')}
 											class="p-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-30 cursor-pointer"
 										>
 											<ArrowUp class="w-2.5 h-2.5" />
@@ -972,7 +972,7 @@
 												playSfx('click');
 												rigging.moveLayer(layer.id, 'down');
 											}}
-											title="Turunkan Layer"
+											title={i18n.t('layer_move_down')}
 											class="p-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-30 cursor-pointer"
 										>
 											<ArrowDown class="w-2.5 h-2.5" />
@@ -988,7 +988,7 @@
 												playSfx('click');
 												rigging.deleteLayer(layer.id);
 											}}
-											title="Hapus / Copot Layer Ini"
+											title={i18n.t('layer_delete')}
 											class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-colors cursor-pointer"
 										>
 											<Trash2 class="w-3 h-3" />
@@ -1045,13 +1045,13 @@
 															onclick={(e) => e.stopPropagation()}
 															class="text-[9px] px-1 py-0.2 rounded font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 cursor-pointer"
 														>
-															<option value="head">Di Kepala</option>
-															<option value="body">Di Badan</option>
-															<option value="screen">Di Layar</option>
+															<option value="head">{i18n.t('prop_attach_head')}</option>
+															<option value="body">{i18n.t('prop_attach_body')}</option>
+															<option value="screen">{i18n.t('prop_attach_screen')}</option>
 														</select>
 													</div>
 													<div class="text-[9px] text-zinc-400 font-mono">
-														Skala: {acc.scale}x • Opacity: {Math.round((acc.opacity || 1) * 100)}%
+														{i18n.t('prop_scale_label')} {acc.scale}x • Opacity: {Math.round((acc.opacity || 1) * 100)}%
 													</div>
 												</div>
 											</div>
@@ -1069,7 +1069,7 @@
 													bind:value={acc.opacity}
 													oninput={() => rigging.persist()}
 													class="w-12 h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-amber-500"
-													title="Transparansi aksesoris"
+													title={i18n.t('prop_opacity_title')}
 												/>
 
 												<button
@@ -1080,7 +1080,7 @@
 														acc.visible = !acc.visible;
 														rigging.persist();
 													}}
-													title={acc.visible ? 'Sembunyikan' : 'Tampilkan'}
+													title={acc.visible ? i18n.t('layer_hide') : i18n.t('layer_show')}
 													class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
 												>
 													{#if acc.visible}
@@ -1097,7 +1097,7 @@
 														playSfx('click');
 														rigging.removeAccessory(acc.id);
 													}}
-													title="Copot Aksesoris Ini"
+													title={i18n.t('prop_remove_title')}
 													class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-colors cursor-pointer"
 												>
 													<Trash2 class="w-3 h-3" />

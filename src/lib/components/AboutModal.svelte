@@ -89,7 +89,7 @@
 				installOutcome = 'dismissed';
 			}
 		} else {
-			rigging.showToast('Buka menu browser (...) lalu pilih "Install MiruNova Live"');
+			rigging.showToast(i18n.t('pwa_browser_menu_hint'));
 		}
 	}
 
@@ -164,7 +164,7 @@
 					class="p-2.5 rounded-xl transition-colors cursor-pointer {
 						isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
 					}"
-					aria-label="Tutup"
+					aria-label={i18n.t('close_btn')}
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -267,20 +267,20 @@
 						<div>
 							<div class="flex items-center gap-2">
 								<h4 class="font-extrabold text-sm {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-									Aplikasi Desktop Standalone (PWA)
+									{i18n.t('pwa_desktop_app')}
 								</h4>
 								{#if isStandalone}
 									<span class="text-[9px] px-2 py-0.5 rounded-full font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-										Aplikasi Aktif (Standalone)
+										{i18n.t('pwa_installed')}
 									</span>
 								{:else}
 									<span class="text-[9px] px-2 py-0.5 rounded-full font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-										Web Browser Mode
+										{i18n.t('pwa_browser_mode')}
 									</span>
 								{/if}
 							</div>
 							<p class="text-xs {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'} mt-0.5">
-								Mendukung instalasi desktop instan ke Windows/Mac, shortcut terdaftar, dan offline service worker caching
+								{i18n.t('pwa_desc')}
 							</p>
 						</div>
 					</div>
@@ -296,7 +296,7 @@
 						}"
 					>
 						<Download class="w-4 h-4" />
-						<span>{isStandalone ? 'Sudah Terpasang' : 'Pasang Aplikasi Desktop'}</span>
+						<span>{isStandalone ? i18n.t('pwa_installed') : i18n.t('pwa_install_btn')}</span>
 					</button>
 				</div>
 
@@ -305,7 +305,7 @@
 					<div class="flex items-center gap-2">
 						<Code2 class="w-4 h-4 text-cyan-400" />
 						<span class="text-xs font-bold uppercase tracking-wider {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
-							Arsitektur & Tech Stack Inti
+							{i18n.t('about_architecture_title')}
 						</span>
 					</div>
 
@@ -362,7 +362,7 @@
 						}"
 					>
 						<FileText class="w-3.5 h-3.5" />
-						<span>Buka Piagam Privasi & ToS</span>
+						<span>{i18n.t('tos_modal_title')}</span>
 					</button>
 				</div>
 			</div>
