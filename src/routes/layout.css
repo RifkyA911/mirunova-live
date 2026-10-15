@@ -999,4 +999,27 @@ aside [class*="hover:bg-zinc-800"]:hover {
 	-webkit-mask-composite: source-in;
 }
 
+/* ========================================================
+   LIGHT THEMES TEXT CONTRAST SAFEGUARD
+   Prevents invisible white-on-white text in daylight modes
+   ======================================================== */
+.theme-light [role="dialog"] :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-light-cyan-sea [role="dialog"] :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-sakura-light [role="dialog"] :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-matcha-light [role="dialog"] :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-light nav :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-light-cyan-sea nav :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-sakura-light nav :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])),
+.theme-matcha-light nav :where(.text-white:not(button):not([class*="bg-"]):not([class*="badge"])) {
+	color: #0f172a !important;
+}
+
+.theme-light input::placeholder,
+.theme-light-cyan-sea input::placeholder,
+.theme-sakura-light input::placeholder,
+.theme-matcha-light input::placeholder {
+	color: #94a3b8 !important;
+}
+
+
 

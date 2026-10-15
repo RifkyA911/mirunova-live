@@ -682,6 +682,9 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
 			onclick={(e) => e.stopPropagation()}
 			class="w-full max-w-6xl xl:max-w-7xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 transition-colors border {
 				isLightTheme

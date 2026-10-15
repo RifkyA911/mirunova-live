@@ -154,6 +154,9 @@
 	>
 		<!-- Broadcast Command Center Window -->
 		<div
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
 			class="w-full max-w-5xl xl:max-w-6xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border transition-colors duration-200 {
 				isLightTheme
 					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'

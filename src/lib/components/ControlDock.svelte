@@ -47,7 +47,9 @@
 		Trees,
 		Sun,
 		Flame,
-		Music
+		Music,
+		Languages,
+		Check
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { threeStage, type FramingMode3D, type FullBodyPose3D, type StageEnvironment3D } from '#lib/core/threeStage';
@@ -58,91 +60,96 @@
 	let isExpressionMenuOpen = $state<boolean>(false);
 	let isStageMenuOpen = $state<boolean>(false);
 	let isCursorToolMenuOpen = $state<boolean>(false);
+	let isLanguageMenuOpen = $state<boolean>(false);
 	let expressionActiveTab = $state<'expressions' | 'poses' | 'motions'>('expressions');
 
-	const POSE_LOOPS: Array<{ id: PoseLoopMode; label: string; emoji: string; desc: string }> = [
-		{ id: 'idle-breath', label: 'Breathing', emoji: '🫁', desc: 'Nafas halus alami' },
-		{ id: 'gentle-sway', label: 'Gentle Sway', emoji: '🌾', desc: 'Goyang santai kiri-kanan' },
-		{ id: 'head-nod', label: 'Head Nod', emoji: '🙂', desc: 'Anggukan kepala ritmis' },
-		{ id: 'wave', label: 'Continuous Wave', emoji: '👋', desc: 'Lambaian tangan' },
-		{ id: 'none', label: 'Pose Diam (Off)', emoji: '🛑', desc: 'Hanya ikuti webcam' }
-	];
+	const POSE_LOOPS = $derived.by(() => [
+		{ id: 'idle-breath' as PoseLoopMode, label: i18n.t('loop_idle'), emoji: '🫁', desc: i18n.t('poses_loop_sub') },
+		{ id: 'gentle-sway' as PoseLoopMode, label: i18n.t('loop_sway'), emoji: '🌾', desc: i18n.t('poses_loop_sub') },
+		{ id: 'head-nod' as PoseLoopMode, label: i18n.t('loop_nod'), emoji: '🙂', desc: i18n.t('motion_nod_sub') },
+		{ id: 'wave' as PoseLoopMode, label: i18n.t('motion_wave_label'), emoji: '👋', desc: i18n.t('motion_wave_sub') },
+		{ id: 'none' as PoseLoopMode, label: i18n.t('loop_none'), emoji: '🛑', desc: i18n.t('loop_none') }
+	]);
 
-	const FULL_BODY_POSES_3D: Array<{ id: FullBodyPose3D; label: string; emoji: string }> = [
-		{ id: 'idle', label: 'Siaga Netral', emoji: '🧍' },
-		{ id: 'wave', label: 'Melambai', emoji: '👋' },
-		{ id: 'peace', label: 'Pose Peace', emoji: '✌️' },
-		{ id: 'heart', label: 'Tangan Love', emoji: '🫶' },
-		{ id: 'stand', label: 'Tegak Formal', emoji: '🚶' }
-	];
+	const FULL_BODY_POSES_3D = $derived.by(() => [
+		{ id: 'idle' as FullBodyPose3D, label: i18n.t('exp_neutral_pose'), emoji: '🧍' },
+		{ id: 'wave' as FullBodyPose3D, label: i18n.t('motion_wave_label'), emoji: '👋' },
+		{ id: 'peace' as FullBodyPose3D, label: 'Peace ✌️', emoji: '✌️' },
+		{ id: 'heart' as FullBodyPose3D, label: 'Heart 🫶', emoji: '🫶' },
+		{ id: 'stand' as FullBodyPose3D, label: 'Formal Stand', emoji: '🚶' }
+	]);
 
-	const STAGE_ENVIRONMENTS: Array<{
-		id: StageEnvironment3D;
-		name: string;
-		desc: string;
-		badge: string;
-		color: string;
-		icon: string;
-	}> = [
+	const STAGE_ENVIRONMENTS = $derived.by(() => [
 		{
-			id: 'grid',
-			name: 'Cyber Grid',
-			desc: 'Lantai wireframe kotak neon cyan cyberpunk & ring panggung',
-			badge: 'Neon Sci-Fi',
+			id: 'grid' as StageEnvironment3D,
+			name: i18n.t('stage_grid_name'),
+			desc: i18n.t('stage_grid_desc'),
+			badge: 'Classic Cyber',
 			color: 'border-cyan-500/50 bg-cyan-950/30 text-cyan-300',
 			icon: '🌐'
 		},
 		{
-			id: 'room',
-			name: 'Cozy Room',
-			desc: 'Kamar cat cream lembut, lantai zinc cream, rak & lampu meja cewek',
-			badge: 'Anime Room',
+			id: 'room' as StageEnvironment3D,
+			name: i18n.t('stage_room_name'),
+			desc: i18n.t('stage_room_desc'),
+			badge: 'Cozy Room',
 			color: 'border-amber-500/50 bg-amber-950/30 text-amber-300',
 			icon: '🏠'
 		},
 		{
-			id: 'field',
-			name: 'Open Meadow',
-			desc: 'Padang rumput hijau bukit anime, pedestal batu & langit sejuk',
+			id: 'field' as StageEnvironment3D,
+			name: i18n.t('stage_field_name'),
+			desc: i18n.t('stage_field_desc'),
 			badge: 'Nature',
 			color: 'border-emerald-500/50 bg-emerald-950/30 text-emerald-300',
 			icon: '🌱'
 		},
 		{
-			id: 'sunset',
-			name: 'Sunset Coast',
-			desc: 'Cahaya senja keemasan pantai, horizon laut & dek kayu',
+			id: 'sunset' as StageEnvironment3D,
+			name: i18n.t('stage_sunset_name'),
+			desc: i18n.t('stage_sunset_desc'),
 			badge: 'Golden Hour',
 			color: 'border-orange-500/50 bg-orange-950/30 text-orange-300',
 			icon: '🌅'
 		},
 		{
-			id: 'studio',
-			name: 'Idol Concert',
-			desc: 'Panggung konser idol, lantai glossy, lampu spotlight kerucut & truss',
+			id: 'studio' as StageEnvironment3D,
+			name: i18n.t('stage_studio_name'),
+			desc: i18n.t('stage_studio_desc'),
 			badge: 'Live Idol',
 			color: 'border-purple-500/50 bg-purple-950/30 text-purple-300',
 			icon: '🎤'
 		},
 		{
-			id: 'dojo',
-			name: 'Sakura Dojo',
-			desc: 'Ruang tatami tradisional Jepang, dinding shoji & lampion hangat',
+			id: 'dojo' as StageEnvironment3D,
+			name: i18n.t('stage_dojo_name'),
+			desc: i18n.t('stage_dojo_desc'),
 			badge: 'Japanese Zen',
 			color: 'border-rose-400/50 bg-rose-950/30 text-rose-300',
 			icon: '⛩️'
 		},
 		{
-			id: 'void',
-			name: 'Deep Void',
-			desc: 'Panggung gelap pekat minimalis dengan ring pedestal tanpa distraksi',
+			id: 'void' as StageEnvironment3D,
+			name: i18n.t('stage_void_name'),
+			desc: i18n.t('stage_void_desc'),
 			badge: 'Clean Dark',
 			color: 'border-zinc-700 bg-zinc-900/60 text-zinc-300',
 			icon: '🌌'
 		}
-	];
+	]);
+
+	function isHexLight(hex?: string): boolean {
+		if (!hex || hex.length < 7) return false;
+		const r = parseInt(hex.slice(1, 3), 16);
+		const g = parseInt(hex.slice(3, 5), 16);
+		const b = parseInt(hex.slice(5, 7), 16);
+		const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+		return luminance > 0.6;
+	}
+
 	const isLightTheme = $derived(
-		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
+		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme) ||
+		(rigging.uiTheme === 'custom' && isHexLight(rigging.customThemeConfig?.bg))
 	);
 	const currentTheme = $derived.by(() => {
 		if (rigging.uiTheme === 'custom' && rigging.customThemeConfig) {
@@ -1046,7 +1053,7 @@
 								}"
 							>
 								<Smile class="w-3.5 h-3.5 text-pink-400" />
-								<span>Ekspresi</span>
+								<span>{i18n.t('tab_expressions')}</span>
 								<span class="text-[9px] font-mono px-1 rounded bg-black/30 text-zinc-400">{DEFAULT_EXPRESSIONS.length}</span>
 							</button>
 
@@ -1060,7 +1067,7 @@
 								}"
 							>
 								<Activity class="w-3.5 h-3.5 text-violet-400" />
-								<span>Pose & Loop</span>
+								<span>{i18n.t('tab_poses')}</span>
 							</button>
 
 							<button
@@ -1073,7 +1080,7 @@
 								}"
 							>
 								<Play class="w-3.5 h-3.5 text-cyan-400" />
-								<span>Motions</span>
+								<span>{i18n.t('tab_motions')}</span>
 								{#if rigging.availableMotions.length > 0}
 									<span class="text-[9px] font-mono px-1 rounded bg-black/30 text-cyan-300">{rigging.availableMotions.length}</span>
 								{/if}
@@ -1087,7 +1094,7 @@
 									? 'bg-pink-500/20 text-pink-300 border border-pink-500/40'
 									: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
 							}">
-								{rigging.activeExpression ? `Aktif: ${rigging.activeExpression}` : 'Pose Netral'}
+								{rigging.activeExpression ? `${i18n.t('exp_active_label')} ${rigging.activeExpression}` : i18n.t('exp_neutral_pose')}
 							</span>
 
 							{#if rigging.activeExpression}
@@ -1095,9 +1102,9 @@
 									type="button"
 									onclick={() => handleSelectExpression('', 'Netral')}
 									class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-pink-500/20 text-pink-300 border border-pink-500/40 text-[10px] font-mono font-bold cursor-pointer hover:bg-pink-500/30 transition-colors"
-									title="Reset ke Netral"
+									title={i18n.t('exp_reset_btn')}
 								>
-									<span>Reset</span>
+									<span>{i18n.t('exp_reset_btn')}</span>
 									<X class="w-3 h-3" />
 								</button>
 							{/if}
@@ -1106,7 +1113,7 @@
 								type="button"
 								onclick={() => (isExpressionMenuOpen = false)}
 								class="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-								title="Tutup [Esc]"
+								title={i18n.t('close_tooltip')}
 							>
 								<X class="w-4 h-4" />
 							</button>
@@ -1123,8 +1130,8 @@
 									<!-- Section 1: Ekspresi Utama -->
 									<div class="space-y-1.5">
 										<div class="flex items-center justify-between px-1 text-[10px] font-bold text-pink-400">
-											<span>EKSPRESI UTAMA ({DEFAULT_EXPRESSIONS.length})</span>
-											<span class="text-[9px] text-zinc-500 font-mono">Hotkey [E] / [Alt + 1..8]</span>
+											<span>{i18n.t('exp_primary_title')} ({DEFAULT_EXPRESSIONS.length})</span>
+											<span class="text-[9px] text-zinc-500 font-mono">{i18n.t('exp_hotkey_hint')}</span>
 										</div>
 
 										<!-- 4-column compact expression chip grid (no separate scrollbar!) -->
@@ -1157,8 +1164,8 @@
 									{#if rigging.availableExpressions && rigging.availableExpressions.length > 0}
 										<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'} space-y-1.5">
 											<div class="flex items-center justify-between px-1 text-[10px] font-bold text-cyan-400">
-												<span>EKSPRESI KHUSUS MODEL ({rigging.availableExpressions.length})</span>
-												<span class="text-[9px] text-zinc-500">Live2D / 3D Morph</span>
+												<span>{i18n.t('exp_model_specific')} ({rigging.availableExpressions.length})</span>
+												<span class="text-[9px] text-zinc-500">{i18n.t('exp_live2d_morph')}</span>
 											</div>
 											<div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
 												{#each rigging.availableExpressions as mExp}
@@ -1186,8 +1193,8 @@
 								<!-- TAB 2: POSES & POSE LOOPING -->
 								<div class="space-y-3">
 									<div class="flex items-center justify-between px-1 text-[10px] font-bold text-violet-400">
-										<span>POSE LOOPING CONTINUOUS ({POSE_LOOPS.length})</span>
-										<span class="text-[9px] text-zinc-500">Animasi Idle Halus</span>
+										<span>{i18n.t('poses_loop_title')} ({POSE_LOOPS.length})</span>
+										<span class="text-[9px] text-zinc-500">{i18n.t('poses_loop_sub')}</span>
 									</div>
 
 									<!-- Pose Loops Grid -->
@@ -1219,7 +1226,7 @@
 									<!-- Pose Loop Speed Slider -->
 									{#if rigging.poseLoopMode !== 'none'}
 										<div class="flex items-center gap-3 p-2 rounded-xl bg-black/30 border border-white/10">
-											<span class="text-[11px] font-medium text-zinc-400 shrink-0">Kecepatan Loop:</span>
+											<span class="text-[11px] font-medium text-zinc-400 shrink-0">{i18n.t('poses_loop_speed')}</span>
 											<input
 												type="range"
 												min="0.2"
@@ -1236,8 +1243,8 @@
 									{#if rigging.avatarEngine === '3d'}
 										<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 											<div class="flex items-center justify-between px-1 mb-1.5 text-[10px] font-bold text-amber-400">
-												<span>POSE TUBUH 3D (FULL BODY POSES)</span>
-												<span class="text-[9px] text-zinc-500">Pose Kinematik</span>
+												<span>{i18n.t('poses_3d_body_title')}</span>
+												<span class="text-[9px] text-zinc-500">{i18n.t('poses_3d_body_sub')}</span>
 											</div>
 											<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
 												{#each FULL_BODY_POSES_3D as fbPose}
@@ -1267,8 +1274,8 @@
 								<!-- TAB 3: TRIGGER MOTIONS -->
 								<div class="space-y-2.5">
 									<div class="flex items-center justify-between px-1 text-[10px] font-bold text-cyan-400">
-										<span>TRIGGER ANIMASI & MOTIONS</span>
-										<span class="text-[9px] text-zinc-500">Animasi Gerakan Model</span>
+										<span>{i18n.t('motions_trigger_header')}</span>
+										<span class="text-[9px] text-zinc-500">{i18n.t('motions_model_sub')}</span>
 									</div>
 
 									{#if rigging.availableMotions && rigging.availableMotions.length > 0}
@@ -1279,7 +1286,7 @@
 													onclick={() => {
 														playSfx('click');
 														rigging.playMotion(motion);
-														rigging.showToast(`Putar Gerakan: ${motion}`);
+														rigging.showToast(`Play: ${motion}`);
 														isExpressionMenuOpen = false;
 													}}
 													class="p-2 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 {
@@ -1299,15 +1306,15 @@
 												onclick={() => {
 													playSfx('click');
 													rigging.playMotion('wave');
-													rigging.showToast('👋 Melambai ke Penonton');
+													rigging.showToast(`👋 ${i18n.t('motion_wave_label')}`);
 													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
 												<span class="text-lg">👋</span>
 												<div>
-													<div class="font-semibold text-xs">Lambaian Tangan</div>
-													<div class="text-[9px] text-zinc-500">Sapa penonton</div>
+													<div class="font-semibold text-xs">{i18n.t('motion_wave_label')}</div>
+													<div class="text-[9px] text-zinc-500">{i18n.t('motion_wave_sub')}</div>
 												</div>
 											</button>
 
@@ -1316,15 +1323,15 @@
 												onclick={() => {
 													playSfx('click');
 													rigging.playMotion('bow');
-													rigging.showToast('🙇 Membungkuk Hormat');
+													rigging.showToast(`🙇 ${i18n.t('motion_bow_label')}`);
 													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
 												<span class="text-lg">🙇</span>
 												<div>
-													<div class="font-semibold text-xs">Membungkuk</div>
-													<div class="text-[9px] text-zinc-500">Salam pembuka/penutup</div>
+													<div class="font-semibold text-xs">{i18n.t('motion_bow_label')}</div>
+													<div class="text-[9px] text-zinc-500">{i18n.t('motion_bow_sub')}</div>
 												</div>
 											</button>
 
@@ -1333,15 +1340,15 @@
 												onclick={() => {
 													playSfx('click');
 													rigging.playMotion('cheer');
-													rigging.showToast('🎉 Sorak Semangat!');
+													rigging.showToast(`🎉 ${i18n.t('motion_cheer_label')}`);
 													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
 												<span class="text-lg">🎉</span>
 												<div>
-													<div class="font-semibold text-xs">Sorak Hore</div>
-													<div class="text-[9px] text-zinc-500">Ekspresi heboh</div>
+													<div class="font-semibold text-xs">{i18n.t('motion_cheer_label')}</div>
+													<div class="text-[9px] text-zinc-500">{i18n.t('motion_cheer_sub')}</div>
 												</div>
 											</button>
 
@@ -1350,15 +1357,15 @@
 												onclick={() => {
 													playSfx('click');
 													rigging.playMotion('nod');
-													rigging.showToast('🙂 Mengangguk Setuju');
+													rigging.showToast(`🙂 ${i18n.t('motion_nod_label')}`);
 													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
 												<span class="text-lg">🙂</span>
 												<div>
-													<div class="font-semibold text-xs">Mengangguk</div>
-													<div class="text-[9px] text-zinc-500">Respon ya / setuju</div>
+													<div class="font-semibold text-xs">{i18n.t('motion_nod_label')}</div>
+													<div class="text-[9px] text-zinc-500">{i18n.t('motion_nod_sub')}</div>
 												</div>
 											</button>
 
@@ -1367,15 +1374,15 @@
 												onclick={() => {
 													playSfx('click');
 													rigging.playMotion('shake');
-													rigging.showToast('🙅 Menggeleng Kepala');
+													rigging.showToast(`🙅 ${i18n.t('motion_shake_label')}`);
 													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
 												<span class="text-lg">🙅</span>
 												<div>
-													<div class="font-semibold text-xs">Menggeleng</div>
-													<div class="text-[9px] text-zinc-500">Respon tidak / enggan</div>
+													<div class="font-semibold text-xs">{i18n.t('motion_shake_label')}</div>
+													<div class="text-[9px] text-zinc-500">{i18n.t('motion_shake_sub')}</div>
 												</div>
 											</button>
 
@@ -1384,15 +1391,15 @@
 												onclick={() => {
 													playSfx('click');
 													rigging.playMotion('blink_fast');
-													rigging.showToast('✨ Kedip Mata Cepat');
+													rigging.showToast(`✨ ${i18n.t('motion_blink_label')}`);
 													isExpressionMenuOpen = false;
 												}}
 												class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 bg-zinc-900/80 border-zinc-800 hover:bg-cyan-500/15 text-zinc-300 hover:text-cyan-300"
 											>
 												<span class="text-lg">✨</span>
 												<div>
-													<div class="font-semibold text-xs">Kedip Beruntun</div>
-													<div class="text-[9px] text-zinc-500">Mata genit lucu</div>
+													<div class="font-semibold text-xs">{i18n.t('motion_blink_label')}</div>
+													<div class="text-[9px] text-zinc-500">{i18n.t('motion_blink_sub')}</div>
 												</div>
 											</button>
 										</div>
@@ -1406,8 +1413,8 @@
 							<!-- Framing -->
 							<div class="space-y-1.5">
 								<div class="flex items-center justify-between text-[10px] font-bold text-zinc-400">
-									<span>FRAMING KAMERA</span>
-									<span class="text-[9px] text-zinc-500 font-mono">[0] Reset</span>
+									<span>{i18n.t('framing_cam_title')}</span>
+									<span class="text-[9px] text-zinc-500 font-mono">{i18n.t('framing_reset_hotkey')}</span>
 								</div>
 								<div class="grid grid-cols-3 gap-1 text-xs">
 									<button
@@ -1453,7 +1460,7 @@
 							{#if rigging.avatarEngine === '3d'}
 								<div class="space-y-1.5 pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 									<div class="flex items-center justify-between text-[10px] font-bold text-amber-400">
-										<span>ROTASI 3D STAGE</span>
+										<span>{i18n.t('stage_3d_rot_title')}</span>
 										<span class="text-[9px] text-zinc-500">Turntable 360°</span>
 									</div>
 									<div class="grid grid-cols-2 gap-1.5">
@@ -1462,7 +1469,7 @@
 											onclick={() => {
 												playSfx('toggle');
 												rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
-												rigging.showToast(rigging.is3DAutoSpin ? '3D Auto-Spin 360° Aktif' : 'Auto-Spin Dihentikan');
+												rigging.showToast(rigging.is3DAutoSpin ? i18n.t('stage_auto_spin') : i18n.t('stage_stop_spin'));
 											}}
 											class="col-span-2 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border active:scale-95 {
 												rigging.is3DAutoSpin
@@ -1471,7 +1478,7 @@
 											}"
 										>
 											<RefreshCw class="w-3.5 h-3.5 {rigging.is3DAutoSpin ? 'animate-spin text-amber-300' : 'text-zinc-400'}" />
-											<span class="text-[11px]">{rigging.is3DAutoSpin ? 'Stop Spin' : 'Auto-Spin 360°'}</span>
+											<span class="text-[11px]">{rigging.is3DAutoSpin ? i18n.t('stage_stop_spin') : i18n.t('stage_auto_spin')}</span>
 										</button>
 
 										<button
@@ -1479,7 +1486,7 @@
 											onclick={() => {
 												playSfx('click');
 												threeStage.rotateModelBodyDegrees(-45);
-												rigging.showToast('Putar Karakter 3D -45°');
+												rigging.showToast('Rotate -45°');
 											}}
 											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
@@ -1494,7 +1501,7 @@
 											onclick={() => {
 												playSfx('click');
 												threeStage.rotateModelBodyDegrees(45);
-												rigging.showToast('Putar Karakter 3D +45°');
+												rigging.showToast('Rotate +45°');
 											}}
 											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
@@ -1510,22 +1517,22 @@
 												playSfx('click');
 												threeStage.resetOrbit();
 												rigging.is3DAutoSpin = false;
-												rigging.showToast('Karakter Hadap Depan (0°)');
+												rigging.showToast(i18n.t('stage_face_front'));
 											}}
 											class="col-span-2 p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 											}"
 										>
 											<Crosshair class="w-3.5 h-3.5 text-cyan-400" />
-											<span>Hadap Depan (0°)</span>
+											<span>{i18n.t('stage_face_front')}</span>
 										</button>
 									</div>
 
 									<!-- Posisi Model 3D (Pan / Move D-Pad) -->
 									<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 										<div class="flex items-center justify-between text-[10px] font-bold text-cyan-400 mb-1.5">
-											<span>POSISI MODEL 3D</span>
-											<span class="text-[9px] text-zinc-500 font-mono">Pan D-Pad</span>
+											<span>{i18n.t('stage_model_pos_title')}</span>
+											<span class="text-[9px] text-zinc-500 font-mono">{i18n.t('stage_pan_dpad')}</span>
 										</div>
 										<div class="grid grid-cols-3 gap-1">
 											<div></div>
@@ -1534,12 +1541,12 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(0, 0.15);
-													rigging.showToast('Geser Atas (+Y)');
+													rigging.showToast(i18n.t('stage_move_up'));
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
-												title="Geser Karakter ke Atas"
+												title={i18n.t('stage_move_up')}
 											>
 												<ChevronUp class="w-4 h-4" />
 											</button>
@@ -1550,12 +1557,12 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(-0.15, 0);
-													rigging.showToast('Geser Kiri (-X)');
+													rigging.showToast(i18n.t('stage_move_left'));
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
-												title="Geser Karakter ke Kiri"
+												title={i18n.t('stage_move_left')}
 											>
 												<ChevronLeft class="w-4 h-4" />
 											</button>
@@ -1565,12 +1572,12 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.resetModelPosition();
-													rigging.showToast('Posisi Karakter Direset (Tengah)');
+													rigging.showToast(i18n.t('stage_center_pos'));
 												}}
 												class="p-1.5 rounded-xl text-xs font-bold border flex items-center justify-center transition-all cursor-pointer active:scale-95 text-cyan-400 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800'
 												}"
-												title="Reset Posisi ke Tengah (0, 0)"
+												title={i18n.t('stage_center_pos')}
 											>
 												<Crosshair class="w-4 h-4 text-cyan-400" />
 											</button>
@@ -1580,12 +1587,12 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(0.15, 0);
-													rigging.showToast('Geser Kanan (+X)');
+													rigging.showToast(i18n.t('stage_move_right'));
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
-												title="Geser Karakter ke Kanan"
+												title={i18n.t('stage_move_right')}
 											>
 												<ChevronRight class="w-4 h-4" />
 											</button>
@@ -1596,12 +1603,12 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(0, -0.15);
-													rigging.showToast('Geser Bawah (-Y)');
+													rigging.showToast(i18n.t('stage_move_down'));
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
-												title="Geser Karakter ke Bawah"
+												title={i18n.t('stage_move_down')}
 											>
 												<ChevronDown class="w-4 h-4" />
 											</button>
@@ -1675,6 +1682,7 @@
 					rigging.isObsModalOpen = false;
 					rigging.isDrawerOpen = false;
 					isDeviceMenuOpen = false;
+					isLanguageMenuOpen = false;
 				}}
 				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
 				aria-label={i18n.t('settings_title')}
@@ -1686,6 +1694,120 @@
 			>
 				{i18n.t('settings_title')} [F2]
 			</div>
+		</div>
+
+		<!-- 10b. Quick Language Selector (ID / EN / JA) -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isLanguageMenuOpen = !isLanguageMenuOpen;
+					isDeviceMenuOpen = false;
+					isExpressionMenuOpen = false;
+				}}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
+					isLanguageMenuOpen
+						? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('switch_language')}
+			>
+				<Languages class="w-5 h-5 text-emerald-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('switch_language')} ({i18n.locale.toUpperCase()})
+			</div>
+
+			<!-- Language Popover Dropdown -->
+			{#if isLanguageMenuOpen}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="fixed inset-0 z-[80] bg-black/20 backdrop-blur-[0.5px]"
+					onclick={() => (isLanguageMenuOpen = false)}
+				></div>
+
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-48 backdrop-blur-2xl border rounded-2xl p-2 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 shadow-2xl space-y-1"
+					onclick={(e) => e.stopPropagation()}
+					style="background: {isLightTheme ? currentTheme.surface + 'f5' : currentTheme.surface + 'ea'}; border-color: {currentTheme.accent}55; color: {currentTheme.text};"
+				>
+					<div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border-b border-white/10 flex items-center justify-between">
+						<span>{i18n.t('switch_language')}</span>
+						<span class="font-mono text-[9px] text-zinc-400">{i18n.locale.toUpperCase()}</span>
+					</div>
+
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							i18n.setLocale('id');
+							isLanguageMenuOpen = false;
+						}}
+						class="w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer active:scale-95 {
+							i18n.locale === 'id'
+								? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
+								: 'text-zinc-300 hover:bg-white/10 hover:text-white'
+						}"
+					>
+						<span class="flex items-center gap-2">
+							<span class="text-sm">🇮🇩</span>
+							<span>Bahasa Indonesia</span>
+						</span>
+						{#if i18n.locale === 'id'}
+							<Check class="w-3.5 h-3.5 text-emerald-400" />
+						{/if}
+					</button>
+
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							i18n.setLocale('en');
+							isLanguageMenuOpen = false;
+						}}
+						class="w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer active:scale-95 {
+							i18n.locale === 'en'
+								? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
+								: 'text-zinc-300 hover:bg-white/10 hover:text-white'
+						}"
+					>
+						<span class="flex items-center gap-2">
+							<span class="text-sm">🇬🇧</span>
+							<span>English</span>
+						</span>
+						{#if i18n.locale === 'en'}
+							<Check class="w-3.5 h-3.5 text-emerald-400" />
+						{/if}
+					</button>
+
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							i18n.setLocale('ja');
+							isLanguageMenuOpen = false;
+						}}
+						class="w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer active:scale-95 {
+							i18n.locale === 'ja'
+								? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
+								: 'text-zinc-300 hover:bg-white/10 hover:text-white'
+						}"
+					>
+						<span class="flex items-center gap-2">
+							<span class="text-sm">🇯🇵</span>
+							<span>日本語</span>
+						</span>
+						{#if i18n.locale === 'ja'}
+							<Check class="w-3.5 h-3.5 text-emerald-400" />
+						{/if}
+					</button>
+				</div>
+			{/if}
 		</div>
 
 		<!-- 11. Clear GUI / Lock Screen Button -->

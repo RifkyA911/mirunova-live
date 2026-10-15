@@ -99,6 +99,9 @@
 		class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 select-none animate-in fade-in duration-150"
 	>
 		<div
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
 			class="w-full max-w-5xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border transition-colors duration-200 {
 				isLightTheme
 					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'

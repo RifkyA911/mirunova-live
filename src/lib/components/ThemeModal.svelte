@@ -162,6 +162,9 @@
 	>
 		<!-- Studio Theme Modal Dialog Card -->
 		<div
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
 			class="w-full max-w-5xl xl:max-w-6xl max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-colors duration-200 border {
 				isLightTheme
 					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
@@ -192,7 +195,7 @@
 							</span>
 						</div>
 						<p class="text-xs text-zinc-400 mt-0.5">
-							Pilih palet warna UI studio panggung, tema daylight/dark, dan customizer palet warna interaktif
+							{i18n.t('themes_sub')}
 						</p>
 					</div>
 				</div>
@@ -202,7 +205,7 @@
 					class="p-2 rounded-xl transition-colors cursor-pointer {
 						isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80'
 					}"
-					aria-label="Tutup"
+					aria-label={i18n.t('close_btn')}
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -217,7 +220,7 @@
 					<div class="flex items-center gap-2">
 						<Compass class="w-4 h-4 text-cyan-400" />
 						<span class="text-xs font-bold uppercase tracking-wider {isLightTheme ? 'text-zinc-700' : 'text-zinc-200'}">
-							Pilih Palet Tema UI
+							{i18n.t('theme_selector_title')}
 						</span>
 					</div>
 
@@ -234,7 +237,7 @@
 									: 'text-zinc-400 hover:text-zinc-200'
 							}"
 						>
-							<span>Semua Tema</span>
+							<span>{i18n.t('themes_all_filter')}</span>
 							<span class="text-[10px] px-1.5 py-0.2 rounded font-mono {themeCategory === 'all' ? 'bg-zinc-950/20 text-zinc-950' : 'bg-zinc-800 text-zinc-400'}">13</span>
 						</button>
 
@@ -249,7 +252,7 @@
 							}"
 						>
 							<Sun class="w-3.5 h-3.5" />
-							<span>Daylight (Terang)</span>
+							<span>{i18n.t('themes_daylight_filter')}</span>
 							<span class="text-[10px] px-1.5 py-0.2 rounded font-mono {themeCategory === 'light' ? 'bg-amber-950/20 text-amber-950' : 'bg-zinc-800 text-zinc-400'}">4</span>
 						</button>
 
@@ -264,7 +267,7 @@
 							}"
 						>
 							<Moon class="w-3.5 h-3.5" />
-							<span>Dark & Cyber</span>
+							<span>{i18n.t('themes_dark_filter')}</span>
 							<span class="text-[10px] px-1.5 py-0.2 rounded font-mono {themeCategory === 'dark' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-400'}">8</span>
 						</button>
 
@@ -279,7 +282,7 @@
 							}"
 						>
 							<Wand2 class="w-3.5 h-3.5" />
-							<span>Custom Studio</span>
+							<span>{i18n.t('themes_custom_filter')}</span>
 							<span class="text-[10px] px-1.5 py-0.2 rounded font-mono bg-white/20 text-white">PRO</span>
 						</button>
 					</div>
@@ -356,7 +359,7 @@
 									{#if isSelected}
 										<div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-cyan-400 text-zinc-950 font-bold text-[9px]">
 											<Check class="w-3 h-3 stroke-[3]" />
-											<span>Aktif</span>
+											<span>{i18n.t('theme_active_badge')}</span>
 										</div>
 									{/if}
 								</div>
@@ -374,23 +377,23 @@
 									<div class="grid grid-cols-5 gap-1">
 										<div class="flex flex-col items-center gap-0.5" title="Background: {theme.palette.bg}">
 											<div class="w-full h-3.5 rounded border border-black/10 shadow-sm" style="background-color: {theme.palette.bg};"></div>
-											<span class="text-[8px] font-mono text-zinc-400">BG</span>
+											<span class="text-[8px] font-mono text-zinc-400">{i18n.t('themes_palette_bg')}</span>
 										</div>
 										<div class="flex flex-col items-center gap-0.5" title="Surface: {theme.palette.surface}">
 											<div class="w-full h-3.5 rounded border border-black/10 shadow-sm" style="background-color: {theme.palette.surface};"></div>
-											<span class="text-[8px] font-mono text-zinc-400">Card</span>
+											<span class="text-[8px] font-mono text-zinc-400">{i18n.t('themes_palette_card')}</span>
 										</div>
 										<div class="flex flex-col items-center gap-0.5" title="Accent: {theme.palette.accent}">
 											<div class="w-full h-3.5 rounded border border-black/10 shadow-sm" style="background-color: {theme.palette.accent};"></div>
-											<span class="text-[8px] font-mono text-zinc-400">Aksen</span>
+											<span class="text-[8px] font-mono text-zinc-400">{i18n.t('themes_palette_accent')}</span>
 										</div>
 										<div class="flex flex-col items-center gap-0.5" title="Border: {theme.palette.border}">
 											<div class="w-full h-3.5 rounded border border-black/10 shadow-sm" style="background-color: {theme.palette.border};"></div>
-											<span class="text-[8px] font-mono text-zinc-400">Garis</span>
+											<span class="text-[8px] font-mono text-zinc-400">{i18n.t('themes_palette_border')}</span>
 										</div>
 										<div class="flex flex-col items-center gap-0.5" title="Text: {theme.palette.text}">
 											<div class="w-full h-3.5 rounded border border-black/10 shadow-sm" style="background-color: {theme.palette.text};"></div>
-											<span class="text-[8px] font-mono text-zinc-400">Teks</span>
+											<span class="text-[8px] font-mono text-zinc-400">{i18n.t('themes_palette_text')}</span>
 										</div>
 									</div>
 								</div>
@@ -407,9 +410,9 @@
 						<div>
 							<div class="flex items-center justify-between mb-3">
 								<span class="text-xs font-bold uppercase tracking-wider {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
-									Preset Estetik 1-Klik
+									{i18n.t('themes_presets_1click')}
 								</span>
-								<span class="text-[10px] text-zinc-400">Pilih salah satu untuk basis customizer</span>
+								<span class="text-[10px] text-zinc-400">{i18n.t('themes_presets_sub')}</span>
 							</div>
 
 							<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
@@ -438,13 +441,13 @@
 						<!-- 5-Color Picker Sliders & Hex Controls -->
 						<div class="space-y-2">
 							<span class="text-xs font-bold uppercase tracking-wider block {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
-								Palet 5-Warna Studio Kustom
+								{i18n.t('themes_custom_5col')}
 							</span>
 
 							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 								<!-- 1. Background -->
 								<div class="p-3 rounded-2xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
-									<label for="th-bg" class="text-[11px] font-bold text-zinc-400 block">1. Background</label>
+									<label for="th-bg" class="text-[11px] font-bold text-zinc-400 block">1. {i18n.t('themes_palette_bg')}</label>
 									<div class="flex items-center gap-2">
 										<input
 											id="th-bg"
@@ -470,7 +473,7 @@
 
 								<!-- 2. Surface -->
 								<div class="p-3 rounded-2xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
-									<label for="th-surface" class="text-[11px] font-bold text-zinc-400 block">2. Surface Card</label>
+									<label for="th-surface" class="text-[11px] font-bold text-zinc-400 block">2. {i18n.t('themes_palette_card')}</label>
 									<div class="flex items-center gap-2">
 										<input
 											id="th-surface"
@@ -496,7 +499,7 @@
 
 								<!-- 3. Accent -->
 								<div class="p-3 rounded-2xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
-									<label for="th-accent" class="text-[11px] font-bold text-zinc-400 block">3. Accent Highlight</label>
+									<label for="th-accent" class="text-[11px] font-bold text-zinc-400 block">3. {i18n.t('themes_palette_accent')}</label>
 									<div class="flex items-center gap-2">
 										<input
 											id="th-accent"
@@ -522,7 +525,7 @@
 
 								<!-- 4. Border -->
 								<div class="p-3 rounded-2xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
-									<label for="th-border" class="text-[11px] font-bold text-zinc-400 block">4. Border / Divider</label>
+									<label for="th-border" class="text-[11px] font-bold text-zinc-400 block">4. {i18n.t('themes_palette_border')}</label>
 									<div class="flex items-center gap-2">
 										<input
 											id="th-border"
@@ -548,7 +551,7 @@
 
 								<!-- 5. Text -->
 								<div class="p-3 rounded-2xl border space-y-1.5 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950 border-zinc-800'}">
-									<label for="th-text" class="text-[11px] font-bold text-zinc-400 block">5. Typography Text</label>
+									<label for="th-text" class="text-[11px] font-bold text-zinc-400 block">5. {i18n.t('themes_palette_text')}</label>
 									<div class="flex items-center gap-2">
 										<input
 											id="th-text"
@@ -588,10 +591,10 @@
 								</div>
 								<div>
 									<h4 class="font-extrabold text-sm" style="color: {rigging.customThemeConfig.text};">
-										MiruNova Live Custom Studio Preview
+										{i18n.t('themes_preview_title')}
 									</h4>
 									<p class="text-xs opacity-85">
-										Palet warna kustom aktif dan langsung diterapkan ke seluruh antarmuka studio
+										{i18n.t('themes_preview_sub')}
 									</p>
 								</div>
 							</div>
@@ -608,10 +611,10 @@
 								>
 									{#if rigging.uiTheme === 'custom'}
 										<Check class="w-4 h-4 stroke-[3]" />
-										<span>Tema Kustom Aktif</span>
+										<span>{i18n.t('themes_applied_badge')}</span>
 									{:else}
 										<Wand2 class="w-4 h-4" />
-										<span>Terapkan Tema Kustom</span>
+										<span>{i18n.t('themes_apply_btn')}</span>
 									{/if}
 								</button>
 							</div>
@@ -670,7 +673,7 @@
 								isLightTheme ? 'bg-zinc-100 border-zinc-200' : 'bg-zinc-900/80 border-zinc-800'
 							}">
 								<span class="text-xs text-zinc-400">
-									{rigging.customBgUrl ? 'Gambar latar berhasil dimuat' : 'Belum ada wallpaper diunggah'}
+									{rigging.customBgUrl ? i18n.t('image_loaded') : i18n.t('no_image_uploaded')}
 								</span>
 								<button
 									type="button"
