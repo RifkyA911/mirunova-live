@@ -239,7 +239,7 @@ export class RiggingStore {
 	selected3DModelId = $state<string>('mochi-cat');
 	is3DAutoSpin = $state<boolean>(false);
 	customGlbUrl = $state<string | null>(null);
-	stageEnvironment = $state<'grid' | 'room' | 'field' | 'void'>('grid');
+	stageEnvironment = $state<'grid' | 'room' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void'>('grid');
 
 	// Active Model Details
 	selectedModelId = $state<string>('vivian');
@@ -615,7 +615,7 @@ export class RiggingStore {
 		this.persist();
 	}
 
-	setStageEnvironment(env: 'grid' | 'room' | 'field' | 'void') {
+	setStageEnvironment(env: 'grid' | 'room' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void') {
 		this.stageEnvironment = env;
 		this.persist();
 	}

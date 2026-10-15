@@ -5,7 +5,7 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 export type CatVariant = 'mochi' | 'kuro' | 'tora';
 export type FramingMode3D = 'full' | 'half' | 'closeup';
 export type FullBodyPose3D = 'idle' | 'wave' | 'peace' | 'heart' | 'stand';
-export type StageEnvironment3D = 'grid' | 'room' | 'field' | 'void';
+export type StageEnvironment3D = 'grid' | 'room' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void';
 
 export class ThreeStage {
 	private scene: THREE.Scene;
@@ -14,7 +14,7 @@ export class ThreeStage {
 	private container: HTMLElement | null = null;
 	private animationFrameId: number | null = null;
 
-	// 3D Stage Environments ('grid' | 'room' | 'field' | 'void')
+	// 3D Stage Environments ('grid' | 'room' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void')
 	public currentStageEnv: StageEnvironment3D = 'grid';
 	private stageEnvironmentGroup: THREE.Group = new THREE.Group();
 
@@ -121,9 +121,8 @@ export class ThreeStage {
 		this.renderer.setSize(width, height);
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-		// ACESFilmicToneMapping with vibrant exposure ensures colors are bright, saturated, and punchy without chalky blowout
-		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-		this.renderer.toneMappingExposure = 1.08;
+		// Use NoToneMapping so anime cel textures retain their authored, rich, vivid, saturated colors without ACES desaturation
+		this.renderer.toneMapping = THREE.NoToneMapping;
 		container.appendChild(this.renderer.domElement);
 
 		this.camera.aspect = width / height;
@@ -131,21 +130,21 @@ export class ThreeStage {
 
 		// Studio Lights: Bright, colorful, broadcast-grade anime lighting
 		// 1. Soft warm ambient fill gives character bright, luminous presence
-		const ambientLight = new THREE.AmbientLight(0xfffbf2, 0.85);
+		const ambientLight = new THREE.AmbientLight(0xfff8ee, 0.92);
 		this.scene.add(ambientLight);
 
 		// 2. Frontal eye-level key light provides crisp, colorful definition
-		const mainLight = new THREE.DirectionalLight(0xffffff, 0.85);
+		const mainLight = new THREE.DirectionalLight(0xffffff, 1.05);
 		mainLight.position.set(0.1, 1.45, 2.8);
 		this.scene.add(mainLight);
 
 		// 3. Gentle pastel fill light from side-left softens contours with colorful contrast
-		const fillLight = new THREE.DirectionalLight(0xf0f7ff, 0.35);
+		const fillLight = new THREE.DirectionalLight(0xfdf2f8, 0.45);
 		fillLight.position.set(-2.2, 1.4, 2.0);
 		this.scene.add(fillLight);
 
 		// 4. Subtle warm champagne rim backlight gives clean edge separation from background
-		const rimLight = new THREE.DirectionalLight(0xfff5e6, 0.35);
+		const rimLight = new THREE.DirectionalLight(0xffedd5, 0.4);
 		rimLight.position.set(0, 2.8, -2.2);
 		this.scene.add(rimLight);
 
@@ -308,16 +307,45 @@ export class ThreeStage {
 		this.activeExpression = name;
 		if (this.morphMesh && this.morphMesh.morphTargetInfluences) {
 			const infl = this.morphMesh.morphTargetInfluences;
-			const expKeys = ['stars', 'blush', 'vrc.blink', 'vrc.ee', 'vrc.oh', 'vrc.aa'];
-			for (const k of expKeys) {
-				const idx = this.morphDict[k];
-				if (idx !== undefined) infl[idx] = 0;
-			}
+			for (let i = 0; i < infl.length; i++) infl[i] = 0;
+
+			if (!name || name === 'normal' || name === 'reset') return;
+
 			let key = name;
 			if (name === 'smile') key = 'vrc.ee';
-			else if (name === 'wink') key = 'vrc.blink';
+			else if (name === 'laugh') {
+				if (this.morphDict['vrc.ee'] !== undefined) infl[this.morphDict['vrc.ee']] = 1.0;
+				if (this.morphDict['vrc.aa'] !== undefined) infl[this.morphDict['vrc.aa']] = 0.8;
+				return;
+			} else if (name === 'wink') key = 'vrc.blink';
 			else if (name === 'surprised' || name === 'surprise') key = 'vrc.oh';
-			else if (name === 'open') key = 'vrc.aa';
+			else if (name === 'open' || name === 'tongue') key = 'vrc.aa';
+			else if (name === 'love') {
+				if (this.morphDict['stars'] !== undefined) infl[this.morphDict['stars']] = 1.0;
+				if (this.morphDict['blush'] !== undefined) infl[this.morphDict['blush']] = 1.0;
+				if (this.morphDict['vrc.ee'] !== undefined) infl[this.morphDict['vrc.ee']] = 0.6;
+				return;
+			} else if (name === 'pout') {
+				if (this.morphDict['vrc.ou'] !== undefined) infl[this.morphDict['vrc.ou']] = 1.0;
+				if (this.morphDict['blush'] !== undefined) infl[this.morphDict['blush']] = 0.5;
+				return;
+			} else if (name === 'angry') key = 'vrc.ou';
+			else if (name === 'smug') {
+				if (this.morphDict['vrc.ee'] !== undefined) infl[this.morphDict['vrc.ee']] = 0.75;
+				if (this.morphDict['vrc.ou'] !== undefined) infl[this.morphDict['vrc.ou']] = 0.35;
+				return;
+			} else if (name === 'dazed') {
+				if (this.morphDict['stars'] !== undefined) infl[this.morphDict['stars']] = 0.6;
+				if (this.morphDict['vrc.blink'] !== undefined) infl[this.morphDict['vrc.blink']] = 0.4;
+				return;
+			} else if (name === 'sleepy') {
+				if (this.morphDict['vrc.blink'] !== undefined) infl[this.morphDict['vrc.blink']] = 0.85;
+				return;
+			} else if (name === 'cry') {
+				if (this.morphDict['vrc.ou'] !== undefined) infl[this.morphDict['vrc.ou']] = 0.7;
+				if (this.morphDict['vrc.oh'] !== undefined) infl[this.morphDict['vrc.oh']] = 0.35;
+				return;
+			}
 
 			if (key && this.morphDict[key] !== undefined) {
 				infl[this.morphDict[key]] = 1.0;
@@ -411,9 +439,9 @@ export class ThreeStage {
 			baseboardRight.position.set(7.96, 0.125, 0);
 			this.stageEnvironmentGroup.add(baseboardRight);
 
-			// 2. Dinding Cat Cream Kuning Soft (Soft warm pastel cream yellow walls)
+			// 2. Dinding Cat Cream Kuning Soft #F9E4BC (Soft warm pastel cream yellow walls)
 			const wallMat = new THREE.MeshStandardMaterial({
-				color: 0xfef9e7, // cat cream kuning soft
+				color: 0xf9e4bc, // cat cream kuning soft #F9E4BC
 				roughness: 0.85,
 				metalness: 0.02
 			});
@@ -711,6 +739,188 @@ export class ThreeStage {
 
 			// Atmospheric distant fog
 			this.scene.fog = new THREE.FogExp2(0x064e3b, 0.035);
+		} else if (env === 'sunset') {
+			// Sunset Beach Horizon Stage: Warm golden sands, glistening ocean horizon, sunset sky disc
+			const sandGeo = new THREE.CircleGeometry(6, 48);
+			const sandMat = new THREE.MeshStandardMaterial({
+				color: 0xe0a96d, // warm golden sand
+				roughness: 0.9,
+				metalness: 0.02
+			});
+			const sand = new THREE.Mesh(sandGeo, sandMat);
+			sand.rotation.x = -Math.PI / 2;
+			sand.position.y = 0;
+			this.stageEnvironmentGroup.add(sand);
+
+			// Wooden Boardwalk / Stage Deck
+			const deckGeo = new THREE.BoxGeometry(4.2, 0.1, 4.2);
+			const deckMat = new THREE.MeshStandardMaterial({
+				color: 0x8c5332, // beach wood
+				roughness: 0.5,
+				metalness: 0.05
+			});
+			const deck = new THREE.Mesh(deckGeo, deckMat);
+			deck.position.set(0, 0.05, 0);
+			this.stageEnvironmentGroup.add(deck);
+
+			// Distant Ocean Horizon Plane
+			const oceanGeo = new THREE.PlaneGeometry(60, 30);
+			const oceanMat = new THREE.MeshStandardMaterial({
+				color: 0x075985, // deep oceanic blue with specular glints
+				roughness: 0.2,
+				metalness: 0.75
+			});
+			const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+			ocean.rotation.x = -Math.PI / 2;
+			ocean.position.set(0, -0.05, -16);
+			this.stageEnvironmentGroup.add(ocean);
+
+			// Giant Sunset Sun Disc in Background
+			const sunGeo = new THREE.CircleGeometry(4.5, 32);
+			const sunMat = new THREE.MeshBasicMaterial({
+				color: 0xfbbf24,
+				transparent: true,
+				opacity: 0.92
+			});
+			const sun = new THREE.Mesh(sunGeo, sunMat);
+			sun.position.set(0, 4.2, -18);
+			this.stageEnvironmentGroup.add(sun);
+
+			// Warm Golden Sunset Fog
+			this.scene.fog = new THREE.FogExp2(0x451a03, 0.03);
+		} else if (env === 'studio') {
+			// Neon Broadcast Concert Studio: High-gloss black stage, neon ring podium, stage trusses & spotlights
+			const floorGeo = new THREE.CircleGeometry(7, 48);
+			const floorMat = new THREE.MeshStandardMaterial({
+				color: 0x0f172a, // dark sleek concert floor
+				roughness: 0.15,
+				metalness: 0.9
+			});
+			const floor = new THREE.Mesh(floorGeo, floorMat);
+			floor.rotation.x = -Math.PI / 2;
+			floor.position.y = 0;
+			this.stageEnvironmentGroup.add(floor);
+
+			// Inner Magenta & Cyan Glowing Podium Rings
+			const ring1 = new THREE.Mesh(
+				new THREE.RingGeometry(2.4, 2.52, 48),
+				new THREE.MeshBasicMaterial({ color: 0xec4899, side: THREE.DoubleSide })
+			);
+			ring1.rotation.x = -Math.PI / 2;
+			ring1.position.y = 0.01;
+			this.stageEnvironmentGroup.add(ring1);
+
+			const ring2 = new THREE.Mesh(
+				new THREE.RingGeometry(4.5, 4.62, 48),
+				new THREE.MeshBasicMaterial({ color: 0x06b6d4, side: THREE.DoubleSide })
+			);
+			ring2.rotation.x = -Math.PI / 2;
+			ring2.position.y = 0.01;
+			this.stageEnvironmentGroup.add(ring2);
+
+			// Stage Trusses in Background
+			const trussMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.3 });
+			[-4.5, 4.5].forEach((x) => {
+				const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 7, 12), trussMat);
+				pillar.position.set(x, 3.5, -5.5);
+				this.stageEnvironmentGroup.add(pillar);
+
+				const crossbar = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.06), trussMat);
+				crossbar.position.set(x, 6.2, -5.5);
+				this.stageEnvironmentGroup.add(crossbar);
+			});
+
+			const topTruss = new THREE.Mesh(new THREE.BoxGeometry(10, 0.12, 0.12), trussMat);
+			topTruss.position.set(0, 6.8, -5.5);
+			this.stageEnvironmentGroup.add(topTruss);
+
+			// Volumetric Spotlight Beam Cones
+			const beamMat1 = new THREE.MeshBasicMaterial({
+				color: 0x38bdf8,
+				transparent: true,
+				opacity: 0.14,
+				side: THREE.DoubleSide
+			});
+			const beam1 = new THREE.Mesh(new THREE.ConeGeometry(1.6, 7.5, 24, 1, true), beamMat1);
+			beam1.position.set(-3.2, 3.6, -2.5);
+			beam1.rotation.z = -0.32;
+			beam1.rotation.x = 0.2;
+			this.stageEnvironmentGroup.add(beam1);
+
+			const beamMat2 = new THREE.MeshBasicMaterial({
+				color: 0xf472b6,
+				transparent: true,
+				opacity: 0.14,
+				side: THREE.DoubleSide
+			});
+			const beam2 = new THREE.Mesh(new THREE.ConeGeometry(1.6, 7.5, 24, 1, true), beamMat2);
+			beam2.position.set(3.2, 3.6, -2.5);
+			beam2.rotation.z = 0.32;
+			beam2.rotation.x = 0.2;
+			this.stageEnvironmentGroup.add(beam2);
+
+			this.scene.fog = new THREE.FogExp2(0x020617, 0.025);
+		} else if (env === 'dojo') {
+			// Sakura Garden Shrine / Tatami Stage: Woven tatami mats, shoji panels, lanterns, falling petals
+			const tatamiGeo = new THREE.PlaneGeometry(12, 12);
+			const tatamiMat = new THREE.MeshStandardMaterial({
+				color: 0xa3b18a, // traditional woven tatami rush grass
+				roughness: 0.8,
+				metalness: 0.02
+			});
+			const tatami = new THREE.Mesh(tatamiGeo, tatamiMat);
+			tatami.rotation.x = -Math.PI / 2;
+			tatami.position.y = 0;
+			this.stageEnvironmentGroup.add(tatami);
+
+			// Tatami Borders (Black woven cloth trims)
+			const borderMat = new THREE.MeshBasicMaterial({ color: 0x1f2421 });
+			for (let x = -4; x <= 4; x += 4) {
+				const trim = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 12), borderMat);
+				trim.rotation.x = -Math.PI / 2;
+				trim.position.set(x, 0.005, 0);
+				this.stageEnvironmentGroup.add(trim);
+			}
+
+			// Shoji Screen Screen in Background
+			const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d2614, roughness: 0.6 });
+			const paperMat = new THREE.MeshStandardMaterial({ color: 0xfefae0, roughness: 0.4, emissive: 0xffedd5, emissiveIntensity: 0.15 });
+
+			const shojiGroup = new THREE.Group();
+			shojiGroup.position.set(0, 2.5, -5.8);
+
+			const paper = new THREE.Mesh(new THREE.PlaneGeometry(10, 5), paperMat);
+			shojiGroup.add(paper);
+
+			// Wood frame borders
+			const frameT = new THREE.Mesh(new THREE.BoxGeometry(10.2, 0.15, 0.08), woodMat);
+			frameT.position.y = 2.5;
+			shojiGroup.add(frameT);
+			const frameB = new THREE.Mesh(new THREE.BoxGeometry(10.2, 0.15, 0.08), woodMat);
+			frameB.position.y = -2.5;
+			shojiGroup.add(frameB);
+
+			[-5, 0, 5].forEach((x) => {
+				const post = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5.1, 0.08), woodMat);
+				post.position.x = x;
+				shojiGroup.add(post);
+			});
+
+			this.stageEnvironmentGroup.add(shojiGroup);
+
+			// Traditional Hanging Paper Lanterns on Left and Right
+			const lanternMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xf59e0b, emissiveIntensity: 0.6 });
+			[-3.8, 3.8].forEach((x) => {
+				const lantern = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.65, 16), lanternMat);
+				lantern.position.set(x, 3.2, -4.5);
+				this.stageEnvironmentGroup.add(lantern);
+
+				const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.06, 16), woodMat);
+				cap.position.set(x, 3.55, -4.5);
+				this.stageEnvironmentGroup.add(cap);
+			});
+
+			this.scene.fog = new THREE.FogExp2(0x1c1917, 0.025);
 		}
 	}
 
@@ -1025,6 +1235,19 @@ export class ThreeStage {
 				if (mesh.morphTargetDictionary) {
 					this.morphMesh = mesh;
 					this.morphDict = mesh.morphTargetDictionary;
+					if (typeof window !== 'undefined') {
+						import('#lib/stores/riggingStore.svelte').then(({ rigging }) => {
+							rigging.availableExpressions = [
+								{ id: 'stars', name: 'stars', label: '⭐ Starry Eyes (Neuro-sama)' },
+								{ id: 'blush', name: 'blush', label: '😳 Blush Pipi Merah' },
+								{ id: 'vrc.blink', name: 'wink', label: '😉 Kedip Mata (Wink)' },
+								{ id: 'vrc.ee', name: 'smile', label: '😁 Senyum Lebar (EE)' },
+								{ id: 'vrc.aa', name: 'open', label: '🗣️ Mulut Terbuka Bicara (AA)' },
+								{ id: 'vrc.oh', name: 'surprised', label: '😮 Kaget / Terkejut (OH)' },
+								{ id: 'vrc.ou', name: 'pout', label: '😗 Cemberut / Pout (OU)' }
+							];
+						}).catch(() => {});
+					}
 				}
 
 				if (Array.isArray(mesh.material)) {
@@ -1168,6 +1391,19 @@ export class ThreeStage {
 				if (mesh.morphTargetDictionary) {
 					this.morphMesh = mesh;
 					this.morphDict = mesh.morphTargetDictionary;
+					if (typeof window !== 'undefined') {
+						import('#lib/stores/riggingStore.svelte').then(({ rigging }) => {
+							rigging.availableExpressions = [
+								{ id: 'stars', name: 'stars', label: '⭐ Tatapan Misterius (Stars)' },
+								{ id: 'blush', name: 'blush', label: '😳 Blush Merona (Blush)' },
+								{ id: 'vrc.blink', name: 'wink', label: '😉 Kedip Mata Manis (Wink)' },
+								{ id: 'vrc.ee', name: 'smile', label: '😊 Senyum Lembut (EE)' },
+								{ id: 'vrc.aa', name: 'open', label: '🗣️ Mulut Bicara Kalem (AA)' },
+								{ id: 'vrc.oh', name: 'surprised', label: '😮 Terkejut / Soft Gasp (OH)' },
+								{ id: 'vrc.ou', name: 'pout', label: '😗 Cemberut (OU)' }
+							];
+						}).catch(() => {});
+					}
 				}
 
 				if (Array.isArray(mesh.material)) {
@@ -1369,33 +1605,46 @@ export class ThreeStage {
 
 		if (!initArmL || !initArmR || !this.armLNode || !this.armRNode) return;
 
+		// Tracking values from MediaPipe webcam tracker
 		const armLA = params['ParamArmLA'] ?? 0;
 		const armRA = params['ParamArmRA'] ?? 0;
+		const isHighFiveL = (params['ParamArmLB'] ?? 0) > 0.5 || armLA > 25;
+		const isHighFiveR = (params['ParamArmRB'] ?? 0) > 0.5 || armRA > 25;
 
 		if (this.activeFullBodyPose === 'wave') {
 			// Melambaikan tangan kanan
-			this.armRNode.rotation.z = initArmR.z + 1.2;
-			this.armRNode.rotation.x = initArmR.x - 0.6;
+			this.armRNode.rotation.z = initArmR.z + 0.25;
+			this.armRNode.rotation.x = initArmR.x - 0.7;
 			if (this.forearmRNode && initForeR) {
-				this.forearmRNode.rotation.z = initForeR.z + 0.8;
+				this.forearmRNode.rotation.z = initForeR.z + 0.9;
 				this.forearmRNode.rotation.x = initForeR.x + Math.sin(time * 0.008) * 0.35;
 			}
 			if (this.handRNode && initHandR) {
 				this.handRNode.rotation.z = initHandR.z + Math.sin(time * 0.008) * 0.45;
 			}
-			this.armLNode.rotation.z = initArmL.z - Math.sin(time * 0.002) * 0.02;
+			// Left arm relaxed down at side
+			this.armLNode.rotation.z = initArmL.z - 1.18 + Math.sin(time * 0.002) * 0.02;
+			this.armLNode.rotation.x = initArmL.x + 0.08;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.y = initForeL.y + 0.25;
+			}
 		} else if (this.activeFullBodyPose === 'peace') {
 			// Pose V / Peace sign
-			this.armRNode.rotation.z = initArmR.z + 1.0;
-			this.armRNode.rotation.y = initArmR.y - 0.5;
-			this.armRNode.rotation.x = initArmR.x - 0.8;
+			this.armRNode.rotation.z = initArmR.z + 0.2;
+			this.armRNode.rotation.y = initArmR.y - 0.4;
+			this.armRNode.rotation.x = initArmR.x - 0.85;
 			if (this.forearmRNode && initForeR) {
-				this.forearmRNode.rotation.z = initForeR.z + 1.2;
+				this.forearmRNode.rotation.z = initForeR.z + 1.25;
 			}
 			if (this.handRNode && initHandR) {
 				this.handRNode.rotation.y = initHandR.y + 0.5;
 			}
-			this.armLNode.rotation.z = initArmL.z;
+			// Left arm relaxed down at side
+			this.armLNode.rotation.z = initArmL.z - 1.18 + Math.sin(time * 0.002) * 0.02;
+			this.armLNode.rotation.x = initArmL.x + 0.08;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.y = initForeL.y + 0.25;
+			}
 		} else if (this.activeFullBodyPose === 'heart') {
 			// Pose Hati / Heart shape
 			this.armLNode.rotation.z = initArmL.z - 0.7;
@@ -1405,38 +1654,74 @@ export class ThreeStage {
 			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.z = initForeL.z - 0.8;
 			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.z = initForeR.z + 0.8;
 		} else if (this.activeFullBodyPose === 'stand') {
-			// Pose tegak natural
-			this.armLNode.rotation.copy(initArmL);
-			this.armRNode.rotation.copy(initArmR);
-			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.copy(initForeL);
-			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.copy(initForeR);
+			// Pose tegak formal santai: kedua tangan turun lurus ke bawah di samping paha
+			this.armLNode.rotation.z = initArmL.z - 1.22;
+			this.armRNode.rotation.z = initArmR.z + 1.22;
+			this.armLNode.rotation.x = initArmL.x + 0.05;
+			this.armRNode.rotation.x = initArmR.x + 0.05;
+			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.y = initForeL.y + 0.15;
+			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.y = initForeR.y - 0.15;
 		} else {
-			// Idle atau pelacakan tangan MediaPipe
-			const hasWebcamArmL = armLA > 12;
-			const hasWebcamArmR = armRA > 12;
+			// IDLE & WEBCAM REAL-TIME HAND TRACKING:
+			// Relaxed natural A-pose default: arms down by the body (NO T-POSE!)
+			// initArmL is horizontal (T-pose). Lowering it by ~1.18 rad (~68 deg) brings it to a cute VTuber idle posture!
+			const relaxAngle = 1.18;
+			const breathSway = Math.sin(time * 0.002) * 0.025;
 
-			if (hasWebcamArmL) {
-				const liftL = armLA / 30;
-				this.armLNode.rotation.z = initArmL.z - liftL * 1.3;
-				this.armLNode.rotation.x = initArmL.x - liftL * 0.4;
+			// LEFT ARM:
+			// If user raises left hand (ParamArmLA > 3 or High-Five):
+			const liftRatioL = Math.max(0, Math.min(1.0, armLA / 28));
+			if (liftRatioL > 0.08 || isHighFiveL) {
+				const effLift = isHighFiveL ? Math.max(liftRatioL, 0.95) : liftRatioL;
+				// Smoothly lift from relaxed (-1.18) to raised (+0.25)
+				this.armLNode.rotation.z = initArmL.z - relaxAngle + effLift * 1.45;
+				this.armLNode.rotation.x = initArmL.x - effLift * 0.65;
 				if (this.forearmLNode && initForeL) {
-					this.forearmLNode.rotation.z = initForeL.z - liftL * 0.6;
+					this.forearmLNode.rotation.z = initForeL.z - effLift * 0.85;
+					this.forearmLNode.rotation.y = initForeL.y + 0.25 + effLift * 0.35;
+				}
+				if (this.handLNode && initHandL && isHighFiveL) {
+					this.handLNode.rotation.z = initHandL.z + Math.sin(time * 0.007) * 0.25;
 				}
 			} else {
-				this.armLNode.rotation.z = initArmL.z + Math.sin(time * 0.002) * 0.02;
-				if (this.forearmLNode && initForeL) this.forearmLNode.rotation.copy(initForeL);
+				// Natural cute idle posture: arms down at sides with gentle breathing
+				this.armLNode.rotation.z = initArmL.z - relaxAngle + breathSway;
+				this.armLNode.rotation.x = initArmL.x + 0.08 + breathSway * 0.5;
+				if (this.forearmLNode && initForeL) {
+					this.forearmLNode.rotation.y = initForeL.y + 0.22;
+					this.forearmLNode.rotation.z = initForeL.z - 0.12;
+				}
+				if (this.handLNode && initHandL) {
+					this.handLNode.rotation.copy(initHandL);
+				}
 			}
 
-			if (hasWebcamArmR) {
-				const liftR = armRA / 30;
-				this.armRNode.rotation.z = initArmR.z + liftR * 1.3;
-				this.armRNode.rotation.x = initArmR.x - liftR * 0.4;
+			// RIGHT ARM:
+			// If user raises right hand (ParamArmRA > 3 or High-Five):
+			const liftRatioR = Math.max(0, Math.min(1.0, armRA / 28));
+			if (liftRatioR > 0.08 || isHighFiveR) {
+				const effLift = isHighFiveR ? Math.max(liftRatioR, 0.95) : liftRatioR;
+				// Smoothly lift from relaxed (+1.18) to raised (-0.25)
+				this.armRNode.rotation.z = initArmR.z + relaxAngle - effLift * 1.45;
+				this.armRNode.rotation.x = initArmR.x - effLift * 0.65;
 				if (this.forearmRNode && initForeR) {
-					this.forearmRNode.rotation.z = initForeR.z + liftR * 0.6;
+					this.forearmRNode.rotation.z = initForeR.z + effLift * 0.85;
+					this.forearmRNode.rotation.y = initForeR.y - 0.25 - effLift * 0.35;
+				}
+				if (this.handRNode && initHandR && isHighFiveR) {
+					this.handRNode.rotation.z = initHandR.z - Math.sin(time * 0.007) * 0.25;
 				}
 			} else {
-				this.armRNode.rotation.z = initArmR.z - Math.sin(time * 0.002) * 0.02;
-				if (this.forearmRNode && initForeR) this.forearmRNode.rotation.copy(initForeR);
+				// Natural cute idle posture: arms down at sides with gentle breathing
+				this.armRNode.rotation.z = initArmR.z + relaxAngle - breathSway;
+				this.armRNode.rotation.x = initArmR.x + 0.08 + breathSway * 0.5;
+				if (this.forearmRNode && initForeR) {
+					this.forearmRNode.rotation.y = initForeR.y - 0.22;
+					this.forearmRNode.rotation.z = initForeR.z + 0.12;
+				}
+				if (this.handRNode && initHandR) {
+					this.handRNode.rotation.copy(initHandR);
+				}
 			}
 		}
 	}
@@ -1495,22 +1780,30 @@ export class ThreeStage {
 				const dict = this.morphDict;
 				const infl = this.morphMesh.morphTargetInfluences;
 
+				const isSmile = this.activeExpression === 'smile' || this.activeExpression === 'vrc.ee' || this.activeExpression === 'laugh' || this.activeExpression === 'love' || this.activeExpression === 'smug';
+				const isWink = this.activeExpression === 'wink' || this.activeExpression === 'vrc.blink' || this.activeExpression === 'sleepy' || this.activeExpression === 'dazed';
+				const isMouthOpen = this.activeExpression === 'vrc.aa' || this.activeExpression === 'open' || this.activeExpression === 'laugh' || this.activeExpression === 'tongue';
+				const isSurprised = this.activeExpression === 'vrc.oh' || this.activeExpression === 'surprised' || this.activeExpression === 'surprise' || this.activeExpression === 'cry';
+				const isPout = this.activeExpression === 'vrc.ou' || this.activeExpression === 'pout' || this.activeExpression === 'angry' || this.activeExpression === 'cry' || this.activeExpression === 'smug';
+				const isStars = this.activeExpression === 'stars' || this.activeExpression === 'love' || this.activeExpression === 'dazed';
+				const isBlush = this.activeExpression === 'blush' || this.activeExpression === 'love' || this.activeExpression === 'pout';
+
 				// Eye Blink
 				const blinkIdx = dict['vrc.blink'];
 				if (blinkIdx !== undefined) {
 					const avgBlink = Math.min(eyeBlinkL, eyeBlinkR);
 					const blinkVal = Math.max(0, Math.min(1.0, (1.0 - avgBlink) * 1.25));
-					infl[blinkIdx] = (this.activeExpression === 'vrc.blink' || this.activeExpression === 'wink') ? 1.0 : blinkVal;
+					infl[blinkIdx] = isWink ? 1.0 : blinkVal;
 				}
 
 				// Lip sync mouth open
 				const aaIdx = dict['vrc.aa'];
 				const ohIdx = dict['vrc.oh'];
 				if (aaIdx !== undefined) {
-					infl[aaIdx] = (this.activeExpression === 'vrc.aa' || this.activeExpression === 'open') ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
+					infl[aaIdx] = isMouthOpen ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
 				}
 				if (ohIdx !== undefined) {
-					infl[ohIdx] = (this.activeExpression === 'vrc.oh' || this.activeExpression === 'surprised' || this.activeExpression === 'surprise')
+					infl[ohIdx] = isSurprised
 						? 1.0
 						: (mouthOpen > 0.4 && Math.abs(mouthForm) < 0.2 ? mouthOpen * 0.8 : 0);
 				}
@@ -1519,20 +1812,31 @@ export class ThreeStage {
 				const eeIdx = dict['vrc.ee'];
 				if (eeIdx !== undefined) {
 					const smileVal = mouthForm > 0.1 ? mouthForm : 0;
-					infl[eeIdx] = (this.activeExpression === 'vrc.ee' || this.activeExpression === 'smile') ? 1.0 : Math.max(0, Math.min(1.0, smileVal));
+					infl[eeIdx] = isSmile ? 1.0 : Math.max(0, Math.min(1.0, smileVal));
 				}
 
 				// Star eyes (Neuro-sama signature!)
 				const starsIdx = dict['stars'];
 				if (starsIdx !== undefined) {
-					infl[starsIdx] = this.activeExpression === 'stars' ? 1.0 : 0;
+					infl[starsIdx] = isStars ? 1.0 : 0;
 				}
 
 				// Blush
 				const blushIdx = dict['blush'];
 				if (blushIdx !== undefined) {
 					const autoBlush = mouthForm > 0.5 ? 0.4 : 0;
-					infl[blushIdx] = this.activeExpression === 'blush' ? 1.0 : autoBlush;
+					infl[blushIdx] = isBlush ? 1.0 : autoBlush;
+				}
+
+				// Pout / OU
+				const ouIdx = dict['vrc.ou'];
+				if (ouIdx !== undefined) {
+					infl[ouIdx] = isPout ? 1.0 : 0;
+				}
+
+				// Generic fallback for any arbitrary model morph target
+				if (this.activeExpression && dict[this.activeExpression] !== undefined) {
+					infl[dict[this.activeExpression]] = 1.0;
 				}
 			}
 

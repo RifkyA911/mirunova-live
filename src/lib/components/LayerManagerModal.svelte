@@ -88,8 +88,9 @@
 	);
 
 	const hostModelItem = $derived(
-		MODEL_CATALOG.find((m) => m.id === rigging.selectedModelId || m.url === rigging.modelUrl) ||
-		MODEL_3D_CATALOG.find((m) => m.id === rigging.selectedModelId)
+		rigging.avatarEngine === '3d'
+			? MODEL_3D_CATALOG.find((m) => m.id === rigging.selected3DModelId)
+			: MODEL_CATALOG.find((m) => m.id === rigging.selectedModelId || m.url === rigging.modelUrl)
 	);
 
 	const collabModelItem = $derived(

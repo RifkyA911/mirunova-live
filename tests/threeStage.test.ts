@@ -233,9 +233,19 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		const floor = envGroup.children.find((c) => (c as any).isMesh && c.rotation.x === -Math.PI / 2);
 		expect(floor).toBeDefined();
 
-		// Check back wall
-		const backWall = envGroup.children.find((c) => (c as any).isMesh && c.position.z === -8);
+		// Check back wall with #F9E4BC color (0xf9e4bc)
+		const backWall = envGroup.children.find((c) => (c as any).isMesh && c.position.z === -8) as THREE.Mesh;
 		expect(backWall).toBeDefined();
+		expect(((backWall.material as THREE.MeshStandardMaterial).color).getHex()).toBe(0xf9e4bc);
+	});
+
+	it('should support switching between all 7 stage environments', () => {
+		const stage = new ThreeStage();
+		const environments = ['grid', 'room', 'field', 'sunset', 'studio', 'dojo', 'void'] as const;
+		for (const env of environments) {
+			stage.setStageEnvironment(env);
+			expect(stage.currentStageEnv).toBe(env);
+		}
 	});
 
 	it('should lock skirt bones firmly to authored rest pose to prevent skirt flipping or lifting', () => {

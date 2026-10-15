@@ -629,7 +629,45 @@ class VoiceEngine {
 		}
 	}
 
+	ensureTestBuffer(): AudioBuffer | null {
+		if (this.testAudioBuffer) return this.testAudioBuffer;
+		if (typeof window === 'undefined') return null;
+		try {
+			if (!this.audioCtx) {
+				const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+				this.audioCtx = new AudioCtxClass();
+			}
+			const sampleRate = this.audioCtx.sampleRate || 44100;
+			const duration = 2.4;
+			const numSamples = Math.floor(sampleRate * duration);
+			const buffer = this.audioCtx.createBuffer(1, numSamples, sampleRate);
+			const data = buffer.getChannelData(0);
+			const baseF0 = 220; // Natural A3 fundamental pitch
+
+			for (let i = 0; i < numSamples; i++) {
+				const t = i / sampleRate;
+				// Speech syllables envelope with natural breathing cadence
+				const env = Math.sin((t / duration) * Math.PI) * (0.75 + 0.25 * Math.sin(t * 16));
+				// Rich human vocal harmonic spectrum
+				const h1 = Math.sin(2 * Math.PI * baseF0 * t) * 0.45;
+				const h2 = Math.sin(2 * Math.PI * baseF0 * 2 * t) * 0.25;
+				const h3 = Math.sin(2 * Math.PI * baseF0 * 3 * t) * 0.16;
+				const h4 = Math.sin(2 * Math.PI * baseF0 * 4 * t) * 0.09;
+				const h5 = Math.sin(2 * Math.PI * baseF0 * 5 * t) * 0.05;
+				data[i] = (h1 + h2 + h3 + h4 + h5) * env * 0.5;
+			}
+			this.testAudioBuffer = buffer;
+			return buffer;
+		} catch (e) {
+			console.warn('VoiceEngine: ensureTestBuffer failed:', e);
+			return null;
+		}
+	}
+
 	async playRawSample(onEnded?: () => void): Promise<boolean> {
+		if (!this.testAudioBuffer) {
+			this.ensureTestBuffer();
+		}
 		if (!this.testAudioBuffer) return false;
 		if (typeof window === 'undefined') return false;
 		this.stopPlayback();
@@ -663,6 +701,9 @@ class VoiceEngine {
 	}
 
 	async playConvertedSample(onEnded?: () => void, filterType?: VoiceFilterType): Promise<boolean> {
+		if (!this.testAudioBuffer) {
+			this.ensureTestBuffer();
+		}
 		if (!this.testAudioBuffer) return false;
 		if (typeof window === 'undefined') return false;
 
@@ -803,26 +844,55 @@ class VoiceEngine {
 					const utterance = new SpeechSynthesisUtterance(cleanText);
 					const voices = window.speechSynthesis.getVoices();
 
-					// Smart natural voice selection:
-					// 1. Explicit user choice if provided
-					// 2. Or pick best natural female/male voice matching the filter personality
+					// Detect language of text for accurate phonetic pronunciation
+					const hasJapanese = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]|konnichiwa|arigato|ohayou/i.test(cleanText);
+					const hasIndonesian = /halo|selamat|suara|ini|dengan|kamu|aku|dan|di|pagi|malam|bicara|tes|nyaman/i.test(cleanText);
+
 					let chosenVoice: SpeechSynthesisVoice | undefined;
 					if (preferredVoiceName) {
 						chosenVoice = voices.find((v) => v.name === preferredVoiceName);
 					}
 
 					if (!chosenVoice && voices.length > 0) {
-						if (activeFilter === 'anime-girl' || activeFilter === 'chipmunk') {
-							// Prefer female voices: Indonesian / Japanese / English female
-							chosenVoice =
-								voices.find((v) => /gadis|haruka|ayumi|nanami|kyoko|zira|jenny|female/i.test(v.name)) ||
-								voices.find((v) => !/male|david|george|ichiro/i.test(v.name));
-						} else if (activeFilter === 'ikemen') {
-							// Prefer deep male voices
-							chosenVoice =
-								voices.find((v) => /male|david|george|ichiro|keita|guy/i.test(v.name)) ||
-								voices.find((v) => !/female|zira|gadis|haruka|jenny/i.test(v.name));
+						if (hasJapanese) {
+							const jaVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('ja'));
+							if (jaVoices.length > 0) {
+								if (activeFilter === 'anime-girl' || activeFilter === 'chipmunk') {
+									chosenVoice = jaVoices.find((v) => /haruka|ayumi|nanami|kyoko|sayaka|female/i.test(v.name)) || jaVoices[0];
+								} else if (activeFilter === 'ikemen') {
+									chosenVoice = jaVoices.find((v) => /keita|ichiro|male/i.test(v.name)) || jaVoices[0];
+								} else {
+									chosenVoice = jaVoices[0];
+								}
+							}
+						} else if (hasIndonesian) {
+							const idVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('id'));
+							if (idVoices.length > 0) {
+								if (activeFilter === 'anime-girl' || activeFilter === 'chipmunk') {
+									chosenVoice = idVoices.find((v) => /gadis|female/i.test(v.name)) || idVoices[0];
+								} else if (activeFilter === 'ikemen') {
+									chosenVoice = idVoices.find((v) => /male|arfi/i.test(v.name)) || idVoices[0];
+								} else {
+									chosenVoice = idVoices[0];
+								}
+							}
 						}
+
+						// Fallback: Pick highest-quality natural voice matching persona
+						if (!chosenVoice) {
+							if (activeFilter === 'anime-girl' || activeFilter === 'chipmunk') {
+								chosenVoice =
+									voices.find((v) => /natural|neural|online/i.test(v.name) && /female|gadis|haruka|zira|jenny/i.test(v.name)) ||
+									voices.find((v) => /gadis|haruka|ayumi|nanami|kyoko|zira|jenny|female/i.test(v.name)) ||
+									voices.find((v) => !/male|david|george|ichiro/i.test(v.name));
+							} else if (activeFilter === 'ikemen') {
+								chosenVoice =
+									voices.find((v) => /natural|neural|online/i.test(v.name) && /male|david|george|ichiro|keita|guy/i.test(v.name)) ||
+									voices.find((v) => /male|david|george|ichiro|keita|guy/i.test(v.name)) ||
+									voices.find((v) => !/female|zira|gadis|haruka|jenny/i.test(v.name));
+							}
+						}
+
 						if (!chosenVoice) {
 							chosenVoice = voices.find((v) => v.default) || voices[0];
 						}
@@ -833,22 +903,23 @@ class VoiceEngine {
 					}
 
 					// Human-sounding natural pitch & prosody presets based on filter
+					// (Avoid extreme pitch shifts like 1.35 or 0.78 that cause robotic metallic screeching)
 					switch (activeFilter) {
 						case 'anime-girl':
-							utterance.pitch = 1.35; // Bright, youthful natural voice
-							utterance.rate = 1.05;
+							utterance.pitch = 1.08; // Natural sweet feminine pitch without robotic distortion
+							utterance.rate = 1.02;
 							break;
 						case 'ikemen':
-							utterance.pitch = 0.78; // Cool, deeper natural masculine tone
-							utterance.rate = 0.95;
+							utterance.pitch = 0.92; // Natural handsome masculine resonance
+							utterance.rate = 0.98;
 							break;
 						case 'chipmunk':
-							utterance.pitch = 1.8;
-							utterance.rate = 1.25;
+							utterance.pitch = 1.25;
+							utterance.rate = 1.15;
 							break;
 						case 'robot':
-							utterance.pitch = 0.9;
-							utterance.rate = 0.85;
+							utterance.pitch = 0.95;
+							utterance.rate = 0.92;
 							break;
 						case 'podcast-pro':
 						case 'radio-retro':
@@ -860,11 +931,39 @@ class VoiceEngine {
 							break;
 					}
 
+					// Lip-sync animation: Drive avatar mouth opening during speech reading
+					let lipSyncTimer: any = null;
+					let frameCount = 0;
+					import('#lib/stores/riggingStore.svelte')
+						.then(({ rigging }) => {
+							lipSyncTimer = setInterval(() => {
+								frameCount++;
+								// Syllable rhythm modulation between 0.15 and 0.75
+								const amp = 0.35 + 0.3 * Math.sin(frameCount * 0.8) * Math.sin(frameCount * 0.3);
+								rigging.micVolumeLevel = Math.max(0.08, amp);
+							}, 60);
+						})
+						.catch(() => {});
+
+					const cleanupLipSync = () => {
+						if (lipSyncTimer) {
+							clearInterval(lipSyncTimer);
+							lipSyncTimer = null;
+						}
+						import('#lib/stores/riggingStore.svelte')
+							.then(({ rigging }) => {
+								rigging.micVolumeLevel = 0;
+							})
+							.catch(() => {});
+					};
+
 					utterance.onend = () => {
+						cleanupLipSync();
 						if (onEnded) onEnded();
 						resolve(true);
 					};
 					utterance.onerror = (err) => {
+						cleanupLipSync();
 						console.warn('VoiceEngine: SpeechSynthesis error:', err);
 						if (onEnded) onEnded();
 						resolve(false);

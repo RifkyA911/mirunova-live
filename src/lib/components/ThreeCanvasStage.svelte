@@ -188,7 +188,7 @@
 			rigging.is3DAutoSpin = false;
 		}
 
-		if (dragButton === 2 || e.shiftKey) {
+		if (rigging.cursorToolMode === 'pan' || dragButton === 2 || e.shiftKey) {
 			// Pan / Translate 3D model position
 			threeStage.moveModel(deltaX * 0.0035, -deltaY * 0.0035);
 		} else {
@@ -238,3 +238,127 @@
 	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"
 	class="absolute inset-0 w-full h-full overflow-hidden select-none {isDragging ? 'cursor-grabbing' : 'cursor-grab'} z-0"
 ></div>
+
+<!-- Floating On-Screen 3D Transform & Navigation HUD (Visible in 3D Mode) -->
+{#if !rigging.isGuiLocked && isHostLayerVisible && !isHostLayerLocked}
+	<div class="fixed top-20 right-4 z-20 flex flex-col items-end gap-2 pointer-events-none select-none">
+		<div class="pointer-events-auto backdrop-blur-2xl bg-zinc-950/80 border border-zinc-700/80 rounded-2xl p-2.5 shadow-2xl space-y-2 text-zinc-200">
+			<!-- Header -->
+			<div class="flex items-center justify-between gap-3 pb-1.5 border-b border-zinc-800 text-[11px] font-bold">
+				<span class="text-cyan-400 font-mono tracking-wide">POSISI 3D</span>
+				<span class="text-[9px] text-zinc-500 font-mono">Drag / Pan</span>
+			</div>
+
+			<!-- D-Pad Translation Buttons -->
+			<div class="grid grid-cols-3 gap-1 w-28">
+				<div></div>
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.moveModel(0, 0.15);
+						rigging.showToast('↑ Geser Atas (+Y)');
+					}}
+					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
+					title="Geser Karakter Atas"
+					aria-label="Geser Karakter Atas"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+				</button>
+				<div></div>
+
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.moveModel(-0.15, 0);
+						rigging.showToast('← Geser Kiri (-X)');
+					}}
+					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
+					title="Geser Karakter Kiri"
+					aria-label="Geser Karakter Kiri"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+				</button>
+
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.resetModelPosition();
+						rigging.showToast('🎯 Reset Posisi Tengah');
+					}}
+					class="p-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-400 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
+					title="Reset Posisi Tengah (0, 0)"
+					aria-label="Reset Posisi Tengah"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
+				</button>
+
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.moveModel(0.15, 0);
+						rigging.showToast('→ Geser Kanan (+X)');
+					}}
+					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
+					title="Geser Karakter Kanan"
+					aria-label="Geser Karakter Kanan"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+				</button>
+
+				<div></div>
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.moveModel(0, -0.15);
+						rigging.showToast('↓ Geser Bawah (-Y)');
+					}}
+					class="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
+					title="Geser Karakter Bawah"
+					aria-label="Geser Karakter Bawah"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+				</button>
+				<div></div>
+			</div>
+
+			<!-- Body Rotation Quick Actions -->
+			<div class="pt-1.5 border-t border-zinc-800 flex items-center justify-between gap-1">
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.rotateModelBodyDegrees(-45);
+						rigging.showToast('Putar Karakter -45°');
+					}}
+					class="flex-1 py-1 px-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono font-medium flex items-center justify-center gap-1 cursor-pointer transition-colors"
+					title="Putar Kiri -45°"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+					<span>-45°</span>
+				</button>
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.resetOrbit();
+						rigging.showToast('🎯 Hadap Depan (0°)');
+					}}
+					class="py-1 px-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono font-medium text-cyan-400 cursor-pointer transition-colors"
+					title="Reset Hadap Depan"
+				>
+					0°
+				</button>
+				<button
+					type="button"
+					onclick={() => {
+						threeStage.rotateModelBodyDegrees(45);
+						rigging.showToast('Putar Karakter +45°');
+					}}
+					class="flex-1 py-1 px-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono font-medium flex items-center justify-center gap-1 cursor-pointer transition-colors"
+					title="Putar Kanan +45°"
+				>
+					<span>+45°</span>
+					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

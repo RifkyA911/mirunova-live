@@ -23,6 +23,8 @@
 		Lock,
 		ChevronDown,
 		ChevronUp,
+		ChevronLeft,
+		ChevronRight,
 		Mic,
 		MicOff,
 		Video,
@@ -39,11 +41,18 @@
 		User,
 		Maximize2,
 		RotateCcw,
-		GripVertical
+		RotateCw,
+		GripVertical,
+		Home,
+		Trees,
+		Sun,
+		Flame,
+		Music
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { threeStage, type FramingMode3D, type FullBodyPose3D, type StageEnvironment3D } from '#lib/core/threeStage';
 	import type { AvatarFramingMode, PoseLoopMode } from '#lib/types/tracking';
+	import { UI_THEMES } from '#lib/data/themes';
 
 	let isDeviceMenuOpen = $state<boolean>(false);
 	let isExpressionMenuOpen = $state<boolean>(false);
@@ -78,31 +87,55 @@
 		{
 			id: 'grid',
 			name: 'Cyber Grid',
-			desc: 'Lantai wireframe kotak neon cyan cyberpunk',
+			desc: 'Lantai wireframe kotak neon cyan cyberpunk & ring panggung',
 			badge: 'Neon Sci-Fi',
 			color: 'border-cyan-500/50 bg-cyan-950/30 text-cyan-300',
 			icon: '🌐'
 		},
 		{
 			id: 'room',
-			name: '3D Studio Room',
-			desc: 'Ruangan dinding studio 3D dengan aksen neon',
-			badge: 'Studio',
-			color: 'border-violet-500/50 bg-violet-950/30 text-violet-300',
-			icon: '🏛️'
+			name: 'Cozy Room',
+			desc: 'Kamar cat cream lembut, lantai zinc cream, rak & lampu meja cewek',
+			badge: 'Anime Room',
+			color: 'border-amber-500/50 bg-amber-950/30 text-amber-300',
+			icon: '🏠'
 		},
 		{
 			id: 'field',
-			name: 'Open Field',
-			desc: 'Padang rumput hijau luas & langit berkabut',
+			name: 'Open Meadow',
+			desc: 'Padang rumput hijau bukit anime, pedestal batu & langit sejuk',
 			badge: 'Nature',
 			color: 'border-emerald-500/50 bg-emerald-950/30 text-emerald-300',
 			icon: '🌱'
 		},
 		{
+			id: 'sunset',
+			name: 'Sunset Coast',
+			desc: 'Cahaya senja keemasan pantai, horizon laut & dek kayu',
+			badge: 'Golden Hour',
+			color: 'border-orange-500/50 bg-orange-950/30 text-orange-300',
+			icon: '🌅'
+		},
+		{
+			id: 'studio',
+			name: 'Idol Concert',
+			desc: 'Panggung konser idol, lantai glossy, lampu spotlight kerucut & truss',
+			badge: 'Live Idol',
+			color: 'border-purple-500/50 bg-purple-950/30 text-purple-300',
+			icon: '🎤'
+		},
+		{
+			id: 'dojo',
+			name: 'Sakura Dojo',
+			desc: 'Ruang tatami tradisional Jepang, dinding shoji & lampion hangat',
+			badge: 'Japanese Zen',
+			color: 'border-rose-400/50 bg-rose-950/30 text-rose-300',
+			icon: '⛩️'
+		},
+		{
 			id: 'void',
-			name: 'Void Minimal',
-			desc: 'Panggung gelap pekat minimalis tanpa distraksi',
+			name: 'Deep Void',
+			desc: 'Panggung gelap pekat minimalis dengan ring pedestal tanpa distraksi',
 			badge: 'Clean Dark',
 			color: 'border-zinc-700 bg-zinc-900/60 text-zinc-300',
 			icon: '🌌'
@@ -111,6 +144,22 @@
 	const isLightTheme = $derived(
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
+	const currentTheme = $derived.by(() => {
+		if (rigging.uiTheme === 'custom' && rigging.customThemeConfig) {
+			return rigging.customThemeConfig;
+		}
+		const found = UI_THEMES.find((t) => t.id === rigging.uiTheme);
+		return (
+			found?.palette || {
+				bg: '#09090b',
+				surface: '#18181b',
+				accent: '#ec4899',
+				border: '#27272a',
+				text: '#f4f4f5',
+				ring: '#ec4899'
+			}
+		);
+	});
 	let availableCameras = $state<Array<{ deviceId: string; label: string }>>([]);
 	let availableMics = $state<Array<{ deviceId: string; label: string }>>([]);
 
@@ -795,22 +844,22 @@
 
 				<div
 					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm backdrop-blur-3xl border rounded-3xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3 cursor-default text-left max-h-[75dvh] overflow-y-auto {
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[calc(100vw-1.5rem)] sm:max-w-[480px] backdrop-blur-3xl border rounded-3xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3 cursor-default text-left max-h-[78dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/90 border-white/15 text-zinc-100 shadow-2xl'
 					}"
 				>
 					<div class="flex items-center justify-between border-b pb-2 px-1 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 						<div class="flex items-center gap-2">
 							<Compass class="w-4 h-4 text-indigo-400" />
-							<span class="font-bold text-xs uppercase tracking-wide">Panggung 3D (Stage)</span>
+							<span class="font-bold text-xs uppercase tracking-wide">Panggung 3D ({STAGE_ENVIRONMENTS.length} Stages)</span>
 						</div>
 						<span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
 							{rigging.stageEnvironment}
 						</span>
 					</div>
 
-					<!-- 4 Environments Grid -->
-					<div class="grid grid-cols-2 gap-2">
+					<!-- 7 Environments Grid with Visual Thumbnails -->
+					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 						{#each STAGE_ENVIRONMENTS as stageEnv}
 							<button
 								type="button"
@@ -820,7 +869,7 @@
 									threeStage.setStageEnvironment(stageEnv.id);
 									rigging.showToast(`🪐 Panggung 3D: ${stageEnv.name}`);
 								}}
-								class="p-2.5 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+								class="p-2 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 flex flex-col justify-between {
 									rigging.stageEnvironment === stageEnv.id
 										? `${stageEnv.color} ring-2 ring-indigo-400 font-bold shadow-md`
 										: isLightTheme
@@ -828,12 +877,61 @@
 											: 'bg-zinc-900/80 border-zinc-800 hover:bg-zinc-800 text-zinc-300'
 								}"
 							>
-								<div class="flex items-center justify-between mb-1">
-									<span class="text-lg">{stageEnv.icon}</span>
-									<span class="text-[8px] font-mono px-1.5 py-0.5 rounded bg-black/40 text-zinc-300">{stageEnv.badge}</span>
+								<!-- Stage Visual Thumbnail Preview -->
+								{#if stageEnv.id === 'grid'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-cyan-950/80 to-zinc-950 border border-cyan-500/30 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute inset-0 bg-[radial-gradient(#06b6d4_1px,transparent_1px)] [background-size:8px_8px] opacity-40"></div>
+										<div class="absolute bottom-0 inset-x-0 h-3 bg-gradient-to-t from-cyan-500/25 to-transparent border-t border-cyan-400/50"></div>
+										<Compass class="w-4 h-4 text-cyan-400 relative z-10" />
+									</div>
+								{:else if stageEnv.id === 'room'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-[#fef7ee] to-[#e6d7c3] border border-amber-300/40 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute top-1 left-2 w-3 h-3.5 rounded-sm bg-pink-300/60 border border-pink-400/50"></div>
+										<div class="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-amber-400/70 shadow-[0_0_6px_#fbbf24]"></div>
+										<div class="absolute bottom-0 inset-x-0 h-3 bg-[#c8b7a0] border-t border-amber-800/20"></div>
+										<Home class="w-4 h-4 text-amber-700 relative z-10" />
+									</div>
+								{:else if stageEnv.id === 'field'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-sky-400 via-sky-200 to-emerald-200 border border-emerald-400/40 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute top-1 right-2 w-4 h-1.5 rounded-full bg-white/70 blur-[0.5px]"></div>
+										<div class="absolute bottom-0 inset-x-0 h-3.5 rounded-t-full bg-gradient-to-b from-emerald-500 to-emerald-700 border-t border-emerald-300/50"></div>
+										<Trees class="w-4 h-4 text-emerald-900 relative z-10" />
+									</div>
+								{:else if stageEnv.id === 'sunset'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-amber-500 via-rose-600 to-indigo-950 border border-rose-500/40 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-amber-200 shadow-[0_0_8px_#fde047]"></div>
+										<div class="absolute bottom-0 inset-x-0 h-2 bg-gradient-to-t from-indigo-950 to-rose-900/60 border-t border-amber-300/40"></div>
+										<Sun class="w-4 h-4 text-amber-100 relative z-10" />
+									</div>
+								{:else if stageEnv.id === 'studio'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-purple-950 via-zinc-950 to-black border border-purple-500/40 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute top-0 left-1.5 w-6 h-10 bg-gradient-to-br from-cyan-400/25 to-transparent -rotate-12 pointer-events-none"></div>
+										<div class="absolute top-0 right-1.5 w-6 h-10 bg-gradient-to-bl from-pink-500/25 to-transparent rotate-12 pointer-events-none"></div>
+										<div class="absolute bottom-0 inset-x-0 h-2.5 bg-purple-950/60 border-t border-purple-400/50"></div>
+										<Music class="w-4 h-4 text-purple-300 relative z-10" />
+									</div>
+								{:else if stageEnv.id === 'dojo'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-[#e8dcc8] to-[#ab987a] border border-amber-700/30 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute inset-y-0 left-1 w-3 border-r border-stone-400/60 bg-white/40"></div>
+										<div class="absolute inset-y-0 right-1 w-3 border-l border-stone-400/60 bg-white/40"></div>
+										<div class="absolute bottom-0 inset-x-0 h-3 bg-[#c2b280] border-t border-amber-900/30"></div>
+										<Flame class="w-4 h-4 text-rose-600 relative z-10" />
+									</div>
+								{:else}
+									<div class="w-full h-11 rounded-xl bg-black border border-zinc-700/50 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute top-1.5 left-2 w-1 h-1 rounded-full bg-white/80"></div>
+										<div class="absolute top-2 right-3 w-1 h-1 rounded-full bg-cyan-300/80"></div>
+										<div class="absolute bottom-1 inset-x-2 h-1 rounded-full border border-violet-500/40 bg-violet-950/20"></div>
+										<Sparkles class="w-4 h-4 text-violet-400 relative z-10" />
+									</div>
+								{/if}
+
+								<div class="flex items-center justify-between mb-0.5">
+									<span class="text-sm">{stageEnv.icon}</span>
+									<span class="text-[8px] font-mono px-1 py-0.2 rounded bg-black/40 text-zinc-300">{stageEnv.badge}</span>
 								</div>
-								<div class="font-bold text-xs">{stageEnv.name}</div>
-								<div class="text-[9px] text-zinc-400 leading-tight mt-0.5">{stageEnv.desc}</div>
+								<div class="font-bold text-[11px] leading-tight">{stageEnv.name}</div>
+								<div class="text-[8px] text-zinc-400 leading-tight mt-0.5 line-clamp-2">{stageEnv.desc}</div>
 							</button>
 						{/each}
 					</div>
@@ -846,15 +944,21 @@
 							onclick={() => {
 								playSfx('toggle');
 								rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
-								rigging.showToast(rigging.is3DAutoSpin ? '🔄 3D Auto-Spin Aktif' : 'Auto-Spin Nonaktif');
+								rigging.showToast(rigging.is3DAutoSpin ? '3D Auto-Spin Aktif' : 'Auto-Spin Nonaktif');
 							}}
-							class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all cursor-pointer {
+							class="px-3 py-1 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer {
 								rigging.is3DAutoSpin
 									? 'bg-amber-500/25 border-amber-500 text-amber-300 font-bold'
 									: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
 							}"
 						>
-							{rigging.is3DAutoSpin ? '🔄 Stop Spin' : '▶ Putar 360°'}
+							{#if rigging.is3DAutoSpin}
+								<RefreshCw class="w-3.5 h-3.5 animate-spin text-amber-400" />
+								<span>Stop Spin</span>
+							{:else}
+								<Play class="w-3.5 h-3.5 text-zinc-400" />
+								<span>Putar 360°</span>
+							{/if}
 						</button>
 					</div>
 				</div>
@@ -920,13 +1024,13 @@
 					onclick={() => (isExpressionMenuOpen = false)}
 				></div>
 
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					id="expression-popover-menu"
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[820px] max-w-[calc(100vw-1rem)] sm:max-w-[820px] min-w-0 sm:min-w-[340px] max-h-[78dvh] overflow-y-auto backdrop-blur-3xl border rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.65)] p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none sm:resize {
-						isLightTheme ? 'bg-white/85 border-white/40 text-zinc-900 shadow-2xl' : 'bg-zinc-950/75 border-white/20 text-zinc-100 shadow-2xl'
-					}"
+					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[820px] max-w-[calc(100vw-1rem)] sm:max-w-[820px] min-w-0 sm:min-w-[340px] max-h-[78dvh] overflow-y-auto backdrop-blur-3xl border rounded-3xl p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none sm:resize"
 					onclick={(e) => e.stopPropagation()}
-					style="min-height: 290px;"
+					style="background: {isLightTheme ? currentTheme.surface + 'f5' : currentTheme.surface + 'ea'}; border-color: {currentTheme.accent}55; color: {currentTheme.text}; box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 35px {currentTheme.accent}25; min-height: 290px;"
 				>
 					<!-- Header Bar with Tabs, Status, and Close -->
 					<div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 border-b pb-2.5 px-1 mb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
@@ -1175,7 +1279,7 @@
 													onclick={() => {
 														playSfx('click');
 														rigging.playMotion(motion);
-														rigging.showToast(`▶ Putar Gerakan: ${motion}`);
+														rigging.showToast(`Putar Gerakan: ${motion}`);
 														isExpressionMenuOpen = false;
 													}}
 													class="p-2 rounded-xl border flex items-center gap-2 transition-all cursor-pointer active:scale-95 {
@@ -1358,7 +1462,7 @@
 											onclick={() => {
 												playSfx('toggle');
 												rigging.is3DAutoSpin = !rigging.is3DAutoSpin;
-												rigging.showToast(rigging.is3DAutoSpin ? '🔄 3D Auto-Spin 360° Aktif' : 'Auto-Spin Dihentikan');
+												rigging.showToast(rigging.is3DAutoSpin ? '3D Auto-Spin 360° Aktif' : 'Auto-Spin Dihentikan');
 											}}
 											class="col-span-2 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border active:scale-95 {
 												rigging.is3DAutoSpin
@@ -1366,7 +1470,7 @@
 													: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 											}"
 										>
-											<span class="{rigging.is3DAutoSpin ? 'animate-spin' : ''}">🔄</span>
+											<RefreshCw class="w-3.5 h-3.5 {rigging.is3DAutoSpin ? 'animate-spin text-amber-300' : 'text-zinc-400'}" />
 											<span class="text-[11px]">{rigging.is3DAutoSpin ? 'Stop Spin' : 'Auto-Spin 360°'}</span>
 										</button>
 
@@ -1375,13 +1479,14 @@
 											onclick={() => {
 												playSfx('click');
 												threeStage.rotateModelBodyDegrees(-45);
-												rigging.showToast('↺ Putar Karakter 3D -45°');
+												rigging.showToast('Putar Karakter 3D -45°');
 											}}
-											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
+											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 											}"
 										>
-											↺ -45°
+											<RotateCcw class="w-3.5 h-3.5 text-zinc-400" />
+											<span>-45°</span>
 										</button>
 
 										<button
@@ -1389,13 +1494,14 @@
 											onclick={() => {
 												playSfx('click');
 												threeStage.rotateModelBodyDegrees(45);
-												rigging.showToast('↻ Putar Karakter 3D +45°');
+												rigging.showToast('Putar Karakter 3D +45°');
 											}}
-											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
+											class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 											}"
 										>
-											↻ +45°
+											<RotateCw class="w-3.5 h-3.5 text-zinc-400" />
+											<span>+45°</span>
 										</button>
 
 										<button
@@ -1404,13 +1510,14 @@
 												playSfx('click');
 												threeStage.resetOrbit();
 												rigging.is3DAutoSpin = false;
-												rigging.showToast('🎯 Karakter Hadap Depan (0°)');
+												rigging.showToast('Karakter Hadap Depan (0°)');
 											}}
-											class="col-span-2 p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 {
+											class="col-span-2 p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 {
 												isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 											}"
 										>
-											🎯 Hadap Depan (0°)
+											<Crosshair class="w-3.5 h-3.5 text-cyan-400" />
+											<span>Hadap Depan (0°)</span>
 										</button>
 									</div>
 
@@ -1418,7 +1525,7 @@
 									<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 										<div class="flex items-center justify-between text-[10px] font-bold text-cyan-400 mb-1.5">
 											<span>POSISI MODEL 3D</span>
-											<span class="text-[9px] text-zinc-500 font-mono">R-Click/Shift Drag</span>
+											<span class="text-[9px] text-zinc-500 font-mono">Pan D-Pad</span>
 										</div>
 										<div class="grid grid-cols-3 gap-1">
 											<div></div>
@@ -1427,14 +1534,14 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(0, 0.15);
-													rigging.showToast('↑ Geser Atas (+Y)');
+													rigging.showToast('Geser Atas (+Y)');
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
 												title="Geser Karakter ke Atas"
 											>
-												▲
+												<ChevronUp class="w-4 h-4" />
 											</button>
 											<div></div>
 
@@ -1443,14 +1550,14 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(-0.15, 0);
-													rigging.showToast('← Geser Kiri (-X)');
+													rigging.showToast('Geser Kiri (-X)');
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
 												title="Geser Karakter ke Kiri"
 											>
-												◀
+												<ChevronLeft class="w-4 h-4" />
 											</button>
 
 											<button
@@ -1458,14 +1565,14 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.resetModelPosition();
-													rigging.showToast('🎯 Posisi Karakter Direset (Tengah)');
+													rigging.showToast('Posisi Karakter Direset (Tengah)');
 												}}
 												class="p-1.5 rounded-xl text-xs font-bold border flex items-center justify-center transition-all cursor-pointer active:scale-95 text-cyan-400 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800'
 												}"
 												title="Reset Posisi ke Tengah (0, 0)"
 											>
-												•
+												<Crosshair class="w-4 h-4 text-cyan-400" />
 											</button>
 
 											<button
@@ -1473,14 +1580,14 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(0.15, 0);
-													rigging.showToast('→ Geser Kanan (+X)');
+													rigging.showToast('Geser Kanan (+X)');
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
 												title="Geser Karakter ke Kanan"
 											>
-												▶
+												<ChevronRight class="w-4 h-4" />
 											</button>
 
 											<div></div>
@@ -1489,14 +1596,14 @@
 												onclick={() => {
 													playSfx('click');
 													threeStage.moveModel(0, -0.15);
-													rigging.showToast('↓ Geser Bawah (-Y)');
+													rigging.showToast('Geser Bawah (-Y)');
 												}}
 												class="p-1.5 rounded-xl text-xs font-semibold border flex items-center justify-center transition-all cursor-pointer active:scale-95 {
 													isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 												}"
 												title="Geser Karakter ke Bawah"
 											>
-												▼
+												<ChevronDown class="w-4 h-4" />
 											</button>
 											<div></div>
 										</div>

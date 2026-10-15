@@ -261,6 +261,77 @@
 			ParamEyeROpen: 0.75,
 			PARAM_EYE_L_OPEN: 0.75,
 			PARAM_EYE_R_OPEN: 0.75
+		},
+		laugh: {
+			ParamEyeLSmile: 1.0,
+			ParamEyeRSmile: 1.0,
+			PARAM_EYE_L_SMILE: 1.0,
+			PARAM_EYE_R_SMILE: 1.0,
+			ParamMouthForm: 1.0,
+			PARAM_MOUTH_FORM: 1.0,
+			ParamMouthOpenY: 0.85,
+			PARAM_MOUTH_OPEN_Y: 0.85,
+			ParamCheek: 0.9,
+			PARAM_CHEEK: 0.9
+		},
+		love: {
+			ParamEyeLSmile: 1.0,
+			ParamEyeRSmile: 1.0,
+			PARAM_EYE_L_SMILE: 1.0,
+			PARAM_EYE_R_SMILE: 1.0,
+			ParamMouthForm: 0.9,
+			PARAM_MOUTH_FORM: 0.9,
+			ParamCheek: 1.0,
+			PARAM_CHEEK: 1.0,
+			Param149: 1.0
+		},
+		smug: {
+			ParamEyeLSmile: 0.9,
+			PARAM_EYE_L_SMILE: 0.9,
+			ParamEyeRSmile: 0.4,
+			PARAM_EYE_R_SMILE: 0.4,
+			ParamMouthForm: 0.7,
+			PARAM_MOUTH_FORM: 0.7,
+			ParamBrowLY: 0.3,
+			PARAM_BROW_L_Y: 0.3
+		},
+		tongue: {
+			ParamMouthOpenY: 0.9,
+			PARAM_MOUTH_OPEN_Y: 0.9,
+			ParamMouthForm: 0.6,
+			PARAM_MOUTH_FORM: 0.6,
+			ParamEyeLSmile: 0.7,
+			PARAM_EYE_L_SMILE: 0.7
+		},
+		flat: {
+			ParamEyeLOpen: 0.55,
+			PARAM_EYE_L_OPEN: 0.55,
+			ParamEyeROpen: 0.55,
+			PARAM_EYE_R_OPEN: 0.55,
+			ParamMouthForm: 0.0,
+			PARAM_MOUTH_FORM: 0.0,
+			ParamBrowLY: 0.0,
+			PARAM_BROW_L_Y: 0.0,
+			ParamBrowRY: 0.0,
+			PARAM_BROW_R_Y: 0.0
+		},
+		dazed: {
+			ParamEyeLOpen: 0.9,
+			PARAM_EYE_L_OPEN: 0.9,
+			ParamEyeROpen: 0.9,
+			PARAM_EYE_R_OPEN: 0.9,
+			ParamBrowLAngle: 0.6,
+			PARAM_BROW_L_ANGLE: 0.6,
+			ParamBrowRAngle: -0.6,
+			PARAM_BROW_R_ANGLE: -0.6
+		},
+		sleepy: {
+			ParamEyeLOpen: 0.2,
+			PARAM_EYE_L_OPEN: 0.2,
+			ParamEyeROpen: 0.2,
+			PARAM_EYE_R_OPEN: 0.2,
+			ParamMouthOpenY: 0.15,
+			PARAM_MOUTH_OPEN_Y: 0.15
 		}
 	};
 

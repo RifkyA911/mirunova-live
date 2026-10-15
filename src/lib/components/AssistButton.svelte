@@ -24,7 +24,7 @@
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { tracker } from '#lib/core/tracker';
-	import { threeStage } from '#lib/core/threeStage';
+	import { threeStage, type StageEnvironment3D } from '#lib/core/threeStage';
 	import { voice, type VoiceFilterType } from '#lib/core/audio';
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -76,10 +76,11 @@
 
 	function cycleStageEnv() {
 		playSfx('click');
-		const envs: Array<'grid' | 'room' | 'field' | 'void'> = ['grid', 'room', 'field', 'void'];
+		const envs: StageEnvironment3D[] = ['grid', 'room', 'field', 'sunset', 'studio', 'dojo', 'void'];
 		const currentIdx = envs.indexOf(rigging.stageEnvironment);
 		const nextEnv = envs[(currentIdx + 1) % envs.length];
 		rigging.setStageEnvironment(nextEnv);
+		threeStage.setStageEnvironment(nextEnv);
 		rigging.showToast(`🪐 Panggung 3D: ${nextEnv.toUpperCase()}`);
 	}
 

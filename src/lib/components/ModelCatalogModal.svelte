@@ -56,9 +56,20 @@
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
 
+	let catalog2DFilter = $state<'all' | 'game' | 'booth' | 'official'>('all');
+
 	// Separation: Pre-installed Booth models vs Pre-installed Official models
 	const boothPreinstalledModels = $derived(MODEL_CATALOG.filter((m) => m.source === 'booth'));
 	const officialPreinstalledModels = $derived(MODEL_CATALOG.filter((m) => m.source !== 'booth'));
+
+	const displayed2DModels = $derived(
+		MODEL_CATALOG.filter((m) => {
+			if (catalog2DFilter === 'game') return ['jian', 'changli', 'chun', 'tingyun', 'ruan-mei'].includes(m.id);
+			if (catalog2DFilter === 'booth') return ['mihari', 'vivian'].includes(m.id);
+			if (catalog2DFilter === 'official') return m.source === 'official';
+			return true;
+		})
+	);
 
 	let displayedBoothModels = $derived(
 		BOOTH_SHOWCASE_CATALOG.filter(
@@ -460,7 +471,7 @@
 						}"
 					>
 						<Box class="w-4 h-4 text-cyan-500" />
-						<span>3D WebGL Cats ({MODEL_3D_CATALOG.length})</span>
+						<span>3D WebGL Avatar ({MODEL_3D_CATALOG.length})</span>
 					</button>
 				</div>
 
@@ -468,7 +479,9 @@
 				<div class="hidden sm:flex items-center gap-2 text-[11px] text-zinc-400">
 					<span>Avatar Aktif:</span>
 					<span class="px-2 py-0.5 rounded bg-zinc-800 text-cyan-300 font-semibold font-mono border border-zinc-700">
-						{rigging.avatarEngine === '3d' ? rigging.selected3DModelId : rigging.modelName}
+						{rigging.avatarEngine === '3d'
+							? (MODEL_3D_CATALOG.find((m) => m.id === rigging.selected3DModelId)?.name || rigging.selected3DModelId)
+							: rigging.modelName}
 					</span>
 				</div>
 			</div>
@@ -559,18 +572,69 @@
 							</div>
 						</div>
 
-						<!-- GROUP 1: Model Siap Pakai Resmi (Official Ready-to-Use) -->
+						<!-- GROUP 1: Model 2D Siap Pakai (All 15 Pre-installed Models: HoYoverse/Kuro, Booth & Official) -->
 						<div class="space-y-3">
-							<div class="flex items-center justify-between">
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 								<h3 class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
 									<Sparkles class="w-3.5 h-3.5 text-cyan-400" />
-									Model Cubism 4 Siap Pakai ({officialPreinstalledModels.length} Model)
+									Model 2D Siap Pakai ({displayed2DModels.length} dari {MODEL_CATALOG.length} Model)
 								</h3>
 								<span class="text-[10px] text-zinc-500">Klik kartu untuk langsung aktifkan avatar</span>
 							</div>
 
+							<!-- Category Filter Pills for 2D Models -->
+							<div class="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
+								<button
+									type="button"
+									onclick={() => (catalog2DFilter = 'all')}
+									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer {
+										catalog2DFilter === 'all'
+											? 'bg-cyan-500/25 border-cyan-500 text-cyan-200 shadow-sm'
+											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+									}"
+								>
+									Semua 2D ({MODEL_CATALOG.length})
+								</button>
+								<button
+									type="button"
+									onclick={() => (catalog2DFilter = 'game')}
+									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
+										catalog2DFilter === 'game'
+											? 'bg-amber-500/25 border-amber-500 text-amber-200 shadow-sm'
+											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-amber-300'
+									}"
+								>
+									<span>🌟 ZZZ / WuWa / HSR</span>
+									<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">5</span>
+								</button>
+								<button
+									type="button"
+									onclick={() => (catalog2DFilter = 'booth')}
+									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
+										catalog2DFilter === 'booth'
+											? 'bg-pink-500/25 border-pink-500 text-pink-200 shadow-sm'
+											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-pink-300'
+									}"
+								>
+									<span>🌸 BOOTH Anime</span>
+									<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">2</span>
+								</button>
+								<button
+									type="button"
+									onclick={() => (catalog2DFilter = 'official')}
+									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
+										catalog2DFilter === 'official'
+											? 'bg-sky-500/25 border-sky-500 text-sky-200 shadow-sm'
+											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-sky-300'
+									}"
+								>
+									<span>🎌 Live2D Resmi</span>
+									<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">8</span>
+								</button>
+							</div>
+
 							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-								{#each officialPreinstalledModels as model}
+								{#each displayed2DModels as model}
 									{@const isActive = rigging.avatarEngine === 'live2d' && (rigging.selectedModelId === model.id || rigging.modelUrl === model.url)}
 									<div
 										role="button"
@@ -584,7 +648,7 @@
 										}"
 									>
 										{#if isActive}
-											<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide">
+											<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
 												<Check class="w-3 h-3 stroke-[3]" />
 												AKTIF
 											</div>
@@ -599,6 +663,7 @@
 														class="w-full h-full object-cover object-top"
 														style="image-rendering: -webkit-optimize-contrast;"
 														loading="lazy"
+														referrerpolicy="no-referrer"
 													/>
 												{:else}
 													<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
@@ -615,8 +680,12 @@
 													<span class="inline-flex self-start px-1.5 py-0.5 rounded bg-zinc-800 text-cyan-400 font-mono text-[9px] border border-zinc-700">
 														{model.version}
 													</span>
-													<span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold text-[8px] uppercase tracking-wide">
-														Resmi
+													<span class="px-1.5 py-0.5 rounded font-semibold text-[8px] uppercase tracking-wide border {
+														model.source === 'booth'
+															? 'bg-pink-500/20 text-pink-300 border-pink-500/30'
+															: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+													}">
+														{model.source === 'booth' ? 'BOOTH' : 'Resmi'}
 													</span>
 												</div>
 												{#if model.author}
@@ -669,7 +738,7 @@
 
 										<div class="flex items-start gap-3.5 mb-2.5">
 											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												<img src={sample.avatarUrl} alt={sample.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" />
+												<img src={sample.avatarUrl} alt={sample.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" referrerpolicy="no-referrer" />
 											</div>
 											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
 												<div class="flex items-center gap-1.5 mb-0.5">
@@ -844,6 +913,7 @@
 														class="w-full h-full object-cover object-top"
 														style="image-rendering: -webkit-optimize-contrast;"
 														loading="lazy"
+														referrerpolicy="no-referrer"
 													/>
 												{/if}
 											</div>
@@ -957,7 +1027,7 @@
 										<!-- Top Row: Thumbnail + Info -->
 										<div class="flex items-start gap-3.5 mb-2.5">
 											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" />
+												<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" referrerpolicy="no-referrer" />
 											</div>
 											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
 												<div class="flex items-center gap-1.5 mb-0.5">
@@ -1115,6 +1185,7 @@
 													class="w-full h-full object-cover object-top"
 													style="image-rendering: -webkit-optimize-contrast;"
 													loading="lazy"
+													referrerpolicy="no-referrer"
 												/>
 											{:else}
 												<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">

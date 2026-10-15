@@ -2737,8 +2737,8 @@
 								</span>
 							</div>
 
-							<!-- 4 Stage Environment Cards Grid -->
-							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+							<!-- 7 Stage Environment Cards Grid -->
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 								<!-- 1. Grid / Lantai Reflektif -->
 								<button
 									type="button"
@@ -2765,29 +2765,30 @@
 									</p>
 								</button>
 
-								<!-- 2. Room / Studio 3D -->
+								<!-- 2. Room / Studio Kamar VTuber -->
 								<button
 									type="button"
 									onclick={() => {
 										playSfx('click');
 										rigging.setStageEnvironment('room');
-										rigging.showToast('✓ Panggung 3D: Studio Room');
+										rigging.showToast('✓ Panggung 3D: Cozy Room');
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
 										rigging.stageEnvironment === 'room'
-											? 'bg-pink-500/15 border-pink-500 ring-2 ring-pink-500/50 shadow-md'
+											? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/50 shadow-md'
 											: isLightTheme
 												? 'bg-white hover:bg-zinc-100 border-zinc-200'
 												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
 									}"
 								>
-									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-pink-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
-										<div class="absolute w-full h-1 bg-gradient-to-r from-cyan-400 to-pink-500 top-3"></div>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-[#fef7ee] to-[#e6d7c3] border border-amber-300/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute top-1 left-2 w-4 h-5 rounded-sm bg-pink-300/60 border border-pink-400/50"></div>
+										<div class="absolute top-2 right-3 w-3 h-3 rounded-full bg-amber-400/70 shadow-[0_0_8px_#fbbf24]"></div>
 										<span class="text-2xl">🏠</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Studio Room</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Cozy Anime Room</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Ruang studio VTuber lengkap dengan lantai panggung, dinding, dan aksen neon strip
+										Kamar cat cream lembut, lantai zinc cream, rak hiasan &amp; lampu meja cewek
 									</p>
 								</button>
 
@@ -2807,35 +2808,118 @@
 												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
 									}"
 								>
-									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-emerald-950/70 to-zinc-950 border border-emerald-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
-										<span class="text-2xl">🌲</span>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-sky-400 via-sky-200 to-emerald-200 border border-emerald-400/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute bottom-0 inset-x-0 h-6 rounded-t-full bg-gradient-to-b from-emerald-500 to-emerald-700"></div>
+										<span class="text-2xl relative z-10">🌱</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Open Field &amp; Horizon</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Open Meadow &amp; Horizon</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
-										Panggung terbuka dengan hamparan rumput hijau, pedestal batu, dan kabut atmosferik
+										Panggung terbuka dengan hamparan rumput hijau, pedestal batu, dan langit sejuk
 									</p>
 								</button>
 
-								<!-- 4. Void / Transparan Minimal -->
+								<!-- 4. Sunset / Pesisir Senja -->
 								<button
 									type="button"
 									onclick={() => {
 										playSfx('click');
-										rigging.setStageEnvironment('void');
-										rigging.showToast('✓ Panggung 3D: Void Minimal (Transparan)');
+										rigging.setStageEnvironment('sunset');
+										rigging.showToast('✓ Panggung 3D: Sunset Coast');
 									}}
 									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
-										rigging.stageEnvironment === 'void'
+										rigging.stageEnvironment === 'sunset'
+											? 'bg-orange-500/15 border-orange-500 ring-2 ring-orange-500/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-amber-500 via-rose-600 to-indigo-950 border border-rose-500/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-amber-200 shadow-[0_0_12px_#fde047]"></div>
+										<span class="text-2xl relative z-10">🌅</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Sunset Coast</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Suasana pantai senja keemasan dengan horizon laut, matahari terbenam &amp; dek kayu
+									</p>
+								</button>
+
+								<!-- 5. Studio / Panggung Konser Idol -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('studio');
+										rigging.showToast('✓ Panggung 3D: Live Idol Concert Studio');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'studio'
 											? 'bg-purple-500/15 border-purple-500 ring-2 ring-purple-500/50 shadow-md'
 											: isLightTheme
 												? 'bg-white hover:bg-zinc-100 border-zinc-200'
 												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
 									}"
 								>
-									<div class="w-full h-16 rounded-xl bg-zinc-950 border border-purple-800/40 mb-2 flex items-center justify-center relative overflow-hidden">
-										<span class="text-2xl">✨</span>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-purple-950 via-zinc-950 to-black border border-purple-500/40 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute top-0 left-2 w-10 h-16 bg-gradient-to-br from-cyan-400/25 to-transparent -rotate-12 pointer-events-none"></div>
+										<div class="absolute top-0 right-2 w-10 h-16 bg-gradient-to-bl from-pink-500/25 to-transparent rotate-12 pointer-events-none"></div>
+										<span class="text-2xl relative z-10">🎤</span>
 									</div>
-									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Void Minimal (Alpha)</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Idol Live Concert</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Lantai panggung konser glossy dengan lampu sorot spotlight kerucut &amp; truss neon
+									</p>
+								</button>
+
+								<!-- 6. Dojo / Tatami Tradisional Jepang -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('dojo');
+										rigging.showToast('✓ Panggung 3D: Sakura Dojo');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'dojo'
+											? 'bg-rose-400/15 border-rose-400 ring-2 ring-rose-400/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-gradient-to-b from-[#e8dcc8] to-[#ab987a] border border-amber-700/30 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute inset-y-0 left-2 w-5 border-r border-stone-400/60 bg-white/40"></div>
+										<div class="absolute inset-y-0 right-2 w-5 border-l border-stone-400/60 bg-white/40"></div>
+										<span class="text-2xl relative z-10">⛩️</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Sakura Dojo Tatami</div>
+									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
+										Ruang tatami tradisional Jepang, dinding pintu shoji geser &amp; lampion gantung
+									</p>
+								</button>
+
+								<!-- 7. Void / Transparan Minimal -->
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										rigging.setStageEnvironment('void');
+										rigging.showToast('✓ Panggung 3D: Deep Void Minimal');
+									}}
+									class="p-3 rounded-2xl border text-left transition-all cursor-pointer group active:scale-95 {
+										rigging.stageEnvironment === 'void'
+											? 'bg-zinc-600/20 border-zinc-400 ring-2 ring-zinc-400/50 shadow-md'
+											: isLightTheme
+												? 'bg-white hover:bg-zinc-100 border-zinc-200'
+												: 'bg-zinc-950/80 hover:bg-zinc-900 border-zinc-800'
+									}"
+								>
+									<div class="w-full h-16 rounded-xl bg-black border border-zinc-700/50 mb-2 flex items-center justify-center relative overflow-hidden">
+										<div class="absolute top-2 left-4 w-1 h-1 rounded-full bg-white/80"></div>
+										<div class="absolute top-4 right-5 w-1 h-1 rounded-full bg-cyan-300/80"></div>
+										<span class="text-2xl relative z-10">🌌</span>
+									</div>
+									<div class="font-bold text-xs {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">Deep Void Minimal</div>
 									<p class="text-[10px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'} mt-0.5 leading-snug">
 										Tanpa lantai atau dinding 3D, cocok untuk OBS browser source / background kustom 2D
 									</p>
