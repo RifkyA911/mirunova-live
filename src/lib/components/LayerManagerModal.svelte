@@ -75,7 +75,7 @@
 		try {
 			playSfx('click');
 			availableCameras = await tracker.getAvailableVideoDevices(true);
-			rigging.showToast(`✓ Ditemukan ${availableCameras.length} webcam / kamera perangkat`);
+			rigging.showToast(`✓ ${i18n.t('layer_toast_cameras_found')} (${availableCameras.length})`);
 		} catch {}
 	}
 
@@ -429,7 +429,7 @@
 					}"
 				>
 					<Sparkles class="w-3.5 h-3.5" />
-					<span>+ Upload / Pasang Prop</span>
+					<span>{i18n.t('layer_upload_prop_btn')}</span>
 					{#if isAddPropDrawerOpen}
 						<ChevronUp class="w-3 h-3" />
 					{:else}
@@ -452,7 +452,7 @@
 					}"
 				>
 					<Users class="w-3.5 h-3.5" />
-					<span>Collab Studio (3 Ppl)</span>
+					<span>{i18n.t('layer_collab_studio_btn')}</span>
 					{#if rigging.isCollabModeActive || rigging.isCollab2Active}
 						<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
 					{/if}
@@ -605,7 +605,7 @@
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
 							<Users class="w-3.5 h-3.5" />
-							Studio Collab Multi-Camera (Maks 3 Orang)
+							{i18n.t('layer_collab_studio_title')}
 						</span>
 						<button
 							type="button"
@@ -756,7 +756,7 @@
 										draggable={!layer.locked}
 										ondragstart={(e) => onLayerDragStart(idx, e)}
 										ondragend={onLayerDragEnd}
-										title={layer.locked ? 'Layer terkunci' : 'Tarik ikon ini untuk atur urutan'}
+										title={layer.locked ? i18n.t('layer_is_locked_title') : i18n.t('layer_drag_grip_title')}
 										class="p-1 text-zinc-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing shrink-0 select-none {
 											layer.locked ? 'opacity-30 cursor-not-allowed' : ''
 										}"
@@ -875,12 +875,12 @@
 													{#if rigging.backgroundStyle === 'solid'}
 														<span class="opacity-80">• {rigging.backgroundColor}</span>
 													{:else if rigging.backgroundStyle === 'chroma'}
-														<span class="opacity-80">• #00FF00 Green Screen</span>
+														<span class="opacity-80">• {i18n.t('layer_green_screen_badge')}</span>
 													{/if}
 													<span class="opacity-80">• Opacity: {Math.round(layer.opacity * 100)}%</span>
 												</div>
 											{:else}
-												<div>Transparansi: {Math.round(layer.opacity * 100)}%</div>
+												<div>{i18n.t('opacity')}: {Math.round(layer.opacity * 100)}%</div>
 											{/if}
 										</div>
 									</div>
@@ -889,7 +889,7 @@
 								<!-- Right: Controls strictly pinned flush right -->
 								<div class="flex items-center gap-1.5 ml-auto shrink-0">
 									<!-- Opacity Slider with explicit event isolation -->
-									<div class="flex items-center gap-1" title="Transparansi layer: {Math.round(layer.opacity * 100)}%">
+									<div class="flex items-center gap-1" title="{i18n.t('layer_opacity_title')}: {Math.round(layer.opacity * 100)}%">
 										<input
 											type="range"
 											draggable={false}
@@ -1119,7 +1119,7 @@
 			<div
 				onpointerdown={handleResizePointerDown}
 				class="absolute bottom-1 right-1 w-5 h-5 cursor-nwse-resize text-zinc-500 hover:text-cyan-400 flex items-center justify-center z-50 select-none p-0.5"
-				title="Tarik untuk ubah ukuran (Resize Window)"
+				title={i18n.t('window_resize_tooltip')}
 			>
 				<svg viewBox="0 0 16 16" class="w-3.5 h-3.5 fill-current opacity-70">
 					<path d="M14 14H12V12H14V14ZM14 10H12V8H14V10ZM10 14H8V12H10V14ZM14 6H12V4H14V6ZM6 14H4V12H6V14ZM10 10H8V8H10V10Z" />

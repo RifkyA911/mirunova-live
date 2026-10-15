@@ -154,7 +154,7 @@
 							</span>
 						</div>
 						<p class="text-xs {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'} mt-0.5">
-							Studio VTuber Web Berkinerja Tinggi, Zero Latency, 100% Client-Side Privacy
+							{i18n.t('about_subheading')}
 						</p>
 					</div>
 				</div>
@@ -344,10 +344,10 @@
 						<ShieldCheck class="w-5 h-5 text-emerald-500 shrink-0" />
 						<div>
 							<div class="font-extrabold text-xs {isLightTheme ? 'text-emerald-900' : 'text-emerald-300'}">
-								Privasi Klien 100% Zero-Telemetry & Bebas Royalti
+								{i18n.t('about_privacy_title')}
 							</div>
 							<p class="text-[11px] {isLightTheme ? 'text-emerald-700' : 'text-zinc-400'}">
-								Semua pemrosesan kamera & mikrofon berjalan sepenuhnya secara lokal di browser Anda
+								{i18n.t('about_privacy_desc')}
 							</p>
 						</div>
 					</div>

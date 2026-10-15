@@ -243,6 +243,7 @@ export class RiggingStore {
 	stageEnvironment = $state<'grid' | 'room' | 'cafe' | 'beach' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void'>('grid');
 	activeFullBodyPose = $state<FullBodyPose3D>('idle');
 	activeStageWaypoint = $state<StageAreaWaypoint>('center');
+	is3DPositionHudVisible = $state<boolean>(true);
 
 	// Active Model Details
 	selectedModelId = $state<string>('vivian');
@@ -393,6 +394,7 @@ export class RiggingStore {
 				opacity: l.opacity,
 				locked: l.locked
 			})),
+			is3DPositionHudVisible: this.is3DPositionHudVisible,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -404,6 +406,7 @@ export class RiggingStore {
 		if (saved.selected3DModelId) this.selected3DModelId = saved.selected3DModelId;
 		if (saved.stageEnvironment) this.stageEnvironment = saved.stageEnvironment as any;
 		if (saved.customGlbUrl !== undefined) this.customGlbUrl = saved.customGlbUrl;
+		if (saved.is3DPositionHudVisible !== undefined) this.is3DPositionHudVisible = saved.is3DPositionHudVisible;
 
 		// Safe model verification to prevent 404 from obsolete models like momose_aria
 		if (saved.selectedModelId) {
@@ -560,6 +563,12 @@ export class RiggingStore {
 	toggleDock(hide?: boolean) {
 		this.isDockHidden = hide !== undefined ? hide : !this.isDockHidden;
 		this.showToast(this.isDockHidden ? 'Menu Dock disembunyikan (Tekan H untuk menampilkan)' : 'Menu Dock ditampilkan');
+	}
+
+	toggle3DPositionHud(visible?: boolean) {
+		this.is3DPositionHudVisible = visible !== undefined ? visible : !this.is3DPositionHudVisible;
+		this.showToast(this.is3DPositionHudVisible ? i18n.t('toast_3d_pos_hud_shown') : i18n.t('toast_3d_pos_hud_hidden'));
+		this.persist();
 	}
 
 	toggleShortcutModal(open?: boolean) {

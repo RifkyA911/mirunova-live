@@ -70,6 +70,7 @@ export interface SavedUserConfig {
 	layerWindowY?: number;
 	cursorToolMode?: 'pan' | 'select-layer' | 'hand-tracking';
 	stageLayers?: Array<{ id: string; visible: boolean; opacity: number; locked: boolean }>;
+	is3DPositionHudVisible?: boolean;
 }
 
 const STORAGE_KEY = 'mirunova_live_preferences_v1';

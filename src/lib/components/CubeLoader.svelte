@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { i18n } from '#lib/i18n/index.svelte';
+
 	interface Props {
 		title?: string;
 		subtitle?: string;
@@ -9,7 +11,7 @@
 
 	let {
 		title = 'MEMUAT AVATAR',
-		subtitle = 'Menyiapkan panggung virtual, mohon tunggu…',
+		subtitle = i18n.t('loading_stage_subtitle'),
 		modelName = '',
 		engine = '',
 		asOverlay = true

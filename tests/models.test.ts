@@ -9,8 +9,8 @@ describe('Model Catalog Validation', () => {
 		for (const model of live2dModels) {
 			expect(model.id).toBeTruthy();
 			expect(model.name).toBeTruthy();
-			expect(model.url).toMatch(/\.model3\.json$/);
-			expect(model.version).toBe('Cubism 3/4');
+			expect(model.url).toMatch(/\.model(3)?\.json$/);
+			expect(['Cubism 3/4', 'Cubism 2']).toContain(model.version);
 		}
 
 		// Vivian and Mihari verification (BOOTH.pm Famous Models)
@@ -140,5 +140,40 @@ describe('Model Catalog Validation', () => {
 		expect(ren?.name).toContain('Ren');
 		expect(ren?.url).toContain('Ren/Ren.model3.json');
 		expect(ren?.version).toBe('Cubism 3/4');
+	});
+
+	it('should verify official Live2D sample models Hiyori, Haru, Shizuku, and Tororo have author credits', () => {
+		const hiyori = MODEL_CATALOG.find((m) => m.id === 'hiyori');
+		expect(hiyori).toBeDefined();
+		expect(hiyori?.author).toContain('Kani Biimu');
+		expect(hiyori?.sampleUrl).toBe('https://www.live2d.com/en/learn/sample/momose-hiyori-video/');
+		expect(hiyori?.license).toBeTruthy();
+
+		const haru = MODEL_CATALOG.find((m) => m.id === 'haru');
+		expect(haru).toBeDefined();
+		expect(haru?.author).toContain('Kani Biimu');
+		expect(haru?.sampleUrl).toBe('https://www.live2d.com/en/learn/sample/haru/');
+		expect(haru?.license).toBeTruthy();
+
+		const shizuku = MODEL_CATALOG.find((m) => m.id === 'shizuku');
+		expect(shizuku).toBeDefined();
+		expect(shizuku?.version).toBe('Cubism 2');
+		expect(shizuku?.url).toBe('/models/shizuku/shizuku.model.json');
+		expect(shizuku?.sampleUrl).toBe('https://www.live2d.com/en/learn/sample/shizuku/');
+		expect(shizuku?.author).toBe('Live2D Inc.');
+
+		const tororo = MODEL_CATALOG.find((m) => m.id === 'tororo');
+		expect(tororo).toBeDefined();
+		expect(tororo?.version).toBe('Cubism 2');
+		expect(tororo?.url).toBe('/models/tororo/tororo.model.json');
+		expect(tororo?.sampleUrl).toBe('https://www.live2d.com/en/learn/sample/tororo-hijiki/');
+		expect(tororo?.author).toBe('Live2D Inc.');
+
+		const hijiki = MODEL_CATALOG.find((m) => m.id === 'hijiki');
+		expect(hijiki).toBeDefined();
+		expect(hijiki?.version).toBe('Cubism 2');
+		expect(hijiki?.url).toBe('/models/hijiki/hijiki.model.json');
+		expect(hijiki?.sampleUrl).toBe('https://www.live2d.com/en/learn/sample/tororo-hijiki/');
+		expect(hijiki?.author).toBe('Live2D Inc.');
 	});
 });

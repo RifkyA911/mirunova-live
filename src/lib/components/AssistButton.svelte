@@ -20,7 +20,8 @@
 		Maximize2,
 		User,
 		Smile,
-		Layers
+		Layers,
+		Move
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 	import { tracker } from '#lib/core/tracker';
@@ -61,7 +62,7 @@
 	function handleCalibrate() {
 		playSfx('calibrate');
 		tracker.calibrate();
-		rigging.showToast('🎯 Tracking dikalibrasi ke posisi tegak');
+		rigging.showToast('🎯 ' + i18n.t('toast_tracking_calibrated'));
 	}
 
 	function cycleCameraMode() {
@@ -198,7 +199,7 @@
 							<div class="font-bold text-xs tracking-wide uppercase {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
 								ASSISTIVE TOUCH
 							</div>
-							<div class="text-[9px] text-zinc-400 font-mono">Pusat Kontrol Cepat Streamer</div>
+							<div class="text-[9px] text-zinc-400 font-mono">{i18n.t('assist_subtitle')}</div>
 						</div>
 					</div>
 
@@ -327,7 +328,7 @@
 							<Download class="w-4 h-4" />
 						</div>
 						<span class="text-[10px] font-bold leading-tight">Snapshot</span>
-						<span class="text-[8px] text-zinc-400 font-mono">Simpan PNG</span>
+						<span class="text-[8px] text-zinc-400 font-mono">{i18n.t('assist_save_png')}</span>
 					</button>
 
 					<!-- Tile 6: Panggung 3D Virtual Environment -->
@@ -494,6 +495,61 @@
 							<span>Close</span>
 						</button>
 					</div>
+				</div>
+
+				<!-- Quick HUD & PIP Toggles -->
+				<div class="grid grid-cols-2 gap-1.5 mb-3 text-[10.5px]">
+					<!-- 3D Model Position HUD Toggle -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.toggle3DPositionHud();
+						}}
+						class="py-1.5 px-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer {
+							rigging.is3DPositionHudVisible
+								? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300'
+								: isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:bg-zinc-100' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+						}"
+						title={i18n.t('assist_toggle_3d_pos')}
+					>
+						<span class="flex items-center gap-1.5 font-bold truncate">
+							<Move class="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+							<span class="truncate">{i18n.t('assist_toggle_3d_pos')}</span>
+						</span>
+						<span class="text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 {
+							rigging.is3DPositionHudVisible ? 'bg-cyan-500/30 text-cyan-200' : 'bg-zinc-800 text-zinc-500'
+						}">
+							{rigging.is3DPositionHudVisible ? 'ON' : 'OFF'}
+						</span>
+					</button>
+
+					<!-- Tracking Telemetry PIP Toggle -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.showCameraPip = !rigging.showCameraPip;
+							rigging.persist();
+							rigging.showToast(rigging.showCameraPip ? i18n.t('pip_maximize_tooltip') : i18n.t('pip_closed_toast'));
+						}}
+						class="py-1.5 px-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer {
+							rigging.showCameraPip
+								? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
+								: isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:bg-zinc-100' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+						}"
+						title={i18n.t('assist_toggle_telemetry')}
+					>
+						<span class="flex items-center gap-1.5 font-bold truncate">
+							<Camera class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+							<span class="truncate">{i18n.t('assist_toggle_telemetry')}</span>
+						</span>
+						<span class="text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 {
+							rigging.showCameraPip ? 'bg-emerald-500/30 text-emerald-200' : 'bg-zinc-800 text-zinc-500'
+						}">
+							{rigging.showCameraPip ? 'ON' : 'OFF'}
+						</span>
+					</button>
 				</div>
 
 				<!-- Live Telemetry Bar -->

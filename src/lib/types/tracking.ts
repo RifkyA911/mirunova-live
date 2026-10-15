@@ -124,7 +124,10 @@ export interface Live2DModelItem {
 	avatarUrl?: string;
 	source?: 'booth' | 'official' | 'community';
 	boothUrl?: string;
+	sampleUrl?: string;
 	author?: string;
+	license?: string;
+	copyright?: string;
 }
 
 export interface AccessoryItem {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { Activity } from 'lucide-svelte';
+	import { Activity, X } from 'lucide-svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { threeStage, type StageAreaWaypoint } from '#lib/core/threeStage';
 	import { i18n, type I18nKey } from '#lib/i18n/index.svelte';
@@ -197,27 +197,69 @@
 	let dragButton = 0;
 	let prevPointerX = 0;
 	let prevPointerY = 0;
+	const activePointers = new Map<number, { x: number; y: number }>();
+	let initialPinchDistance = 0;
 
 	function handlePointerDown(e: PointerEvent) {
 		if (rigging.isGuiLocked || isHostLayerLocked) return;
-		if (e.button !== 0 && e.button !== 2) return;
-		isDragging = true;
-		dragButton = e.button;
-		prevPointerX = e.clientX;
-		prevPointerY = e.clientY;
+		activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+		if (activePointers.size === 1) {
+			if (e.button !== 0 && e.button !== 2) return;
+			isDragging = true;
+			dragButton = e.button;
+			prevPointerX = e.clientX;
+			prevPointerY = e.clientY;
+		} else if (activePointers.size === 2) {
+			// Two-finger touch on mobile/touchscreen: initialize 2-finger pan & pinch zoom
+			const pts = Array.from(activePointers.values());
+			const dx = pts[0].x - pts[1].x;
+			const dy = pts[0].y - pts[1].y;
+			initialPinchDistance = Math.hypot(dx, dy);
+			prevPointerX = (pts[0].x + pts[1].x) / 2;
+			prevPointerY = (pts[0].y + pts[1].y) / 2;
+		}
 		(e.currentTarget as HTMLElement)?.setPointerCapture(e.pointerId);
 	}
 
 	function handlePointerMove(e: PointerEvent) {
+		if (!activePointers.has(e.pointerId)) return;
+		activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+		if (rigging.is3DAutoSpin) {
+			rigging.is3DAutoSpin = false;
+		}
+
+		if (activePointers.size === 2 && initialPinchDistance > 0) {
+			// 2-finger Touch: Pan (geser) & Pinch Zoom
+			const pts = Array.from(activePointers.values());
+			const centerX = (pts[0].x + pts[1].x) / 2;
+			const centerY = (pts[0].y + pts[1].y) / 2;
+			const deltaCenterX = centerX - prevPointerX;
+			const deltaCenterY = centerY - prevPointerY;
+			prevPointerX = centerX;
+			prevPointerY = centerY;
+
+			// Pan 3D model
+			threeStage.moveModel(deltaCenterX * 0.0035, -deltaCenterY * 0.0035);
+
+			// Pinch zoom
+			const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+			if (initialPinchDistance > 0 && dist > 0) {
+				const factor = dist / initialPinchDistance;
+				if (Math.abs(factor - 1) > 0.015) {
+					threeStage.zoomBy(factor > 1 ? 1.025 : 0.975);
+					initialPinchDistance = dist;
+				}
+			}
+			return;
+		}
+
 		if (!isDragging) return;
 		const deltaX = e.clientX - prevPointerX;
 		const deltaY = e.clientY - prevPointerY;
 		prevPointerX = e.clientX;
 		prevPointerY = e.clientY;
-
-		if (rigging.is3DAutoSpin) {
-			rigging.is3DAutoSpin = false;
-		}
 
 		if (rigging.cursorToolMode === 'pan' || dragButton === 2 || e.shiftKey) {
 			// Pan / Translate 3D model position
@@ -230,12 +272,18 @@
 	}
 
 	function handlePointerUp(e: PointerEvent) {
-		if (isDragging) {
+		activePointers.delete(e.pointerId);
+		if (activePointers.size === 0) {
 			isDragging = false;
-			try {
-				(e.currentTarget as HTMLElement)?.releasePointerCapture(e.pointerId);
-			} catch (_) {}
+			initialPinchDistance = 0;
+		} else if (activePointers.size === 1) {
+			const remaining = Array.from(activePointers.values())[0];
+			prevPointerX = remaining.x;
+			prevPointerY = remaining.y;
 		}
+		try {
+			(e.currentTarget as HTMLElement)?.releasePointerCapture(e.pointerId);
+		} catch (_) {}
 	}
 
 	function handleWheel(e: WheelEvent) {
@@ -267,17 +315,28 @@
 	onwheel={handleWheel}
 	oncontextmenu={(e) => e.preventDefault()}
 	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"
-	class="absolute inset-0 w-full h-full overflow-hidden select-none {isDragging ? 'cursor-grabbing' : 'cursor-grab'} z-0"
+	class="absolute inset-0 w-full h-full overflow-hidden select-none touch-none {isDragging ? 'cursor-grabbing' : 'cursor-grab'} z-0"
 ></div>
 
 <!-- Floating On-Screen 3D Transform & Navigation HUD (Visible in 3D Mode) -->
-{#if !rigging.isGuiLocked && isHostLayerVisible && !isHostLayerLocked}
+{#if !rigging.isGuiLocked && isHostLayerVisible && !isHostLayerLocked && rigging.is3DPositionHudVisible}
 	<div class="fixed top-20 right-4 z-20 flex flex-col items-end gap-2 pointer-events-none select-none">
 		<div class="pointer-events-auto backdrop-blur-2xl bg-zinc-950/80 border border-zinc-700/80 rounded-2xl p-2.5 shadow-2xl space-y-2 text-zinc-200">
 			<!-- Header -->
 			<div class="flex items-center justify-between gap-3 pb-1.5 border-b border-zinc-800 text-[11px] font-bold">
 				<span class="text-cyan-400 font-mono tracking-wide">{i18n.t('stage_model_pos_title')}</span>
-				<span class="text-[9px] text-zinc-500 font-mono">{i18n.t('stage_pan_dpad')}</span>
+				<div class="flex items-center gap-1.5">
+					<span class="text-[9px] text-zinc-500 font-mono">{i18n.t('stage_pan_dpad')}</span>
+					<button
+						type="button"
+						onclick={() => rigging.toggle3DPositionHud(false)}
+						class="p-1 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 transition-colors cursor-pointer"
+						title={i18n.t('close_btn')}
+						aria-label={i18n.t('close_btn')}
+					>
+						<X class="w-3.5 h-3.5" />
+					</button>
+				</div>
 			</div>
 
 			<!-- D-Pad Translation Buttons -->

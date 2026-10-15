@@ -157,7 +157,7 @@
 			console.warn('Auto download & install error:', err);
 			// Fallback: if network or CORS error, let the user pick the file manually
 			rigging.showToast(
-				`⚠️ Server unduh dibatasi CORS atau offline. Silakan pilih file ZIP hasil unduh manual.`
+				`⚠️ ${i18n.t('model_cors_error_toast')}`
 			);
 			activeTargetModelName = displayName;
 			activeTargetModelId = id || '';

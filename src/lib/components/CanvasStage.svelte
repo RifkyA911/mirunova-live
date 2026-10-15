@@ -1250,21 +1250,21 @@
 
 			if (targetId === 'collab') {
 				if (collabLayer?.locked) {
-					rigging.showToast('🔒 Layer Avatar Collab Partner 1 terkunci');
+					rigging.showToast('🔒 ' + i18n.t('toast_layer_collab1_locked'));
 					return;
 				}
 				if (!collabLayer?.visible) return;
 			}
 			if (targetId === 'collab-2' || targetId === 'model-collab-2') {
 				if (collab2Layer?.locked) {
-					rigging.showToast('🔒 Layer Avatar Collab Partner 2 terkunci');
+					rigging.showToast('🔒 ' + i18n.t('toast_layer_collab2_locked'));
 					return;
 				}
 				if (!collab2Layer?.visible) return;
 			}
 			if (targetId === 'host' || !targetId) {
 				if (hostLayer?.locked) {
-					rigging.showToast('🔒 Layer Avatar Utama terkunci');
+					rigging.showToast('🔒 ' + i18n.t('toast_layer_host_locked'));
 					return;
 				}
 				if (!hostLayer?.visible) return;
@@ -1355,6 +1355,79 @@
 		}
 	}
 
+	let initialPinchDistance = 0;
+	let initialTouchScale = 1;
+
+	function handleTouchStart(e: TouchEvent) {
+		if (rigging.isGuiLocked) return;
+		if (e.touches.length === 1) {
+			const touch = e.touches[0];
+			const fakeEvent = {
+				button: 0,
+				clientX: touch.clientX,
+				clientY: touch.clientY
+			} as MouseEvent;
+			handleMouseDown(fakeEvent);
+		} else if (e.touches.length === 2) {
+			isDragging = false;
+			const dx = e.touches[0].clientX - e.touches[1].clientX;
+			const dy = e.touches[0].clientY - e.touches[1].clientY;
+			initialPinchDistance = Math.hypot(dx, dy);
+			initialTouchScale = modelScale;
+			lastPointerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+			lastPointerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+		}
+	}
+
+	function handleTouchMove(e: TouchEvent) {
+		if (rigging.isGuiLocked) return;
+		if (e.touches.length === 1 && isDragging) {
+			const touch = e.touches[0];
+			const fakeEvent = {
+				clientX: touch.clientX,
+				clientY: touch.clientY
+			} as MouseEvent;
+			handleMouseMove(fakeEvent);
+		} else if (e.touches.length === 2 && currentModel && initialPinchDistance > 0) {
+			const currentCenter = {
+				x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+				y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+			};
+			const dxCenter = currentCenter.x - lastPointerX;
+			const dyCenter = currentCenter.y - lastPointerY;
+			lastPointerX = currentCenter.x;
+			lastPointerY = currentCenter.y;
+
+			modelPosition = {
+				x: modelPosition.x + dxCenter,
+				y: modelPosition.y + dyCenter
+			};
+			currentModel.position.set(modelPosition.x, modelPosition.y);
+
+			const dx = e.touches[0].clientX - e.touches[1].clientX;
+			const dy = e.touches[0].clientY - e.touches[1].clientY;
+			const dist = Math.hypot(dx, dy);
+			const ratio = dist / initialPinchDistance;
+			const newScale = Math.max(0.08, Math.min(3.5, initialTouchScale * ratio));
+			modelScale = newScale;
+			currentModel.scale.set(modelScale);
+		}
+	}
+
+	function handleTouchEnd(e: TouchEvent) {
+		if (e.touches.length === 0) {
+			handleMouseUp();
+			initialPinchDistance = 0;
+		} else if (e.touches.length === 1) {
+			const touch = e.touches[0];
+			lastPointerX = touch.clientX;
+			lastPointerY = touch.clientY;
+			dragStart = { x: touch.clientX - modelPosition.x, y: touch.clientY - modelPosition.y };
+			isDragging = true;
+			initialPinchDistance = 0;
+		}
+	}
+
 	function handleWheel(e: WheelEvent) {
 		if (rigging.isGuiLocked) return;
 		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
@@ -1375,7 +1448,7 @@
 		}
 		const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
 		if (hostLayer?.locked) {
-			rigging.showToast('🔒 Layer Avatar Utama terkunci');
+			rigging.showToast('🔒 ' + i18n.t('toast_layer_host_locked'));
 			return;
 		}
 		if (!hostLayer?.visible) return;
@@ -1438,7 +1511,7 @@
 	aria-label="Live2D Stage Canvas"
 	tabindex="0"
 	bind:this={containerEl}
-	class="absolute inset-0 w-full h-full overflow-hidden select-none z-0 {
+	class="absolute inset-0 w-full h-full overflow-hidden select-none touch-none z-0 {
 		rigging.cursorToolMode === 'select-layer'
 			? 'cursor-move'
 			: rigging.cursorToolMode === 'hand-tracking'
@@ -1449,6 +1522,10 @@
 	onmousemove={handleMouseMove}
 	onmouseup={handleMouseUp}
 	onmouseleave={handleMouseUp}
+	ontouchstart={handleTouchStart}
+	ontouchmove={handleTouchMove}
+	ontouchend={handleTouchEnd}
+	ontouchcancel={handleTouchEnd}
 	onwheel={handleWheel}
 	ondblclick={handleDoubleClick}
 >
@@ -1528,7 +1605,7 @@
 					}">
 						{#if isSelected}
 							<div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-amber-500 text-zinc-950 font-bold font-mono text-[9px] whitespace-nowrap shadow-md pointer-events-none z-30">
-								🎯 {acc.name} (Drag untuk geser)
+								🎯 {acc.name} ({i18n.t('stage_drag_to_move')})
 							</div>
 						{/if}
 						{#if acc.imageUrl}
@@ -1661,7 +1738,7 @@
 			<div class="flex items-center gap-1.5 pr-2 border-r border-zinc-800">
 				<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
 				<span class="text-xs font-bold text-amber-300">
-					🎯 Geser: <span class="text-white font-semibold">{getSelectedElementName()}</span>
+					🎯 {i18n.t('stage_drag_move_label')}: <span class="text-white font-semibold">{getSelectedElementName()}</span>
 				</span>
 			</div>
 

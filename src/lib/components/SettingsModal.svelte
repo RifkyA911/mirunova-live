@@ -895,7 +895,7 @@
 									<span class="text-xl font-bold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">{hardware.cpuCores} Cores</span>
 								</div>
 								<div class="p-3.5 rounded-xl border {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
-									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Kamera Stream</span>
+									<span class="text-[10px] block uppercase font-sans font-bold {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('badge_webcam')}</span>
 									<span class="text-xl font-bold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">{rigging.cameraResolution}</span>
 								</div>
 								<div class="p-3.5 rounded-xl border col-span-2 sm:col-span-4 {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
@@ -3680,27 +3680,27 @@
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">C</span>
-									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Toggle Kamera</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('shortcut_title_c')}</span>
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">V</span>
-									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Toggle Mic</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('shortcut_title_v')}</span>
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">H</span>
-									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Sembunyi Dock</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('shortcut_title_h')}</span>
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">L</span>
-									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Kunci GUI</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('shortcut_title_l')}</span>
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">O</span>
-									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Mode OBS</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('shortcut_title_o')}</span>
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">S</span>
-									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">Screenshot</span>
+									<span class="text-[10px] font-sans {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">{i18n.t('shortcut_title_s')}</span>
 								</div>
 								<div class="p-2.5 rounded-xl border text-center {isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-950/80 border-zinc-800'}">
 									<span class="font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">F1</span>

@@ -13,7 +13,8 @@
 		RefreshCw,
 		Smile,
 		User,
-		Hand
+		Hand,
+		X
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
 
@@ -74,33 +75,55 @@
 
 {#if rigging.showCameraPip}
 	{#if isMinimized}
-		<!-- Minimal View: Icon Kamera & Status Dot Hijau (Solid Opacity) -->
-		<button
-			type="button"
-			onclick={() => {
-				playSfx('click');
-				isMinimized = false;
-			}}
-			class="fixed top-3 left-3 sm:top-4 sm:left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-2xl backdrop-blur-2xl border shadow-2xl cursor-pointer transition-all duration-200 group active:scale-95 {
-				isLightTheme
-					? 'bg-white border-zinc-200 text-zinc-800 hover:shadow-cyan-500/20'
-					: 'bg-zinc-950 border-zinc-800 text-zinc-100 hover:border-cyan-500/50 shadow-black/80'
-			}"
-			title={i18n.t('pip_maximize_tooltip')}
-			aria-label={i18n.t('maximize')}
-		>
-			<Camera class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-			<span class="text-xs font-bold font-mono tracking-wide">CAM</span>
-			<span
-				class="w-2 h-2 rounded-full {
-					!rigging.isCameraActive
-						? 'bg-zinc-500'
-						: rigging.isFaceDetected
-							? 'bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399]'
-							: 'bg-amber-400 animate-ping'
+		<!-- Minimal View: Icon Kamera & Status Dot Hijau + Touch-Friendly Close Button -->
+		<div class="fixed top-3 left-3 sm:top-4 sm:left-4 z-30 flex items-center gap-1.5">
+			<button
+				type="button"
+				onclick={() => {
+					playSfx('click');
+					isMinimized = false;
+				}}
+				class="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-2xl backdrop-blur-2xl border shadow-2xl cursor-pointer transition-all duration-200 group active:scale-95 {
+					isLightTheme
+						? 'bg-white border-zinc-200 text-zinc-800 hover:shadow-cyan-500/20'
+						: 'bg-zinc-950 border-zinc-800 text-zinc-100 hover:border-cyan-500/50 shadow-black/80'
 				}"
-			></span>
-		</button>
+				title={i18n.t('pip_maximize_tooltip')}
+				aria-label={i18n.t('maximize')}
+			>
+				<Camera class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+				<span class="text-xs font-bold font-mono tracking-wide">CAM</span>
+				<span
+					class="w-2 h-2 rounded-full {
+						!rigging.isCameraActive
+							? 'bg-zinc-500'
+							: rigging.isFaceDetected
+								? 'bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399]'
+								: 'bg-amber-400 animate-ping'
+					}"
+				></span>
+			</button>
+
+			<!-- Quick Dismiss Button when Minimized -->
+			<button
+				type="button"
+				onclick={() => {
+					playSfx('click');
+					rigging.showCameraPip = false;
+					rigging.persist();
+					rigging.showToast(i18n.t('pip_closed_toast'));
+				}}
+				class="w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center backdrop-blur-xl border transition-all cursor-pointer shadow-lg active:scale-90 {
+					isLightTheme
+						? 'bg-white/95 border-zinc-200 text-zinc-500 hover:text-rose-600'
+						: 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-rose-400'
+				}"
+				title={i18n.t('pip_close_tooltip')}
+				aria-label={i18n.t('close_btn')}
+			>
+				<X class="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+			</button>
+		</div>
 	{:else}
 		<!-- Expanded View: Sleek Modern Streamer Telemetry & Camera Card -->
 		<div
@@ -115,8 +138,8 @@
 				isLightTheme ? 'bg-zinc-50/90 border-zinc-200 text-zinc-800' : 'bg-zinc-900/80 border-zinc-800/80 text-zinc-300'
 			}">
 				<div class="flex items-center gap-2">
-					<div class="p-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
-						<Camera class="w-3.5 h-3.5" />
+					<div class="p-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+						<Camera class="w-4 h-4" />
 					</div>
 					<div>
 						<div class="flex items-center gap-1.5">
@@ -138,19 +161,38 @@
 				</div>
 
 				<div class="flex items-center gap-1">
-					<!-- Minimize button -->
+					<!-- Minimize button (Touch-friendly 40px hit area on mobile) -->
 					<button
+						type="button"
 						onclick={() => {
 							playSfx('click');
 							isMinimized = true;
 						}}
-						class="p-1 rounded-lg transition-colors cursor-pointer {
+						class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer active:scale-95 {
 							isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 						}"
 						title={i18n.t('minimize')}
 						aria-label={i18n.t('minimize')}
 					>
-						<Minimize2 class="w-3.5 h-3.5" />
+						<Minimize2 class="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+					</button>
+
+					<!-- Close button (Touch-friendly 40px hit area on mobile) -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.showCameraPip = false;
+							rigging.persist();
+							rigging.showToast(i18n.t('pip_closed_toast'));
+						}}
+						class="w-10 h-10 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-colors cursor-pointer active:scale-95 {
+							isLightTheme ? 'text-zinc-500 hover:text-rose-600 hover:bg-zinc-200' : 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800'
+						}"
+						title={i18n.t('pip_close_tooltip')}
+						aria-label={i18n.t('close_btn')}
+					>
+						<X class="w-4 h-4 sm:w-3.5 sm:h-3.5" />
 					</button>
 				</div>
 			</div>
