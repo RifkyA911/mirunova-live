@@ -19,6 +19,8 @@ describe('Model Catalog Validation', () => {
 		expect(vivian?.name).toContain('薇薇安');
 		expect(vivian?.url).toBe('/models/vivian/薇薇安.model3.json');
 		expect(vivian?.source).toBe('booth');
+		expect(vivian?.author).toBe('shibutani');
+		expect(vivian?.boothUrl).toContain('shibutani.booth.pm');
 		expect(vivian?.tags).toContain('BOOTH.pm');
 
 		const mihari = MODEL_CATALOG.find((m) => m.id === 'mihari');
@@ -33,30 +35,40 @@ describe('Model Catalog Validation', () => {
 		expect(jian?.name).toContain('简');
 		expect(jian?.url).toBe('/models/jian/简.model3.json');
 		expect(jian?.avatarUrl).toBeTruthy();
+		expect(jian?.author).toBe('shibutani');
+		expect(jian?.boothUrl).toContain('shibutani.booth.pm');
 
 		const changli = MODEL_CATALOG.find((m) => m.id === 'changli');
 		expect(changli).toBeDefined();
 		expect(changli?.name).toContain('长离');
 		expect(changli?.url).toBe('/models/changli/长离.model3.json');
 		expect(changli?.avatarUrl).toBeTruthy();
+		expect(changli?.author).toBe('shibutani');
+		expect(changli?.boothUrl).toContain('shibutani.booth.pm');
 
 		const chun = MODEL_CATALOG.find((m) => m.id === 'chun');
 		expect(chun).toBeDefined();
 		expect(chun?.name).toContain('椿');
 		expect(chun?.url).toBe('/models/chun/椿.model3.json');
 		expect(chun?.avatarUrl).toBeTruthy();
+		expect(chun?.author).toBe('shibutani');
+		expect(chun?.boothUrl).toContain('shibutani.booth.pm');
 
 		const tingyun = MODEL_CATALOG.find((m) => m.id === 'tingyun');
 		expect(tingyun).toBeDefined();
 		expect(tingyun?.name).toContain('停云');
 		expect(tingyun?.url).toBe('/models/tingyun/停云.model3.json');
 		expect(tingyun?.avatarUrl).toBeTruthy();
+		expect(tingyun?.author).toBe('shibutani');
+		expect(tingyun?.boothUrl).toContain('shibutani.booth.pm');
 
 		const ruanMei = MODEL_CATALOG.find((m) => m.id === 'ruan-mei');
 		expect(ruanMei).toBeDefined();
 		expect(ruanMei?.name).toContain('阮·梅');
 		expect(ruanMei?.url).toBe('/models/ruan-mei/1208阮梅1-12.20 - 动画.model3.json');
 		expect(ruanMei?.avatarUrl).toBeTruthy();
+		expect(ruanMei?.author).toBe('shibutani');
+		expect(ruanMei?.boothUrl).toContain('shibutani.booth.pm');
 	});
 
 	it('should not contain blocked or dead CDN repositories', () => {

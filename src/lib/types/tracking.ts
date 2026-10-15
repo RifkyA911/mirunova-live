@@ -126,6 +126,7 @@ export interface Live2DModelItem {
 	boothUrl?: string;
 	sampleUrl?: string;
 	author?: string;
+	authorUrl?: string;
 	license?: string;
 	copyright?: string;
 }

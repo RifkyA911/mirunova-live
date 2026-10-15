@@ -241,16 +241,14 @@
 			prevPointerY = centerY;
 
 			// Pan 3D model
-			threeStage.moveModel(deltaCenterX * 0.0035, -deltaCenterY * 0.0035);
+			threeStage.moveModel(deltaCenterX * 0.005, -deltaCenterY * 0.005);
 
 			// Pinch zoom
 			const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-			if (initialPinchDistance > 0 && dist > 0) {
+			if (initialPinchDistance > 10 && dist > 10) {
 				const factor = dist / initialPinchDistance;
-				if (Math.abs(factor - 1) > 0.015) {
-					threeStage.zoomBy(factor > 1 ? 1.025 : 0.975);
-					initialPinchDistance = dist;
-				}
+				threeStage.zoomBy(factor);
+				initialPinchDistance = dist;
 			}
 			return;
 		}
@@ -263,7 +261,7 @@
 
 		if (rigging.cursorToolMode === 'pan' || dragButton === 2 || e.shiftKey) {
 			// Pan / Translate 3D model position
-			threeStage.moveModel(deltaX * 0.0035, -deltaY * 0.0035);
+			threeStage.moveModel(deltaX * 0.005, -deltaY * 0.005);
 		} else {
 			// Rotate body & tilt pitch
 			const sensitivity = 0.005;
@@ -284,6 +282,85 @@
 		try {
 			(e.currentTarget as HTMLElement)?.releasePointerCapture(e.pointerId);
 		} catch (_) {}
+	}
+
+	// Mobile TouchEvent Handlers for 100% Reliable 2-Finger Pan & Pinch Zoom
+	let touchInitialDist = 0;
+	let touchPrevCenter = { x: 0, y: 0 };
+	let touchIsDragging = false;
+	let touchPrevSingle = { x: 0, y: 0 };
+
+	function handleTouchStart(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
+		if (rigging.isGuiLocked || isHostLayerLocked) return;
+		if (e.touches.length === 1) {
+			touchIsDragging = true;
+			touchPrevSingle = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+		} else if (e.touches.length === 2) {
+			touchIsDragging = false;
+			const dx = e.touches[0].clientX - e.touches[1].clientX;
+			const dy = e.touches[0].clientY - e.touches[1].clientY;
+			touchInitialDist = Math.hypot(dx, dy);
+			touchPrevCenter = {
+				x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+				y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+			};
+		}
+	}
+
+	function handleTouchMove(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
+		if (rigging.isGuiLocked || isHostLayerLocked) return;
+
+		if (rigging.is3DAutoSpin) {
+			rigging.is3DAutoSpin = false;
+		}
+
+		if (e.touches.length === 2 && touchInitialDist > 10) {
+			// 2-Finger Touch: Geser (Pan) & Pinch Zoom
+			const center = {
+				x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+				y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+			};
+			const deltaCenterX = center.x - touchPrevCenter.x;
+			const deltaCenterY = center.y - touchPrevCenter.y;
+			touchPrevCenter = center;
+
+			// Pan model position in 3D
+			threeStage.moveModel(deltaCenterX * 0.005, -deltaCenterY * 0.005);
+
+			// Pinch zoom
+			const dx = e.touches[0].clientX - e.touches[1].clientX;
+			const dy = e.touches[0].clientY - e.touches[1].clientY;
+			const dist = Math.hypot(dx, dy);
+			if (dist > 10 && touchInitialDist > 10) {
+				const factor = dist / touchInitialDist;
+				threeStage.zoomBy(factor);
+				touchInitialDist = dist;
+			}
+		} else if (e.touches.length === 1 && touchIsDragging) {
+			const deltaX = e.touches[0].clientX - touchPrevSingle.x;
+			const deltaY = e.touches[0].clientY - touchPrevSingle.y;
+			touchPrevSingle = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+			if (rigging.cursorToolMode === 'pan') {
+				threeStage.moveModel(deltaX * 0.005, -deltaY * 0.005);
+			} else {
+				threeStage.rotateOrbit(deltaX * 0.005, -deltaY * 0.005, true);
+			}
+		}
+	}
+
+	function handleTouchEnd(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
+		if (e.touches.length === 0) {
+			touchIsDragging = false;
+			touchInitialDist = 0;
+		} else if (e.touches.length === 1) {
+			touchIsDragging = true;
+			touchInitialDist = 0;
+			touchPrevSingle = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+		}
 	}
 
 	function handleWheel(e: WheelEvent) {
@@ -312,6 +389,10 @@
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
+	ontouchstart={handleTouchStart}
+	ontouchmove={handleTouchMove}
+	ontouchend={handleTouchEnd}
+	ontouchcancel={handleTouchEnd}
 	onwheel={handleWheel}
 	oncontextmenu={(e) => e.preventDefault()}
 	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"

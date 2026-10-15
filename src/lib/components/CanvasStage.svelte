@@ -1359,15 +1359,14 @@
 	let initialTouchScale = 1;
 
 	function handleTouchStart(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
 		if (rigging.isGuiLocked) return;
 		if (e.touches.length === 1) {
 			const touch = e.touches[0];
-			const fakeEvent = {
-				button: 0,
-				clientX: touch.clientX,
-				clientY: touch.clientY
-			} as MouseEvent;
-			handleMouseDown(fakeEvent);
+			isDragging = true;
+			lastPointerX = touch.clientX;
+			lastPointerY = touch.clientY;
+			dragStart = { x: touch.clientX - modelPosition.x, y: touch.clientY - modelPosition.y };
 		} else if (e.touches.length === 2) {
 			isDragging = false;
 			const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -1380,14 +1379,25 @@
 	}
 
 	function handleTouchMove(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
 		if (rigging.isGuiLocked) return;
+
 		if (e.touches.length === 1 && isDragging) {
 			const touch = e.touches[0];
-			const fakeEvent = {
-				clientX: touch.clientX,
-				clientY: touch.clientY
-			} as MouseEvent;
-			handleMouseMove(fakeEvent);
+			const dx = touch.clientX - lastPointerX;
+			const dy = touch.clientY - lastPointerY;
+			lastPointerX = touch.clientX;
+			lastPointerY = touch.clientY;
+
+			// Pan host model or selected layer
+			const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+			if (currentModel && !hostLayer?.locked && hostLayer?.visible) {
+				modelPosition = {
+					x: modelPosition.x + dx,
+					y: modelPosition.y + dy
+				};
+				currentModel.position.set(modelPosition.x, modelPosition.y);
+			}
 		} else if (e.touches.length === 2 && currentModel && initialPinchDistance > 0) {
 			const currentCenter = {
 				x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
@@ -1398,26 +1408,31 @@
 			lastPointerX = currentCenter.x;
 			lastPointerY = currentCenter.y;
 
+			// Pan model with 2 fingers
 			modelPosition = {
 				x: modelPosition.x + dxCenter,
 				y: modelPosition.y + dyCenter
 			};
 			currentModel.position.set(modelPosition.x, modelPosition.y);
 
+			// Pinch zoom centered at finger midpoint
 			const dx = e.touches[0].clientX - e.touches[1].clientX;
 			const dy = e.touches[0].clientY - e.touches[1].clientY;
 			const dist = Math.hypot(dx, dy);
-			const ratio = dist / initialPinchDistance;
-			const newScale = Math.max(0.08, Math.min(3.5, initialTouchScale * ratio));
-			modelScale = newScale;
-			currentModel.scale.set(modelScale);
+			if (dist > 10 && initialPinchDistance > 10) {
+				const factor = dist / initialPinchDistance;
+				initialPinchDistance = dist;
+				applyZoom(factor, currentCenter.x, currentCenter.y);
+			}
 		}
 	}
 
 	function handleTouchEnd(e: TouchEvent) {
+		if (e.cancelable) e.preventDefault();
 		if (e.touches.length === 0) {
-			handleMouseUp();
+			isDragging = false;
 			initialPinchDistance = 0;
+			rigging.persist();
 		} else if (e.touches.length === 1) {
 			const touch = e.touches[0];
 			lastPointerX = touch.clientX;

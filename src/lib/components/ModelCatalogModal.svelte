@@ -56,17 +56,22 @@
 		['light', 'light-cyan-sea', 'sakura-light', 'matcha-light'].includes(rigging.uiTheme)
 	);
 
-	let catalog2DFilter = $state<'all' | 'game' | 'booth' | 'official'>('all');
+	let catalog2DFilter = $state<'all' | 'official' | 'shibutani' | 'other'>('all');
 
-	// Separation: Pre-installed Booth models vs Pre-installed Official models
+	// Clean Model Groupings
+	const officialModels = $derived(MODEL_CATALOG.filter((m) => m.source === 'official'));
+	const shibutaniModels = $derived(MODEL_CATALOG.filter((m) => m.author === 'shibutani'));
+	const otherBoothModels = $derived(
+		MODEL_CATALOG.filter((m) => m.source !== 'official' && m.author !== 'shibutani')
+	);
 	const boothPreinstalledModels = $derived(MODEL_CATALOG.filter((m) => m.source === 'booth'));
 	const officialPreinstalledModels = $derived(MODEL_CATALOG.filter((m) => m.source !== 'booth'));
 
 	const displayed2DModels = $derived(
 		MODEL_CATALOG.filter((m) => {
-			if (catalog2DFilter === 'game') return ['jian', 'changli', 'chun', 'tingyun', 'ruan-mei'].includes(m.id);
-			if (catalog2DFilter === 'booth') return ['mihari', 'vivian'].includes(m.id);
 			if (catalog2DFilter === 'official') return m.source === 'official';
+			if (catalog2DFilter === 'shibutani') return m.author === 'shibutani';
+			if (catalog2DFilter === 'other') return m.source !== 'official' && m.author !== 'shibutani';
 			return true;
 		})
 	);
@@ -448,7 +453,7 @@
 						}"
 					>
 						<Layers class="w-4 h-4 text-pink-500" />
-						<span>{i18n.t('catalog_tab_2d')} ({officialPreinstalledModels.length})</span>
+						<span>{i18n.t('catalog_tab_2d')} ({MODEL_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = 'booth')}
@@ -461,7 +466,7 @@
 						}"
 					>
 						<Heart class="w-4 h-4 text-purple-500 fill-purple-500/30" />
-						<span>{i18n.t('catalog_tab_booth')} ({boothPreinstalledModels.length + BOOTH_SHOWCASE_CATALOG.length})</span>
+						<span>{i18n.t('catalog_tab_booth')} ({BOOTH_SHOWCASE_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = '3d')}
@@ -575,146 +580,258 @@
 							</div>
 						</div>
 
-						<!-- GROUP 1: Model 2D Siap Pakai (All 15 Pre-installed Models: HoYoverse/Kuro, Booth & Official) -->
-						<div class="space-y-3">
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-								<h3 class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-									<Sparkles class="w-3.5 h-3.5 text-cyan-400" />
-									Model 2D Siap Pakai ({displayed2DModels.length} dari {MODEL_CATALOG.length} Model)
-								</h3>
-								<span class="text-[10px] text-zinc-500">Klik kartu untuk langsung aktifkan avatar</span>
-							</div>
+						{#snippet modelCard(model: typeof MODEL_CATALOG[0])}
+							{@const isActive = rigging.avatarEngine === 'live2d' && (rigging.selectedModelId === model.id || rigging.modelUrl === model.url)}
+							<div
+								role="button"
+								tabindex="0"
+								onclick={() => handleSelect2DModel(model)}
+								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect2DModel(model); }}
+								class="relative flex flex-col p-3.5 rounded-2xl border text-left transition-all cursor-pointer group {
+									isActive
+										? 'bg-zinc-900 border-cyan-500 text-white shadow-lg shadow-cyan-500/10 ring-2 ring-cyan-500/40'
+										: 'bg-zinc-900/50 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 hover:border-zinc-700'
+								}"
+							>
+								{#if isActive}
+									<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
+										<Check class="w-3 h-3 stroke-[3]" />
+										AKTIF
+									</div>
+								{/if}
 
-							<!-- Category Filter Pills for 2D Models -->
-							<div class="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
-								<button
-									type="button"
-									onclick={() => (catalog2DFilter = 'all')}
-									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer {
-										catalog2DFilter === 'all'
-											? 'bg-cyan-500/25 border-cyan-500 text-cyan-200 shadow-sm'
-											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-									}"
-								>
-									Semua 2D ({MODEL_CATALOG.length})
-								</button>
-								<button
-									type="button"
-									onclick={() => (catalog2DFilter = 'game')}
-									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
-										catalog2DFilter === 'game'
-											? 'bg-amber-500/25 border-amber-500 text-amber-200 shadow-sm'
-											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-amber-300'
-									}"
-								>
-									<span>🌟 ZZZ / WuWa / HSR</span>
-									<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">5</span>
-								</button>
-								<button
-									type="button"
-									onclick={() => (catalog2DFilter = 'booth')}
-									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
-										catalog2DFilter === 'booth'
-											? 'bg-pink-500/25 border-pink-500 text-pink-200 shadow-sm'
-											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-pink-300'
-									}"
-								>
-									<span>🌸 BOOTH Anime</span>
-									<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">2</span>
-								</button>
-								<button
-									type="button"
-									onclick={() => (catalog2DFilter = 'official')}
-									class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
-										catalog2DFilter === 'official'
-											? 'bg-sky-500/25 border-sky-500 text-sky-200 shadow-sm'
-											: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-sky-300'
-									}"
-								>
-									<span>🎌 Live2D Resmi</span>
-									<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">8</span>
-								</button>
-							</div>
-
-							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-								{#each displayed2DModels as model}
-									{@const isActive = rigging.avatarEngine === 'live2d' && (rigging.selectedModelId === model.id || rigging.modelUrl === model.url)}
-									<div
-										role="button"
-										tabindex="0"
-										onclick={() => handleSelect2DModel(model)}
-										onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect2DModel(model); }}
-										class="relative flex flex-col p-3.5 rounded-2xl border text-left transition-all cursor-pointer group {
-											isActive
-												? 'bg-zinc-900 border-cyan-500 text-white shadow-lg shadow-cyan-500/10 ring-2 ring-cyan-500/40'
-												: 'bg-zinc-900/50 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 hover:border-zinc-700'
-										}"
-									>
-										{#if isActive}
-											<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
-												<Check class="w-3 h-3 stroke-[3]" />
-												AKTIF
-											</div>
-										{/if}
-
-										<div class="flex items-start gap-3.5 mb-2.5">
-											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												{#if model.avatarUrl}
-													<img
-														src={model.avatarUrl}
-														alt={model.name}
-														class="w-full h-full object-cover object-top"
-														style="image-rendering: -webkit-optimize-contrast;"
-														loading="lazy"
-														referrerpolicy="no-referrer"
-													/>
-												{:else}
-													<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
-														<Layers class="w-8 h-8" />
-													</div>
-												{/if}
-											</div>
-
-											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
-												<div class="flex items-center gap-1.5 mb-1">
-													<span class="font-bold text-xs text-zinc-100 truncate">{model.name}</span>
-												</div>
-												<div class="flex items-center gap-1.5 mb-1">
-													<span class="inline-flex self-start px-1.5 py-0.5 rounded bg-zinc-800 text-cyan-400 font-mono text-[9px] border border-zinc-700">
-														{model.version}
-													</span>
-													<span class="px-1.5 py-0.5 rounded font-semibold text-[8px] uppercase tracking-wide border {
-														model.source === 'booth'
-															? 'bg-pink-500/20 text-pink-300 border-pink-500/30'
-															: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-													}">
-														{model.source === 'booth' ? 'BOOTH' : 'Resmi'}
-													</span>
-												</div>
-												{#if model.author}
-													<span class="text-[9px] text-zinc-400 truncate mb-1">
-														{model.author}
-													</span>
-												{/if}
-												<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed">
-													{model.description}
-												</p>
-											</div>
-										</div>
-
-										{#if model.tags && model.tags.length > 0}
-											<div class="flex flex-wrap gap-1 mt-auto pt-2 border-t border-zinc-800/60">
-												{#each model.tags as tag}
-													<span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-zinc-800/80 text-zinc-300">
-														{tag}
-													</span>
-												{/each}
+								<div class="flex items-start gap-3.5 mb-2.5">
+									<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+										{#if model.avatarUrl}
+											<img
+												src={model.avatarUrl}
+												alt={model.name}
+												class="w-full h-full object-cover object-top"
+												style="image-rendering: -webkit-optimize-contrast;"
+												loading="lazy"
+												referrerpolicy="no-referrer"
+											/>
+										{:else}
+											<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
+												<Layers class="w-8 h-8" />
 											</div>
 										{/if}
 									</div>
-								{/each}
+
+									<div class="flex flex-col min-w-0 flex-1 pt-0.5">
+										<div class="flex items-center gap-1.5 mb-1">
+											<span class="font-bold text-xs text-zinc-100 truncate">{model.name}</span>
+										</div>
+										<div class="flex items-center flex-wrap gap-1.5 mb-1.5">
+											<span class="inline-flex self-start px-1.5 py-0.5 rounded bg-zinc-800 text-cyan-400 font-mono text-[9px] border border-zinc-700">
+												{model.version}
+											</span>
+											<span class="px-1.5 py-0.5 rounded font-semibold text-[8px] uppercase tracking-wide border {
+												model.author === 'shibutani'
+													? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+													: model.source === 'booth'
+														? 'bg-pink-500/20 text-pink-300 border-pink-500/30'
+														: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+											}">
+												{model.author === 'shibutani' ? 'Shibutani' : model.source === 'booth' ? 'BOOTH' : 'Resmi'}
+											</span>
+										</div>
+										{#if model.author}
+											<div class="flex items-center gap-1 text-[9px] text-zinc-400 mb-1 flex-wrap">
+												<span>Kreator:</span>
+												{#if model.authorUrl || model.boothUrl}
+													<a
+														href={model.authorUrl || model.boothUrl}
+														target="_blank"
+														rel="noopener noreferrer"
+														onclick={(e) => e.stopPropagation()}
+														class="text-pink-400 hover:text-pink-300 font-semibold underline decoration-pink-500/40 hover:decoration-pink-400 inline-flex items-center gap-0.5"
+													>
+														<span>{model.author}</span>
+														<ExternalLink class="w-2.5 h-2.5" />
+													</a>
+												{:else}
+													<strong class="text-zinc-300 font-semibold">{model.author}</strong>
+												{/if}
+											</div>
+										{/if}
+										{#if model.sampleUrl}
+											<div class="mb-1">
+												<a
+													href={model.sampleUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													onclick={(e) => e.stopPropagation()}
+													class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-[9px] font-semibold transition-colors"
+												>
+													<ExternalLink class="w-2.5 h-2.5" />
+													<span>{i18n.t('catalog_sample_official_btn')}</span>
+												</a>
+											</div>
+										{/if}
+										<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed">
+											{model.description}
+										</p>
+									</div>
+								</div>
+
+								{#if model.tags && model.tags.length > 0}
+									<div class="flex flex-wrap gap-1 mt-auto pt-2 border-t border-zinc-800/60">
+										{#each model.tags as tag}
+											<span class="px-1.5 py-0.5 rounded text-[9px] font-medium {tag.includes('shibutani') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : tag.includes('Live2D Official') ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'bg-zinc-800/80 text-zinc-300'}">
+												{tag}
+											</span>
+										{/each}
+									</div>
+								{/if}
 							</div>
+						{/snippet}
+
+						<!-- Filter Pills for 2D Models -->
+						<div class="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
+							<button
+								type="button"
+								onclick={() => (catalog2DFilter = 'all')}
+								class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer {
+									catalog2DFilter === 'all'
+										? 'bg-cyan-500/25 border-cyan-500 text-cyan-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+								}"
+							>
+								{i18n.t('catalog_filter_all')} ({MODEL_CATALOG.length})
+							</button>
+							<button
+								type="button"
+								onclick={() => (catalog2DFilter = 'official')}
+								class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
+									catalog2DFilter === 'official'
+										? 'bg-sky-500/25 border-sky-500 text-sky-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-sky-300'
+								}"
+							>
+								<span>{i18n.t('catalog_filter_official')}</span>
+								<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">{officialModels.length}</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => (catalog2DFilter = 'shibutani')}
+								class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
+									catalog2DFilter === 'shibutani'
+										? 'bg-amber-500/25 border-amber-500 text-amber-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-amber-300'
+								}"
+							>
+								<span>{i18n.t('catalog_filter_shibutani')}</span>
+								<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">{shibutaniModels.length}</span>
+							</button>
+							<button
+								type="button"
+								onclick={() => (catalog2DFilter = 'other')}
+								class="px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 {
+									catalog2DFilter === 'other'
+										? 'bg-pink-500/25 border-pink-500 text-pink-200 shadow-sm'
+										: 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-pink-300'
+								}"
+							>
+								<span>{i18n.t('catalog_filter_other')}</span>
+								<span class="text-[10px] px-1 rounded bg-zinc-800 text-zinc-300 font-mono">{otherBoothModels.length}</span>
+							</button>
 						</div>
+
+						<!-- GROUP A: Official Live2D Sample Models -->
+						{#if catalog2DFilter === 'all' || catalog2DFilter === 'official'}
+							<div class="space-y-3">
+								<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-sky-950/30 border border-sky-500/30">
+									<div class="flex items-center gap-2">
+										<span class="text-base">🎌</span>
+										<div>
+											<h3 class="text-xs font-bold text-sky-200">
+												{i18n.t('catalog_group_official')} ({officialModels.length} Model)
+											</h3>
+											<p class="text-[10px] text-zinc-400">
+												Model resmi Live2D Inc. (Haru, Hiyori, Shizuku, Tororo, Hijiki, Mark, Ren, dll.) dengan gesture tangan & ekspresi lengkap.
+											</p>
+										</div>
+									</div>
+									<a
+										href="https://www.live2d.com/en/learn/sample/"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="px-2.5 py-1 bg-sky-600/80 hover:bg-sky-600 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1 shrink-0 cursor-pointer shadow-sm"
+									>
+										<ExternalLink class="w-3 h-3" />
+										<span>live2d.com/learn/sample ↗</span>
+									</a>
+								</div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+									{#each officialModels as model}
+										{@render modelCard(model)}
+									{/each}
+								</div>
+							</div>
+						{/if}
+
+						<!-- GROUP B: Shibutani Creator Collection (shibutani.booth.pm) -->
+						{#if catalog2DFilter === 'all' || catalog2DFilter === 'shibutani'}
+							<div class="space-y-3 pt-2 border-t border-zinc-800/60">
+								<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-zinc-900 border border-amber-500/40 shadow-sm">
+									<div class="flex items-center gap-2.5">
+										<span class="text-base">🦊</span>
+										<div>
+											<div class="flex items-center gap-2">
+												<h3 class="text-xs font-bold text-amber-200">
+													{i18n.t('catalog_group_shibutani')} ({shibutaniModels.length} Model)
+												</h3>
+												<span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-[9px] font-semibold border border-amber-500/30">
+													BOOTH
+												</span>
+											</div>
+											<p class="text-[10px] text-zinc-300/90 mt-0.5">
+												Koleksi avatar ZZZ, Wuthering Waves, Honkai: Star Rail & Anime karya <strong>shibutani</strong> dengan tekstur hingga 8K Ultra HD.
+											</p>
+										</div>
+									</div>
+									<a
+										href="https://shibutani.booth.pm/"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold rounded-lg text-[11px] flex items-center gap-1 shrink-0 cursor-pointer shadow-sm transition-all active:scale-95"
+									>
+										<ExternalLink class="w-3 h-3" />
+										<span>{i18n.t('catalog_visit_shibutani_btn')}</span>
+									</a>
+								</div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+									{#each shibutaniModels as model}
+										{@render modelCard(model)}
+									{/each}
+								</div>
+							</div>
+						{/if}
+
+						<!-- GROUP C: Other BOOTH Models -->
+						{#if (catalog2DFilter === 'all' || catalog2DFilter === 'other') && otherBoothModels.length > 0}
+							<div class="space-y-3 pt-2 border-t border-zinc-800/60">
+								<div class="flex items-center justify-between p-3 rounded-xl bg-pink-950/20 border border-pink-500/30">
+									<div class="flex items-center gap-2">
+										<span class="text-base">🌸</span>
+										<div>
+											<h3 class="text-xs font-bold text-pink-200">
+												{i18n.t('catalog_group_booth_other')} ({otherBoothModels.length} Model)
+											</h3>
+										</div>
+									</div>
+								</div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+									{#each otherBoothModels as model}
+										{@render modelCard(model)}
+									{/each}
+								</div>
+							</div>
+						{/if}
 
 
 
