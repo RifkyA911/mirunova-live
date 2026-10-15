@@ -161,12 +161,12 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		id: 'mark',
 		name: 'Mark (Live2D Official)',
 		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Mark/Mark.model3.json',
-		description: 'Model resmi Cubism 4 karakter laki-laki berkacamata dengan fisika rambut dan artikulasi ekspresi halus.',
+		description: 'Model resmi Cubism 4 karakter anak laki-laki energik berhoodie merah dengan fisika rambut dan artikulasi ekspresi halus.',
 		version: 'Cubism 3/4',
-		avatarUrl: '/models/previews/mark.svg',
+		avatarUrl: '/models/previews/mark.png',
 		source: 'official',
 		author: 'Live2D Official',
-		tags: ['Live2D Official', 'Cubism 4', 'Glasses', 'Male Avatar', 'WebSample']
+		tags: ['Live2D Official', 'Cubism 4', 'Male Avatar', 'WebSample']
 	},
 	{
 		id: 'ren',
@@ -174,7 +174,7 @@ export const MODEL_CATALOG: (Live2DModelItem & { tags?: string[] })[] = [
 		url: 'https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@master/Samples/Resources/Ren/Ren.model3.json',
 		description: 'Model resmi Cubism 4 berkarakter anime ceria dengan fisika rambut dinamis dan artikulasi senyuman alami.',
 		version: 'Cubism 3/4',
-		avatarUrl: '/models/previews/ren.svg',
+		avatarUrl: '/models/previews/ren.png',
 		source: 'official',
 		author: 'Live2D Official',
 		tags: ['Live2D Official', 'Cubism 4', 'Anime Boy', 'WebSample', 'Dynamic Physics']
@@ -187,25 +187,43 @@ export const MODEL_3D_CATALOG: Model3DItem[] = [
 		name: "Neuro-sama (Vedal's Version)",
 		type: 'fbx',
 		url: '/models/neurosama/neuro-sama.fbx',
-		avatarUrl: '/models/previews/neurosama.svg',
+		avatarUrl: '/models/previews/neurosama.png',
 		description: 'Model 3D humanoid resmi Neuro-sama karya Vedal dengan full-body humanoid rig (172 bones), tekstur 4K, MediaPipe face tracking, dan VRChat morph targets (Starry Eyes, Blush, Lip-Sync).',
 		tags: ['3D Humanoid', 'Neuro-sama', 'Vedal', 'Full Body', 'Face Tracking', 'Starry Eyes', 'Visemes', 'VRChat FBX']
 	},
 	{
 		id: 'manhattan-cafe',
 		name: 'Manhattan Cafe (マンハッタンカフェ - Uma Musume)',
-		type: 'fbx',
-		url: '/models/manhattan-cafe/manhattan-cafe.vroid',
+		type: 'glb',
+		url: '/models/manhattan-cafe/manhattan-cafe.glb',
 		avatarUrl: '/models/previews/manhattan-cafe.jpg',
 		description: 'Model 3D humanoid Manhattan Cafe karya Uma Musume Pretty Derby dengan rambut raven hitam panjang, telinga kuda (uma mimi), full-body humanoid rig, dan estetika anime elegan.',
 		tags: ['3D Humanoid', 'VRoid', 'Uma Musume', 'Manhattan Cafe', 'Horse Ears', 'Full Body Rig', 'MediaPipe Tracking']
+	},
+	{
+		id: 'sakura',
+		name: 'Sakura (AvatarSample_A - Schoolgirl)',
+		type: 'glb',
+		url: '/models/vroid/sakura.glb',
+		avatarUrl: '/models/previews/sakura.png',
+		description: 'Model 3D humanoid anime VRoid Studio resmi dengan seragam sekolah musim panas, rambut bob cokelat berkilau, humanoid rig lengkap, dan 50+ ekspresi wajah blendshapes.',
+		tags: ['3D Humanoid', 'VRoid', 'Anime Schoolgirl', 'Full Body Rig', 'Blendshapes', 'Facial Tracking']
+	},
+	{
+		id: 'rei',
+		name: 'Rei (AvatarSample_C - Cyber Boy)',
+		type: 'glb',
+		url: '/models/vroid/rei.glb',
+		avatarUrl: '/models/previews/rei.png',
+		description: 'Model 3D humanoid anime VRoid Studio resmi berkarakter cyber boy dengan hoodie oversized, mata merah menyala, humanoid rig lengkap, dan tracking ekspresi wajah.',
+		tags: ['3D Humanoid', 'VRoid', 'Cyber Boy', 'Hoodie', 'Full Body Rig', 'Blendshapes', 'Facial Tracking']
 	},
 	{
 		id: 'mochi-cat',
 		name: 'Mochi The Cat (Shiro Neko)',
 		type: 'procedural',
 		variant: 'mochi',
-		avatarUrl: '/models/previews/mochi.svg',
+		avatarUrl: '/models/previews/mochi.png',
 		description: 'Snow-white 3D anime cat with responsive ears, eyes, blinking, mouth sync, and swaying tail.',
 		tags: ['3D WebGL', 'Procedural', 'Ear Twitch', 'Tail Sway', 'Paw Wave']
 	},
@@ -214,7 +232,7 @@ export const MODEL_3D_CATALOG: Model3DItem[] = [
 		name: 'Kuro The Cat (Kuro Neko)',
 		type: 'procedural',
 		variant: 'kuro',
-		avatarUrl: '/models/previews/kuro.svg',
+		avatarUrl: '/models/previews/kuro.png',
 		description: 'Midnight black 3D cat with glowing emerald eyes and reactive tracking.',
 		tags: ['3D WebGL', 'Emerald Eyes', 'Procedural', 'Dark Mode']
 	},
@@ -223,7 +241,7 @@ export const MODEL_3D_CATALOG: Model3DItem[] = [
 		name: 'Ginger The Cat (Tora Neko)',
 		type: 'procedural',
 		variant: 'tora',
-		avatarUrl: '/models/previews/tora.svg',
+		avatarUrl: '/models/previews/tora.png',
 		description: 'Golden ginger tabby 3D cat with warm amber eyes and bell collar.',
 		tags: ['3D WebGL', 'Tabby Stripes', 'Amber Eyes', 'Bell Collar']
 	}
@@ -392,69 +410,7 @@ export interface OfficialSampleItem {
 	tags: string[];
 }
 
-export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [
-	{
-		id: 'sample-shizuku',
-		name: 'Shizuku (雫 - Live2D Standard Sample)',
-		author: 'Live2D Inc.',
-		avatarUrl: '/models/previews/shizuku.svg',
-		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
-		modelUrl: 'https://cdn.jsdelivr.net/gh/guansss/pixi-live2d-display/test/assets/shizuku/shizuku.model.json',
-		description: 'Model standar legendaris Live2D Cubism dengan rigging rambut panjang halus, ekspresi kaya, dan fisika seragam sekolah.',
-		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
-		tags: ['Live2D Inc.', 'Official Free Sample', 'Shizuku', 'Standard Cubism', 'Free Material']
-	},
-	{
-		id: 'sample-chitose',
-		name: 'Chitose (チトセ - High School Anime)',
-		author: 'Live2D Inc.',
-		avatarUrl: '/models/previews/chitose.svg',
-		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
-		description: 'Model Cubism definisi tinggi dengan fisika sweater rajut, beret modis, dan kedipan mata ekspresif.',
-		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
-		tags: ['Live2D Inc.', 'Official Free Sample', 'Chitose', 'High Definition', 'Student Avatar']
-	},
-	{
-		id: 'sample-koharu',
-		name: 'Koharu (コハル - Chibi Kawaii)',
-		author: 'Live2D Inc.',
-		avatarUrl: '/models/previews/koharu.svg',
-		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
-		description: 'Model anime chibi imut dengan kuncir kembar, pita merah jambu, dan goyangan kepala membal yang menggemaskan.',
-		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
-		tags: ['Live2D Inc.', 'Official Free Sample', 'Koharu', 'Chibi Girl', 'Twin Buns']
-	},
-	{
-		id: 'sample-epsilon',
-		name: 'Epsilon (イプシロン - Cyber Mech Suit)',
-		author: 'Live2D Inc.',
-		avatarUrl: '/models/previews/epsilon.svg',
-		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
-		description: 'Model anime futuristik bersetelan mecha sci-fi dengan visor HUD bercahaya dan artikulasi part pelindung canggih.',
-		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
-		tags: ['Live2D Inc.', 'Official Free Sample', 'Epsilon', 'Cyberpunk', 'Sci-Fi Armor']
-	},
-	{
-		id: 'sample-tororo',
-		name: 'Tororo & Hijiki (トロロ & ヒジキ - Neko Mascots)',
-		author: 'Live2D Inc.',
-		avatarUrl: '/models/previews/tororo.svg',
-		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
-		description: 'Maskot kucing putih dan hitam Live2D Cubism dengan fisika telinga membal, kibasan ekor fluid, dan respon ceria.',
-		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
-		tags: ['Live2D Inc.', 'Official Free Sample', 'Tororo', 'Cat Mascot', 'Pet Physics']
-	},
-	{
-		id: 'sample-hibiki',
-		name: 'Hibiki (ヒビキ - Action Anime Hero)',
-		author: 'Live2D Inc.',
-		avatarUrl: '/models/previews/hibiki.svg',
-		sampleUrl: 'https://www.live2d.com/en/learn/sample/',
-		description: 'Karakter pria anime energik dengan jaket kasual berkerah, rambut jabrik dinamis, dan ragam motion aksi lincah.',
-		copyright: '© Live2D Inc. Free sample data under Live2D Free Material License for personal learning and evaluation.',
-		tags: ['Live2D Inc.', 'Official Free Sample', 'Hibiki', 'Action Male', 'Dynamic Motion']
-	}
-];
+export const OFFICIAL_SAMPLE_CATALOG: OfficialSampleItem[] = [];
 
 export interface CommunityLegendItem {
 	id: string;

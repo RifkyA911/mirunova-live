@@ -2035,6 +2035,104 @@ export class ThreeStage {
 		this.setFraming(this.currentFraming);
 	}
 
+	private setupVRMMorphTargets(gltf: any) {
+		const vrmExt = gltf.parser?.json?.extensions?.VRM;
+		const bsg = vrmExt?.blendShapeMaster?.blendShapeGroups;
+
+		const morphMeshes: THREE.SkinnedMesh[] = [];
+		gltf.scene.traverse((c: any) => {
+			if (c.isMesh && c.morphTargetInfluences && c.morphTargetInfluences.length > 0) {
+				morphMeshes.push(c as THREE.SkinnedMesh);
+			}
+		});
+
+		if (morphMeshes.length === 0) return;
+		this.morphMesh = morphMeshes[0];
+		if (!this.morphMesh.morphTargetDictionary) {
+			this.morphMesh.morphTargetDictionary = {};
+		}
+
+		if (Array.isArray(bsg)) {
+			for (const group of bsg) {
+				const groupName = group.name;
+				for (const bind of group.binds || []) {
+					const targetMesh = morphMeshes[bind.mesh] || this.morphMesh;
+					if (targetMesh && targetMesh.morphTargetDictionary) {
+						targetMesh.morphTargetDictionary[groupName] = bind.index;
+						targetMesh.morphTargetDictionary[groupName.toLowerCase()] = bind.index;
+						if (groupName === 'Blink') targetMesh.morphTargetDictionary['vrc.blink'] = bind.index;
+						if (groupName === 'A') targetMesh.morphTargetDictionary['vrc.aa'] = bind.index;
+						if (groupName === 'E' || groupName === 'I' || groupName === 'Joy' || groupName === 'Fun') {
+							targetMesh.morphTargetDictionary['vrc.ee'] = bind.index;
+							targetMesh.morphTargetDictionary['smile'] = bind.index;
+						}
+						if (groupName === 'O') targetMesh.morphTargetDictionary['vrc.oh'] = bind.index;
+						if (groupName === 'U') targetMesh.morphTargetDictionary['vrc.ou'] = bind.index;
+						if (groupName === 'Angry') targetMesh.morphTargetDictionary['angry'] = bind.index;
+						if (groupName === 'Surprised') targetMesh.morphTargetDictionary['surprised'] = bind.index;
+						if (groupName === 'Extra') {
+							targetMesh.morphTargetDictionary['stars'] = bind.index;
+							targetMesh.morphTargetDictionary['blush'] = bind.index;
+						}
+					}
+				}
+			}
+		}
+		this.morphDict = this.morphMesh.morphTargetDictionary;
+	}
+
+	private discoverHumanoidBones(group: THREE.Object3D) {
+		const findBone = (candidates: string[]): THREE.Object3D | null => {
+			for (const name of candidates) {
+				const found = group.getObjectByName(name);
+				if (found) return found;
+			}
+			let fallback: THREE.Object3D | null = null;
+			group.traverse((c) => {
+				if (fallback) return;
+				const lower = c.name.toLowerCase();
+				for (const cand of candidates) {
+					if (lower === cand.toLowerCase() || lower.includes(cand.toLowerCase())) {
+						fallback = c;
+						return;
+					}
+				}
+			});
+			return fallback;
+		};
+
+		this.headNode = findBone(['J_Bip_C_Head', 'head', 'mixamorig:Head', 'bip01_head']);
+		this.neckNode = findBone(['J_Bip_C_Neck', 'neck', 'mixamorig:Neck', 'bip01_neck']);
+		this.eyeRNode = findBone(['J_Adj_R_FaceEye', 'EyeR', 'mixamorig:RightEye', 'eye_r', 'righteye']);
+		this.eyeLNode = findBone(['J_Adj_L_FaceEye', 'EyeL', 'mixamorig:LeftEye', 'eye_l', 'lefteye']);
+		this.hipsNode = findBone(['J_Bip_C_Hips', 'hips', 'mixamorig:Hips', 'bip01_pelvis', 'pelvis']);
+		this.spineNode = findBone(['J_Bip_C_Spine', 'spine', 'mixamorig:Spine', 'bip01_spine']);
+		this.torsoNode = findBone(['J_Bip_C_UpperChest', 'J_Bip_C_Chest', 'torso', 'chest', 'mixamorig:Spine2']);
+		this.shoulderLNode = findBone(['J_Bip_L_Shoulder', 'shoulderL', 'mixamorig:LeftShoulder', 'leftshoulder']);
+		this.shoulderRNode = findBone(['J_Bip_R_Shoulder', 'shoulderR', 'mixamorig:RightShoulder', 'rightshoulder']);
+		this.armLNode = findBone(['J_Bip_L_UpperArm', 'armL', 'mixamorig:LeftArm', 'leftarm']);
+		this.armRNode = findBone(['J_Bip_R_UpperArm', 'armR', 'mixamorig:RightArm', 'rightarm']);
+		this.forearmLNode = findBone(['J_Bip_L_LowerArm', 'ForearmL', 'mixamorig:LeftForeArm', 'leftforearm']);
+		this.forearmRNode = findBone(['J_Bip_R_LowerArm', 'ForearmR', 'mixamorig:RightForeArm', 'rightforearm']);
+		this.handLNode = findBone(['J_Bip_L_Hand', 'handL', 'mixamorig:LeftHand', 'lefthand']);
+		this.handRNode = findBone(['J_Bip_R_Hand', 'handR', 'mixamorig:RightHand', 'righthand']);
+
+		this.hairBones = [];
+		this.skirtBones = [];
+		this.initialRotations.clear();
+		this.initialPositions.clear();
+
+		group.traverse((c) => {
+			if ((c as any).isBone || (c as any).isObject3D) {
+				const name = c.name.toLowerCase();
+				if (name.includes('hair') || name.includes('pigtail') || name.includes('ahoge')) this.hairBones.push(c);
+				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie') || name.includes('ribbon')) this.skirtBones.push(c);
+				this.initialRotations.set(c, c.rotation.clone());
+				this.initialPositions.set(c, c.position.clone());
+			}
+		});
+	}
+
 	// 2. Load Any External GLTF / GLB Model
 	async loadGLTF(url: string) {
 		const token = ++this.activeLoadToken;
@@ -2056,28 +2154,35 @@ export class ThreeStage {
 		const box = new THREE.Box3().setFromObject(model);
 		const size = box.getSize(new THREE.Vector3());
 		const maxDim = Math.max(size.x, size.y, size.z);
-		const scale = 1.8 / (maxDim || 1);
+		const scale = 1.7 / (maxDim || 1);
 		model.scale.set(scale, scale, scale);
 
 		const center = box.getCenter(new THREE.Vector3());
-		this.modelBasePosition.set(-center.x * scale, -box.min.y * scale - 0.7, -center.z * scale);
+		this.modelBasePosition.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
 		model.position.set(
 			this.modelBasePosition.x + this.modelOffsetX,
 			this.modelBasePosition.y + this.modelOffsetY,
 			this.modelBasePosition.z + this.modelOffsetZ
 		);
 
-		// Discover bone nodes (Head, Neck, Eyes)
-		this.gltfBones.clear();
 		model.traverse((child) => {
-			if (child instanceof THREE.Bone) {
-				const lowerName = child.name.toLowerCase();
-				this.gltfBones.set(lowerName, child);
-				if (lowerName.includes('head') && !this.headNode) {
-					this.headNode = child;
+			if ((child as any).isMesh) {
+				const mesh = child as THREE.Mesh;
+				mesh.castShadow = false;
+				mesh.receiveShadow = false;
+				if (mesh.material) {
+					const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+					mats.forEach((m) => {
+						if (m.transparent && m.opacity > 0.8) {
+							m.depthWrite = true;
+						}
+					});
 				}
 			}
 		});
+
+		this.setupVRMMorphTargets(gltf);
+		this.discoverHumanoidBones(model);
 
 		// Animation mixer if GLTF has clips
 		if (gltf.animations && gltf.animations.length > 0) {
@@ -2233,37 +2338,7 @@ export class ThreeStage {
 			this.modelBasePosition.z + this.modelOffsetZ
 		);
 
-		// Discover humanoid bones
-		this.headNode = group.getObjectByName('head') || null;
-		this.neckNode = group.getObjectByName('neck') || null;
-		this.eyeRNode = group.getObjectByName('EyeR') || null;
-		this.eyeLNode = group.getObjectByName('EyeL') || null;
-		this.hipsNode = group.getObjectByName('hips') || null;
-		this.spineNode = group.getObjectByName('spine') || null;
-		this.torsoNode = group.getObjectByName('torso') || null;
-		this.shoulderLNode = group.getObjectByName('shoulderL') || null;
-		this.shoulderRNode = group.getObjectByName('shoulderR') || null;
-		this.armLNode = group.getObjectByName('armL') || null;
-		this.armRNode = group.getObjectByName('armR') || null;
-		this.forearmLNode = group.getObjectByName('ForearmL') || null;
-		this.forearmRNode = group.getObjectByName('ForearmR') || null;
-		this.handLNode = group.getObjectByName('handL') || null;
-		this.handRNode = group.getObjectByName('handR') || null;
-
-		// Cache secondary bones
-		this.hairBones = [];
-		this.skirtBones = [];
-		this.initialRotations.clear();
-
-		group.traverse((c) => {
-			if ((c as any).isBone) {
-				const name = c.name.toLowerCase();
-				if (name.includes('hair') || name.includes('pigtail')) this.hairBones.push(c);
-				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie')) this.skirtBones.push(c);
-				this.initialRotations.set(c, c.rotation.clone());
-				this.initialPositions.set(c, c.position.clone());
-			}
-		});
+		this.discoverHumanoidBones(group);
 
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
@@ -2275,202 +2350,57 @@ export class ThreeStage {
 		this.setFraming(this.currentFraming);
 	}
 
-	// 4. Load Humanoid Manhattan Cafe Model with Uma Musume Horse Ears & Dark Palette
+	// 4. Load Humanoid Manhattan Cafe Model (Uma Musume Pretty Derby) GLB with Full Rig & Expressions
 	async loadManhattanCafe() {
 		const token = ++this.activeLoadToken;
 		this.showLoadingSkeleton();
 		this.clearCurrentModel();
-		this.modelType = 'fbx';
+		this.modelType = 'glb';
 
-		const loader = new FBXLoader();
-		const texLoader = new THREE.TextureLoader();
-
-		const loadTexAsync = async (url: string) => {
-			try {
-				const t = await texLoader.loadAsync(url);
-				t.colorSpace = THREE.SRGBColorSpace;
-				t.needsUpdate = true;
-				return t;
-			} catch {
-				const fallback = new THREE.Texture();
-				fallback.colorSpace = THREE.SRGBColorSpace;
-				return fallback;
-			}
-		};
-
-		const [group, texExp, texSec, texClothes, texHair, texBody] = await Promise.all([
-			loader.loadAsync('/models/neurosama/neuro-sama.fbx'),
-			loadTexAsync('/models/neurosama/textures/neuroexpresions_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/clothes_neuro_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/neuro_hair_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/body_neuro_vrc.png')
-		]);
+		const loader = new GLTFLoader();
+		const gltf = await loader.loadAsync('/models/manhattan-cafe/manhattan-cafe.glb');
 
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
 			return;
 		}
 		this.clearCurrentModel();
+		const group = gltf.scene;
 		this.currentModelGroup = group;
 
-		const textures = {
-			expressions: texExp,
-			secondaryClothes: texSec,
-			clothes: texClothes,
-			hair: texHair,
-			body: texBody
-		};
-
-		const toonGradient = this.getOrCreateToonGradient();
-
-		group.traverse((child) => {
-			if ((child as any).isMesh) {
-				const mesh = child as THREE.SkinnedMesh;
-				mesh.castShadow = false;
-				mesh.receiveShadow = false;
-
-				if (mesh.morphTargetDictionary) {
-					this.morphMesh = mesh;
-					this.morphDict = mesh.morphTargetDictionary;
-					if (typeof window !== 'undefined') {
-						import('#lib/stores/riggingStore.svelte').then(({ rigging }) => {
-							rigging.availableExpressions = [
-								{ id: 'stars', name: 'stars', label: '⭐ Tatapan Misterius (Stars)' },
-								{ id: 'blush', name: 'blush', label: '😳 Blush Merona (Blush)' },
-								{ id: 'vrc.blink', name: 'wink', label: '😉 Kedip Mata Manis (Wink)' },
-								{ id: 'vrc.ee', name: 'smile', label: '😊 Senyum Lembut (EE)' },
-								{ id: 'vrc.aa', name: 'open', label: '🗣️ Mulut Bicara Kalem (AA)' },
-								{ id: 'vrc.oh', name: 'surprised', label: '😮 Terkejut / Soft Gasp (OH)' },
-								{ id: 'vrc.ou', name: 'pout', label: '😗 Cemberut (OU)' }
-							];
-						}).catch(() => {});
-					}
-				}
-
-				if (Array.isArray(mesh.material)) {
-					const toonMaterials: THREE.Material[] = [
-						new THREE.MeshBasicMaterial({
-							map: textures.expressions,
-							color: new THREE.Color(0xfff8ee),
-							transparent: true,
-							alphaTest: 0.05,
-							depthWrite: false,
-							depthTest: true,
-							side: THREE.DoubleSide
-						}),
-						new THREE.MeshToonMaterial({
-							map: textures.secondaryClothes,
-							gradientMap: toonGradient,
-							color: new THREE.Color(0x383a48),
-							transparent: true,
-							alphaTest: 0.5,
-							side: THREE.DoubleSide
-						}),
-						new THREE.MeshToonMaterial({
-							map: textures.clothes,
-							gradientMap: toonGradient,
-							color: new THREE.Color(0x222230),
-							side: THREE.DoubleSide
-						}),
-						new THREE.MeshToonMaterial({
-							map: textures.hair,
-							gradientMap: toonGradient,
-							color: new THREE.Color(0x282432),
-							transparent: true,
-							alphaTest: 0.5,
-							depthWrite: true,
-							side: THREE.DoubleSide
-						}),
-						new THREE.MeshToonMaterial({
-							map: textures.body,
-							gradientMap: toonGradient,
-							color: new THREE.Color(0xfffaf5),
-							side: THREE.DoubleSide
-						})
-					];
-					mesh.material.forEach((oldMat) => oldMat.dispose());
-					mesh.material = toonMaterials;
-				}
-			}
-		});
-
-		// Attach Uma Musume Horse Ears to head bone node!
-		const head = group.getObjectByName('head');
-		if (head) {
-			const earMat = new THREE.MeshPhongMaterial({
-				color: 0x1a1824, // dark coffee ear fur
-				shininess: 12
-			});
-			const innerEarMat = new THREE.MeshPhongMaterial({
-				color: 0xe07a8c, // soft pink inner ear
-				shininess: 8
-			});
-
-			const createHorseEar = (isLeft: boolean) => {
-				const earGroup = new THREE.Group();
-				const earGeo = new THREE.ConeGeometry(0.045, 0.16, 16);
-				earGeo.rotateZ(isLeft ? 0.35 : -0.35);
-				earGeo.rotateX(-0.1);
-				const outerMesh = new THREE.Mesh(earGeo, earMat);
-				earGroup.add(outerMesh);
-
-				const innerGeo = new THREE.ConeGeometry(0.028, 0.12, 16);
-				innerGeo.rotateZ(isLeft ? 0.35 : -0.35);
-				innerGeo.rotateX(-0.08);
-				innerGeo.translate(0, -0.01, 0.01);
-				const innerMesh = new THREE.Mesh(innerGeo, innerEarMat);
-				earGroup.add(innerMesh);
-
-				earGroup.position.set(isLeft ? -0.085 : 0.085, 0.17, -0.02);
-				return earGroup;
-			};
-
-			head.add(createHorseEar(true));
-			head.add(createHorseEar(false));
-		}
-
-		// Discover humanoid bones
-		this.headNode = group.getObjectByName('head') || null;
-		this.neckNode = group.getObjectByName('neck') || null;
-		this.eyeRNode = group.getObjectByName('EyeR') || null;
-		this.eyeLNode = group.getObjectByName('EyeL') || null;
-		this.hipsNode = group.getObjectByName('hips') || null;
-		this.spineNode = group.getObjectByName('spine') || null;
-		this.torsoNode = group.getObjectByName('torso') || null;
-		this.shoulderLNode = group.getObjectByName('shoulderL') || null;
-		this.shoulderRNode = group.getObjectByName('shoulderR') || null;
-		this.armLNode = group.getObjectByName('armL') || null;
-		this.armRNode = group.getObjectByName('armR') || null;
-		this.forearmLNode = group.getObjectByName('ForearmL') || null;
-		this.forearmRNode = group.getObjectByName('ForearmR') || null;
-		this.handLNode = group.getObjectByName('handL') || null;
-		this.handRNode = group.getObjectByName('handR') || null;
-
-		// Cache secondary bones
-		this.hairBones = [];
-		this.skirtBones = [];
-		this.initialRotations.clear();
-
-		group.traverse((c) => {
-			if ((c as any).isBone) {
-				const name = c.name.toLowerCase();
-				if (name.includes('hair') || name.includes('pigtail')) this.hairBones.push(c);
-				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie')) this.skirtBones.push(c);
-				this.initialRotations.set(c, c.rotation.clone());
-				this.initialPositions.set(c, c.position.clone());
-			}
-		});
-
-		// Ground model on floor and center along X and Z
+		// Center & scale
 		const box = new THREE.Box3().setFromObject(group);
+		const size = box.getSize(new THREE.Vector3());
+		const maxDim = Math.max(size.x, size.y, size.z);
+		const scale = 1.7 / (maxDim || 1);
+		group.scale.set(scale, scale, scale);
+
 		const center = box.getCenter(new THREE.Vector3());
-		this.modelBasePosition.set(-center.x, -box.min.y, -center.z);
+		this.modelBasePosition.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
 		group.position.set(
 			this.modelBasePosition.x + this.modelOffsetX,
 			this.modelBasePosition.y + this.modelOffsetY,
 			this.modelBasePosition.z + this.modelOffsetZ
 		);
+
+		group.traverse((child) => {
+			if ((child as any).isMesh) {
+				const mesh = child as THREE.Mesh;
+				mesh.castShadow = false;
+				mesh.receiveShadow = false;
+				if (mesh.material) {
+					const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+					mats.forEach((m) => {
+						if (m.transparent && m.opacity > 0.8) {
+							m.depthWrite = true;
+						}
+					});
+				}
+			}
+		});
+
+		this.setupVRMMorphTargets(gltf);
+		this.discoverHumanoidBones(group);
 
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
@@ -2883,7 +2813,7 @@ export class ThreeStage {
 				const isBlush = this.activeExpression === 'blush' || this.activeExpression === 'love' || this.activeExpression === 'pout';
 
 				// Eye Blink
-				const blinkIdx = dict['vrc.blink'];
+				const blinkIdx = dict['vrc.blink'] ?? dict['Blink'] ?? dict['blink'];
 				if (blinkIdx !== undefined) {
 					const avgBlink = Math.min(eyeBlinkL, eyeBlinkR);
 					const blinkVal = Math.max(0, Math.min(1.0, (1.0 - avgBlink) * 1.25));
@@ -2891,8 +2821,8 @@ export class ThreeStage {
 				}
 
 				// Lip sync mouth open
-				const aaIdx = dict['vrc.aa'];
-				const ohIdx = dict['vrc.oh'];
+				const aaIdx = dict['vrc.aa'] ?? dict['A'] ?? dict['a'];
+				const ohIdx = dict['vrc.oh'] ?? dict['O'] ?? dict['o'];
 				if (aaIdx !== undefined) {
 					infl[aaIdx] = isMouthOpen ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
 				}
@@ -2903,7 +2833,7 @@ export class ThreeStage {
 				}
 
 				// Smile
-				const eeIdx = dict['vrc.ee'];
+				const eeIdx = dict['vrc.ee'] ?? dict['Joy'] ?? dict['Fun'] ?? dict['joy'] ?? dict['fun'] ?? dict['E'] ?? dict['I'];
 				if (eeIdx !== undefined) {
 					const smileVal = mouthForm > 0.1 ? mouthForm : 0;
 					infl[eeIdx] = isSmile ? 1.0 : Math.max(0, Math.min(1.0, smileVal));

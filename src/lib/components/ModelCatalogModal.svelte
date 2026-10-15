@@ -448,7 +448,7 @@
 						}"
 					>
 						<Layers class="w-4 h-4 text-pink-500" />
-						<span>{i18n.t('catalog_tab_2d')} ({officialPreinstalledModels.length + OFFICIAL_SAMPLE_CATALOG.length})</span>
+						<span>{i18n.t('catalog_tab_2d')} ({officialPreinstalledModels.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = 'booth')}
@@ -716,86 +716,7 @@
 							</div>
 						</div>
 
-						<!-- GROUP 2: Sampel Gratis Resmi dari live2d.com -->
-						<div class="space-y-3 pt-2 border-t border-zinc-800/60">
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-								<h3 class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-									<Download class="w-3.5 h-3.5 text-sky-400" />
-									{i18n.t('catalog_official_samples_title')}
-								</h3>
-								<span class="text-[10px] text-zinc-400">{i18n.t('catalog_download_official_tip')}</span>
-							</div>
 
-							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-								{#each OFFICIAL_SAMPLE_CATALOG as sample}
-									{@const isActive = rigging.selectedModelId === sample.id}
-									<div class="flex flex-col p-3.5 rounded-2xl border text-left transition-all bg-zinc-900/60 border-zinc-800/80 hover:border-sky-500/50 hover:bg-zinc-900 group shadow-md relative {
-										isActive ? 'ring-2 ring-sky-500/50 border-sky-500' : ''
-									}">
-										{#if isActive}
-											<div class="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
-												<Check class="w-3 h-3 stroke-[3]" />
-												{i18n.t('theme_active_badge').toUpperCase()}
-											</div>
-										{/if}
-
-										<div class="flex items-start gap-3.5 mb-2.5">
-											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												<img src={sample.avatarUrl} alt={sample.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" referrerpolicy="no-referrer" />
-											</div>
-											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
-												<div class="flex items-center gap-1.5 mb-0.5">
-													<span class="font-bold text-xs text-zinc-100 truncate group-hover:text-sky-300 transition-colors" title={sample.name}>
-														{sample.name}
-													</span>
-												</div>
-												<span class="text-[10px] text-zinc-400 truncate mb-1">
-													{i18n.t('catalog_creator_label')} <strong class="text-sky-400 font-semibold">{sample.author}</strong>
-												</span>
-												<p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed">
-													{sample.description}
-												</p>
-											</div>
-										</div>
-
-										<div class="p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/80 text-[9px] text-zinc-400 leading-tight mb-2.5">
-											<span class="text-zinc-500 block font-mono font-semibold uppercase mb-0.5">{i18n.t('catalog_license_label')}</span>
-											{sample.copyright}
-										</div>
-
-										<div class="flex flex-wrap gap-1 mb-3">
-											{#each sample.tags as tag}
-												<span class="px-1.5 py-0.5 rounded text-[8px] font-medium bg-zinc-800 text-zinc-300">
-													{tag}
-												</span>
-											{/each}
-										</div>
-
-										<div class="mt-auto pt-2 border-t border-zinc-800/60 flex items-center justify-between gap-2">
-											<button
-												type="button"
-												onclick={() => triggerInstallModel(sample)}
-												class="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-sky-300 hover:text-white border border-sky-500/40 rounded-xl text-[11px] font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
-												title={i18n.t('catalog_folder_tooltip')}
-											>
-												<UploadCloud class="w-3.5 h-3.5 text-sky-400" />
-												<span>{i18n.t('catalog_install_this')}</span>
-											</button>
-
-											<a
-												href={sample.sampleUrl}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600/90 hover:bg-sky-500 text-white rounded-xl text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
-											>
-												<ExternalLink class="w-3 h-3" />
-												<span>{i18n.t('catalog_download_live2d')}</span>
-											</a>
-										</div>
-									</div>
-								{/each}
-							</div>
-						</div>
 
 						<!-- Section 4: Muat Model Live2D Sendiri (Folder / Multi-File / Unduh Otomatis URL) -->
 						<div class="mt-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800 space-y-3">

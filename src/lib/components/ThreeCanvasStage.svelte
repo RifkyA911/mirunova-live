@@ -134,7 +134,26 @@
 					{ id: 'vrc.oh', name: 'vrc.oh', label: `😮 ${i18n.t('exp_soft_gasp')}` },
 					{ id: 'vrc.aa', name: 'vrc.aa', label: `🗣️ ${i18n.t('exp_speaking')}` }
 				];
-				rigging.showToast(`✓ ${i18n.t('model_glb_loaded_toast')} Manhattan Cafe (Uma Musume)`);
+			} else if (id === 'sakura') {
+				await threeStage.loadGLTF('/models/vroid/sakura.glb');
+				rigging.availableExpressions = [
+					{ id: 'vrc.blink', name: 'vrc.blink', label: `😉 ${i18n.t('exp_wink')}` },
+					{ id: 'vrc.ee', name: 'vrc.ee', label: `😊 ${i18n.t('exp_gentle_smile')}` },
+					{ id: 'vrc.aa', name: 'vrc.aa', label: `🗣️ ${i18n.t('exp_speaking')}` },
+					{ id: 'vrc.oh', name: 'vrc.oh', label: `😮 ${i18n.t('exp_soft_gasp')}` },
+					{ id: 'angry', name: 'angry', label: `😠 ${i18n.t('preset_angry')}` }
+				];
+				rigging.showToast(`✓ ${i18n.t('model_glb_loaded_toast')} Sakura (VRoid Schoolgirl)`);
+			} else if (id === 'rei') {
+				await threeStage.loadGLTF('/models/vroid/rei.glb');
+				rigging.availableExpressions = [
+					{ id: 'vrc.blink', name: 'vrc.blink', label: `😉 ${i18n.t('exp_wink')}` },
+					{ id: 'vrc.ee', name: 'vrc.ee', label: `😊 ${i18n.t('exp_gentle_smile')}` },
+					{ id: 'vrc.aa', name: 'vrc.aa', label: `🗣️ ${i18n.t('exp_speaking')}` },
+					{ id: 'vrc.oh', name: 'vrc.oh', label: `😮 ${i18n.t('exp_soft_gasp')}` },
+					{ id: 'angry', name: 'angry', label: `😠 ${i18n.t('preset_angry')}` }
+				];
+				rigging.showToast(`✓ ${i18n.t('model_glb_loaded_toast')} Rei (VRoid Cyber Boy)`);
 			} else if (id === 'mochi-cat') {
 				threeStage.loadProceduralCat('mochi');
 			} else if (id === 'kuro-cat') {
