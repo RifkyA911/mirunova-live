@@ -349,8 +349,14 @@
 
 <svelte:window
 	onkeydown={(e) => {
-		if (e.key === 'Escape' && isExpressionMenuOpen) {
-			isExpressionMenuOpen = false;
+		if (e.key === 'Escape') {
+			if (isDeviceMenuOpen || isCursorToolMenuOpen || isStageMenuOpen || isExpressionMenuOpen || isLanguageMenuOpen) {
+				isDeviceMenuOpen = false;
+				isCursorToolMenuOpen = false;
+				isStageMenuOpen = false;
+				isExpressionMenuOpen = false;
+				isLanguageMenuOpen = false;
+			}
 		}
 	}}
 />
@@ -431,8 +437,15 @@
 		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={() => {
+					playSfx('click');
 					isDeviceMenuOpen = !isDeviceMenuOpen;
-					if (isDeviceMenuOpen) refreshDevices(false);
+					if (isDeviceMenuOpen) {
+						isCursorToolMenuOpen = false;
+						isStageMenuOpen = false;
+						isExpressionMenuOpen = false;
+						isLanguageMenuOpen = false;
+						refreshDevices(false);
+					}
 				}}
 				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
 					isDeviceMenuOpen
@@ -451,18 +464,416 @@
 				{i18n.t('devices_menu_title')}
 			</div>
 
-			<!-- Quick Device Selector Popover Card -->
-			{#if isDeviceMenuOpen}
-				<!-- Click outside backdrop closer -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
+			
+		</div>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5 shrink-0"></div>
+
+		<!-- 2. Calibrate Center Pose -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={handleCalibrate}
+				disabled={!rigging.isCameraActive}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400 cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
+				aria-label={i18n.t('calibrate')}
+			>
+				<Crosshair class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
+			>
+				{i18n.t('calibrate')} [C]
+			</div>
+		</div>
+
+		<!-- 3. Cursor Tool Mode Selector (Pan / Move Layer & Props / Hand Tracking) -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isCursorToolMenuOpen = !isCursorToolMenuOpen;
+					if (isCursorToolMenuOpen) {
+						isDeviceMenuOpen = false;
+						isStageMenuOpen = false;
+						isExpressionMenuOpen = false;
+						isLanguageMenuOpen = false;
+					}
+				}}
+				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
+					rigging.cursorToolMode === 'select-layer'
+						? 'text-amber-400 bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/20'
+						: rigging.cursorToolMode === 'hand-tracking'
+							? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
+							: isCursorToolMenuOpen
+								? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+								: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('cursor_mode_title')}
+			>
+				{#if rigging.cursorToolMode === 'select-layer'}
+					<MousePointer class="w-5 h-5 text-amber-400" />
+				{:else if rigging.cursorToolMode === 'hand-tracking'}
+					<Hand class="w-5 h-5 text-emerald-400" />
+				{:else}
+					<Move class="w-5 h-5 text-cyan-400" />
+				{/if}
+
+				{#if rigging.cursorToolMode !== 'pan'}
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full {rigging.cursorToolMode === 'select-layer' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse"></span>
+				{/if}
+			</button>
+
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
+			>
+				{i18n.t('cursor_mode_title')}: {
+					rigging.cursorToolMode === 'select-layer'
+						? i18n.t('cursor_mode_select_layer')
+						: rigging.cursorToolMode === 'hand-tracking'
+							? i18n.t('cursor_mode_hand_tracking')
+							: i18n.t('cursor_mode_pan')
+				}
+			</div>
+
+			
+		</div>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+
+		<!-- 4. Rigging Preview & Inspector Drawer Toggle Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => (rigging.isDrawerOpen = !rigging.isDrawerOpen)}
+				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+					rigging.isDrawerOpen
+						? 'bg-violet-500 text-white shadow-md shadow-violet-500/25'
+						: 'text-zinc-400 hover:text-violet-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('rigging_preview')}
+			>
+				<Sliders class="w-5 h-5 {rigging.isDrawerOpen ? 'text-white' : 'text-violet-400'}" />
+				{#if rigging.riggingMode === 'manual'}
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+				{/if}
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('rigging_preview')} [R]
+			</div>
+		</div>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+
+		<!-- 5. OBS Screen Mode Button -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => rigging.toggleObsMode(true)}
+				class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 hover:border-emerald-500/50 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
+				aria-label={i18n.t('obs_mode')}
+			>
+				<Radio class="w-5 h-5 animate-pulse" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('obs_mode')} [O]
+			</div>
+		</div>
+
+		<!-- 6. OBS Stream Setup (URL & Guide) -->
+		<div class="group relative flex items-center justify-center">
+			<button
+				onclick={() => {
+					rigging.isObsModalOpen = true;
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isDrawerOpen = false;
+					isDeviceMenuOpen = false;
+				}}
+				class="p-2.5 rounded-xl text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label={i18n.t('obs_setup')}
+			>
+				<Tv class="w-5 h-5 text-emerald-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('obs_setup')}
+			</div>
+		</div>
+
+		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
+
+		<!-- 7. Themes & Background Manager Modal Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					isDeviceMenuOpen = false;
+				}}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
+				aria-label={i18n.t('themes_bg')}
+			>
+				<Palette class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
+			>
+				{i18n.t('themes_bg')} [T]
+			</div>
+		</div>
+
+		<!-- 7b. Stage Environment Selector Popover & Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isStageMenuOpen = !isStageMenuOpen;
+					if (isStageMenuOpen) {
+						isDeviceMenuOpen = false;
+						isCursorToolMenuOpen = false;
+						isExpressionMenuOpen = false;
+						isLanguageMenuOpen = false;
+						rigging.isModelModalOpen = false;
+						rigging.isThemeModalOpen = false;
+					}
+				}}
+				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
+					isStageMenuOpen
+						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('stage_title')}
+			>
+				<Compass class="w-5 h-5 text-indigo-400" />
+			</button>
+			<div
+				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
+			>
+				{i18n.t('stage_title')} [B]
+			</div>
+
+			
+		</div>
+
+		<!-- 8. Model Catalog & Motions Modal Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					rigging.isModelModalOpen = !rigging.isModelModalOpen;
+					rigging.isThemeModalOpen = false;
+					rigging.isObsModalOpen = false;
+					isDeviceMenuOpen = false;
+				}}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label={i18n.t('models')}
+			>
+				<Box class="w-5 h-5 text-pink-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('models')} [M]
+			</div>
+		</div>
+
+		<!-- 8b. Live2D Model Expression Variations Selector -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isExpressionMenuOpen = !isExpressionMenuOpen;
+					if (isExpressionMenuOpen) {
+						isDeviceMenuOpen = false;
+						isCursorToolMenuOpen = false;
+						isStageMenuOpen = false;
+						isLanguageMenuOpen = false;
+					}
+				}}
+				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
+					isExpressionMenuOpen || rigging.activeExpression
+						? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('expressions_title')}
+			>
+				<Smile class="w-5 h-5 text-pink-400" />
+				{#if rigging.activeExpression}
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+				{/if}
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
+					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
+				} {isExpressionMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
+			>
+				{i18n.t('expressions_title')} ({rigging.availableExpressions.length}) [E]
+			</div>
+
+			
+		</div>
+
+		<!-- 8c. Photoshop Layers, Props & Collab Manager Modal Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					rigging.toggleLayerManager();
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					rigging.isSettingsModalOpen = false;
+					isDeviceMenuOpen = false;
+					isExpressionMenuOpen = false;
+				}}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
+					rigging.isLayerManagerOpen
+						? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('layer_manager_title')}
+			>
+				<Layers class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('layer_manager_title')} [P]
+			</div>
+		</div>
+
+		<!-- 9. Screenshot & Download Avatar -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => rigging.triggerScreenshot()}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label="Screenshot Avatar"
+			>
+				<Aperture class="w-5 h-5 text-amber-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('screenshot_btn')} [S]
+			</div>
+		</div>
+
+		<!-- 10. Settings Modal Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					rigging.isSettingsModalOpen = !rigging.isSettingsModalOpen;
+					rigging.isThemeModalOpen = false;
+					rigging.isModelModalOpen = false;
+					rigging.isObsModalOpen = false;
+					rigging.isDrawerOpen = false;
+					isDeviceMenuOpen = false;
+					isLanguageMenuOpen = false;
+				}}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label={i18n.t('settings_title')}
+			>
+				<Settings class="w-5 h-5 text-cyan-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('settings_title')} [F2]
+			</div>
+		</div>
+
+		<!-- 10b. Quick Language Selector (ID / EN / JA) -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => {
+					playSfx('click');
+					isLanguageMenuOpen = !isLanguageMenuOpen;
+					if (isLanguageMenuOpen) {
+						isDeviceMenuOpen = false;
+						isCursorToolMenuOpen = false;
+						isStageMenuOpen = false;
+						isExpressionMenuOpen = false;
+					}
+				}}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
+					isLanguageMenuOpen
+						? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+						: 'text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60'
+				}"
+				aria-label={i18n.t('switch_language')}
+			>
+				<Languages class="w-5 h-5 text-emerald-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('switch_language')} ({i18n.locale.toUpperCase()})
+			</div>
+
+			
+		</div>
+
+		<!-- 11. Clear GUI / Lock Screen Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => rigging.toggleGuiLock()}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label={i18n.t('clear_gui_btn')}
+			>
+				<Lock class="w-5 h-5 text-amber-400" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				{i18n.t('clear_gui_btn')} [L]
+			</div>
+		</div>
+
+		<!-- 12. Sembunyikan Panel Dock Button -->
+		<div class="group relative flex items-center justify-center shrink-0">
+			<button
+				onclick={() => rigging.toggleDock(true)}
+				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
+				aria-label="Toggle Dock"
+			>
+				<ChevronDown class="w-5 h-5" />
+			</button>
+			<div
+				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
+			>
+				Dock [H]
+			</div>
+		</div>
+	</nav>
+</div>
+
+<!-- Popover Menus Root (Viewport-relative, outside transformed nav to prevent mobile clipping) -->
+{#if isDeviceMenuOpen || isCursorToolMenuOpen || isStageMenuOpen || isExpressionMenuOpen || isLanguageMenuOpen}
+	<!-- Click-outside backdrop closer: Covers entire screen at z-[80] -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		transition:fade={{ duration: 120 }}
+		class="fixed inset-0 z-[80] bg-black/40 backdrop-blur-[0.5px]"
+		onclick={() => {
+			isDeviceMenuOpen = false;
+			isCursorToolMenuOpen = false;
+			isStageMenuOpen = false;
+			isExpressionMenuOpen = false;
+			isLanguageMenuOpen = false;
+		}}
+	></div>
+
+	<!-- 1. Quick Device Selector Popover -->
+	{#if isDeviceMenuOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="fixed inset-0 z-[80]"
-					onclick={() => (isDeviceMenuOpen = false)}
-				></div>
-
-				<div
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-84 max-w-sm backdrop-blur-2xl border rounded-2xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left max-h-[75dvh] overflow-y-auto {
+					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
+		onclick={(e) => e.stopPropagation()}
+		class="fixed bottom-18 sm:bottom-24 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-84 max-w-sm backdrop-blur-2xl border rounded-2xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3.5 cursor-default text-left max-h-[75dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -635,87 +1046,16 @@
 						</div>
 					</div>
 				</div>
-			{/if}
-		</div>
+	{/if}
 
-		<div class="w-px h-6 bg-zinc-800 mx-0.5 shrink-0"></div>
-
-		<!-- 2. Calibrate Center Pose -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={handleCalibrate}
-				disabled={!rigging.isCameraActive}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400 cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
-				aria-label={i18n.t('calibrate')}
-			>
-				<Crosshair class="w-5 h-5 text-cyan-400" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
-			>
-				{i18n.t('calibrate')} [C]
-			</div>
-		</div>
-
-		<!-- 3. Cursor Tool Mode Selector (Pan / Move Layer & Props / Hand Tracking) -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					playSfx('click');
-					isCursorToolMenuOpen = !isCursorToolMenuOpen;
-					isDeviceMenuOpen = false;
-					isExpressionMenuOpen = false;
-				}}
-				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
-					rigging.cursorToolMode === 'select-layer'
-						? 'text-amber-400 bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/20'
-						: rigging.cursorToolMode === 'hand-tracking'
-							? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
-							: isCursorToolMenuOpen
-								? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-								: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
-				}"
-				aria-label={i18n.t('cursor_mode_title')}
-			>
-				{#if rigging.cursorToolMode === 'select-layer'}
-					<MousePointer class="w-5 h-5 text-amber-400" />
-				{:else if rigging.cursorToolMode === 'hand-tracking'}
-					<Hand class="w-5 h-5 text-emerald-400" />
-				{:else}
-					<Move class="w-5 h-5 text-cyan-400" />
-				{/if}
-
-				{#if rigging.cursorToolMode !== 'pan'}
-					<span class="absolute top-1 right-1 w-2 h-2 rounded-full {rigging.cursorToolMode === 'select-layer' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse"></span>
-				{/if}
-			</button>
-
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
-			>
-				{i18n.t('cursor_mode_title')}: {
-					rigging.cursorToolMode === 'select-layer'
-						? i18n.t('cursor_mode_select_layer')
-						: rigging.cursorToolMode === 'hand-tracking'
-							? i18n.t('cursor_mode_hand_tracking')
-							: i18n.t('cursor_mode_pan')
-				}
-			</div>
-
-			<!-- Floating Cursor Tool Mode Selector Popover -->
-			{#if isCursorToolMenuOpen}
-				<!-- Click-outside backdrop closer -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- 2. Cursor Tool Mode Selector Popover -->
+	{#if isCursorToolMenuOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					transition:fade={{ duration: 120 }}
-					class="fixed inset-0 z-[80]"
-					onclick={() => (isCursorToolMenuOpen = false)}
-				></div>
-
-				<div
 					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-64 max-w-xs backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-1.5 cursor-default text-left max-h-[75dvh] overflow-y-auto {
+					onclick={(e) => e.stopPropagation()}
+		class="fixed bottom-18 sm:bottom-24 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-72 max-w-xs backdrop-blur-2xl border rounded-2xl shadow-2xl p-2.5 z-[85] space-y-1.5 cursor-default text-left max-h-[75dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/98 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/98 border-zinc-700/80 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -839,134 +1179,16 @@
 						{/if}
 					</button>
 				</div>
-			{/if}
-		</div>
+	{/if}
 
-		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
-
-		<!-- 4. Rigging Preview & Inspector Drawer Toggle Button -->
-		<div class="group relative flex items-center justify-center">
-			<button
-				onclick={() => (rigging.isDrawerOpen = !rigging.isDrawerOpen)}
-				class="relative p-2.5 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
-					rigging.isDrawerOpen
-						? 'bg-violet-500 text-white shadow-md shadow-violet-500/25'
-						: 'text-zinc-400 hover:text-violet-300 hover:bg-zinc-800/60'
-				}"
-				aria-label={i18n.t('rigging_preview')}
-			>
-				<Sliders class="w-5 h-5 {rigging.isDrawerOpen ? 'text-white' : 'text-violet-400'}" />
-				{#if rigging.riggingMode === 'manual'}
-					<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-				{/if}
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('rigging_preview')} [R]
-			</div>
-		</div>
-
-		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
-
-		<!-- 5. OBS Screen Mode Button -->
-		<div class="group relative flex items-center justify-center">
-			<button
-				onclick={() => rigging.toggleObsMode(true)}
-				class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 hover:border-emerald-500/50 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
-				aria-label={i18n.t('obs_mode')}
-			>
-				<Radio class="w-5 h-5 animate-pulse" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('obs_mode')} [O]
-			</div>
-		</div>
-
-		<!-- 6. OBS Stream Setup (URL & Guide) -->
-		<div class="group relative flex items-center justify-center">
-			<button
-				onclick={() => {
-					rigging.isObsModalOpen = true;
-					rigging.isThemeModalOpen = false;
-					rigging.isModelModalOpen = false;
-					rigging.isDrawerOpen = false;
-					isDeviceMenuOpen = false;
-				}}
-				class="p-2.5 rounded-xl text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label={i18n.t('obs_setup')}
-			>
-				<Tv class="w-5 h-5 text-emerald-400" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('obs_setup')}
-			</div>
-		</div>
-
-		<div class="w-px h-6 bg-zinc-800 mx-0.5"></div>
-
-		<!-- 7. Themes & Background Manager Modal Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					rigging.isThemeModalOpen = !rigging.isThemeModalOpen;
-					rigging.isModelModalOpen = false;
-					rigging.isObsModalOpen = false;
-					isDeviceMenuOpen = false;
-				}}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
-				aria-label={i18n.t('themes_bg')}
-			>
-				<Palette class="w-5 h-5 text-cyan-400" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
-			>
-				{i18n.t('themes_bg')} [T]
-			</div>
-		</div>
-
-		<!-- 7b. Stage Environment Selector Popover & Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					playSfx('click');
-					isStageMenuOpen = !isStageMenuOpen;
-					isExpressionMenuOpen = false;
-					isDeviceMenuOpen = false;
-					isCursorToolMenuOpen = false;
-					rigging.isModelModalOpen = false;
-					rigging.isThemeModalOpen = false;
-				}}
-				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
-					isStageMenuOpen
-						? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 shadow-sm'
-						: 'text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800/60'
-				}"
-				aria-label={i18n.t('stage_title')}
-			>
-				<Compass class="w-5 h-5 text-indigo-400" />
-			</button>
-			<div
-				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
-			>
-				{i18n.t('stage_title')} [B]
-			</div>
-
-			<!-- Floating Stage Environment Popover -->
-			{#if isStageMenuOpen}
-				<!-- Backdrop closer -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- 3. Floating Stage Environment Popover -->
+	{#if isStageMenuOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div class="fixed inset-0 z-[80]" onclick={() => (isStageMenuOpen = false)}></div>
-
 				<div
 					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-3 left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[calc(100vw-1.5rem)] sm:max-w-[480px] backdrop-blur-3xl border rounded-3xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3 cursor-default text-left max-h-[78dvh] overflow-y-auto {
+					onclick={(e) => e.stopPropagation()}
+		class="fixed bottom-18 sm:bottom-24 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[480px] max-w-lg backdrop-blur-3xl border rounded-3xl shadow-2xl p-3.5 sm:p-4 z-[85] space-y-3 cursor-default text-left max-h-[78dvh] overflow-y-auto {
 						isLightTheme ? 'bg-white/95 border-zinc-200 text-zinc-900 shadow-xl' : 'bg-zinc-950/90 border-white/15 text-zinc-100 shadow-2xl'
 					}"
 				>
@@ -1233,73 +1455,18 @@
 						</button>
 					</div>
 				</div>
-			{/if}
-		</div>
+	{/if}
 
-		<!-- 8. Model Catalog & Motions Modal Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					rigging.isModelModalOpen = !rigging.isModelModalOpen;
-					rigging.isThemeModalOpen = false;
-					rigging.isObsModalOpen = false;
-					isDeviceMenuOpen = false;
-				}}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label={i18n.t('models')}
-			>
-				<Box class="w-5 h-5 text-pink-400" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('models')} [M]
-			</div>
-		</div>
-
-		<!-- 8b. Live2D Model Expression Variations Selector -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					playSfx('click');
-					isExpressionMenuOpen = !isExpressionMenuOpen;
-					isDeviceMenuOpen = false;
-				}}
-				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 {
-					isExpressionMenuOpen || rigging.activeExpression
-						? 'bg-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm'
-						: 'text-zinc-400 hover:text-pink-300 hover:bg-zinc-800/60'
-				}"
-				aria-label={i18n.t('expressions_title')}
-			>
-				<Smile class="w-5 h-5 text-pink-400" />
-				{#if rigging.activeExpression}
-					<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
-				{/if}
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shadow-2xl transition-all duration-150 scale-95 z-[70] border {
-					isLightTheme ? 'bg-white/95 border-zinc-300 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700/80 text-zinc-200'
-				} {isExpressionMenuOpen ? 'opacity-0' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100'}"
-			>
-				{i18n.t('expressions_title')} ({rigging.availableExpressions.length}) [E]
-			</div>
-
-			<!-- Unified Floating Expression & Stage Controls Popover -->
-			{#if isExpressionMenuOpen}
-				<!-- Click-outside backdrop closer: Covers entire screen at z-[80] -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- 4. Unified Floating Expression & Stage Controls Popover -->
+	{#if isExpressionMenuOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div
-					class="fixed inset-0 z-[80] bg-black/25 backdrop-blur-[0.5px]"
-					onclick={() => (isExpressionMenuOpen = false)}
-				></div>
-
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					id="expression-popover-menu"
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[820px] max-w-[calc(100vw-1rem)] sm:max-w-[820px] min-w-0 sm:min-w-[340px] max-h-[78dvh] overflow-y-auto backdrop-blur-3xl border rounded-3xl p-3.5 sm:p-4 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 cursor-default text-left select-none sm:resize"
+					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
+		class="fixed bottom-18 sm:bottom-24 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-[820px] max-w-4xl min-w-0 sm:min-w-[340px] max-h-[78dvh] overflow-y-auto backdrop-blur-3xl border rounded-3xl p-3.5 sm:p-4 z-[85] cursor-default text-left select-none sm:resize"
 					onclick={(e) => e.stopPropagation()}
 					style="background: {isLightTheme ? currentTheme.surface + 'f5' : currentTheme.surface + 'ea'}; border-color: {currentTheme.accent}55; color: {currentTheme.text}; box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 35px {currentTheme.accent}25; min-height: 290px;"
 				>
@@ -1890,115 +2057,18 @@
 						<GripVertical class="w-3 h-3 rotate-45" />
 					</div>
 				</div>
-			{/if}
-		</div>
+	{/if}
 
-		<!-- 8c. Photoshop Layers, Props & Collab Manager Modal Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					rigging.toggleLayerManager();
-					rigging.isThemeModalOpen = false;
-					rigging.isModelModalOpen = false;
-					rigging.isObsModalOpen = false;
-					rigging.isSettingsModalOpen = false;
-					isDeviceMenuOpen = false;
-					isExpressionMenuOpen = false;
-				}}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
-					rigging.isLayerManagerOpen
-						? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-						: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
-				}"
-				aria-label={i18n.t('layer_manager_title')}
-			>
-				<Layers class="w-5 h-5 text-cyan-400" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('layer_manager_title')} [P]
-			</div>
-		</div>
-
-		<!-- 9. Screenshot & Download Avatar -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => rigging.triggerScreenshot()}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label="Screenshot Avatar"
-			>
-				<Aperture class="w-5 h-5 text-amber-400" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('screenshot_btn')} [S]
-			</div>
-		</div>
-
-		<!-- 10. Settings Modal Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					rigging.isSettingsModalOpen = !rigging.isSettingsModalOpen;
-					rigging.isThemeModalOpen = false;
-					rigging.isModelModalOpen = false;
-					rigging.isObsModalOpen = false;
-					rigging.isDrawerOpen = false;
-					isDeviceMenuOpen = false;
-					isLanguageMenuOpen = false;
-				}}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label={i18n.t('settings_title')}
-			>
-				<Settings class="w-5 h-5 text-cyan-400" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('settings_title')} [F2]
-			</div>
-		</div>
-
-		<!-- 10b. Quick Language Selector (ID / EN / JA) -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => {
-					playSfx('click');
-					isLanguageMenuOpen = !isLanguageMenuOpen;
-					isDeviceMenuOpen = false;
-					isExpressionMenuOpen = false;
-				}}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer hover:scale-105 active:scale-95 {
-					isLanguageMenuOpen
-						? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-						: 'text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800/60'
-				}"
-				aria-label={i18n.t('switch_language')}
-			>
-				<Languages class="w-5 h-5 text-emerald-400" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('switch_language')} ({i18n.locale.toUpperCase()})
-			</div>
-
-			<!-- Language Popover Dropdown -->
-			{#if isLanguageMenuOpen}
+	<!-- 5. Language Popover Dropdown -->
+	{#if isLanguageMenuOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="fixed inset-0 z-[80] bg-black/20 backdrop-blur-[0.5px]"
-					onclick={() => (isLanguageMenuOpen = false)}
-				></div>
-
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div
-					class="fixed sm:absolute bottom-20 sm:bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-48 backdrop-blur-2xl border rounded-2xl p-2 z-[85] animate-in fade-in slide-in-from-bottom-2 duration-150 shadow-2xl space-y-1"
-					onclick={(e) => e.stopPropagation()}
+					transition:fly={{ y: 12, duration: 180, easing: cubicOut }}
+		onclick={(e) => e.stopPropagation()}
+		class="fixed bottom-18 sm:bottom-24 left-1/2 -translate-x-1/2 w-48 sm:w-52 backdrop-blur-2xl border rounded-2xl p-2 z-[85] shadow-2xl space-y-1"
 					style="background: {isLightTheme ? currentTheme.surface + 'f5' : currentTheme.surface + 'ea'}; border-color: {currentTheme.accent}55; color: {currentTheme.text};"
 				>
 					<div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border-b border-white/10 flex items-center justify-between">
@@ -2083,40 +2153,7 @@
 						{/if}
 					</button>
 				</div>
-			{/if}
-		</div>
+	{/if}
+{/if}
 
-		<!-- 11. Clear GUI / Lock Screen Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => rigging.toggleGuiLock()}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label={i18n.t('clear_gui_btn')}
-			>
-				<Lock class="w-5 h-5 text-amber-400" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				{i18n.t('clear_gui_btn')} [L]
-			</div>
-		</div>
-
-		<!-- 12. Sembunyikan Panel Dock Button -->
-		<div class="group relative flex items-center justify-center shrink-0">
-			<button
-				onclick={() => rigging.toggleDock(true)}
-				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors cursor-pointer hover:scale-105 active:scale-95"
-				aria-label="Toggle Dock"
-			>
-				<ChevronDown class="w-5 h-5" />
-			</button>
-			<div
-				class="hidden sm:block pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70]"
-			>
-				Dock [H]
-			</div>
-		</div>
-	</nav>
-</div>
 {/if}

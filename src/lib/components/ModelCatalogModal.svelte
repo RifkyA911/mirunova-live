@@ -376,45 +376,45 @@
 		onclick={(e) => {
 			if (e.target === e.currentTarget) rigging.isModelModalOpen = false;
 		}}
-		class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-150"
+		class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 select-none animate-in fade-in duration-150"
 	>
 		<!-- EXPANSIVE WIDER CONTAINER (max-w-6xl xl:max-w-7xl) -->
 		<div
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
-			class="w-full max-w-6xl xl:max-w-7xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border transition-colors duration-200 {
+			class="w-full max-w-6xl xl:max-w-7xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col h-[94dvh] sm:h-auto max-h-[94dvh] sm:max-h-[90vh] overflow-hidden border transition-colors duration-200 {
 				isLightTheme
 					? 'bg-white text-zinc-900 border-zinc-200 shadow-xl'
 					: 'bg-zinc-950/98 text-zinc-100 border-zinc-800 shadow-2xl'
 			}"
 		>
 			<!-- Header -->
-			<div class="p-4 border-b flex items-center justify-between {
+			<div class="p-3 sm:p-4 border-b flex items-center justify-between {
 				isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 			}">
-				<div class="flex items-center gap-3">
-					<div class="p-2 bg-pink-500/10 border border-pink-500/30 rounded-xl text-pink-500 shadow-sm">
-						<Layers class="w-5 h-5" />
+				<div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+					<div class="p-1.5 sm:p-2 bg-pink-500/10 border border-pink-500/30 rounded-xl text-pink-500 shadow-sm shrink-0">
+						<Layers class="w-4 h-4 sm:w-5 sm:h-5" />
 					</div>
-					<div>
-						<h2 class="text-sm font-semibold tracking-wide flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
-							{i18n.t('models')} & Katalog Avatar
-							<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono font-bold">
+					<div class="min-w-0">
+						<h2 class="text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-1.5 sm:gap-2 truncate {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+							<span class="truncate">{i18n.t('models')} & Katalog Avatar</span>
+							<span class="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono font-bold shrink-0">
 								{catalogTab === '2d' ? `${MODEL_CATALOG.length} Live2D` : catalogTab === 'booth' ? `${BOOTH_SHOWCASE_CATALOG.length} BOOTH` : `${MODEL_3D_CATALOG.length} 3D Mesh`}
 							</span>
 						</h2>
-						<p class="text-xs {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+						<p class="text-[11px] sm:text-xs truncate {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
 							{i18n.t('catalog_subtitle')}
 						</p>
 					</div>
 				</div>
 
-				<div class="flex items-center gap-2">
+				<div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
 					<!-- Reset Position & Scale Button -->
 					<button
 						onclick={() => rigging.resetAvatarTransform()}
-						class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border active:scale-95 shadow-sm {
+						class="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition-colors border active:scale-95 shadow-sm {
 							isLightTheme
 								? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-300'
 								: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700/80'
@@ -422,12 +422,12 @@
 						title={i18n.t('catalog_reset_pos_title')}
 					>
 						<RotateCcw class="w-3.5 h-3.5 text-cyan-500" />
-						<span>{i18n.t('catalog_reset_pos')}</span>
+						<span class="hidden sm:inline">{i18n.t('catalog_reset_pos')}</span>
 					</button>
 
 					<button
 						onclick={() => (rigging.isModelModalOpen = false)}
-						class="p-1.5 rounded-md transition-colors cursor-pointer {
+						class="p-1.5 rounded-lg transition-colors cursor-pointer {
 							isLightTheme ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
 						}"
 						aria-label={i18n.t('close_btn')}
@@ -438,13 +438,13 @@
 			</div>
 
 			<!-- Tab Selector: 2D Live2D vs BOOTH vs 3D Avatars -->
-			<div class="px-6 pt-3 border-b flex items-center justify-between {
+			<div class="px-3 sm:px-6 pt-1 sm:pt-3 border-b flex items-center justify-between overflow-x-auto scrollbar-none {
 				isLightTheme ? 'bg-zinc-100/60 border-zinc-200' : 'bg-zinc-900/40 border-zinc-800/80'
 			}">
-				<div class="flex items-center gap-3">
+				<div class="flex items-center gap-1 sm:gap-3 shrink-0">
 					<button
 						onclick={() => (catalogTab = '2d')}
-						class="flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs transition-all {
+						class="flex items-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2.5 sm:px-3.5 border-b-2 font-medium text-xs whitespace-nowrap transition-all {
 							catalogTab === '2d'
 								? 'border-pink-500 text-pink-600 dark:text-pink-300 font-semibold shadow-sm'
 								: isLightTheme
@@ -452,12 +452,12 @@
 									: 'border-transparent text-zinc-400 hover:text-zinc-200'
 						}"
 					>
-						<Layers class="w-4 h-4 text-pink-500" />
+						<Layers class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-500" />
 						<span>{i18n.t('catalog_tab_2d')} ({MODEL_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = 'booth')}
-						class="flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs transition-all {
+						class="flex items-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2.5 sm:px-3.5 border-b-2 font-medium text-xs whitespace-nowrap transition-all {
 							catalogTab === 'booth'
 								? 'border-purple-500 text-purple-600 dark:text-purple-300 font-semibold shadow-sm'
 								: isLightTheme
@@ -465,12 +465,12 @@
 									: 'border-transparent text-zinc-400 hover:text-zinc-200'
 						}"
 					>
-						<Heart class="w-4 h-4 text-purple-500 fill-purple-500/30" />
+						<Heart class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 fill-purple-500/30" />
 						<span>{i18n.t('catalog_tab_booth')} ({BOOTH_SHOWCASE_CATALOG.length})</span>
 					</button>
 					<button
 						onclick={() => (catalogTab = '3d')}
-						class="flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs transition-all {
+						class="flex items-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2.5 sm:px-3.5 border-b-2 font-medium text-xs whitespace-nowrap transition-all {
 							catalogTab === '3d'
 								? 'border-cyan-500 text-cyan-600 dark:text-cyan-300 font-semibold shadow-sm'
 								: isLightTheme
@@ -478,13 +478,13 @@
 									: 'border-transparent text-zinc-400 hover:text-zinc-200'
 						}"
 					>
-						<Box class="w-4 h-4 text-cyan-500" />
+						<Box class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500" />
 						<span>{i18n.t('catalog_tab_3d')} ({MODEL_3D_CATALOG.length})</span>
 					</button>
 				</div>
 
 				<!-- Active Status Tag -->
-				<div class="hidden sm:flex items-center gap-2 text-[11px] text-zinc-400">
+				<div class="hidden sm:flex items-center gap-2 text-[11px] text-zinc-400 shrink-0">
 					<span>{i18n.t('catalog_active_avatar')}</span>
 					<span class="px-2 py-0.5 rounded bg-zinc-800 text-cyan-300 font-semibold font-mono border border-zinc-700">
 						{rigging.avatarEngine === '3d'
@@ -496,12 +496,12 @@
 
 			<!-- Live Model Download & Extract Progress Banner -->
 			{#if isDownloadingModel}
-				<div class="px-6 py-2.5 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 border-b border-pink-500/30 flex items-center justify-between text-xs text-pink-300 animate-pulse shadow-inner">
+				<div class="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 border-b border-pink-500/30 flex items-center justify-between text-xs text-pink-300 animate-pulse shadow-inner">
 					<div class="flex items-center gap-2.5">
 						<Sparkles class="w-4 h-4 text-pink-400 animate-spin" />
 						<span class="font-semibold text-zinc-100">{downloadProgressText || i18n.t('catalog_processing_model')}</span>
 					</div>
-					<span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-medium">
+					<span class="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-mono font-medium">
 						Auto-Installer In-Memory
 					</span>
 				</div>
@@ -510,7 +510,7 @@
 			<!-- Body Content (Scrollable with Drag & Drop ZIP support) -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar"
+				class="p-3 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 text-xs custom-scrollbar flex-1"
 				ondragover={(e) => e.preventDefault()}
 				ondrop={(e) => {
 					e.preventDefault();
@@ -587,7 +587,7 @@
 								tabindex="0"
 								onclick={() => handleSelect2DModel(model)}
 								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect2DModel(model); }}
-								class="relative flex flex-col p-3.5 rounded-2xl border text-left transition-all cursor-pointer group {
+								class="relative flex flex-col p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer group {
 									isActive
 										? 'bg-zinc-900 border-cyan-500 text-white shadow-lg shadow-cyan-500/10 ring-2 ring-cyan-500/40'
 										: 'bg-zinc-900/50 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 hover:border-zinc-700'
@@ -600,20 +600,20 @@
 									</div>
 								{/if}
 
-								<div class="flex items-start gap-3.5 mb-2.5">
-									<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+								<div class="flex items-start gap-2.5 sm:gap-3.5 mb-2.5">
+									<div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 										{#if model.avatarUrl}
 											<img
 												src={model.avatarUrl}
 												alt={model.name}
 												class="w-full h-full object-cover object-top"
-												style="image-rendering: -webkit-optimize-contrast;"
 												loading="lazy"
+												decoding="async"
 												referrerpolicy="no-referrer"
 											/>
 										{:else}
 											<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
-												<Layers class="w-8 h-8" />
+												<Layers class="w-6 h-6 sm:w-8 sm:h-8" />
 											</div>
 										{/if}
 									</div>
@@ -932,28 +932,28 @@
 										tabindex="0"
 										onclick={() => handleSelect2DModel(model)}
 										onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect2DModel(model); }}
-										class="relative flex flex-col p-4 rounded-2xl border text-left transition-all cursor-pointer group {
+										class="relative flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer group {
 											isActive
 												? 'bg-zinc-900 border-pink-500 text-white shadow-lg shadow-pink-500/15 ring-2 ring-pink-500/40'
 												: 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 hover:border-pink-500/40'
 										}"
 									>
 										{#if isActive}
-											<div class="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-pink-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
+											<div class="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full bg-pink-500 text-zinc-950 font-bold text-[9px] shadow-sm tracking-wide z-10">
 												<Check class="w-3 h-3 stroke-[3]" />
 												SEDANG AKTIF
 											</div>
 										{/if}
 
-										<div class="flex items-start gap-3.5 mb-2.5">
-											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+										<div class="flex items-start gap-2.5 sm:gap-3.5 mb-2.5">
+											<div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 												{#if model.avatarUrl}
 													<img
 														src={model.avatarUrl}
 														alt={model.name}
 														class="w-full h-full object-cover object-top"
-														style="image-rendering: -webkit-optimize-contrast;"
 														loading="lazy"
+														decoding="async"
 														referrerpolicy="no-referrer"
 													/>
 												{/if}
@@ -1055,7 +1055,7 @@
 							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
 								{#each displayedBoothModels as item}
 									{@const isActive = rigging.selectedModelId === item.id}
-									<div class="flex flex-col p-3.5 rounded-2xl border text-left transition-all bg-zinc-900/60 border-zinc-800/80 hover:border-pink-500/50 hover:bg-zinc-900 group shadow-md relative {
+									<div class="flex flex-col p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all bg-zinc-900/60 border-zinc-800/80 hover:border-pink-500/50 hover:bg-zinc-900 group shadow-md relative {
 										isActive ? 'ring-2 ring-pink-500/50 border-pink-500' : ''
 									}">
 										{#if isActive}
@@ -1066,9 +1066,9 @@
 										{/if}
 
 										<!-- Top Row: Thumbnail + Info -->
-										<div class="flex items-start gap-3.5 mb-2.5">
-											<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
-												<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover object-top" style="image-rendering: -webkit-optimize-contrast;" loading="lazy" referrerpolicy="no-referrer" />
+										<div class="flex items-start gap-2.5 sm:gap-3.5 mb-2.5">
+											<div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+												<img src={item.avatarUrl} alt={item.name} class="w-full h-full object-cover object-top" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
 											</div>
 											<div class="flex flex-col min-w-0 flex-1 pt-0.5">
 												<div class="flex items-center gap-1.5 mb-0.5">
@@ -1202,7 +1202,7 @@
 									tabindex="0"
 									onclick={() => handleSelect3DModel(model)}
 									onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect3DModel(model); }}
-									class="relative flex flex-col p-3.5 rounded-2xl border text-left transition-all cursor-pointer group {
+									class="relative flex flex-col p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer group {
 										isActive
 											? 'bg-zinc-900 border-cyan-500 text-white shadow-lg shadow-cyan-500/10 ring-2 ring-cyan-500/40'
 											: 'bg-zinc-900/50 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 hover:border-zinc-700'
@@ -1217,20 +1217,20 @@
 									{/if}
 
 									<!-- Top Card Row: Avatar Visual Preview + Title -->
-									<div class="flex items-start gap-3.5 mb-2.5">
-										<div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
+									<div class="flex items-start gap-2.5 sm:gap-3.5 mb-2.5">
+										<div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-800/90 border border-zinc-700/80 shrink-0 shadow-md group-hover:scale-105 transition-transform">
 											{#if model.avatarUrl}
 												<img
 													src={model.avatarUrl}
 													alt={model.name}
 													class="w-full h-full object-cover object-top"
-													style="image-rendering: -webkit-optimize-contrast;"
 													loading="lazy"
+													decoding="async"
 													referrerpolicy="no-referrer"
 												/>
 											{:else}
 												<div class="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
-													<Box class="w-8 h-8" />
+													<Box class="w-6 h-6 sm:w-8 sm:h-8" />
 												</div>
 											{/if}
 										</div>
