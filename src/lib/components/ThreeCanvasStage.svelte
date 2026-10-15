@@ -1,19 +1,21 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { fade } from 'svelte/transition';
+	import { Activity } from 'lucide-svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { threeStage, type StageAreaWaypoint } from '#lib/core/threeStage';
-	import { i18n } from '#lib/i18n/index.svelte';
+	import { i18n, type I18nKey } from '#lib/i18n/index.svelte';
 
 	let containerEl = $state<HTMLDivElement>();
 	let animFrameId: number | null = null;
 
-	const WAYPOINTS_HUD = [
-		{ id: 'pc' as StageAreaWaypoint, label: 'PC', emoji: '🖥️' },
-		{ id: 'bed' as StageAreaWaypoint, label: 'Bed', emoji: '🛏️' },
-		{ id: 'cafe-bar' as StageAreaWaypoint, label: 'Cafe', emoji: '☕' },
-		{ id: 'beach-umbrella' as StageAreaWaypoint, label: 'Beach', emoji: '🏖️' },
-		{ id: 'meadow-flowers' as StageAreaWaypoint, label: 'Meadow', emoji: '🌸' },
-		{ id: 'center' as StageAreaWaypoint, label: 'Center', emoji: '🎯' }
+	const WAYPOINTS_HUD: { id: StageAreaWaypoint; key: I18nKey; emoji: string }[] = [
+		{ id: 'pc', key: 'waypoint_pc', emoji: '🖥️' },
+		{ id: 'bed', key: 'waypoint_bed', emoji: '🛏️' },
+		{ id: 'cafe-bar', key: 'waypoint_cafe_bar', emoji: '☕' },
+		{ id: 'beach-umbrella', key: 'waypoint_beach_umbrella', emoji: '🏖️' },
+		{ id: 'meadow-flowers', key: 'waypoint_meadow_flowers', emoji: '🌸' },
+		{ id: 'center', key: 'waypoint_center', emoji: '🎯' }
 	];
 
 	onMount(() => {
@@ -255,8 +257,8 @@
 		<div class="pointer-events-auto backdrop-blur-2xl bg-zinc-950/80 border border-zinc-700/80 rounded-2xl p-2.5 shadow-2xl space-y-2 text-zinc-200">
 			<!-- Header -->
 			<div class="flex items-center justify-between gap-3 pb-1.5 border-b border-zinc-800 text-[11px] font-bold">
-				<span class="text-cyan-400 font-mono tracking-wide">POSISI 3D</span>
-				<span class="text-[9px] text-zinc-500 font-mono">Drag / Pan</span>
+				<span class="text-cyan-400 font-mono tracking-wide">{i18n.t('stage_model_pos_title')}</span>
+				<span class="text-[9px] text-zinc-500 font-mono">{i18n.t('stage_pan_dpad')}</span>
 			</div>
 
 			<!-- D-Pad Translation Buttons -->
@@ -373,7 +375,7 @@
 			<!-- Teleport Waypoints Quick Buttons -->
 			<div class="pt-1.5 border-t border-zinc-800 space-y-1">
 				<div class="flex items-center justify-between text-[9px] font-mono text-zinc-500">
-					<span>TELEPORT</span>
+					<span>{i18n.t('waypoint_section_title')}</span>
 					<span class="text-indigo-400 font-bold">{rigging.activeStageWaypoint.toUpperCase()}</span>
 				</div>
 				<div class="grid grid-cols-3 gap-1">
@@ -383,7 +385,7 @@
 							onclick={() => {
 								threeStage.teleportToArea(wp.id);
 								rigging.activeStageWaypoint = wp.id;
-								rigging.showToast(`${wp.emoji} ${wp.label}`);
+								rigging.showToast(`${wp.emoji} ${i18n.t(wp.key)}`);
 							}}
 							class="py-1 px-1 rounded-lg border text-[10px] font-medium flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 {
 								rigging.activeStageWaypoint === wp.id
@@ -392,11 +394,28 @@
 							}"
 						>
 							<span>{wp.emoji}</span>
-							<span class="truncate">{wp.label}</span>
+							<span class="truncate">{i18n.t(wp.key)}</span>
 						</button>
 					{/each}
 				</div>
 			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Floating Holographic Neural Rig Loading Indicator -->
+{#if rigging.isLoadingModel}
+	<div
+		transition:fade={{ duration: 150 }}
+		class="pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-zinc-950/90 border border-cyan-500/40 backdrop-blur-xl shadow-2xl text-cyan-200"
+	>
+		<Activity class="w-4 h-4 text-cyan-400 animate-pulse shrink-0" />
+		<div class="text-left">
+			<div class="text-xs font-bold leading-tight flex items-center gap-1.5">
+				<span>{i18n.t('loading_3d_skeleton_title')}</span>
+				<span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold uppercase">{i18n.t('loading_3d_wireframe_badge')}</span>
+			</div>
+			<div class="text-[10px] text-zinc-400 leading-tight mt-0.5">{i18n.t('loading_3d_skeleton_desc')}</div>
 		</div>
 	</div>
 {/if}

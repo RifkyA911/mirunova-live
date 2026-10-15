@@ -407,4 +407,38 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(freeMove.x).toBe(0);
 		expect(freeMove.z).toBe(0);
 	});
+
+	it('should display holographic wireframe skeleton during model loading and clean up without pop-in', () => {
+		const stage = new ThreeStage();
+		expect(stage.isLoadingModel).toBe(false);
+		expect(stage.loadingSkeletonGroup).toBeNull();
+
+		// Trigger holographic skeleton display
+		stage.showLoadingSkeleton();
+		expect(stage.isLoadingModel).toBe(true);
+		expect(stage.loadingSkeletonGroup).not.toBeNull();
+		expect(stage.loadingSkeletonGroup?.name).toBe('loadingSkeleton');
+		expect(stage.scene.children).toContain(stage.loadingSkeletonGroup!);
+
+		// Idempotency: multiple calls should not duplicate
+		stage.showLoadingSkeleton();
+		const skeletonCount = stage.scene.children.filter((c) => c.name === 'loadingSkeleton').length;
+		expect(skeletonCount).toBe(1);
+
+		// Animate during loading: updateParameters should not throw and should animate holographic scanning sweep
+		expect(() => stage.updateParameters({})).not.toThrow();
+
+		// clearCurrentModel should NOT wipe out the active loading skeleton group
+		stage.clearCurrentModel();
+		expect(stage.loadingSkeletonGroup).not.toBeNull();
+		expect(stage.scene.children).toContain(stage.loadingSkeletonGroup!);
+
+		// Hide holographic skeleton upon model ready
+		stage.hideLoadingSkeleton();
+		expect(stage.isLoadingModel).toBe(false);
+		expect(stage.loadingSkeletonGroup).toBeNull();
+		const postHideCount = stage.scene.children.filter((c) => c.name === 'loadingSkeleton').length;
+		expect(postHideCount).toBe(0);
+	});
 });
+

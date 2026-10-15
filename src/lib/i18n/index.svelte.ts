@@ -12,6 +12,10 @@ export const translations = {
 		themes_bg: 'Themes & Background',
 		models: 'Models & Motions',
 		loading_model: 'Loading Live2D Model...',
+		loading_3d_skeleton_title: '3D Neural Rig Compiling',
+		loading_3d_skeleton_desc: 'Preloading textures & shaders without mesh popping',
+		loading_3d_wireframe_badge: 'Hologram Rig',
+		loading_3d_ready_toast: '3D Model Ready',
 		camera_off: 'Camera Off',
 		tracking_active: 'Tracking Active',
 		searching_face: 'Searching Face...',
@@ -812,6 +816,10 @@ export const translations = {
 		themes_bg: 'Tema & Background',
 		models: 'Model & Gerakan',
 		loading_model: 'Memuat Model Live2D...',
+		loading_3d_skeleton_title: 'Menyusun Skeleton 3D Holografik',
+		loading_3d_skeleton_desc: 'Memproses mesh & tekstur 4K tanpa glitch pop-in',
+		loading_3d_wireframe_badge: 'Rig Hologram',
+		loading_3d_ready_toast: 'Model 3D Siap Digunakan',
 		camera_off: 'Kamera Mati',
 		tracking_active: 'Tracking Aktif',
 		searching_face: 'Mencari Wajah...',
@@ -1612,6 +1620,10 @@ export const translations = {
 		themes_bg: 'テーマと背景',
 		models: 'モデルとモーション',
 		loading_model: 'Live2Dモデルを読み込み中...',
+		loading_3d_skeleton_title: '3Dニューラルボーン構築中',
+		loading_3d_skeleton_desc: 'ポップインを防ぎながらテクスチャとシェーダーを展開中',
+		loading_3d_wireframe_badge: 'ホログラムリグ',
+		loading_3d_ready_toast: '3Dモデル展開完了',
 		camera_off: 'カメラ停止中',
 		tracking_active: 'トラッキング中',
 		searching_face: '顔を認識中...',
@@ -2402,6 +2414,8 @@ export const translations = {
 	}
 };
 
+export type I18nKey = keyof typeof translations.en;
+
 export class I18nStore {
 	currentLocale = $state<Locale>(
 		typeof window !== 'undefined'
@@ -2421,10 +2435,11 @@ export class I18nStore {
 		}
 	}
 
-	t(key: keyof typeof translations.en): string {
+	t(key: I18nKey): string {
 		const dict = translations[this.currentLocale] || translations.id;
 		return (dict as any)[key] || translations.en[key] || key;
 	}
 }
 
 export const i18n = new I18nStore();
+

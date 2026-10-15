@@ -224,6 +224,10 @@ export class ThreeStage {
 	public activeFullBodyPose: FullBodyPose3D = 'idle';
 	public activeStageWaypoint: StageAreaWaypoint = 'center';
 
+	// Holographic Loading Skeleton Rig (prevents progressive piece-by-piece popping)
+	public loadingSkeletonGroup: THREE.Group | null = null;
+	public isLoadingModel: boolean = false;
+
 	// Framing, Orbit Camera & Smooth Turntable Spin
 	public currentFraming: FramingMode3D = 'full';
 	public orbitTheta: number = 0; // Azimuth angle in radians (around Y axis)
@@ -661,6 +665,192 @@ export class ThreeStage {
 
 	setFullBodyPose(pose: FullBodyPose3D) {
 		this.activeFullBodyPose = pose;
+	}
+
+	/**
+	 * Shows a stylized holographic cyber skeleton wireframe rig on stage while 3D models and 4K textures are loading.
+	 * Eliminates progressive pop-in and prevents ugly untextured/missing parts from glitching into view.
+	 */
+	public showLoadingSkeleton() {
+		this.isLoadingModel = true;
+		if (this.loadingSkeletonGroup) {
+			return;
+		}
+
+		const group = new THREE.Group();
+		group.name = 'loadingSkeleton';
+
+		// Cyan holographic line material
+		const lineMat = new THREE.LineBasicMaterial({
+			color: 0x06b6d4,
+			transparent: true,
+			opacity: 0.85,
+			depthTest: true
+		});
+
+		// Glowing cyan joint sphere material
+		const jointMat = new THREE.MeshBasicMaterial({
+			color: 0x38bdf8,
+			transparent: true,
+			opacity: 0.95
+		});
+
+		// Accent purple joint material
+		const accentMat = new THREE.MeshBasicMaterial({
+			color: 0xa855f7,
+			transparent: true,
+			opacity: 0.95
+		});
+
+		// 1. Bones Wireframe Skeleton Line Segments
+		const boneSegments: number[] = [
+			// Spine (Pelvis -> Chest -> Neck -> Head)
+			0, 0.75, 0,  0, 1.15, 0,
+			0, 1.15, 0,  0, 1.35, 0,
+			0, 1.35, 0,  0, 1.5, 0,
+
+			// Left Arm (Clavicle -> Shoulder -> Elbow -> Hand)
+			0, 1.15, 0,  -0.25, 1.15, 0,
+			-0.25, 1.15, 0,  -0.45, 0.9, 0,
+			-0.45, 0.9, 0,  -0.52, 0.65, 0,
+
+			// Right Arm (Clavicle -> Shoulder -> Elbow -> Hand)
+			0, 1.15, 0,  0.25, 1.15, 0,
+			0.25, 1.15, 0,  0.45, 0.9, 0,
+			0.45, 0.9, 0,  0.52, 0.65, 0,
+
+			// Left Leg (Hip -> Knee -> Foot)
+			0, 0.75, 0,  -0.16, 0.72, 0,
+			-0.16, 0.72, 0,  -0.18, 0.38, 0,
+			-0.18, 0.38, 0,  -0.18, 0.05, 0,
+
+			// Right Leg (Hip -> Knee -> Foot)
+			0, 0.75, 0,  0.16, 0.72, 0,
+			0.16, 0.72, 0,  0.18, 0.38, 0,
+			0.18, 0.38, 0,  0.18, 0.05, 0
+		];
+
+		const boneGeo = new THREE.BufferGeometry();
+		boneGeo.setAttribute('position', new THREE.Float32BufferAttribute(boneSegments, 3));
+		const bonesMesh = new THREE.LineSegments(boneGeo, lineMat);
+		group.add(bonesMesh);
+
+		// 2. Wireframe Geometric Prisms
+		// Head: icosahedron wireframe
+		const headGeo = new THREE.IcosahedronGeometry(0.22, 1);
+		const headMat = new THREE.MeshBasicMaterial({
+			color: 0x06b6d4,
+			wireframe: true,
+			transparent: true,
+			opacity: 0.65
+		});
+		const headMesh = new THREE.Mesh(headGeo, headMat);
+		headMesh.position.set(0, 1.5, 0);
+		group.add(headMesh);
+
+		// Chest / Ribcage: 6-sided cylinder wireframe
+		const chestGeo = new THREE.CylinderGeometry(0.2, 0.15, 0.3, 6);
+		const chestMat = new THREE.MeshBasicMaterial({
+			color: 0x06b6d4,
+			wireframe: true,
+			transparent: true,
+			opacity: 0.55
+		});
+		const chestMesh = new THREE.Mesh(chestGeo, chestMat);
+		chestMesh.position.set(0, 1.12, 0);
+		group.add(chestMesh);
+
+		// Pelvis: 5-sided cylinder wireframe
+		const pelvisGeo = new THREE.CylinderGeometry(0.16, 0.12, 0.18, 5);
+		const pelvisMat = new THREE.MeshBasicMaterial({
+			color: 0x06b6d4,
+			wireframe: true,
+			transparent: true,
+			opacity: 0.55
+		});
+		const pelvisMesh = new THREE.Mesh(pelvisGeo, pelvisMat);
+		pelvisMesh.position.set(0, 0.75, 0);
+		group.add(pelvisMesh);
+
+		// 3. Glowing Joint Nodes
+		const jointCoords = [
+			[0, 1.5, 0],       // Head
+			[0, 1.15, 0],      // Chest
+			[0, 0.75, 0],      // Pelvis
+			[-0.25, 1.15, 0],  // L Shoulder
+			[-0.45, 0.9, 0],   // L Elbow
+			[-0.52, 0.65, 0],  // L Hand
+			[0.25, 1.15, 0],   // R Shoulder
+			[0.45, 0.9, 0],    // R Elbow
+			[0.52, 0.65, 0],   // R Hand
+			[-0.18, 0.38, 0],  // L Knee
+			[-0.18, 0.05, 0],  // L Foot
+			[0.18, 0.38, 0],   // R Knee
+			[0.18, 0.05, 0]    // R Foot
+		];
+
+		const jointSphereGeo = new THREE.SphereGeometry(0.032, 8, 8);
+		jointCoords.forEach(([jx, jy, jz], i) => {
+			const jMesh = new THREE.Mesh(jointSphereGeo, i % 3 === 0 ? accentMat : jointMat);
+			jMesh.position.set(jx, jy, jz);
+			group.add(jMesh);
+		});
+
+		// 4. Scanning Holographic Ring
+		const scanRingGeo = new THREE.TorusGeometry(0.36, 0.012, 6, 32);
+		scanRingGeo.rotateX(Math.PI / 2);
+		const scanRingMat = new THREE.MeshBasicMaterial({
+			color: 0x38bdf8,
+			transparent: true,
+			opacity: 0.85
+		});
+		const scanRing = new THREE.Mesh(scanRingGeo, scanRingMat);
+		scanRing.name = 'scanRing';
+		scanRing.position.set(0, 0.8, 0);
+		group.add(scanRing);
+
+		// 5. Floor Hologram Pedestal Ring
+		const baseRingGeo = new THREE.RingGeometry(0.45, 0.48, 32);
+		baseRingGeo.rotateX(-Math.PI / 2);
+		const baseRingMat = new THREE.MeshBasicMaterial({
+			color: 0x06b6d4,
+			transparent: true,
+			opacity: 0.6,
+			side: THREE.DoubleSide
+		});
+		const baseRing = new THREE.Mesh(baseRingGeo, baseRingMat);
+		baseRing.name = 'baseRing';
+		baseRing.position.set(0, 0.02, 0);
+		group.add(baseRing);
+
+		// Position group matching model target
+		group.position.set(
+			this.modelBasePosition.x + this.modelOffsetX,
+			this.modelBasePosition.y + this.modelOffsetY,
+			this.modelBasePosition.z + this.modelOffsetZ
+		);
+		group.rotation.y = this.modelRotationY;
+
+		this.loadingSkeletonGroup = group;
+		this.scene.add(group);
+	}
+
+	public hideLoadingSkeleton() {
+		this.isLoadingModel = false;
+		if (this.loadingSkeletonGroup) {
+			this.scene.remove(this.loadingSkeletonGroup);
+			this.loadingSkeletonGroup.traverse((child) => {
+				if ((child as any).geometry) (child as any).geometry.dispose();
+				if ((child as any).material) {
+					if (Array.isArray((child as any).material)) {
+						(child as any).material.forEach((m: any) => m.dispose());
+					} else {
+						(child as any).material.dispose();
+					}
+				}
+			});
+			this.loadingSkeletonGroup = null;
+		}
 	}
 
 	public setStageEnvironment(env: StageEnvironment3D) {
@@ -1848,12 +2038,16 @@ export class ThreeStage {
 	// 2. Load Any External GLTF / GLB Model
 	async loadGLTF(url: string) {
 		const token = ++this.activeLoadToken;
+		this.showLoadingSkeleton();
 		this.clearCurrentModel();
 		this.modelType = 'glb';
 
 		const loader = new GLTFLoader();
 		const gltf = await loader.loadAsync(url);
-		if (token !== this.activeLoadToken) return;
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
 		this.clearCurrentModel();
 		const model = gltf.scene;
 		this.currentModelGroup = model;
@@ -1892,7 +2086,11 @@ export class ThreeStage {
 			action.play();
 		}
 
-		if (token !== this.activeLoadToken) return;
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
+		this.hideLoadingSkeleton();
 		model.rotation.y = this.modelRotationY;
 		this.scene.add(model);
 		this.setFraming(this.currentFraming);
@@ -1901,34 +2099,48 @@ export class ThreeStage {
 	// 3. Load Humanoid Neuro-sama FBX Model with 4K Textures & VRChat BlendShapes
 	async loadNeuroSama() {
 		const token = ++this.activeLoadToken;
+		this.showLoadingSkeleton();
 		this.clearCurrentModel();
 		this.modelType = 'fbx';
 
 		const loader = new FBXLoader();
-		const group = await loader.loadAsync('/models/neurosama/neuro-sama.fbx');
-		if (token !== this.activeLoadToken) return;
+		const texLoader = new THREE.TextureLoader();
+
+		const loadTexAsync = async (url: string) => {
+			try {
+				const t = await texLoader.loadAsync(url);
+				t.colorSpace = THREE.SRGBColorSpace;
+				t.needsUpdate = true;
+				return t;
+			} catch {
+				const fallback = new THREE.Texture();
+				fallback.colorSpace = THREE.SRGBColorSpace;
+				return fallback;
+			}
+		};
+
+		const [group, texExp, texSec, texClothes, texHair, texBody] = await Promise.all([
+			loader.loadAsync('/models/neurosama/neuro-sama.fbx'),
+			loadTexAsync('/models/neurosama/textures/neuroexpresions_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/clothes_neuro_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/neuro_hair_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/body_neuro_vrc.png')
+		]);
+
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
 		this.clearCurrentModel();
 		this.currentModelGroup = group;
 
-		// Load textures with SRGBColorSpace and reactive onLoad trigger
-		const texLoader = new THREE.TextureLoader();
-		const loadTex = (url: string) => {
-			const t = texLoader.load(url, () => {
-				t.needsUpdate = true;
-				if (this.renderer && this.scene && this.camera) {
-					this.renderer.render(this.scene, this.camera);
-				}
-			});
-			t.colorSpace = THREE.SRGBColorSpace;
-			return t;
-		};
-
 		const textures = {
-			expressions: loadTex('/models/neurosama/textures/neuroexpresions_vrc.png'),
-			secondaryClothes: loadTex('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
-			clothes: loadTex('/models/neurosama/textures/clothes_neuro_vrc.png'),
-			hair: loadTex('/models/neurosama/textures/neuro_hair_vrc.png'),
-			body: loadTex('/models/neurosama/textures/body_neuro_vrc.png')
+			expressions: texExp,
+			secondaryClothes: texSec,
+			clothes: texClothes,
+			hair: texHair,
+			body: texBody
 		};
 
 		const toonGradient = this.getOrCreateToonGradient();
@@ -2053,7 +2265,11 @@ export class ThreeStage {
 			}
 		});
 
-		if (token !== this.activeLoadToken) return;
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
+		this.hideLoadingSkeleton();
 		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
@@ -2062,29 +2278,48 @@ export class ThreeStage {
 	// 4. Load Humanoid Manhattan Cafe Model with Uma Musume Horse Ears & Dark Palette
 	async loadManhattanCafe() {
 		const token = ++this.activeLoadToken;
+		this.showLoadingSkeleton();
 		this.clearCurrentModel();
 		this.modelType = 'fbx';
 
 		const loader = new FBXLoader();
-		const group = await loader.loadAsync('/models/neurosama/neuro-sama.fbx');
-		if (token !== this.activeLoadToken) return;
+		const texLoader = new THREE.TextureLoader();
+
+		const loadTexAsync = async (url: string) => {
+			try {
+				const t = await texLoader.loadAsync(url);
+				t.colorSpace = THREE.SRGBColorSpace;
+				t.needsUpdate = true;
+				return t;
+			} catch {
+				const fallback = new THREE.Texture();
+				fallback.colorSpace = THREE.SRGBColorSpace;
+				return fallback;
+			}
+		};
+
+		const [group, texExp, texSec, texClothes, texHair, texBody] = await Promise.all([
+			loader.loadAsync('/models/neurosama/neuro-sama.fbx'),
+			loadTexAsync('/models/neurosama/textures/neuroexpresions_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/clothes_neuro_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/neuro_hair_vrc.png'),
+			loadTexAsync('/models/neurosama/textures/body_neuro_vrc.png')
+		]);
+
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
 		this.clearCurrentModel();
 		this.currentModelGroup = group;
 
-		// Load textures with SRGBColorSpace
-		const texLoader = new THREE.TextureLoader();
-		const loadTex = (url: string) => {
-			const t = texLoader.load(url);
-			t.colorSpace = THREE.SRGBColorSpace;
-			return t;
-		};
-
 		const textures = {
-			expressions: loadTex('/models/neurosama/textures/neuroexpresions_vrc.png'),
-			secondaryClothes: loadTex('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
-			clothes: loadTex('/models/neurosama/textures/clothes_neuro_vrc.png'),
-			hair: loadTex('/models/neurosama/textures/neuro_hair_vrc.png'),
-			body: loadTex('/models/neurosama/textures/body_neuro_vrc.png')
+			expressions: texExp,
+			secondaryClothes: texSec,
+			clothes: texClothes,
+			hair: texHair,
+			body: texBody
 		};
 
 		const toonGradient = this.getOrCreateToonGradient();
@@ -2237,7 +2472,11 @@ export class ThreeStage {
 			this.modelBasePosition.z + this.modelOffsetZ
 		);
 
-		if (token !== this.activeLoadToken) return;
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
+		this.hideLoadingSkeleton();
 		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
@@ -2253,12 +2492,16 @@ export class ThreeStage {
 		}
 
 		const token = ++this.activeLoadToken;
+		this.showLoadingSkeleton();
 		this.clearCurrentModel();
 		this.modelType = 'fbx';
 
 		const loader = new FBXLoader();
 		const group = await loader.loadAsync(url);
-		if (token !== this.activeLoadToken) return;
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
 		this.clearCurrentModel();
 		this.currentModelGroup = group;
 
@@ -2296,7 +2539,11 @@ export class ThreeStage {
 			}
 		});
 
-		if (token !== this.activeLoadToken) return;
+		if (token !== this.activeLoadToken) {
+			this.hideLoadingSkeleton();
+			return;
+		}
+		this.hideLoadingSkeleton();
 		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
@@ -2569,6 +2816,28 @@ export class ThreeStage {
 		const armLA = params['ParamArmLA'] ?? 0;
 		const armRA = params['ParamArmRA'] ?? 0;
 
+		// Animate holographic loading skeleton if 3D model is compiling in background
+		if (this.loadingSkeletonGroup) {
+			const time = performance.now();
+			this.loadingSkeletonGroup.position.set(
+				this.modelBasePosition.x + this.modelOffsetX,
+				this.modelBasePosition.y + this.modelOffsetY + Math.sin(time * 0.003) * 0.02,
+				this.modelBasePosition.z + this.modelOffsetZ
+			);
+			this.loadingSkeletonGroup.rotation.y = this.modelRotationY;
+
+			const scanRing = this.loadingSkeletonGroup.getObjectByName('scanRing');
+			if (scanRing) {
+				scanRing.position.y = 0.8 + Math.sin(time * 0.0035) * 0.55;
+				scanRing.rotation.z += 0.025;
+			}
+
+			const baseRing = this.loadingSkeletonGroup.getObjectByName('baseRing');
+			if (baseRing) {
+				baseRing.rotation.z += 0.012;
+			}
+		}
+
 		if (this.modelType === 'fbx') {
 			const initHead = this.headNode ? this.initialRotations.get(this.headNode) : null;
 			const initNeck = this.neckNode ? this.initialRotations.get(this.neckNode) : null;
@@ -2797,7 +3066,12 @@ export class ThreeStage {
 		// Sweep all non-light/non-camera child objects from the scene to prevent duplicate models
 		const toRemove: THREE.Object3D[] = [];
 		this.scene.children.forEach((child) => {
-			if (!(child instanceof THREE.Light) && !(child instanceof THREE.Camera) && child !== this.stageEnvironmentGroup) {
+			if (
+				!(child instanceof THREE.Light) &&
+				!(child instanceof THREE.Camera) &&
+				child !== this.stageEnvironmentGroup &&
+				child !== this.loadingSkeletonGroup
+			) {
 				toRemove.push(child);
 			}
 		});
@@ -2884,6 +3158,7 @@ export class ThreeStage {
 			this.animationFrameId = null;
 		}
 		window.removeEventListener('resize', this.handleResize);
+		this.hideLoadingSkeleton();
 		this.clearCurrentModel();
 		if (this.renderer) {
 			this.renderer.dispose();
