@@ -46,9 +46,16 @@
 		Volume1,
 		Bell,
 		Keyboard,
-		Box
+		Box,
+		Navigation,
+		ChevronLeft,
+		ChevronRight,
+		ChevronUp,
+		ChevronDown,
+		Crosshair
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
+	import { threeStage, type StageAreaWaypoint, type FullBodyPose3D } from '#lib/core/threeStage';
 
 	let activeTab = $state<'perf' | 'tracking' | 'voice' | 'theme' | 'stage' | 'storage' | 'about'>('perf');
 	let trackingParticipant = $state<'host' | 'guest1' | 'guest2'>('host');
@@ -2987,6 +2994,153 @@
 										{i18n.t('stage_void_desc')}
 									</p>
 								</button>
+							</div>
+						</div>
+
+						<!-- Card: 3D Stage Area Waypoints & Movement (Teleport & Pan) -->
+						<div class="p-5 rounded-2xl border space-y-4 {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
+						}">
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-2.5">
+									<div class="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-400">
+										<Navigation class="w-4 h-4" />
+									</div>
+									<div>
+										<h3 class="text-sm font-bold {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+											{i18n.t('waypoint_section_title')}
+										</h3>
+										<p class="text-[11px] {isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}">
+											{i18n.t('waypoint_section_desc')}
+										</p>
+									</div>
+								</div>
+								<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold uppercase">
+									{rigging.activeStageWaypoint}
+								</span>
+							</div>
+
+							<!-- 6 Waypoints Grid -->
+							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+								{#each [
+									{ id: 'pc' as StageAreaWaypoint, label: i18n.t('waypoint_pc'), desc: i18n.t('waypoint_pc_desc'), emoji: '🖥️' },
+									{ id: 'bed' as StageAreaWaypoint, label: i18n.t('waypoint_bed'), desc: i18n.t('waypoint_bed_desc'), emoji: '🛏️' },
+									{ id: 'cafe-bar' as StageAreaWaypoint, label: i18n.t('waypoint_cafe_bar'), desc: i18n.t('waypoint_cafe_bar_desc'), emoji: '☕' },
+									{ id: 'beach-umbrella' as StageAreaWaypoint, label: i18n.t('waypoint_beach_umbrella'), desc: i18n.t('waypoint_beach_umbrella_desc'), emoji: '🏖️' },
+									{ id: 'meadow-flowers' as StageAreaWaypoint, label: i18n.t('waypoint_meadow_flowers'), desc: i18n.t('waypoint_meadow_flowers_desc'), emoji: '🌸' },
+									{ id: 'center' as StageAreaWaypoint, label: i18n.t('waypoint_center'), desc: i18n.t('waypoint_center_desc'), emoji: '🎯' }
+								] as wp}
+									<button
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											threeStage.teleportToArea(wp.id);
+											rigging.activeStageWaypoint = wp.id;
+											rigging.showToast(`${wp.emoji} ${wp.label}`);
+										}}
+										class="p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 flex items-center gap-2.5 {
+											rigging.activeStageWaypoint === wp.id
+												? 'bg-indigo-500/20 border-indigo-500 text-indigo-300 font-bold ring-1.5 ring-indigo-500/50 shadow-sm'
+												: isLightTheme
+													? 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100'
+													: 'bg-zinc-950/80 border-zinc-800 text-zinc-300 hover:bg-zinc-900'
+										}"
+									>
+										<span class="text-xl shrink-0">{wp.emoji}</span>
+										<div class="min-w-0">
+											<div class="text-xs font-bold truncate">{wp.label}</div>
+											<div class="text-[10px] text-zinc-400 truncate mt-0.5">{wp.desc}</div>
+										</div>
+									</button>
+								{/each}
+							</div>
+
+							<!-- Manual Stage Movement Row -->
+							<div class="pt-3 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'} flex items-center justify-between gap-3">
+								<div class="space-y-0.5">
+									<div class="text-xs font-bold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
+										{i18n.t('stage_move_manual_title')}
+									</div>
+									<div class="text-[10px] text-zinc-500 font-mono">
+										Offset: X: {threeStage.modelOffsetX.toFixed(2)} | Z: {threeStage.modelOffsetZ.toFixed(2)}
+									</div>
+								</div>
+
+								<div class="flex items-center gap-1.5">
+									<button
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											threeStage.moveModel(-0.3, 0);
+											rigging.showToast(`← ${i18n.t('stage_move_left')}`);
+										}}
+										class="p-2 rounded-xl border cursor-pointer active:scale-95 {
+											isLightTheme ? 'bg-white border-zinc-300 hover:bg-zinc-100 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+										}"
+										title={i18n.t('stage_move_left')}
+									>
+										<ChevronLeft class="w-4 h-4" />
+									</button>
+									<div class="flex flex-col gap-1">
+										<button
+											type="button"
+											onclick={() => {
+												playSfx('click');
+												threeStage.moveModel(0, 0.3);
+												rigging.showToast(`↑ ${i18n.t('stage_move_forward')}`);
+											}}
+											class="p-1 rounded-lg border cursor-pointer active:scale-95 {
+												isLightTheme ? 'bg-white border-zinc-300 hover:bg-zinc-100 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+											}"
+											title={i18n.t('stage_move_forward')}
+										>
+											<ChevronUp class="w-3.5 h-3.5" />
+										</button>
+										<button
+											type="button"
+											onclick={() => {
+												playSfx('click');
+												threeStage.moveModel(0, -0.3);
+												rigging.showToast(`↓ ${i18n.t('stage_move_backward')}`);
+											}}
+											class="p-1 rounded-lg border cursor-pointer active:scale-95 {
+												isLightTheme ? 'bg-white border-zinc-300 hover:bg-zinc-100 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+											}"
+											title={i18n.t('stage_move_backward')}
+										>
+											<ChevronDown class="w-3.5 h-3.5" />
+										</button>
+									</div>
+									<button
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											threeStage.moveModel(0.3, 0);
+											rigging.showToast(`→ ${i18n.t('stage_move_right')}`);
+										}}
+										class="p-2 rounded-xl border cursor-pointer active:scale-95 {
+											isLightTheme ? 'bg-white border-zinc-300 hover:bg-zinc-100 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+										}"
+										title={i18n.t('stage_move_right')}
+									>
+										<ChevronRight class="w-4 h-4" />
+									</button>
+									<button
+										type="button"
+										onclick={() => {
+											playSfx('click');
+											threeStage.resetModelPosition();
+											rigging.activeStageWaypoint = 'center';
+											rigging.showToast(`🎯 ${i18n.t('stage_move_reset')}`);
+										}}
+										class="p-2 rounded-xl border cursor-pointer active:scale-95 text-indigo-400 {
+											isLightTheme ? 'bg-white border-zinc-300 hover:bg-zinc-100' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800'
+										}"
+										title={i18n.t('stage_move_reset')}
+									>
+										<Crosshair class="w-4 h-4" />
+									</button>
+								</div>
 							</div>
 						</div>
 

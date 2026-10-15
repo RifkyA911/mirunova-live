@@ -4,8 +4,165 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 export type CatVariant = 'mochi' | 'kuro' | 'tora';
 export type FramingMode3D = 'full' | 'half' | 'closeup';
-export type FullBodyPose3D = 'idle' | 'wave' | 'peace' | 'heart' | 'stand';
+export type FullBodyPose3D =
+	| 'idle'
+	| 'wave'
+	| 'peace'
+	| 'heart'
+	| 'stand'
+	| 'cat-paw'
+	| 'sit'
+	| 'shy'
+	| 'tsundere'
+	| 'thinking'
+	| 'idol'
+	| 'bow'
+	| 'cross-arms';
+export type StageAreaWaypoint = 'center' | 'pc' | 'bed' | 'cafe-bar' | 'beach-umbrella' | 'meadow-flowers';
 export type StageEnvironment3D = 'grid' | 'room' | 'cafe' | 'beach' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void';
+
+// Procedural 3D Canvas Texture Generators for rich materials
+function createWoodParquetTexture(isDarkTone: boolean = false): THREE.CanvasTexture {
+	if (typeof document === 'undefined') return new THREE.CanvasTexture({} as any);
+	const canvas = document.createElement('canvas');
+	canvas.width = 512;
+	canvas.height = 512;
+	const ctx = canvas.getContext('2d');
+	if (!ctx) return new THREE.CanvasTexture(canvas);
+
+	ctx.fillStyle = isDarkTone ? '#2b1d14' : '#d4a373';
+	ctx.fillRect(0, 0, 512, 512);
+
+	const plankH = 32;
+	const plankW = 128;
+	const rows = 16;
+	const cols = 5;
+
+	const lightTones = ['#e6bc98', '#dfb086', '#d4a373', '#c99665', '#be8957', '#deb887'];
+	const darkTones = ['#3d281c', '#332015', '#2b1b11', '#24160d', '#382518', '#2f1e13'];
+	const tones = isDarkTone ? darkTones : lightTones;
+
+	for (let r = 0; r < rows; r++) {
+		const offset = (r % 2) * (plankW / 2);
+		for (let c = -1; c < cols; c++) {
+			const x = c * plankW + offset;
+			const y = r * plankH;
+			ctx.fillStyle = tones[(r * 7 + c * 3 + 11) % tones.length];
+			ctx.fillRect(x + 1, y + 1, plankW - 2, plankH - 2);
+
+			ctx.fillStyle = isDarkTone ? 'rgba(0, 0, 0, 0.15)' : 'rgba(100, 50, 20, 0.08)';
+			for (let g = 4; g < plankH - 4; g += 6) {
+				ctx.fillRect(x + 2, y + g, plankW - 4, 1);
+			}
+
+			ctx.fillStyle = isDarkTone ? 'rgba(0, 0, 0, 0.4)' : 'rgba(60, 30, 10, 0.28)';
+			ctx.fillRect(x, y + plankH - 1, plankW, 1);
+			ctx.fillRect(x + plankW - 1, y, 1, plankH);
+		}
+	}
+
+	const tex = new THREE.CanvasTexture(canvas);
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.wrapT = THREE.RepeatWrapping;
+	tex.repeat.set(4, 4);
+	return tex;
+}
+
+function createTatamiTexture(): THREE.CanvasTexture {
+	if (typeof document === 'undefined') return new THREE.CanvasTexture({} as any);
+	const canvas = document.createElement('canvas');
+	canvas.width = 256;
+	canvas.height = 256;
+	const ctx = canvas.getContext('2d');
+	if (!ctx) return new THREE.CanvasTexture(canvas);
+
+	ctx.fillStyle = '#b7c4a1';
+	ctx.fillRect(0, 0, 256, 256);
+
+	for (let y = 0; y < 256; y += 4) {
+		ctx.fillStyle = y % 8 === 0 ? 'rgba(70, 85, 50, 0.18)' : 'rgba(230, 240, 210, 0.15)';
+		ctx.fillRect(0, y, 256, 2);
+	}
+	for (let x = 0; x < 256; x += 8) {
+		ctx.fillStyle = 'rgba(60, 75, 45, 0.08)';
+		ctx.fillRect(x, 0, 1, 256);
+	}
+
+	const tex = new THREE.CanvasTexture(canvas);
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.wrapT = THREE.RepeatWrapping;
+	tex.repeat.set(6, 6);
+	return tex;
+}
+
+function createGrassTexture(): THREE.CanvasTexture {
+	if (typeof document === 'undefined') return new THREE.CanvasTexture({} as any);
+	const canvas = document.createElement('canvas');
+	canvas.width = 256;
+	canvas.height = 256;
+	const ctx = canvas.getContext('2d');
+	if (!ctx) return new THREE.CanvasTexture(canvas);
+
+	ctx.fillStyle = '#22c55e'; // vibrant emerald anime meadow
+	ctx.fillRect(0, 0, 256, 256);
+
+	for (let i = 0; i < 500; i++) {
+		const x = Math.random() * 256;
+		const y = Math.random() * 256;
+		const h = 5 + Math.random() * 9;
+		const tone = Math.random() > 0.4 ? '#4ade80' : '#16a34a';
+		ctx.strokeStyle = tone;
+		ctx.lineWidth = 1.3;
+		ctx.beginPath();
+		ctx.moveTo(x, y);
+		ctx.lineTo(x + (Math.random() - 0.5) * 4, y - h);
+		ctx.stroke();
+	}
+
+	const tex = new THREE.CanvasTexture(canvas);
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.wrapT = THREE.RepeatWrapping;
+	tex.repeat.set(8, 8);
+	return tex;
+}
+
+function createChalkboardTexture(): THREE.CanvasTexture {
+	if (typeof document === 'undefined') return new THREE.CanvasTexture({} as any);
+	const canvas = document.createElement('canvas');
+	canvas.width = 512;
+	canvas.height = 256;
+	const ctx = canvas.getContext('2d');
+	if (!ctx) return new THREE.CanvasTexture(canvas);
+
+	ctx.fillStyle = '#18181b';
+	ctx.fillRect(0, 0, 512, 256);
+
+	ctx.strokeStyle = '#fef08a';
+	ctx.lineWidth = 3;
+	ctx.strokeRect(10, 10, 492, 236);
+
+	ctx.fillStyle = '#fef08a';
+	ctx.font = 'bold 24px sans-serif';
+	ctx.textAlign = 'center';
+	ctx.fillText('☕ MIRUNOVA COFFEE CAFE ☕', 256, 46);
+
+	ctx.font = '15px monospace';
+	ctx.textAlign = 'left';
+	ctx.fillStyle = '#fde047';
+	ctx.fillText('• Matcha Latte ...... 500¥', 30, 90);
+	ctx.fillText('• Caramel Macchiato . 550¥', 30, 122);
+	ctx.fillText('• Strawberry Parfait . 680¥', 30, 154);
+	ctx.fillText('• Sakura Roll Cake .. 620¥', 30, 186);
+
+	ctx.fillStyle = '#fda4af';
+	ctx.font = '22px sans-serif';
+	ctx.fillText('✨ ₍ᐢ.ˬ.⑅ᐢ₎', 340, 100);
+	ctx.fillText('💖 Welcome!', 330, 140);
+	ctx.fillStyle = '#93c5fd';
+	ctx.fillText('☕ Fresh Brewed', 320, 180);
+
+	return new THREE.CanvasTexture(canvas);
+}
 
 export class ThreeStage {
 	private scene: THREE.Scene;
@@ -65,6 +222,7 @@ export class ThreeStage {
 	// Interactive States: Expression & Full Body Pose
 	public activeExpression: string = '';
 	public activeFullBodyPose: FullBodyPose3D = 'idle';
+	public activeStageWaypoint: StageAreaWaypoint = 'center';
 
 	// Framing, Orbit Camera & Smooth Turntable Spin
 	public currentFraming: FramingMode3D = 'full';
@@ -233,10 +391,97 @@ export class ThreeStage {
 		this.isAutoSpin = false;
 	}
 
+	/**
+	 * Stage Props & Furniture Collision Resolver
+	 * Ensures 3D character models cannot collide or penetrate non-character stage furniture/props
+	 * (e.g. PC desk, bed, walls, cafe counter).
+	 * Permitted exception: Character-to-character proximity is explicitly allowed.
+	 */
+	public resolvePropCollision(targetX: number, targetZ: number): { x: number; z: number } {
+		let x = targetX;
+		let z = targetZ;
+		const r = 0.42; // Character collision boundary cylinder radius
+
+		const obstacles: Array<{ minX: number; maxX: number; minZ: number; maxZ: number }> = [];
+
+		if (this.currentStageEnv === 'room') {
+			// Room perimeter walls
+			x = Math.max(-7.1, Math.min(7.1, x));
+			z = Math.max(-7.1, Math.min(7.1, z));
+
+			// PC Desk Solid Body (monitor, PC rig & desk surface)
+			// Chair front is at Z: -3.5 to -3.0, so the desk surface behind it is blocked
+			obstacles.push({ minX: 3.5, maxX: 6.1, minZ: -5.2, maxZ: -3.85 });
+
+			// Cozy Bed Solid Mattress & Wooden Frame
+			obstacles.push({ minX: -6.2, maxX: -2.3, minZ: -6.2, maxZ: -1.0 });
+
+			// Nightstand & Bedside Lamp
+			obstacles.push({ minX: -3.5, maxX: -2.5, minZ: -6.6, maxZ: -5.6 });
+
+			// Corner Plant
+			obstacles.push({ minX: 6.3, maxX: 7.3, minZ: -7.3, maxZ: -6.3 });
+		} else if (this.currentStageEnv === 'cafe') {
+			// Cafe perimeter walls
+			x = Math.max(-7.1, Math.min(7.1, x));
+			z = Math.max(-7.1, Math.min(7.1, z));
+
+			// Espresso Bar Counter Body
+			obstacles.push({ minX: -6.8, maxX: -2.1, minZ: -5.4, maxZ: -3.5 });
+
+			// Cafe Monster Plant
+			obstacles.push({ minX: 4.6, maxX: 5.8, minZ: -5.1, maxZ: -3.9 });
+		} else if (this.currentStageEnv === 'beach') {
+			// Deep ocean barrier
+			z = Math.max(-3.5, Math.min(8.0, z));
+			x = Math.max(-9.0, Math.min(9.0, x));
+
+			// Beach umbrella pole base
+			obstacles.push({ minX: -3.8, maxX: -3.4, minZ: -2.0, maxZ: -1.6 });
+		} else if (this.currentStageEnv === 'field') {
+			// Rustic meadow fence line
+			z = Math.max(-5.8, Math.min(12.0, z));
+			x = Math.max(-12.0, Math.min(12.0, x));
+		} else if (this.currentStageEnv === 'dojo') {
+			z = Math.max(-5.2, Math.min(5.5, z));
+			x = Math.max(-5.5, Math.min(5.5, x));
+			// Hanging paper lanterns
+			obstacles.push({ minX: -4.1, maxX: -3.5, minZ: -4.8, maxZ: -4.2 });
+			obstacles.push({ minX: 3.5, maxX: 4.1, minZ: -4.8, maxZ: -4.2 });
+		} else {
+			// General stage boundaries
+			x = Math.max(-7.5, Math.min(7.5, x));
+			z = Math.max(-7.5, Math.min(7.5, z));
+		}
+
+		// AABB circle penetration resolution (push out along axis of least penetration)
+		for (const obs of obstacles) {
+			if (x + r > obs.minX && x - r < obs.maxX && z + r > obs.minZ && z - r < obs.maxZ) {
+				const overlapL = (x + r) - obs.minX;
+				const overlapR = obs.maxX - (x - r);
+				const overlapT = (z + r) - obs.minZ;
+				const overlapB = obs.maxZ - (z - r);
+				const minO = Math.min(overlapL, overlapR, overlapT, overlapB);
+
+				if (minO === overlapL) x = obs.minX - r;
+				else if (minO === overlapR) x = obs.maxX + r;
+				else if (minO === overlapT) z = obs.minZ - r;
+				else z = obs.maxZ + r;
+			}
+		}
+
+		return { x, z };
+	}
+
 	public moveModel(deltaX: number, deltaY: number, deltaZ: number = 0) {
-		this.modelOffsetX = Math.max(-4.0, Math.min(4.0, this.modelOffsetX + deltaX));
+		const rawX = this.modelOffsetX + deltaX;
+		const rawZ = this.modelOffsetZ + deltaZ;
+		const resolved = this.resolvePropCollision(rawX, rawZ);
+
+		this.modelOffsetX = resolved.x;
 		this.modelOffsetY = Math.max(-2.5, Math.min(3.5, this.modelOffsetY + deltaY));
-		this.modelOffsetZ = Math.max(-4.0, Math.min(4.0, this.modelOffsetZ + deltaZ));
+		this.modelOffsetZ = resolved.z;
+
 		if (this.currentModelGroup) {
 			this.currentModelGroup.position.set(
 				this.modelBasePosition.x + this.modelOffsetX,
@@ -247,9 +492,12 @@ export class ThreeStage {
 	}
 
 	public setModelPosition(x: number, y: number, z: number = 0) {
-		this.modelOffsetX = Math.max(-4.0, Math.min(4.0, x));
+		const resolved = this.resolvePropCollision(x, z);
+
+		this.modelOffsetX = resolved.x;
 		this.modelOffsetY = Math.max(-2.5, Math.min(3.5, y));
-		this.modelOffsetZ = Math.max(-4.0, Math.min(4.0, z));
+		this.modelOffsetZ = resolved.z;
+
 		if (this.currentModelGroup) {
 			this.currentModelGroup.position.set(
 				this.modelBasePosition.x + this.modelOffsetX,
@@ -259,13 +507,71 @@ export class ThreeStage {
 		}
 	}
 
+	public teleportToArea(area: StageAreaWaypoint) {
+		this.activeStageWaypoint = area;
+		switch (area) {
+			case 'pc':
+				// Teleport right to PC streamer desk chair
+				this.setModelPosition(4.8, 0, -3.5);
+				this.modelRotationY = 0;
+				if (this.currentModelGroup) this.currentModelGroup.rotation.y = 0;
+				this.cameraLookTarget.set(4.8, 1.2, -3.5);
+				this.updateCameraTargetPos();
+				break;
+			case 'bed':
+				// Beside the cozy bed
+				this.setModelPosition(-3.5, 0, -3.0);
+				this.modelRotationY = 0.2;
+				if (this.currentModelGroup) this.currentModelGroup.rotation.y = 0.2;
+				this.cameraLookTarget.set(-3.5, 1.2, -3.0);
+				this.updateCameraTargetPos();
+				break;
+			case 'cafe-bar':
+				// Beside cafe counter
+				this.setModelPosition(-2.0, 0, -3.2);
+				this.modelRotationY = 0.15;
+				if (this.currentModelGroup) this.currentModelGroup.rotation.y = 0.15;
+				this.cameraLookTarget.set(-2.0, 1.2, -3.2);
+				this.updateCameraTargetPos();
+				break;
+			case 'beach-umbrella':
+				// Under beach umbrella
+				this.setModelPosition(-2.2, 0, -1.0);
+				this.modelRotationY = -0.2;
+				if (this.currentModelGroup) this.currentModelGroup.rotation.y = -0.2;
+				this.cameraLookTarget.set(-2.2, 1.2, -1.0);
+				this.updateCameraTargetPos();
+				break;
+			case 'meadow-flowers':
+				// Among vibrant wildflowers in open meadow
+				this.setModelPosition(2.2, 0, -1.5);
+				this.modelRotationY = -0.15;
+				if (this.currentModelGroup) this.currentModelGroup.rotation.y = -0.15;
+				this.cameraLookTarget.set(2.2, 1.2, -1.5);
+				this.updateCameraTargetPos();
+				break;
+			case 'center':
+			default:
+				// Center stage
+				this.setModelPosition(0, 0, 0);
+				this.modelRotationY = 0;
+				if (this.currentModelGroup) this.currentModelGroup.rotation.y = 0;
+				this.cameraLookTarget.set(0, 1.2, 0);
+				this.updateCameraTargetPos();
+				break;
+		}
+	}
+
 	public resetModelPosition() {
+		this.activeStageWaypoint = 'center';
 		this.modelOffsetX = 0;
 		this.modelOffsetY = 0;
 		this.modelOffsetZ = 0;
 		if (this.currentModelGroup) {
 			this.currentModelGroup.position.copy(this.modelBasePosition);
 		}
+		this.cameraLookTarget.set(0, 1.2, 0);
+		this.updateCameraTargetPos();
 	}
 
 	public adjustCameraPitch(deltaPhi: number) {
@@ -416,6 +722,7 @@ export class ThreeStage {
 			// 1. Lantai Zinc Cream (Warm zinc-tinted cream wood flooring)
 			const floorGeo = new THREE.PlaneGeometry(16, 16);
 			const floorMat = new THREE.MeshStandardMaterial({
+				map: createWoodParquetTexture(false),
 				color: 0xeee7db, // zinc cream
 				roughness: 0.45,
 				metalness: 0.08
@@ -718,6 +1025,7 @@ export class ThreeStage {
 			// 1. Warm Walnut Parquet Flooring
 			const floorGeo = new THREE.PlaneGeometry(16, 16);
 			const floorMat = new THREE.MeshStandardMaterial({
+				map: createWoodParquetTexture(true),
 				color: 0x3d271d, // rich dark roasted coffee wood parquet
 				roughness: 0.38,
 				metalness: 0.08
@@ -775,7 +1083,7 @@ export class ThreeStage {
 
 			const boardChalk = new THREE.Mesh(
 				new THREE.PlaneGeometry(3.3, 1.9),
-				new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.95 })
+				new THREE.MeshBasicMaterial({ map: createChalkboardTexture() })
 			);
 			boardChalk.position.set(0, 4.2, -7.89);
 			this.stageEnvironmentGroup.add(boardChalk);
@@ -1007,11 +1315,24 @@ export class ThreeStage {
 			// Happy Clear Atmosphere Fog
 			this.scene.fog = new THREE.FogExp2(0x38bdf8, 0.018);
 		} else if (env === 'field') {
-			// Open Field / Horizon Stage
-			const fieldGeo = new THREE.PlaneGeometry(40, 40);
+			// Vivid Happy Open Meadow / Blooming Wildflower Horizon Stage
+			// 1. Rolling Lush Emerald & Lime Anime Meadow Hills
+			const fieldGeo = new THREE.PlaneGeometry(60, 60, 32, 32);
+			const posAttr = fieldGeo.attributes.position;
+			for (let i = 0; i < posAttr.count; i++) {
+				const vx = posAttr.getX(i);
+				const vy = posAttr.getY(i);
+				const dist = Math.sqrt(vx * vx + vy * vy);
+				const heightScale = Math.min(1.0, Math.max(0, (dist - 3.2) / 6.0));
+				const hillZ = Math.sin(vx * 0.18) * Math.cos(vy * 0.18) * 0.85 * heightScale;
+				posAttr.setZ(i, hillZ);
+			}
+			fieldGeo.computeVertexNormals();
+
 			const fieldMat = new THREE.MeshStandardMaterial({
-				color: 0x14532d, // dark lush green grass tone
-				roughness: 0.85,
+				map: createGrassTexture(),
+				color: 0x4ade80, // bright vivid sunny anime green
+				roughness: 0.65,
 				metalness: 0.05
 			});
 			const field = new THREE.Mesh(fieldGeo, fieldMat);
@@ -1019,19 +1340,111 @@ export class ThreeStage {
 			field.position.y = 0;
 			this.stageEnvironmentGroup.add(field);
 
-			// Circular stone stepping pedestal
-			const stoneGeo = new THREE.CylinderGeometry(2.4, 2.6, 0.12, 32);
+			// 2. Sunlit Limestone Pedestal & Stepping Stones Path
+			const stoneGeo = new THREE.CylinderGeometry(2.6, 2.8, 0.12, 36);
 			const stoneMat = new THREE.MeshStandardMaterial({
-				color: 0x3f3f46,
-				roughness: 0.7,
-				metalness: 0.2
+				color: 0xf1f5f9, // bright sunlit limestone
+				roughness: 0.55,
+				metalness: 0.08
 			});
 			const stone = new THREE.Mesh(stoneGeo, stoneMat);
 			stone.position.set(0, 0.06, 0);
 			this.stageEnvironmentGroup.add(stone);
 
-			// Atmospheric distant fog
-			this.scene.fog = new THREE.FogExp2(0x064e3b, 0.035);
+			// Stepping stones path
+			[-1.2, -2.2, -3.2, -4.2, -5.2].forEach((pz, idx) => {
+				const pGeo = new THREE.CylinderGeometry(0.35 + (idx % 2) * 0.08, 0.4, 0.05, 16);
+				const pMesh = new THREE.Mesh(pGeo, stoneMat);
+				pMesh.position.set(Math.sin(idx * 0.8) * 0.35, 0.03, pz + 3.0);
+				this.stageEnvironmentGroup.add(pMesh);
+			});
+
+			// 3. 70+ Vivid Wildflower Blooms (Pink Cosmos, Buttercups, Lavender, Daisies)
+			const flowerColors = [0xf43f5e, 0xf472b6, 0xfbbf24, 0xf59e0b, 0xa855f7, 0x38bdf8, 0xffffff];
+			const stemMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
+			const petalGeos = [
+				new THREE.CylinderGeometry(0.14, 0.14, 0.02, 8),
+				new THREE.SphereGeometry(0.12, 8, 8)
+			];
+
+			for (let i = 0; i < 70; i++) {
+				const ang = (i / 70) * Math.PI * 2 + Math.sin(i * 3.7) * 0.5;
+				const dist = 3.2 + Math.abs(Math.sin(i * 2.3)) * 8.5;
+				const fx = Math.cos(ang) * dist;
+				const fz = Math.sin(ang) * dist;
+
+				const flowerGroup = new THREE.Group();
+				const stemH = 0.25 + (i % 4) * 0.06;
+				const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, stemH, 6), stemMat);
+				stem.position.y = stemH * 0.5;
+				flowerGroup.add(stem);
+
+				const flowerColor = flowerColors[i % flowerColors.length];
+				const flowerMat = new THREE.MeshStandardMaterial({
+					color: flowerColor,
+					roughness: 0.35,
+					emissive: flowerColor,
+					emissiveIntensity: 0.15
+				});
+				const petal = new THREE.Mesh(petalGeos[i % 2], flowerMat);
+				petal.position.y = stemH;
+				petal.rotation.x = 0.2 * Math.sin(i);
+				flowerGroup.add(petal);
+
+				// Center yellow pistil for petals
+				const pistilMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+				const pistil = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), pistilMat);
+				pistil.position.y = stemH + 0.02;
+				flowerGroup.add(pistil);
+
+				flowerGroup.position.set(fx, 0, fz);
+				this.stageEnvironmentGroup.add(flowerGroup);
+			}
+
+			// 4. Rustic Wooden Fence along the meadow horizon
+			const fenceMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.7 });
+			for (let x = -14; x <= 14; x += 2.8) {
+				const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 1.25, 8), fenceMat);
+				post.position.set(x, 0.6, -6.5);
+				this.stageEnvironmentGroup.add(post);
+
+				const railTop = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.06, 0.05), fenceMat);
+				railTop.position.set(x + 1.4, 0.95, -6.5);
+				this.stageEnvironmentGroup.add(railTop);
+
+				const railMid = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.06, 0.05), fenceMat);
+				railMid.position.set(x + 1.4, 0.55, -6.5);
+				this.stageEnvironmentGroup.add(railMid);
+			}
+
+			// 5. Stylized Fluffy 3D Anime Clouds floating in the sunny sky
+			const cloudMat = new THREE.MeshStandardMaterial({
+				color: 0xffffff,
+				roughness: 0.95,
+				emissive: 0xf0fdf4,
+				emissiveIntensity: 0.15
+			});
+			const cloudPositions = [
+				{ x: -9, y: 11, z: -16, s: 1.6 },
+				{ x: 3, y: 13, z: -18, s: 2.1 },
+				{ x: 11, y: 10, z: -15, s: 1.5 },
+				{ x: -2, y: 9, z: -14, s: 1.2 }
+			];
+			cloudPositions.forEach(({ x, y, z, s }) => {
+				const cloud = new THREE.Group();
+				[-0.6, 0, 0.6].forEach((cx, idx) => {
+					const r = idx === 1 ? 0.75 : 0.55;
+					const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 12), cloudMat);
+					puff.position.set(cx, idx === 1 ? 0.2 : 0, 0);
+					cloud.add(puff);
+				});
+				cloud.scale.set(s, s * 0.7, s * 0.8);
+				cloud.position.set(x, y, z);
+				this.stageEnvironmentGroup.add(cloud);
+			});
+
+			// 6. Vivid Bright Sunny Sky Fog (soft sky-blue, morning radiance)
+			this.scene.fog = new THREE.FogExp2(0xe0f2fe, 0.014);
 		} else if (env === 'sunset') {
 			// Sunset Beach Horizon Stage: Warm golden sands, glistening ocean horizon, sunset sky disc
 			const sandGeo = new THREE.CircleGeometry(6, 48);
@@ -1157,6 +1570,7 @@ export class ThreeStage {
 			// Sakura Garden Shrine / Tatami Stage: Woven tatami mats, shoji panels, lanterns, falling petals
 			const tatamiGeo = new THREE.PlaneGeometry(12, 12);
 			const tatamiMat = new THREE.MeshStandardMaterial({
+				map: createTatamiTexture(),
 				color: 0xa3b18a, // traditional woven tatami rush grass
 				roughness: 0.8,
 				metalness: 0.02
@@ -1954,6 +2368,124 @@ export class ThreeStage {
 			this.armRNode.rotation.x = initArmR.x + 0.05;
 			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.y = initForeL.y + 0.15;
 			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.y = initForeR.y - 0.15;
+		} else if (this.activeFullBodyPose === 'cat-paw') {
+			// Pose Nya / Cakar Kucing: kedua tangan terangkat ke depan pipi/dada melengkung gemas
+			this.armLNode.rotation.z = initArmL.z - 0.75;
+			this.armLNode.rotation.x = initArmL.x - 0.65;
+			this.armRNode.rotation.z = initArmR.z + 0.75;
+			this.armRNode.rotation.x = initArmR.x - 0.65;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.z = initForeL.z - 1.25;
+				this.forearmLNode.rotation.x = initForeL.x + 0.35;
+			}
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 1.25;
+				this.forearmRNode.rotation.x = initForeR.x + 0.35;
+			}
+			if (this.handLNode && initHandL) {
+				this.handLNode.rotation.x = initHandL.x + 0.45 + Math.sin(time * 0.005) * 0.15;
+			}
+			if (this.handRNode && initHandR) {
+				this.handRNode.rotation.x = initHandR.x + 0.45 - Math.sin(time * 0.005) * 0.15;
+			}
+		} else if (this.activeFullBodyPose === 'sit') {
+			// Pose Duduk Santai / Seiza / Kursi Gaming: tangan rileks bertumpu di paha
+			this.armLNode.rotation.z = initArmL.z - 1.15;
+			this.armLNode.rotation.x = initArmL.x + 0.15;
+			this.armRNode.rotation.z = initArmR.z + 1.15;
+			this.armRNode.rotation.x = initArmR.x + 0.15;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.x = initForeL.x - 0.75;
+				this.forearmLNode.rotation.y = initForeL.y + 0.35;
+			}
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.x = initForeR.x - 0.75;
+				this.forearmRNode.rotation.y = initForeR.y - 0.35;
+			}
+		} else if (this.activeFullBodyPose === 'shy') {
+			// Pose Malu-malu / Tunjuk Jari: kedua telunjuk bertemu di depan dada
+			this.armLNode.rotation.z = initArmL.z - 0.6;
+			this.armLNode.rotation.x = initArmL.x - 0.5;
+			this.armLNode.rotation.y = initArmL.y + 0.35;
+			this.armRNode.rotation.z = initArmR.z + 0.6;
+			this.armRNode.rotation.x = initArmR.x - 0.5;
+			this.armRNode.rotation.y = initArmR.y - 0.35;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.z = initForeL.z - 0.95;
+				this.forearmLNode.rotation.y = initForeL.y + 0.45;
+			}
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 0.95;
+				this.forearmRNode.rotation.y = initForeR.y - 0.45;
+			}
+		} else if (this.activeFullBodyPose === 'tsundere') {
+			// Pose Tsundere / Kacak Pinggang: tangan di pinggang, siku mengembang keluar
+			this.armLNode.rotation.z = initArmL.z - 0.85;
+			this.armLNode.rotation.x = initArmL.x - 0.25;
+			this.armLNode.rotation.y = initArmL.y - 0.5;
+			this.armRNode.rotation.z = initArmR.z + 0.85;
+			this.armRNode.rotation.x = initArmR.x - 0.25;
+			this.armRNode.rotation.y = initArmR.y + 0.5;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.z = initForeL.z - 1.15;
+				this.forearmLNode.rotation.x = initForeL.x + 0.4;
+			}
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 1.15;
+				this.forearmRNode.rotation.x = initForeR.x + 0.4;
+			}
+		} else if (this.activeFullBodyPose === 'thinking') {
+			// Pose Berpikir / Topang Dagu: tangan kanan menopang dagu, tangan kiri menyangga siku kanan
+			this.armRNode.rotation.z = initArmR.z + 0.45;
+			this.armRNode.rotation.x = initArmR.x - 0.85;
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 1.35;
+				this.forearmRNode.rotation.y = initForeR.y - 0.3;
+			}
+			if (this.handRNode && initHandR) {
+				this.handRNode.rotation.x = initHandR.x - 0.3;
+			}
+			this.armLNode.rotation.z = initArmL.z - 0.65;
+			this.armLNode.rotation.x = initArmL.x - 0.35;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.z = initForeL.z - 0.75;
+				this.forearmLNode.rotation.y = initForeL.y + 0.6;
+			}
+		} else if (this.activeFullBodyPose === 'idol') {
+			// Pose Idol Sparkle: tangan kanan salute di dekat pelipis, tangan kiri terulur anggun
+			this.armRNode.rotation.z = initArmR.z + 0.35;
+			this.armRNode.rotation.x = initArmR.x - 1.05;
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 1.45;
+				this.forearmRNode.rotation.x = initForeR.x - 0.2;
+			}
+			this.armLNode.rotation.z = initArmL.z - 0.45;
+			this.armLNode.rotation.x = initArmL.x - 0.2;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.y = initForeL.y + 0.35;
+			}
+		} else if (this.activeFullBodyPose === 'bow') {
+			// Pose Membungkuk / Ojigi: kedua tangan diletakkan sopan di depan paha
+			this.armLNode.rotation.z = initArmL.z - 0.95;
+			this.armLNode.rotation.x = initArmL.x - 0.2;
+			this.armRNode.rotation.z = initArmR.z + 0.95;
+			this.armRNode.rotation.x = initArmR.x - 0.2;
+			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.y = initForeL.y + 0.45;
+			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.y = initForeR.y - 0.45;
+		} else if (this.activeFullBodyPose === 'cross-arms') {
+			// Pose Sedekap Dada / Folded Arms: kedua tangan terlipat di depan dada percaya diri
+			this.armLNode.rotation.z = initArmL.z - 0.7;
+			this.armLNode.rotation.x = initArmL.x - 0.45;
+			this.armRNode.rotation.z = initArmR.z + 0.7;
+			this.armRNode.rotation.x = initArmR.x - 0.45;
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.z = initForeL.z - 1.1;
+				this.forearmLNode.rotation.y = initForeL.y + 0.7;
+			}
+			if (this.forearmRNode && initForeR) {
+				this.forearmRNode.rotation.z = initForeR.z + 1.1;
+				this.forearmRNode.rotation.y = initForeR.y - 0.7;
+			}
 		} else {
 			// IDLE & WEBCAM REAL-TIME HAND TRACKING:
 			// Relaxed natural A-pose default: arms down by the body (NO T-POSE!)
@@ -2136,20 +2668,22 @@ export class ThreeStage {
 			// 4. Full Body Sway & Breathing Physics
 			const time = performance.now();
 			const breathOffset = Math.sin(time * 0.002) * 0.02;
+			const isBow = this.activeFullBodyPose === 'bow';
+			const isSit = this.activeFullBodyPose === 'sit';
 
 			if (this.spineNode && initSpine) {
 				this.spineNode.rotation.y = initSpine.y + yaw * 0.15;
-				this.spineNode.rotation.x = initSpine.x + breathOffset;
+				this.spineNode.rotation.x = initSpine.x + breathOffset + (isBow ? 0.42 : 0);
 				this.spineNode.rotation.z = initSpine.z - roll * 0.1;
 			}
 			if (this.torsoNode && initTorso) {
 				this.torsoNode.rotation.y = initTorso.y + yaw * 0.1;
-				this.torsoNode.rotation.x = initTorso.x + breathOffset * 1.2;
+				this.torsoNode.rotation.x = initTorso.x + breathOffset * 1.2 + (isBow ? 0.35 : 0);
 			}
 			if (this.hipsNode && initHips) {
 				const initHipsPos = this.initialPositions.get(this.hipsNode);
 				if (initHipsPos) {
-					this.hipsNode.position.y = initHipsPos.y + Math.sin(time * 0.002) * 0.004;
+					this.hipsNode.position.y = initHipsPos.y + (isSit ? -0.22 : Math.sin(time * 0.002) * 0.004);
 				}
 				this.hipsNode.rotation.y = initHips.y + Math.sin(time * 0.001) * 0.015;
 			}
@@ -2209,20 +2743,43 @@ export class ThreeStage {
 
 		const isHighFiveL = armLA > 24 || (params['ParamArmLB'] ?? 0) > 0.5;
 		const isHighFiveR = armRA > 24 || (params['ParamArmRB'] ?? 0) > 0.5;
+		const animTime = performance.now();
 
-		if (this.pawLNode) {
-			const lift = armLA / 30;
-			this.pawLNode.position.y = -0.3 + lift * 0.45;
-			this.pawLNode.position.z = 0.4 + (isHighFiveL ? 0.35 : lift * 0.15);
-			this.pawLNode.rotation.z = lift * 0.4;
-			this.pawLNode.rotation.x = isHighFiveL ? -1.1 : -lift * 0.5;
-		}
-		if (this.pawRNode) {
-			const lift = armRA / 30;
-			this.pawRNode.position.y = -0.3 + lift * 0.45;
-			this.pawRNode.position.z = 0.4 + (isHighFiveR ? 0.35 : lift * 0.15);
-			this.pawRNode.rotation.z = -lift * 0.4;
-			this.pawRNode.rotation.x = isHighFiveR ? -1.1 : -lift * 0.5;
+		if (this.pawLNode && this.pawRNode) {
+			if (this.activeFullBodyPose === 'cat-paw') {
+				// Cute animated pawing in front of chest
+				this.pawLNode.position.set(-0.32, -0.05 + Math.sin(animTime * 0.006) * 0.04, 0.55);
+				this.pawRNode.position.set(0.32, -0.05 - Math.sin(animTime * 0.006) * 0.04, 0.55);
+				this.pawLNode.rotation.set(-0.4, 0, 0.3);
+				this.pawRNode.rotation.set(-0.4, 0, -0.3);
+			} else if (this.activeFullBodyPose === 'wave') {
+				this.pawLNode.position.set(-0.36, -0.3, 0.4);
+				this.pawLNode.rotation.set(0, 0, 0);
+				this.pawRNode.position.set(0.32, 0.15, 0.5);
+				this.pawRNode.rotation.set(-0.5, 0, Math.sin(animTime * 0.008) * 0.45);
+			} else if (this.activeFullBodyPose === 'sit') {
+				this.pawLNode.position.set(-0.34, -0.45, 0.42);
+				this.pawRNode.position.set(0.34, -0.45, 0.42);
+				this.pawLNode.rotation.set(0, 0, 0);
+				this.pawRNode.rotation.set(0, 0, 0);
+			} else if (this.activeFullBodyPose === 'peace' || this.activeFullBodyPose === 'heart') {
+				this.pawLNode.position.set(-0.16, -0.05, 0.5);
+				this.pawRNode.position.set(0.16, -0.05, 0.5);
+				this.pawLNode.rotation.set(-0.3, 0, 0.4);
+				this.pawRNode.rotation.set(-0.3, 0, -0.4);
+			} else {
+				const liftL = armLA / 30;
+				this.pawLNode.position.y = -0.3 + liftL * 0.45;
+				this.pawLNode.position.z = 0.4 + (isHighFiveL ? 0.35 : liftL * 0.15);
+				this.pawLNode.rotation.z = liftL * 0.4;
+				this.pawLNode.rotation.x = isHighFiveL ? -1.1 : -liftL * 0.5;
+
+				const liftR = armRA / 30;
+				this.pawRNode.position.y = -0.3 + liftR * 0.45;
+				this.pawRNode.position.z = 0.4 + (isHighFiveR ? 0.35 : liftR * 0.15);
+				this.pawRNode.rotation.z = -liftR * 0.4;
+				this.pawRNode.rotation.x = isHighFiveR ? -1.1 : -liftR * 0.5;
+			}
 		}
 
 		if (this.tailNode) {

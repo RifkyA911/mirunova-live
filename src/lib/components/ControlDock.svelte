@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { tracker } from '#lib/core/tracker';
-	import { voice } from '#lib/core/audio';
+	import { voice, VOICE_MODELS } from '#lib/core/audio';
 	import { i18n, type Locale } from '#lib/i18n/index.svelte';
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -49,10 +49,16 @@
 		Flame,
 		Music,
 		Languages,
-		Check
+		Check,
+		Monitor,
+		Coffee,
+		Umbrella,
+		Flower2,
+		Navigation,
+		Volume2
 	} from 'lucide-svelte';
 	import { playSfx } from '#lib/core/sfx';
-	import { threeStage, type FramingMode3D, type FullBodyPose3D, type StageEnvironment3D } from '#lib/core/threeStage';
+	import { threeStage, type FramingMode3D, type FullBodyPose3D, type StageAreaWaypoint, type StageEnvironment3D } from '#lib/core/threeStage';
 	import type { AvatarFramingMode, PoseLoopMode } from '#lib/types/tracking';
 	import { UI_THEMES } from '#lib/data/themes';
 
@@ -73,10 +79,27 @@
 
 	const FULL_BODY_POSES_3D = $derived.by(() => [
 		{ id: 'idle' as FullBodyPose3D, label: i18n.t('exp_neutral_pose'), emoji: '🧍' },
+		{ id: 'cat-paw' as FullBodyPose3D, label: i18n.t('pose_cat_paw'), emoji: '🐾' },
+		{ id: 'sit' as FullBodyPose3D, label: i18n.t('pose_sit'), emoji: '🪑' },
+		{ id: 'shy' as FullBodyPose3D, label: i18n.t('pose_shy'), emoji: '👉👈' },
+		{ id: 'tsundere' as FullBodyPose3D, label: i18n.t('pose_tsundere'), emoji: '😤' },
+		{ id: 'thinking' as FullBodyPose3D, label: i18n.t('pose_thinking'), emoji: '🤔' },
+		{ id: 'idol' as FullBodyPose3D, label: i18n.t('pose_idol'), emoji: '🌟' },
+		{ id: 'bow' as FullBodyPose3D, label: i18n.t('pose_bow'), emoji: '🙇' },
+		{ id: 'cross-arms' as FullBodyPose3D, label: i18n.t('pose_cross_arms'), emoji: '🙅' },
 		{ id: 'wave' as FullBodyPose3D, label: i18n.t('motion_wave_label'), emoji: '👋' },
-		{ id: 'peace' as FullBodyPose3D, label: 'Peace ✌️', emoji: '✌️' },
-		{ id: 'heart' as FullBodyPose3D, label: 'Heart 🫶', emoji: '🫶' },
-		{ id: 'stand' as FullBodyPose3D, label: 'Formal Stand', emoji: '🚶' }
+		{ id: 'peace' as FullBodyPose3D, label: i18n.t('pose_peace'), emoji: '✌️' },
+		{ id: 'heart' as FullBodyPose3D, label: i18n.t('pose_heart'), emoji: '🫶' },
+		{ id: 'stand' as FullBodyPose3D, label: i18n.t('pose_stand'), emoji: '🚶' }
+	]);
+
+	const STAGE_WAYPOINTS = $derived.by(() => [
+		{ id: 'pc' as StageAreaWaypoint, label: i18n.t('waypoint_pc'), desc: i18n.t('waypoint_pc_desc'), emoji: '🖥️', color: 'border-blue-500/40 bg-blue-500/10 text-blue-400' },
+		{ id: 'bed' as StageAreaWaypoint, label: i18n.t('waypoint_bed'), desc: i18n.t('waypoint_bed_desc'), emoji: '🛏️', color: 'border-purple-500/40 bg-purple-500/10 text-purple-400' },
+		{ id: 'cafe-bar' as StageAreaWaypoint, label: i18n.t('waypoint_cafe_bar'), desc: i18n.t('waypoint_cafe_bar_desc'), emoji: '☕', color: 'border-amber-500/40 bg-amber-500/10 text-amber-400' },
+		{ id: 'beach-umbrella' as StageAreaWaypoint, label: i18n.t('waypoint_beach_umbrella'), desc: i18n.t('waypoint_beach_umbrella_desc'), emoji: '🏖️', color: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-400' },
+		{ id: 'meadow-flowers' as StageAreaWaypoint, label: i18n.t('waypoint_meadow_flowers'), desc: i18n.t('waypoint_meadow_flowers_desc'), emoji: '🌸', color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' },
+		{ id: 'center' as StageAreaWaypoint, label: i18n.t('waypoint_center'), desc: i18n.t('waypoint_center_desc'), emoji: '🎯', color: 'border-violet-500/40 bg-violet-500/10 text-violet-400' }
 	]);
 
 	const STAGE_ENVIRONMENTS = $derived.by(() => [
@@ -556,6 +579,60 @@
 								></div>
 							</div>
 						{/if}
+
+						<!-- Quick Mic Sidetone Monitor -->
+						<div class="pt-1.5 flex items-center justify-between border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
+							<span class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'} flex items-center gap-1.5">
+								<Volume2 class="w-3.5 h-3.5 text-cyan-400" />
+								{i18n.t('mic_monitor_quick')}
+							</span>
+							<button
+								type="button"
+								onclick={() => {
+									playSfx('toggle');
+									rigging.isMicMonitorActive = !rigging.isMicMonitorActive;
+									voice.setMonitor(rigging.isMicMonitorActive);
+									rigging.persist();
+									rigging.showToast(rigging.isMicMonitorActive ? '🔊 ' + i18n.t('mic_monitor_quick') + ' On' : '🔇 ' + i18n.t('mic_monitor_quick') + ' Off');
+								}}
+								class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold border transition-all cursor-pointer {
+									rigging.isMicMonitorActive
+										? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
+										: isLightTheme ? 'bg-zinc-100 border-zinc-200 text-zinc-600' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+								}"
+							>
+								{rigging.isMicMonitorActive ? 'ON' : 'OFF'}
+							</button>
+						</div>
+
+						<!-- Quick Voice Filter Selector -->
+						<div class="pt-1 space-y-1">
+							<label for="dock-voice-filter" class="text-[11px] {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'} flex items-center justify-between">
+								<span class="flex items-center gap-1.5">
+									<Sparkles class="w-3 h-3 text-violet-400" />
+									{i18n.t('voice_filter_label')}
+								</span>
+								<span class="text-[10px] font-mono text-violet-400 font-bold uppercase">{rigging.voiceFilter}</span>
+							</label>
+							<select
+								id="dock-voice-filter"
+								bind:value={rigging.voiceFilter}
+								onchange={(e) => {
+									const target = e.target as HTMLSelectElement;
+									rigging.voiceFilter = target.value as any;
+									voice.setFilter(rigging.voiceFilter);
+									rigging.persist();
+									rigging.showToast(`✨ Filter: ${rigging.voiceFilter}`);
+								}}
+								class="w-full border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-violet-500 cursor-pointer {
+									isLightTheme ? 'bg-zinc-50 border-zinc-300 text-zinc-900' : 'bg-zinc-900 border-zinc-800 text-zinc-200'
+								}"
+							>
+								{#each VOICE_MODELS as vm}
+									<option value={vm.id}>{vm.name} ({vm.badge})</option>
+								{/each}
+							</select>
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -973,6 +1050,16 @@
 										<div class="absolute bottom-0 inset-x-0 h-3 bg-[#c2b280] border-t border-amber-900/30"></div>
 										<Flame class="w-4 h-4 text-rose-600 relative z-10" />
 									</div>
+								{:else if stageEnv.id === 'cafe'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-[#3d281c] via-[#24160d] to-black border border-amber-600/40 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute inset-x-2 bottom-0 h-3 bg-[#4a2e1b] border-t border-amber-500/30"></div>
+										<Coffee class="w-4 h-4 text-amber-300 relative z-10" />
+									</div>
+								{:else if stageEnv.id === 'beach'}
+									<div class="w-full h-11 rounded-xl bg-gradient-to-b from-sky-400 via-cyan-300 to-amber-200 border border-cyan-400/50 mb-1.5 relative overflow-hidden flex items-center justify-center">
+										<div class="absolute bottom-0 inset-x-0 h-3 bg-[#f6d365] border-t border-amber-300/60"></div>
+										<Umbrella class="w-4 h-4 text-rose-500 relative z-10" />
+									</div>
 								{:else}
 									<div class="w-full h-11 rounded-xl bg-black border border-zinc-700/50 mb-1.5 relative overflow-hidden flex items-center justify-center">
 										<div class="absolute top-1.5 left-2 w-1 h-1 rounded-full bg-white/80"></div>
@@ -990,6 +1077,134 @@
 								<div class="text-[8px] text-zinc-400 leading-tight mt-0.5 line-clamp-2">{stageEnv.desc}</div>
 							</button>
 						{/each}
+					</div>
+
+					<!-- Stage Area Teleport Waypoints (PC, Bed, Cafe, Beach, Meadow, Center) -->
+					<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'} space-y-2">
+						<div class="flex items-center justify-between px-1 text-[11px] font-bold text-indigo-400">
+							<span class="flex items-center gap-1.5">
+								<Navigation class="w-3.5 h-3.5 text-indigo-400" />
+								{i18n.t('waypoint_section_title')}
+							</span>
+							<span class="text-[9px] text-zinc-500">{i18n.t('waypoint_section_desc')}</span>
+						</div>
+
+						<div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+							{#each STAGE_WAYPOINTS as wp}
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										threeStage.teleportToArea(wp.id);
+										rigging.activeStageWaypoint = wp.id;
+										rigging.showToast(`${wp.emoji} ${wp.label}`);
+									}}
+									class="p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95 flex items-center gap-2 {
+										rigging.activeStageWaypoint === wp.id
+											? `${wp.color} ring-1.5 ring-indigo-400 font-bold shadow-sm`
+											: isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+									}"
+								>
+									<span class="text-base shrink-0">{wp.emoji}</span>
+									<div class="min-w-0">
+										<div class="text-[11px] font-bold truncate leading-tight">{wp.label}</div>
+										<div class="text-[8px] text-zinc-400 truncate leading-tight">{wp.desc}</div>
+									</div>
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Manual Stage Movement & Area Geser Controls -->
+					<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'} flex items-center justify-between gap-3">
+						<div class="space-y-0.5">
+							<div class="text-[11px] font-bold {isLightTheme ? 'text-zinc-800' : 'text-zinc-200'}">
+								{i18n.t('stage_move_manual_title')}
+							</div>
+							<div class="text-[9px] text-zinc-500 font-mono">
+								X: {threeStage.modelOffsetX.toFixed(2)} | Z: {threeStage.modelOffsetZ.toFixed(2)}
+							</div>
+						</div>
+
+						<!-- Mini Joypad Buttons -->
+						<div class="flex items-center gap-1">
+							<button
+								type="button"
+								onclick={() => {
+									playSfx('click');
+									threeStage.moveModel(-0.3, 0);
+									rigging.showToast(`← ${i18n.t('stage_move_left')}`);
+								}}
+								class="p-1.5 rounded-lg border text-xs cursor-pointer active:scale-95 {
+									isLightTheme ? 'bg-zinc-100 border-zinc-300 hover:bg-zinc-200 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+								}"
+								title={i18n.t('stage_move_left')}
+							>
+								<ChevronLeft class="w-3.5 h-3.5" />
+							</button>
+
+							<div class="flex flex-col gap-1">
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										threeStage.moveModel(0, 0.3);
+										rigging.showToast(`↑ ${i18n.t('stage_move_forward')}`);
+									}}
+									class="p-1.5 rounded-lg border text-xs cursor-pointer active:scale-95 {
+										isLightTheme ? 'bg-zinc-100 border-zinc-300 hover:bg-zinc-200 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+									}"
+									title={i18n.t('stage_move_forward')}
+								>
+									<ChevronUp class="w-3.5 h-3.5" />
+								</button>
+								<button
+									type="button"
+									onclick={() => {
+										playSfx('click');
+										threeStage.moveModel(0, -0.3);
+										rigging.showToast(`↓ ${i18n.t('stage_move_backward')}`);
+									}}
+									class="p-1.5 rounded-lg border text-xs cursor-pointer active:scale-95 {
+										isLightTheme ? 'bg-zinc-100 border-zinc-300 hover:bg-zinc-200 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+									}"
+									title={i18n.t('stage_move_backward')}
+								>
+									<ChevronDown class="w-3.5 h-3.5" />
+								</button>
+							</div>
+
+							<button
+								type="button"
+								onclick={() => {
+									playSfx('click');
+									threeStage.moveModel(0.3, 0);
+									rigging.showToast(`→ ${i18n.t('stage_move_right')}`);
+								}}
+								class="p-1.5 rounded-lg border text-xs cursor-pointer active:scale-95 {
+									isLightTheme ? 'bg-zinc-100 border-zinc-300 hover:bg-zinc-200 text-zinc-700' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-200'
+								}"
+								title={i18n.t('stage_move_right')}
+							>
+								<ChevronRight class="w-3.5 h-3.5" />
+							</button>
+
+							<button
+								type="button"
+								onclick={() => {
+									playSfx('click');
+									threeStage.resetModelPosition();
+									rigging.activeStageWaypoint = 'center';
+									rigging.showToast(`🎯 ${i18n.t('stage_move_reset')}`);
+								}}
+								class="p-1.5 rounded-lg border text-xs cursor-pointer active:scale-95 text-indigo-400 {
+									isLightTheme ? 'bg-zinc-100 border-zinc-300 hover:bg-zinc-200' : 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800'
+								}"
+								title={i18n.t('stage_move_reset')}
+							>
+								<Crosshair class="w-3.5 h-3.5" />
+							</button>
+						</div>
 					</div>
 
 					<!-- Quick 3D Turntable Spin Toggle inside Stage Menu -->
@@ -1295,13 +1510,14 @@
 												<span>{i18n.t('poses_3d_body_title')}</span>
 												<span class="text-[9px] text-zinc-500">{i18n.t('poses_3d_body_sub')}</span>
 											</div>
-											<div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+											<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-1.5 max-h-56 overflow-y-auto p-0.5">
 												{#each FULL_BODY_POSES_3D as fbPose}
 													<button
 														type="button"
 														onclick={() => {
 															playSfx('click');
 															threeStage.setFullBodyPose(fbPose.id);
+															rigging.activeFullBodyPose = fbPose.id;
 															rigging.showToast(`Pose 3D: ${fbPose.label}`);
 															isExpressionMenuOpen = false;
 														}}

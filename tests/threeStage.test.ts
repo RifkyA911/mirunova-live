@@ -300,4 +300,111 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(skirtChild.rotation.x).toBeCloseTo(-0.1004, 4);
 		expect(skirtChild.rotation.y).toBeCloseTo(0.1745, 4);
 	});
+
+	it('should support all 13 popular full-body poses without errors or NaN values', () => {
+		const stage = new ThreeStage();
+		const popularPoses: Array<
+			| 'idle'
+			| 'wave'
+			| 'peace'
+			| 'heart'
+			| 'stand'
+			| 'cat-paw'
+			| 'sit'
+			| 'shy'
+			| 'tsundere'
+			| 'thinking'
+			| 'idol'
+			| 'bow'
+			| 'cross-arms'
+		> = [
+			'idle',
+			'wave',
+			'peace',
+			'heart',
+			'stand',
+			'cat-paw',
+			'sit',
+			'shy',
+			'tsundere',
+			'thinking',
+			'idol',
+			'bow',
+			'cross-arms'
+		];
+
+		for (const pose of popularPoses) {
+			expect(() => stage.setFullBodyPose(pose)).not.toThrow();
+			expect(stage.activeFullBodyPose).toBe(pose);
+		}
+	});
+
+	it('should teleport smoothly to stage area waypoints (PC desk, bed, cafe, beach, meadow, center)', () => {
+		const stage = new ThreeStage();
+
+		// Teleport to PC desk chair
+		stage.teleportToArea('pc');
+		expect(stage.activeStageWaypoint).toBe('pc');
+		expect(stage.modelOffsetX).toBeCloseTo(4.8, 1);
+		expect(stage.modelOffsetZ).toBeCloseTo(-3.5, 1);
+		expect(stage.cameraLookTarget.x).toBeCloseTo(4.8, 1);
+		expect(stage.cameraLookTarget.z).toBeCloseTo(-3.5, 1);
+
+		// Teleport to Cozy Bed
+		stage.teleportToArea('bed');
+		expect(stage.activeStageWaypoint).toBe('bed');
+		expect(stage.modelOffsetX).toBeCloseTo(-3.5, 1);
+		expect(stage.modelOffsetZ).toBeCloseTo(-3.0, 1);
+
+		// Teleport to Cafe Bar Counter
+		stage.teleportToArea('cafe-bar');
+		expect(stage.activeStageWaypoint).toBe('cafe-bar');
+		expect(stage.modelOffsetX).toBeCloseTo(-2.0, 1);
+		expect(stage.modelOffsetZ).toBeCloseTo(-3.2, 1);
+
+		// Teleport to Beach Umbrella
+		stage.teleportToArea('beach-umbrella');
+		expect(stage.activeStageWaypoint).toBe('beach-umbrella');
+		expect(stage.modelOffsetX).toBeCloseTo(-2.2, 1);
+		expect(stage.modelOffsetZ).toBeCloseTo(-1.0, 1);
+
+		// Teleport to Wildflower Meadow
+		stage.teleportToArea('meadow-flowers');
+		expect(stage.activeStageWaypoint).toBe('meadow-flowers');
+		expect(stage.modelOffsetX).toBeCloseTo(2.2, 1);
+		expect(stage.modelOffsetZ).toBeCloseTo(-1.5, 1);
+
+		// Teleport back to Center
+		stage.teleportToArea('center');
+		expect(stage.activeStageWaypoint).toBe('center');
+		expect(stage.modelOffsetX).toBe(0);
+		expect(stage.modelOffsetZ).toBe(0);
+		expect(stage.cameraLookTarget.x).toBe(0);
+		expect(stage.cameraLookTarget.z).toBe(0);
+	});
+
+	it('should prevent character model collision with environment props while allowing character proximity', () => {
+		const stage = new ThreeStage();
+		stage.setStageEnvironment('room');
+
+		// Attempt to walk character directly into PC desk center prop (X: 4.8, Z: -4.5)
+		const blockedInsideDesk = stage.resolvePropCollision(4.8, -4.5);
+		// Must be repelled away from desk boundaries (desk maxZ is -3.85, so with radius 0.42 z is pushed to >= -3.43)
+		expect(blockedInsideDesk.z).toBeGreaterThanOrEqual(-3.5);
+
+		// Attempt to walk character into cozy bed mattress (X: -4.0, Z: -3.5)
+		const blockedInsideBed = stage.resolvePropCollision(-4.0, -3.5);
+		// Bed maxZ is -1.0, maxX is -2.3; character must be pushed out
+		const isOutsideBed =
+			blockedInsideBed.x > -2.3 ||
+			blockedInsideBed.x < -6.2 ||
+			blockedInsideBed.z > -1.0 ||
+			blockedInsideBed.z < -6.2;
+		expect(isOutsideBed).toBe(true);
+
+		// Open floor walk without obstacles (e.g. at X: 0, Z: 0) should remain unperturbed
+		const freeMove = stage.resolvePropCollision(0, 0);
+		expect(freeMove.x).toBe(0);
+		expect(freeMove.z).toBe(0);
+	});
 });

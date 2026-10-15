@@ -1,11 +1,20 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
-	import { threeStage } from '#lib/core/threeStage';
+	import { threeStage, type StageAreaWaypoint } from '#lib/core/threeStage';
 	import { i18n } from '#lib/i18n/index.svelte';
 
 	let containerEl = $state<HTMLDivElement>();
 	let animFrameId: number | null = null;
+
+	const WAYPOINTS_HUD = [
+		{ id: 'pc' as StageAreaWaypoint, label: 'PC', emoji: '🖥️' },
+		{ id: 'bed' as StageAreaWaypoint, label: 'Bed', emoji: '🛏️' },
+		{ id: 'cafe-bar' as StageAreaWaypoint, label: 'Cafe', emoji: '☕' },
+		{ id: 'beach-umbrella' as StageAreaWaypoint, label: 'Beach', emoji: '🏖️' },
+		{ id: 'meadow-flowers' as StageAreaWaypoint, label: 'Meadow', emoji: '🌸' },
+		{ id: 'center' as StageAreaWaypoint, label: 'Center', emoji: '🎯' }
+	];
 
 	onMount(() => {
 		if (!containerEl) return;
@@ -359,6 +368,34 @@
 					<span>+45°</span>
 					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
 				</button>
+			</div>
+
+			<!-- Teleport Waypoints Quick Buttons -->
+			<div class="pt-1.5 border-t border-zinc-800 space-y-1">
+				<div class="flex items-center justify-between text-[9px] font-mono text-zinc-500">
+					<span>TELEPORT</span>
+					<span class="text-indigo-400 font-bold">{rigging.activeStageWaypoint.toUpperCase()}</span>
+				</div>
+				<div class="grid grid-cols-3 gap-1">
+					{#each WAYPOINTS_HUD as wp}
+						<button
+							type="button"
+							onclick={() => {
+								threeStage.teleportToArea(wp.id);
+								rigging.activeStageWaypoint = wp.id;
+								rigging.showToast(`${wp.emoji} ${wp.label}`);
+							}}
+							class="py-1 px-1 rounded-lg border text-[10px] font-medium flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 {
+								rigging.activeStageWaypoint === wp.id
+									? 'bg-indigo-500/25 border-indigo-400 text-indigo-300 font-bold shadow-sm'
+									: 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+							}"
+						>
+							<span>{wp.emoji}</span>
+							<span class="truncate">{wp.label}</span>
+						</button>
+					{/each}
+				</div>
 			</div>
 		</div>
 	</div>

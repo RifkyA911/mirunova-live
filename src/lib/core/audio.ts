@@ -193,13 +193,13 @@ class VoiceEngine {
 			}
 			this.sourceNode = this.audioCtx.createMediaStreamSource(this.micStream);
 
-			// DSP Node 0: Realtime Granular Pitch Shifter
+			// DSP Node 0: Realtime Granular Pitch Shifter with Linear Interpolation
 			const bufferSize = 8192;
 			const ringBuffer = new Float32Array(bufferSize);
 			let writeIdx = 0;
 			const grainSize = 1024;
-			let grainPos0 = 0;
-			let grainPos1 = 512;
+			let delay0 = 0.0;
+			let delay1 = grainSize * 0.5;
 
 			this.pitchNode = this.audioCtx.createScriptProcessor(2048, 1, 1);
 			this.pitchNode.onaudioprocess = (e) => {
@@ -207,28 +207,51 @@ class VoiceEngine {
 				const output = e.outputBuffer.getChannelData(0);
 				const pitch = this.currentPitchRatio;
 
-				if (Math.abs(pitch - 1.0) < 0.02) {
+				if (Math.abs(pitch - 1.0) < 0.015) {
 					output.set(input);
 					return;
 				}
 
+				// The delay rate of change dD/dt = 1.0 - pitch
+				// Pitch > 1 (higher frequency) => rate < 0 (delay shrinks, reading faster)
+				// Pitch < 1 (lower frequency)  => rate > 0 (delay grows, reading slower)
+				const rate = 1.0 - pitch;
+
 				for (let i = 0; i < input.length; i++) {
 					ringBuffer[writeIdx] = input[i];
+
+					delay0 += rate;
+					while (delay0 >= grainSize) delay0 -= grainSize;
+					while (delay0 < 0) delay0 += grainSize;
+
+					delay1 += rate;
+					while (delay1 >= grainSize) delay1 -= grainSize;
+					while (delay1 < 0) delay1 += grainSize;
+
+					// Smooth Hanning crossfade window
+					const w0 = 0.5 * (1.0 - Math.cos((2.0 * Math.PI * delay0) / grainSize));
+					const w1 = 0.5 * (1.0 - Math.cos((2.0 * Math.PI * delay1) / grainSize));
+
+					// Interpolated sample for tap 0
+					let readPos0 = writeIdx - delay0;
+					while (readPos0 < 0) readPos0 += bufferSize;
+					while (readPos0 >= bufferSize) readPos0 -= bufferSize;
+					const idx0A = Math.floor(readPos0);
+					const idx0B = (idx0A + 1) % bufferSize;
+					const frac0 = readPos0 - idx0A;
+					const s0 = ringBuffer[idx0A] * (1.0 - frac0) + ringBuffer[idx0B] * frac0;
+
+					// Interpolated sample for tap 1
+					let readPos1 = writeIdx - delay1;
+					while (readPos1 < 0) readPos1 += bufferSize;
+					while (readPos1 >= bufferSize) readPos1 -= bufferSize;
+					const idx1A = Math.floor(readPos1);
+					const idx1B = (idx1A + 1) % bufferSize;
+					const frac1 = readPos1 - idx1A;
+					const s1 = ringBuffer[idx1A] * (1.0 - frac1) + ringBuffer[idx1B] * frac1;
+
+					output[i] = s0 * w0 + s1 * w1;
 					writeIdx = (writeIdx + 1) % bufferSize;
-
-					grainPos0 += pitch;
-					if (grainPos0 >= grainSize) grainPos0 -= grainSize;
-
-					grainPos1 += pitch;
-					if (grainPos1 >= grainSize) grainPos1 -= grainSize;
-
-					const w0 = 0.5 * (1 - Math.cos((2 * Math.PI * grainPos0) / grainSize));
-					const w1 = 0.5 * (1 - Math.cos((2 * Math.PI * grainPos1) / grainSize));
-
-					const r0 = (writeIdx - grainSize + Math.floor(grainPos0) + bufferSize) % bufferSize;
-					const r1 = (writeIdx - grainSize + Math.floor(grainPos1) + bufferSize) % bufferSize;
-
-					output[i] = ringBuffer[r0] * w0 + ringBuffer[r1] * w1;
 				}
 			};
 
@@ -457,6 +480,7 @@ class VoiceEngine {
 				if (this.ringOsc && this.ringGain) {
 					try {
 						this.ringOsc.frequency.setValueAtTime(55, now);
+						this.ringGain.gain.setValueAtTime(0.0, now);
 						this.ringOsc.connect(this.ringGain.gain);
 					} catch {}
 				}
@@ -733,6 +757,12 @@ class VoiceEngine {
 			const previewGain = this.audioCtx.createGain();
 			previewGain.gain.value = 1.0;
 
+			let previewRingOsc: OscillatorNode | null = null;
+			let previewRingGain: GainNode | null = null;
+			let previewDist: WaveShaperNode | null = null;
+			let previewDelay: DelayNode | null = null;
+			let previewDelayGain: GainNode | null = null;
+
 			const now = this.audioCtx.currentTime;
 			switch (activeFilter) {
 				case 'anime-girl':
@@ -768,6 +798,17 @@ class VoiceEngine {
 					previewFilter2.type = 'peaking';
 					previewFilter2.frequency.setValueAtTime(2400, now);
 					previewFilter2.gain.setValueAtTime(4.0, now);
+
+					// True Sci-Fi Ring Modulator for Preview
+					previewRingOsc = this.audioCtx.createOscillator();
+					previewRingOsc.type = 'sine';
+					previewRingOsc.frequency.setValueAtTime(55, now);
+					previewRingGain = this.audioCtx.createGain();
+					previewRingGain.gain.setValueAtTime(0.0, now);
+					previewRingOsc.connect(previewRingGain.gain);
+					try {
+						previewRingOsc.start(now);
+					} catch {}
 					break;
 				case 'radio-retro':
 					previewFilter1.type = 'bandpass';
@@ -776,11 +817,24 @@ class VoiceEngine {
 					previewFilter2.type = 'peaking';
 					previewFilter2.frequency.setValueAtTime(1000, now);
 					previewFilter2.gain.setValueAtTime(5.0, now);
+
+					// Vintage Lo-Fi Saturation Distortion for Preview
+					previewDist = this.audioCtx.createWaveShaper();
+					previewDist.curve = makeDistortionCurve(22) as any;
+					previewDist.oversample = '2x';
 					break;
 				case 'echo-hall':
 					previewFilter1.type = 'lowpass';
 					previewFilter1.frequency.setValueAtTime(4500, now);
 					previewFilter2.type = 'allpass';
+
+					// Concert Reverb Delay Feedback for Preview
+					previewDelay = this.audioCtx.createDelay(1.0);
+					previewDelay.delayTime.setValueAtTime(0.22, now);
+					previewDelayGain = this.audioCtx.createGain();
+					previewDelayGain.gain.setValueAtTime(0.38, now);
+					previewDelay.connect(previewDelayGain);
+					previewDelayGain.connect(previewDelay);
 					break;
 				case 'podcast-pro':
 					previewFilter1.type = 'lowshelf';
@@ -797,9 +851,27 @@ class VoiceEngine {
 					break;
 			}
 
+			// Chain preview audio nodes
 			source.connect(previewFilter1);
 			previewFilter1.connect(previewFilter2);
-			previewFilter2.connect(previewGain);
+
+			let lastChainNode: AudioNode = previewFilter2;
+			if (previewDist) {
+				lastChainNode.connect(previewDist);
+				lastChainNode = previewDist;
+			}
+			if (previewRingGain) {
+				lastChainNode.connect(previewRingGain);
+				lastChainNode = previewRingGain;
+			}
+
+			lastChainNode.connect(previewGain);
+
+			if (previewDelay && previewDelayGain) {
+				lastChainNode.connect(previewDelay);
+				previewDelayGain.connect(previewGain);
+			}
+
 			previewGain.connect(this.audioCtx.destination);
 
 			source.onended = () => {
@@ -808,6 +880,14 @@ class VoiceEngine {
 					source.disconnect();
 					previewFilter1.disconnect();
 					previewFilter2.disconnect();
+					if (previewDist) previewDist.disconnect();
+					if (previewRingGain) previewRingGain.disconnect();
+					if (previewRingOsc) {
+						previewRingOsc.stop();
+						previewRingOsc.disconnect();
+					}
+					if (previewDelay) previewDelay.disconnect();
+					if (previewDelayGain) previewDelayGain.disconnect();
 					previewGain.disconnect();
 				} catch {}
 				if (onEnded) onEnded();
@@ -902,28 +982,36 @@ class VoiceEngine {
 						utterance.voice = chosenVoice;
 					}
 
-					// Human-sounding natural pitch & prosody presets based on filter
-					// (Avoid extreme pitch shifts like 1.35 or 0.78 that cause robotic metallic screeching)
+					// Characteristic pitch & prosody presets based on active voice filter
 					switch (activeFilter) {
 						case 'anime-girl':
-							utterance.pitch = 1.08; // Natural sweet feminine pitch without robotic distortion
-							utterance.rate = 1.02;
+							utterance.pitch = 1.32; // Sweet, bright feminine anime pitch
+							utterance.rate = 1.08;
 							break;
 						case 'ikemen':
-							utterance.pitch = 0.92; // Natural handsome masculine resonance
-							utterance.rate = 0.98;
+							utterance.pitch = 0.76; // Deep, handsome anime baritone resonance
+							utterance.rate = 0.94;
 							break;
 						case 'chipmunk':
-							utterance.pitch = 1.25;
-							utterance.rate = 1.15;
+							utterance.pitch = 1.82; // Playful helium cartoon pitch
+							utterance.rate = 1.25;
 							break;
 						case 'robot':
-							utterance.pitch = 0.95;
-							utterance.rate = 0.92;
+							utterance.pitch = 0.78; // Monotone deliberate robotic cadence
+							utterance.rate = 0.85;
+							break;
+						case 'radio-retro':
+							utterance.pitch = 1.05;
+							utterance.rate = 1.10;
+							break;
+						case 'echo-hall':
+							utterance.pitch = 1.0;
+							utterance.rate = 0.95;
 							break;
 						case 'podcast-pro':
-						case 'radio-retro':
-						case 'echo-hall':
+							utterance.pitch = 0.95;
+							utterance.rate = 0.98;
+							break;
 						case 'none':
 						default:
 							utterance.pitch = 1.0;

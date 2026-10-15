@@ -15,6 +15,7 @@ import type {
 import { MODEL_CATALOG } from '#lib/data/models';
 import { UI_THEMES } from '#lib/data/themes';
 import { i18n, type Locale } from '#lib/i18n/index.svelte';
+import type { FullBodyPose3D, StageAreaWaypoint } from '#lib/core/threeStage';
 
 export { UI_THEMES };
 
@@ -240,6 +241,8 @@ export class RiggingStore {
 	is3DAutoSpin = $state<boolean>(false);
 	customGlbUrl = $state<string | null>(null);
 	stageEnvironment = $state<'grid' | 'room' | 'cafe' | 'beach' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void'>('grid');
+	activeFullBodyPose = $state<FullBodyPose3D>('idle');
+	activeStageWaypoint = $state<StageAreaWaypoint>('center');
 
 	// Active Model Details
 	selectedModelId = $state<string>('vivian');
