@@ -9,6 +9,7 @@
 	import {
 		Camera,
 		CameraOff,
+		Loader2,
 		Crosshair,
 		Sliders,
 		Palette,
@@ -302,6 +303,7 @@
 	});
 
 	async function toggleCamera() {
+		if (rigging.isCameraLoading) return;
 		if (rigging.isCameraActive) {
 			playSfx('cameraOff');
 			tracker.stopCamera();
@@ -389,14 +391,19 @@
 		<div class="group relative flex items-center justify-center shrink-0">
 			<button
 				onclick={toggleCamera}
+				disabled={rigging.isCameraLoading}
 				class="p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all duration-150 cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
-					rigging.isCameraActive
+					rigging.isCameraLoading
+						? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-wait'
+						: rigging.isCameraActive
 						? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 shadow-md shadow-rose-500/10'
 						: 'bg-cyan-500 text-zinc-950 hover:bg-cyan-400 shadow-md shadow-cyan-500/25'
 				}"
-				aria-label={rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
+				aria-label={rigging.isCameraLoading ? i18n.t('camera_loading') : rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
 			>
-				{#if rigging.isCameraActive}
+				{#if rigging.isCameraLoading}
+					<Loader2 class="w-5 h-5 animate-spin text-amber-300" />
+				{:else if rigging.isCameraActive}
 					<CameraOff class="w-5 h-5" />
 				{:else}
 					<Camera class="w-5 h-5" />
@@ -405,7 +412,7 @@
 			<div
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
-				{rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
+				{rigging.isCameraLoading ? i18n.t('camera_loading') : rigging.isCameraActive ? i18n.t('stop_tracking') : i18n.t('start_tracking')}
 			</div>
 		</div>
 

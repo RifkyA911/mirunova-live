@@ -17,6 +17,10 @@ export function solveFaceLandmarks(
 		rightDetected: boolean;
 		armLA: number;
 		armRA: number;
+		armSpreadL?: number;
+		armSpreadR?: number;
+		handAngleL?: number;
+		handAngleR?: number;
 		gestureL?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
 		gestureR?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';
 		isHighFiveL?: boolean;
@@ -347,6 +351,10 @@ export function solveFaceLandmarks(
 		bodyAngleZ,
 		armLA,
 		armRA,
+		armSpreadL: handData?.armSpreadL ?? 0,
+		armSpreadR: handData?.armSpreadR ?? 0,
+		handAngleL: handData?.handAngleL ?? 0,
+		handAngleR: handData?.handAngleR ?? 0,
 		handLDetected: handData?.leftDetected ?? false,
 		handRDetected: handData?.rightDetected ?? false,
 		handLGesture: handData?.gestureL,

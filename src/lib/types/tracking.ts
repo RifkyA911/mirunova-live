@@ -28,6 +28,10 @@ export interface TrackingResults {
 	bodyAngleZ: number;    // -10 to 10
 	armLA: number;         // Hand/Arm Left gesture/pos (0 to 30)
 	armRA: number;         // Hand/Arm Right gesture/pos (0 to 30)
+	armSpreadL?: number;   // -1 to 1 (Arm Left horizontal spread / reach)
+	armSpreadR?: number;   // -1 to 1 (Arm Right horizontal spread / reach)
+	handAngleL?: number;   // -30 to 30 (Hand Left continuous roll angle)
+	handAngleR?: number;   // -30 to 30 (Hand Right continuous roll angle)
 	handLDetected: boolean;
 	handRDetected: boolean;
 	handLGesture?: 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none';

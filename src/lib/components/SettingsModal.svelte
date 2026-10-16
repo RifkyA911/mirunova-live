@@ -949,6 +949,117 @@
 							</div>
 						</div>
 
+						<!-- 3D Graphics Quality Preset Card -->
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
+							isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
+						}">
+							<div class="flex items-center justify-between">
+								<h3 class="text-sm font-bold flex items-center gap-2 {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
+									<Box class="w-4 h-4 text-cyan-500" />
+									<span>{i18n.t('preset_quality_3d')}</span>
+								</h3>
+								<span class="text-[10px] px-2.5 py-0.5 rounded-full font-mono uppercase font-bold {
+									rigging.renderQuality3D === 'highest'
+										? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+										: rigging.renderQuality3D === 'medium'
+										? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+										: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+								}">
+									{rigging.renderQuality3D}
+								</span>
+							</div>
+
+							<p class="text-xs leading-relaxed {isLightTheme ? 'text-zinc-600' : 'text-zinc-400'}">
+								{i18n.t('preset_quality_3d_desc')}
+							</p>
+
+							<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+								<button
+									type="button"
+									onclick={() => {
+										rigging.renderQuality3D = 'low';
+										rigging.persist();
+										threeStage.setQuality('low');
+										playSfx('click');
+										rigging.showToast('✓ ' + i18n.t('quality_low'));
+									}}
+									class="p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 {
+										rigging.renderQuality3D === 'low'
+											? isLightTheme
+												? 'bg-emerald-100 text-emerald-900 border-emerald-400 ring-2 ring-emerald-400/40 shadow-sm'
+												: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 ring-2 ring-emerald-500/30'
+											: isLightTheme
+											? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+											: 'bg-zinc-950/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+									}"
+								>
+									<div class="flex items-center justify-between">
+										<span class="font-bold text-xs">Low (Hemat Daya)</span>
+										{#if rigging.renderQuality3D === 'low'}
+											<Check class="w-3.5 h-3.5 text-emerald-500" />
+										{/if}
+									</div>
+									<span class="text-[10px] opacity-80 font-mono">0.85x scale • 30 FPS • Aniso 1x</span>
+								</button>
+
+								<button
+									type="button"
+									onclick={() => {
+										rigging.renderQuality3D = 'medium';
+										rigging.persist();
+										threeStage.setQuality('medium');
+										playSfx('click');
+										rigging.showToast('✓ ' + i18n.t('quality_medium'));
+									}}
+									class="p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 {
+										rigging.renderQuality3D === 'medium'
+											? isLightTheme
+												? 'bg-cyan-100 text-cyan-900 border-cyan-400 ring-2 ring-cyan-400/40 shadow-sm'
+												: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 ring-2 ring-cyan-500/30'
+											: isLightTheme
+											? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+											: 'bg-zinc-950/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+									}"
+								>
+									<div class="flex items-center justify-between">
+										<span class="font-bold text-xs">Medium (Standar)</span>
+										{#if rigging.renderQuality3D === 'medium'}
+											<Check class="w-3.5 h-3.5 text-cyan-500" />
+										{/if}
+									</div>
+									<span class="text-[10px] opacity-80 font-mono">1.25x scale • 60 FPS • Aniso 4x</span>
+								</button>
+
+								<button
+									type="button"
+									onclick={() => {
+										rigging.renderQuality3D = 'highest';
+										rigging.persist();
+										threeStage.setQuality('highest');
+										playSfx('click');
+										rigging.showToast('✓ ' + i18n.t('quality_highest'));
+									}}
+									class="p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 {
+										rigging.renderQuality3D === 'highest'
+											? isLightTheme
+												? 'bg-purple-100 text-purple-900 border-purple-400 ring-2 ring-purple-400/40 shadow-sm'
+												: 'bg-purple-500/20 text-purple-300 border-purple-500/50 ring-2 ring-purple-500/30'
+											: isLightTheme
+											? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+											: 'bg-zinc-950/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+									}"
+								>
+									<div class="flex items-center justify-between">
+										<span class="font-bold text-xs">Highest (Ultra HD)</span>
+										{#if rigging.renderQuality3D === 'highest'}
+											<Check class="w-3.5 h-3.5 text-purple-500" />
+										{/if}
+									</div>
+									<span class="text-[10px] opacity-80 font-mono">2.0x scale • Uncapped • Aniso 16x</span>
+								</button>
+							</div>
+						</div>
+
 						<!-- GPU Architecture & Optimization Guide (Card 2) -->
 						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme

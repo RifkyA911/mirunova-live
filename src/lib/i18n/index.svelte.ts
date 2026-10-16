@@ -32,6 +32,14 @@ export const translations = {
 		maximize: 'Maximize',
 		enable_cam: 'Enable Camera',
 		cam_instructions: 'Click the camera button to begin face tracking.',
+		camera_loading: 'Initializing Camera...',
+		camera_loading_title: 'Camera Initializing',
+		camera_loading_desc: 'Starting webcam stream and neural vision models...',
+		preset_quality_3d: '3D Graphics Quality Preset',
+		preset_quality_3d_desc: 'Adjust resolution scaling, texture filtering, and target frame rate for 3D avatars.',
+		quality_low: '3D Graphics Quality: Low (Eco / 0.85x / 30 FPS)',
+		quality_medium: '3D Graphics Quality: Medium (Balanced / 1.25x / 60 FPS)',
+		quality_highest: '3D Graphics Quality: Highest (Ultra HD / 2.0x / Uncapped)',
 
 		// OBS Screen Mode
 		obs_mode: 'OBS Screen Mode',
@@ -874,6 +882,14 @@ export const translations = {
 		maximize: 'Perbesar',
 		enable_cam: 'Aktifkan Kamera',
 		cam_instructions: 'Klik tombol kamera untuk mengaktifkan pelacak wajah.',
+		camera_loading: 'Memuat Kamera...',
+		camera_loading_title: 'Mengaktifkan Kamera...',
+		camera_loading_desc: 'Menyiapkan driver webcam dan model neural vision...',
+		preset_quality_3d: 'Preset Kualitas Grafis 3D',
+		preset_quality_3d_desc: 'Sesuaikan skala resolusi, filter tekstur, dan target FPS rendering model 3D.',
+		quality_low: 'Kualitas Grafis 3D: Low (Hemat Daya / 0.85x / 30 FPS)',
+		quality_medium: 'Kualitas Grafis 3D: Medium (Seimbang / 1.25x / 60 FPS)',
+		quality_highest: 'Kualitas Grafis 3D: Highest (Ultra HD / 2.0x / Maksimal)',
 
 		// OBS Screen Mode
 		obs_mode: 'Mode Layar OBS',
@@ -1716,6 +1732,14 @@ export const translations = {
 		maximize: '最大化',
 		enable_cam: 'カメラを有効化',
 		cam_instructions: 'カメラボタンを押して顔トラッキングを開始してください。',
+		camera_loading: 'カメラ初期化中...',
+		camera_loading_title: 'カメラ起動中',
+		camera_loading_desc: 'Webカメラストリームと認識モデルを初期化中...',
+		preset_quality_3d: '3Dグラフィックス品質プリセット',
+		preset_quality_3d_desc: '3Dアバターの解像度スケーリング、テクスチャフィルタリング、フレームレートを調整します。',
+		quality_low: '3Dグラフィックス品質: 低 (省電力 / 0.85x / 30 FPS)',
+		quality_medium: '3Dグラフィックス品質: 中 (標準 / 1.25x / 60 FPS)',
+		quality_highest: '3Dグラフィックス品質: 最高 (ウルトラHD / 2.0x / 無制限)',
 
 		// OBS Screen Mode
 		obs_mode: 'OBS配信画面モード',

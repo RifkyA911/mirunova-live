@@ -52,7 +52,9 @@ export const DEFAULT_PARAMETERS: Live2DParameterDef[] = [
 	{ id: 'ParamArmLB', label: 'Arm Left High-Five Pose', min: 0, max: 1, defaultValue: 0, group: 'hands' },
 	{ id: 'ParamArmRB', label: 'Arm Right High-Five Pose', min: 0, max: 1, defaultValue: 0, group: 'hands' },
 	{ id: 'ParamHandAngleL', label: 'Hand Left Angle (Lambaian Kiri)', min: -30, max: 30, defaultValue: 0, group: 'hands' },
-	{ id: 'ParamHandAngleR', label: 'Hand Right Angle (Lambaian Kanan)', min: -30, max: 30, defaultValue: 0, group: 'hands' }
+	{ id: 'ParamHandAngleR', label: 'Hand Right Angle (Lambaian Kanan)', min: -30, max: 30, defaultValue: 0, group: 'hands' },
+	{ id: 'ParamArmSpreadL', label: 'Arm Left Spread (Jangkauan Kiri)', min: -1, max: 1, defaultValue: 0, group: 'hands' },
+	{ id: 'ParamArmSpreadR', label: 'Arm Right Spread (Jangkauan Kanan)', min: -1, max: 1, defaultValue: 0, group: 'hands' }
 ];
 
 import { savePreferences, loadPreferences } from '#lib/core/storage';
@@ -72,6 +74,7 @@ export class RiggingStore {
 	isDockHidden = $state<boolean>(false);
 	resetTransformSignal = $state<number>(0);
 	isCameraActive = $state<boolean>(false);
+	isCameraLoading = $state<boolean>(false);
 	showCameraPip = $state<boolean>(true);
 	showLandmarksMesh = $state<boolean>(true);
 	cameraViewMode = $state<'wireframe' | 'rig' | 'raw'>('wireframe');
@@ -244,6 +247,7 @@ export class RiggingStore {
 	activeFullBodyPose = $state<FullBodyPose3D>('idle');
 	activeStageWaypoint = $state<StageAreaWaypoint>('center');
 	is3DPositionHudVisible = $state<boolean>(true);
+	renderQuality3D = $state<'low' | 'medium' | 'highest'>('medium');
 
 	// Active Model Details
 	selectedModelId = $state<string>('vivian');
@@ -395,6 +399,7 @@ export class RiggingStore {
 				locked: l.locked
 			})),
 			is3DPositionHudVisible: this.is3DPositionHudVisible,
+			renderQuality3D: this.renderQuality3D,
 			currentLocale: i18n.currentLocale
 		});
 	}
@@ -407,6 +412,7 @@ export class RiggingStore {
 		if (saved.stageEnvironment) this.stageEnvironment = saved.stageEnvironment as any;
 		if (saved.customGlbUrl !== undefined) this.customGlbUrl = saved.customGlbUrl;
 		if (saved.is3DPositionHudVisible !== undefined) this.is3DPositionHudVisible = saved.is3DPositionHudVisible;
+		if (saved.renderQuality3D) this.renderQuality3D = saved.renderQuality3D;
 
 		// Safe model verification to prevent 404 from obsolete models like momose_aria
 		if (saved.selectedModelId) {

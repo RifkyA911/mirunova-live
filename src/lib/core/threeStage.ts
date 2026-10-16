@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
+if (typeof THREE !== 'undefined' && THREE.Cache) {
+	THREE.Cache.enabled = true;
+}
+
 export type CatVariant = 'mochi' | 'kuro' | 'tora';
 export type FramingMode3D = 'full' | 'half' | 'closeup';
 export type FullBodyPose3D =
@@ -164,12 +168,82 @@ function createChalkboardTexture(): THREE.CanvasTexture {
 	return new THREE.CanvasTexture(canvas);
 }
 
+// Enable Three.js internal memory caching
+THREE.Cache.enabled = true;
+
+/**
+ * Fetch asset with persistent Browser Cache Storage ('mirunova-3d-cache-v1')
+ * Eliminates redundant network downloads across browser tabs and refreshes.
+ */
+async function fetchCachedBlob(url: string): Promise<Blob> {
+	if (typeof window !== 'undefined' && 'caches' in window) {
+		try {
+			const cache = await caches.open('mirunova-3d-cache-v1');
+			const matched = await cache.match(url);
+			if (matched) {
+				return await matched.blob();
+			}
+			const response = await fetch(url);
+			if (response.ok) {
+				cache.put(url, response.clone()).catch(() => {});
+				return await response.blob();
+			}
+		} catch (e) {
+			console.warn('[ThreeStage] CacheStorage error, fallback to direct fetch:', e);
+		}
+	}
+	const res = await fetch(url);
+	return await res.blob();
+}
+
 export class ThreeStage {
 	private scene: THREE.Scene;
 	private camera: THREE.PerspectiveCamera;
 	private renderer: THREE.WebGLRenderer | null = null;
 	private container: HTMLElement | null = null;
 	private animationFrameId: number | null = null;
+
+	// Graphics & Performance Quality Preset ('low' | 'medium' | 'highest')
+	public currentQuality: 'low' | 'medium' | 'highest' = 'medium';
+
+	public setQuality(quality: 'low' | 'medium' | 'highest') {
+		this.currentQuality = quality;
+		if (!this.renderer) return;
+
+		const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+		let ratio = 1.25;
+		let maxAniso = 4;
+		if (quality === 'low') {
+			ratio = Math.min(dpr, 0.85);
+			maxAniso = 1;
+		} else if (quality === 'medium') {
+			ratio = Math.min(dpr, 1.25);
+			maxAniso = 4;
+		} else if (quality === 'highest') {
+			ratio = Math.min(dpr, 2.0);
+			maxAniso = 16;
+		}
+
+		this.renderer.setPixelRatio(ratio);
+
+		if (this.currentModelGroup) {
+			this.currentModelGroup.traverse((child) => {
+				if ((child as any).isMesh && (child as any).material) {
+					const mats = Array.isArray((child as any).material) ? (child as any).material : [(child as any).material];
+					mats.forEach((m: any) => {
+						if (m.map) {
+							m.map.anisotropy = maxAniso;
+							m.map.needsUpdate = true;
+						}
+					});
+				}
+			});
+		}
+	}
+
+	public setRenderQuality(quality: 'low' | 'medium' | 'highest') {
+		this.setQuality(quality);
+	}
 
 	// 3D Stage Environments ('grid' | 'room' | 'field' | 'sunset' | 'studio' | 'dojo' | 'void')
 	public currentStageEnv: StageEnvironment3D = 'grid';
@@ -205,6 +279,8 @@ export class ThreeStage {
 	private handRNode: THREE.Object3D | null = null;
 	public handGestureL: string = 'none';
 	public handGestureR: string = 'none';
+	public isHandLDetected: boolean = false;
+	public isHandRDetected: boolean = false;
 	private fingerBonesL = { thumb: [] as THREE.Object3D[], index: [] as THREE.Object3D[], middle: [] as THREE.Object3D[], others: [] as THREE.Object3D[] };
 	private fingerBonesR = { thumb: [] as THREE.Object3D[], index: [] as THREE.Object3D[], middle: [] as THREE.Object3D[], others: [] as THREE.Object3D[] };
 	private upperLegLNode: THREE.Object3D | null = null;
@@ -291,10 +367,10 @@ export class ThreeStage {
 			preserveDrawingBuffer: true
 		});
 		this.renderer.setSize(width, height);
-		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 		// Use NoToneMapping so anime cel textures retain their authored, rich, vivid, saturated colors without ACES desaturation
 		this.renderer.toneMapping = THREE.NoToneMapping;
+		this.setQuality(this.currentQuality);
 		container.appendChild(this.renderer.domElement);
 
 		this.camera.aspect = width / height;
@@ -2170,8 +2246,23 @@ export class ThreeStage {
 		this.clearCurrentModel();
 		this.modelType = 'glb';
 
+		let targetUrl = url;
+		let objectUrlToRevoke: string | null = null;
+		try {
+			const blob = await fetchCachedBlob(url);
+			objectUrlToRevoke = URL.createObjectURL(blob);
+			targetUrl = objectUrlToRevoke;
+		} catch {
+			targetUrl = url;
+		}
+
 		const loader = new GLTFLoader();
-		const gltf = await loader.loadAsync(url);
+		let gltf: any;
+		try {
+			gltf = await loader.loadAsync(targetUrl);
+		} finally {
+			if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+		}
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
 			return;
@@ -2229,6 +2320,7 @@ export class ThreeStage {
 		model.rotation.y = this.modelRotationY;
 		this.scene.add(model);
 		this.setFraming(this.currentFraming);
+		this.setQuality(this.currentQuality);
 	}
 
 	// 3. Load Humanoid Neuro-sama FBX Model with 4K Textures & VRChat BlendShapes
@@ -2241,27 +2333,50 @@ export class ThreeStage {
 		const loader = new FBXLoader();
 		const texLoader = new THREE.TextureLoader();
 
-		const loadTexAsync = async (url: string) => {
+		const loadCachedTexAsync = async (url: string) => {
+			let texUrl = url;
+			let objUrl: string | null = null;
 			try {
-				const t = await texLoader.loadAsync(url);
+				const b = await fetchCachedBlob(url);
+				objUrl = URL.createObjectURL(b);
+				texUrl = objUrl;
+			} catch {}
+			try {
+				const t = await texLoader.loadAsync(texUrl);
 				t.colorSpace = THREE.SRGBColorSpace;
 				t.needsUpdate = true;
+				if (objUrl) URL.revokeObjectURL(objUrl);
 				return t;
 			} catch {
+				if (objUrl) URL.revokeObjectURL(objUrl);
 				const fallback = new THREE.Texture();
 				fallback.colorSpace = THREE.SRGBColorSpace;
 				return fallback;
 			}
 		};
 
-		const [group, texExp, texSec, texClothes, texHair, texBody] = await Promise.all([
-			loader.loadAsync('/models/neurosama/neuro-sama.fbx'),
-			loadTexAsync('/models/neurosama/textures/neuroexpresions_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/clothes_neuro_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/neuro_hair_vrc.png'),
-			loadTexAsync('/models/neurosama/textures/body_neuro_vrc.png')
-		]);
+		let fbxUrl = '/models/neurosama/neuro-sama.fbx';
+		let fbxObjUrl: string | null = null;
+		try {
+			const b = await fetchCachedBlob(fbxUrl);
+			fbxObjUrl = URL.createObjectURL(b);
+			fbxUrl = fbxObjUrl;
+		} catch {}
+
+		let group: any;
+		let texExp: any, texSec: any, texClothes: any, texHair: any, texBody: any;
+		try {
+			[group, texExp, texSec, texClothes, texHair, texBody] = await Promise.all([
+				loader.loadAsync(fbxUrl),
+				loadCachedTexAsync('/models/neurosama/textures/neuroexpresions_vrc.png'),
+				loadCachedTexAsync('/models/neurosama/textures/secondary_clothes_neuro_vrc.png'),
+				loadCachedTexAsync('/models/neurosama/textures/clothes_neuro_vrc.png'),
+				loadCachedTexAsync('/models/neurosama/textures/neuro_hair_vrc.png'),
+				loadCachedTexAsync('/models/neurosama/textures/body_neuro_vrc.png')
+			]);
+		} finally {
+			if (fbxObjUrl) URL.revokeObjectURL(fbxObjUrl);
+		}
 
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
@@ -2378,6 +2493,7 @@ export class ThreeStage {
 		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
+		this.setQuality(this.currentQuality);
 	}
 
 	// 4. Load Humanoid Manhattan Cafe Model (Uma Musume Pretty Derby) GLB with Full Rig & Expressions
@@ -2387,8 +2503,21 @@ export class ThreeStage {
 		this.clearCurrentModel();
 		this.modelType = 'glb';
 
+		let cafeUrl = '/models/manhattan-cafe/manhattan-cafe.glb';
+		let objUrl: string | null = null;
+		try {
+			const b = await fetchCachedBlob(cafeUrl);
+			objUrl = URL.createObjectURL(b);
+			cafeUrl = objUrl;
+		} catch {}
+
 		const loader = new GLTFLoader();
-		const gltf = await loader.loadAsync('/models/manhattan-cafe/manhattan-cafe.glb');
+		let gltf: any;
+		try {
+			gltf = await loader.loadAsync(cafeUrl);
+		} finally {
+			if (objUrl) URL.revokeObjectURL(objUrl);
+		}
 
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
@@ -2440,6 +2569,7 @@ export class ThreeStage {
 		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
+		this.setQuality(this.currentQuality);
 	}
 
 	// 5. Load Any External Generic FBX Model
@@ -2456,8 +2586,21 @@ export class ThreeStage {
 		this.clearCurrentModel();
 		this.modelType = 'fbx';
 
+		let targetUrl = url;
+		let objUrl: string | null = null;
+		try {
+			const b = await fetchCachedBlob(url);
+			objUrl = URL.createObjectURL(b);
+			targetUrl = objUrl;
+		} catch {}
+
 		const loader = new FBXLoader();
-		const group = await loader.loadAsync(url);
+		let group: any;
+		try {
+			group = await loader.loadAsync(targetUrl);
+		} finally {
+			if (objUrl) URL.revokeObjectURL(objUrl);
+		}
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
 			return;
@@ -2499,6 +2642,7 @@ export class ThreeStage {
 		group.rotation.y = this.modelRotationY;
 		this.scene.add(group);
 		this.setFraming(this.currentFraming);
+		this.setQuality(this.currentQuality);
 	}
 
 	private updateHumanoidArms(params: Record<string, number>, time: number) {
@@ -2717,30 +2861,37 @@ export class ThreeStage {
 			const breathSway = Math.sin(time * 0.002) * 0.025;
 			const handAngleL = params['ParamHandAngleL'] ?? 0;
 			const handAngleR = params['ParamHandAngleR'] ?? 0;
+			const armSpreadL = params['ParamArmSpreadL'] ?? 0;
+			const armSpreadR = params['ParamArmSpreadR'] ?? 0;
 
 			// LEFT ARM:
 			const liftRatioL = Math.max(0, Math.min(1.0, armLA / 28));
 			const effLiftL = isHighFiveL ? Math.max(liftRatioL, 0.95) : liftRatioL;
+			const hasHandActionL = this.isHandLDetected || this.handGestureL !== 'none' || effLiftL > 0.03 || Math.abs(armSpreadL) > 0.06 || isHighFiveL;
 
 			// RIGHT ARM:
 			const liftRatioR = Math.max(0, Math.min(1.0, armRA / 28));
 			const effLiftR = isHighFiveR ? Math.max(liftRatioR, 0.95) : liftRatioR;
+			const hasHandActionR = this.isHandRDetected || this.handGestureR !== 'none' || effLiftR > 0.03 || Math.abs(armSpreadR) > 0.06 || isHighFiveR;
 
 			if (this.modelType === 'fbx') {
 				// FBX Mixamo / Neuro-sama:
-				// In Mixamo rig with shoulder rotation:
-				// rotation.x lowers (-0.45 = naturally relaxed hanging down by hips/thighs) / lifts (+1.5 = raised high-five)
-				if (effLiftL > 0.08 || isHighFiveL) {
-					this.armLNode.rotation.x = initArmL.x - 0.45 + effLiftL * 1.5;
-					this.armLNode.rotation.y = initArmL.y;
-					this.armLNode.rotation.z = initArmL.z - effLiftL * 0.35;
+				if (hasHandActionL) {
+					// Dynamic Upper Arm forward pitch + abduction spread + natural roll
+					const baseFlexL = (this.isHandLDetected || this.handGestureL !== 'none') ? 0.35 : 0;
+					const armForwardL = -0.45 + baseFlexL * 0.4 + (effLiftL * 1.55);
+					this.armLNode.rotation.x = initArmL.x + armForwardL;
+					this.armLNode.rotation.y = initArmL.y - (armSpreadL * 0.35);
+					this.armLNode.rotation.z = initArmL.z - (effLiftL * 0.35) - (armSpreadL * 0.65);
 					if (this.forearmLNode && initForeL) {
-						this.forearmLNode.rotation.x = initForeL.x + effLiftL * 0.6;
-						this.forearmLNode.rotation.y = initForeL.y;
+						// Anatomical elbow flexion: bends up toward chest/chin as hand lifts
+						const elbowFlexL = baseFlexL + (effLiftL * 0.85) + Math.max(0, -armSpreadL * 0.35);
+						this.forearmLNode.rotation.x = initForeL.x + elbowFlexL;
+						this.forearmLNode.rotation.y = initForeL.y + (armSpreadL * 0.25);
 						this.forearmLNode.rotation.z = initForeL.z;
 					}
 				} else {
-					// Natural cute relaxed posture: arms hanging straight down naturally at sides/thighs without aiming forward
+					// Natural cute relaxed posture: arms hanging straight down naturally at sides/thighs
 					this.armLNode.rotation.x = initArmL.x - 0.45 + breathSway;
 					this.armLNode.rotation.y = initArmL.y;
 					this.armLNode.rotation.z = initArmL.z;
@@ -2749,17 +2900,22 @@ export class ThreeStage {
 					}
 				}
 
-				if (effLiftR > 0.08 || isHighFiveR) {
-					this.armRNode.rotation.x = initArmR.x - 0.45 + effLiftR * 1.5;
-					this.armRNode.rotation.y = initArmR.y;
-					this.armRNode.rotation.z = initArmR.z + effLiftR * 0.35;
+				if (hasHandActionR) {
+					// Dynamic Upper Arm forward pitch + abduction spread + natural roll
+					const baseFlexR = (this.isHandRDetected || this.handGestureR !== 'none') ? 0.35 : 0;
+					const armForwardR = -0.45 + baseFlexR * 0.4 + (effLiftR * 1.55);
+					this.armRNode.rotation.x = initArmR.x + armForwardR;
+					this.armRNode.rotation.y = initArmR.y + (armSpreadR * 0.35);
+					this.armRNode.rotation.z = initArmR.z + (effLiftR * 0.35) + (armSpreadR * 0.65);
 					if (this.forearmRNode && initForeR) {
-						this.forearmRNode.rotation.x = initForeR.x - effLiftR * 0.6;
-						this.forearmRNode.rotation.y = initForeR.y;
+						// Anatomical elbow flexion: bends up toward chest/chin as hand lifts
+						const elbowFlexR = baseFlexR + (effLiftR * 0.85) + Math.max(0, armSpreadR * 0.35);
+						this.forearmRNode.rotation.x = initForeR.x - elbowFlexR;
+						this.forearmRNode.rotation.y = initForeR.y - (armSpreadR * 0.25);
 						this.forearmRNode.rotation.z = initForeR.z;
 					}
 				} else {
-					// Natural cute relaxed posture: arms hanging straight down naturally at sides/thighs without aiming forward
+					// Natural cute relaxed posture: arms hanging straight down naturally at sides/thighs
 					this.armRNode.rotation.x = initArmR.x - 0.45 + breathSway;
 					this.armRNode.rotation.y = initArmR.y;
 					this.armRNode.rotation.z = initArmR.z;
@@ -2770,14 +2926,16 @@ export class ThreeStage {
 			} else {
 				// GLB / VRM Humanoid:
 				// rotation.z lowers (+1.18 L, -1.18 R) / lifts (-1.5 L, +1.5 R)
-				if (effLiftL > 0.08 || isHighFiveL) {
-					this.armLNode.rotation.z = initArmL.z + 1.18 - effLiftL * 1.5;
-					this.armLNode.rotation.x = initArmL.x - effLiftL * 0.35;
-					this.armLNode.rotation.y = initArmL.y;
+				if (hasHandActionL) {
+					const baseFlexL = (this.isHandLDetected || this.handGestureL !== 'none') ? 0.35 : 0;
+					this.armLNode.rotation.z = initArmL.z + 1.18 - (baseFlexL * 0.3) - (effLiftL * 1.45) - (armSpreadL * 0.7);
+					this.armLNode.rotation.x = initArmL.x - (baseFlexL * 0.4) - (effLiftL * 0.55);
+					this.armLNode.rotation.y = initArmL.y - (armSpreadL * 0.35);
 					if (this.forearmLNode && initForeL) {
-						this.forearmLNode.rotation.z = initForeL.z + effLiftL * 0.6;
-						this.forearmLNode.rotation.y = initForeL.y;
-						this.forearmLNode.rotation.x = initForeL.x;
+						const elbowFlexL = baseFlexL + (effLiftL * 0.85) + Math.max(0, -armSpreadL * 0.3);
+						this.forearmLNode.rotation.z = initForeL.z + elbowFlexL;
+						this.forearmLNode.rotation.y = initForeL.y + (armSpreadL * 0.25);
+						this.forearmLNode.rotation.x = initForeL.x - (effLiftL * 0.15);
 					}
 				} else {
 					this.armLNode.rotation.z = initArmL.z + 1.18 - breathSway;
@@ -2788,14 +2946,16 @@ export class ThreeStage {
 					}
 				}
 
-				if (effLiftR > 0.08 || isHighFiveR) {
-					this.armRNode.rotation.z = initArmR.z - 1.18 + effLiftR * 1.5;
-					this.armRNode.rotation.x = initArmR.x - effLiftR * 0.35;
-					this.armRNode.rotation.y = initArmR.y;
+				if (hasHandActionR) {
+					const baseFlexR = (this.isHandRDetected || this.handGestureR !== 'none') ? 0.35 : 0;
+					this.armRNode.rotation.z = initArmR.z - 1.18 + (baseFlexR * 0.3) + (effLiftR * 1.45) + (armSpreadR * 0.7);
+					this.armRNode.rotation.x = initArmR.x - (baseFlexR * 0.4) - (effLiftR * 0.55);
+					this.armRNode.rotation.y = initArmR.y + (armSpreadR * 0.35);
 					if (this.forearmRNode && initForeR) {
-						this.forearmRNode.rotation.z = initForeR.z - effLiftR * 0.6;
-						this.forearmRNode.rotation.y = initForeR.y;
-						this.forearmRNode.rotation.x = initForeR.x;
+						const elbowFlexR = baseFlexR + (effLiftR * 0.85) + Math.max(0, armSpreadR * 0.3);
+						this.forearmRNode.rotation.z = initForeR.z - elbowFlexR;
+						this.forearmRNode.rotation.y = initForeR.y - (armSpreadR * 0.25);
+						this.forearmRNode.rotation.x = initForeR.x - (effLiftR * 0.15);
 					}
 				} else {
 					this.armRNode.rotation.z = initArmR.z - 1.18 + breathSway;
@@ -2809,22 +2969,24 @@ export class ThreeStage {
 
 			// HAND / WRIST ROTATION & WAVING:
 			if (this.handLNode && initHandL) {
-				if (effLiftL > 0.08 || isHighFiveL) {
+				if (hasHandActionL) {
 					const waveWiggle = (isHighFiveL || this.handGestureL === 'wave') ? Math.sin(time * 0.007) * 0.35 : 0;
-					const handTrackingAngle = (handAngleL * Math.PI / 180) * 0.5;
+					const handTrackingAngle = (handAngleL * Math.PI / 180) * 0.8;
 					this.handLNode.rotation.z = initHandL.z + waveWiggle + handTrackingAngle;
-					this.handLNode.rotation.y = initHandL.y + (isHighFiveL ? 0.3 : 0);
+					this.handLNode.rotation.y = initHandL.y + (isHighFiveL ? 0.3 : armSpreadL * 0.2);
+					this.handLNode.rotation.x = initHandL.x + (isHighFiveL ? 0.2 : 0);
 				} else {
 					this.handLNode.rotation.copy(initHandL);
 				}
 			}
 
 			if (this.handRNode && initHandR) {
-				if (effLiftR > 0.08 || isHighFiveR) {
+				if (hasHandActionR) {
 					const waveWiggle = (isHighFiveR || this.handGestureR === 'wave') ? Math.sin(time * 0.007) * 0.35 : 0;
-					const handTrackingAngle = (handAngleR * Math.PI / 180) * 0.5;
+					const handTrackingAngle = (handAngleR * Math.PI / 180) * 0.8;
 					this.handRNode.rotation.z = initHandR.z - waveWiggle + handTrackingAngle;
-					this.handRNode.rotation.y = initHandR.y - (isHighFiveR ? 0.3 : 0);
+					this.handRNode.rotation.y = initHandR.y - (isHighFiveR ? 0.3 : armSpreadR * 0.2);
+					this.handRNode.rotation.x = initHandR.x + (isHighFiveR ? 0.2 : 0);
 				} else {
 					this.handRNode.rotation.copy(initHandR);
 				}

@@ -6,6 +6,7 @@
 	import {
 		Camera,
 		CameraOff,
+		Loader2,
 		Eye,
 		EyeOff,
 		Minimize2,
@@ -60,6 +61,7 @@
 	});
 
 	async function toggleCamera() {
+		if (rigging.isCameraLoading) return;
 		if (rigging.isCameraActive) {
 			tracker.stopCamera();
 		} else {
@@ -270,15 +272,27 @@
 					class="absolute inset-0 w-full h-full -scale-x-100 {rigging.isCameraActive ? 'block' : 'hidden'}"
 				></canvas>
 
-				{#if !rigging.isCameraActive}
+				{#if rigging.isCameraLoading}
+					<div class="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center gap-2 text-cyan-400 p-4 text-center z-20">
+						<Loader2 class="w-7 h-7 animate-spin text-cyan-400" />
+						<span class="text-xs font-bold tracking-wide text-zinc-100">{i18n.t('camera_loading_title')}</span>
+						<p class="text-[11px] text-zinc-400 max-w-[220px]">{i18n.t('camera_loading_desc')}</p>
+					</div>
+				{:else if !rigging.isCameraActive}
 					<div class="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center gap-2 text-zinc-500 p-4 text-center z-10">
 						<CameraOff class="w-6 h-6 stroke-1 text-zinc-400" />
 						<p class="text-[11px] leading-tight">{i18n.t('cam_instructions')}</p>
 						<button
 							onclick={toggleCamera}
-							class="mt-1 px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+							disabled={rigging.isCameraLoading}
+							class="mt-1 px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-wait text-zinc-950 font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
 						>
-							{i18n.t('enable_cam')}
+							{#if rigging.isCameraLoading}
+								<Loader2 class="w-3.5 h-3.5 animate-spin" />
+								<span>{i18n.t('camera_loading')}</span>
+							{:else}
+								<span>{i18n.t('enable_cam')}</span>
+							{/if}
 						</button>
 					</div>
 				{/if}

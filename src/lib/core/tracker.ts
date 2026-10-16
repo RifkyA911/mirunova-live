@@ -30,6 +30,10 @@ export class FaceTracker {
 		rightDetected: false,
 		armLA: 0,
 		armRA: 0,
+		armSpreadL: 0,
+		armSpreadR: 0,
+		handAngleL: 0,
+		handAngleR: 0,
 		gestureL: 'none' as 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none',
 		gestureR: 'none' as 'high_five' | 'wave' | 'open' | 'fist' | 'peace' | 'none',
 		isHighFiveL: false,
@@ -146,7 +150,9 @@ export class FaceTracker {
 		previewVideoEl?: HTMLVideoElement | null,
 		canvasEl?: HTMLCanvasElement | null
 	): Promise<void> {
-		this.previewVideo = previewVideoEl || null;
+		rigging.isCameraLoading = true;
+		try {
+			this.previewVideo = previewVideoEl || null;
 
 		// Only store canvasOverlay if it supports 2D context (avoid passing WebGL stage canvas)
 		if (canvasEl) {
@@ -394,6 +400,9 @@ export class FaceTracker {
 		rigging.isCameraActive = true;
 		this.lastVideoTime = -1;
 		this.processLoop();
+		} finally {
+			rigging.isCameraLoading = false;
+		}
 	}
 
 	setPreviewElements(previewVideoEl?: HTMLVideoElement | null, canvasEl?: HTMLCanvasElement | null) {
@@ -573,6 +582,10 @@ export class FaceTracker {
 								handData.rightDetected = false;
 								handData.armLA = 0;
 								handData.armRA = 0;
+								handData.armSpreadL = 0;
+								handData.armSpreadR = 0;
+								handData.handAngleL = 0;
+								handData.handAngleR = 0;
 								handData.gestureL = 'none';
 								handData.gestureR = 'none';
 								handData.isHighFiveL = false;
@@ -593,6 +606,19 @@ export class FaceTracker {
 									// Elevation calculation: 0 = top of screen, 1 = bottom
 									const elevation = Math.max(0, Math.min(1, (0.75 - handY) / 0.5));
 									let armAngle = elevation * 30;
+
+									// Continuous wrist roll: calculate angle vector from wrist to middle fingertip
+									const dx = middleTip.x - wrist.x;
+									const dy = middleTip.y - wrist.y;
+									// In screen space (y down), -dy points upward. Math.atan2(dx, -dy) is 0 when upright.
+									const rawAngleDeg = Math.atan2(dx, -dy) * (180 / Math.PI);
+									const continuousRoll = Math.max(-30, Math.min(30, rawAngleDeg));
+
+									// Continuous Arm Spread / Reach (horizontal abduction):
+									// Normal resting x is ~0.4; reaching out moves x towards 0.15.
+									const armSpread = isScreenRight
+										? Math.max(-1, Math.min(1, (0.38 - wrist.x) / 0.22))
+										: Math.max(-1, Math.min(1, (wrist.x - 0.62) / 0.22));
 
 									// Finger extension Euclidean distance checks
 									const dist = (p1: { x: number; y: number }, p2: { x: number; y: number }) =>
@@ -627,6 +653,8 @@ export class FaceTracker {
 									if (isScreenRight) {
 										handData.leftDetected = true;
 										handData.armLA = armAngle;
+										handData.armSpreadL = armSpread;
+										handData.handAngleL = -continuousRoll;
 										handData.gestureL = gesture;
 										handData.isHighFiveL = isHighFive;
 										rigging.isHandLDetected = true;
@@ -634,6 +662,8 @@ export class FaceTracker {
 									} else {
 										handData.rightDetected = true;
 										handData.armRA = armAngle;
+										handData.armSpreadR = armSpread;
+										handData.handAngleR = continuousRoll;
 										handData.gestureR = gesture;
 										handData.isHighFiveR = isHighFive;
 										rigging.isHandRDetected = true;
@@ -659,6 +689,10 @@ export class FaceTracker {
 					handData.rightDetected = false;
 					handData.armLA = 0;
 					handData.armRA = 0;
+					handData.armSpreadL = 0;
+					handData.armSpreadR = 0;
+					handData.handAngleL = 0;
+					handData.handAngleR = 0;
 					handData.gestureL = 'none';
 					handData.gestureR = 'none';
 					rigging.isHandLDetected = false;
@@ -749,12 +783,16 @@ export class FaceTracker {
 					rigging.setLiveValue('ParamBodyAngleX', globalSmoother.smooth('ParamBodyAngleX', solved.bodyAngleX, 'angle'));
 					rigging.setLiveValue('ParamBodyAngleY', globalSmoother.smooth('ParamBodyAngleY', solved.bodyAngleY, 'angle'));
 					rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.smooth('ParamBodyAngleZ', solved.bodyAngleZ, 'angle'));
+					const effHandAngleL = solved.isHighFiveL ? 15 : (solved.handAngleL ?? 0);
+					const effHandAngleR = solved.isHighFiveR ? 15 : (solved.handAngleR ?? 0);
 					rigging.setLiveValue('ParamArmLA', globalSmoother.smooth('ParamArmLA', solved.armLA, 'generic'));
 					rigging.setLiveValue('ParamArmRA', globalSmoother.smooth('ParamArmRA', solved.armRA, 'generic'));
+					rigging.setLiveValue('ParamArmSpreadL', globalSmoother.smooth('ParamArmSpreadL', solved.armSpreadL ?? 0, 'generic'));
+					rigging.setLiveValue('ParamArmSpreadR', globalSmoother.smooth('ParamArmSpreadR', solved.armSpreadR ?? 0, 'generic'));
 					rigging.setLiveValue('ParamArmLB', solved.isHighFiveL ? 1 : 0);
 					rigging.setLiveValue('ParamArmRB', solved.isHighFiveR ? 1 : 0);
-					rigging.setLiveValue('ParamHandAngleL', solved.isHighFiveL ? 15 : 0);
-					rigging.setLiveValue('ParamHandAngleR', solved.isHighFiveR ? 15 : 0);
+					rigging.setLiveValue('ParamHandAngleL', globalSmoother.smooth('ParamHandAngleL', effHandAngleL, 'generic'));
+					rigging.setLiveValue('ParamHandAngleR', globalSmoother.smooth('ParamHandAngleR', effHandAngleR, 'generic'));
 
 					// Draw wireframe overlay only if PIP is visible and NO blocking modal is active
 					const isModalOpen = rigging.isSettingsModalOpen || rigging.isModelModalOpen || rigging.isThemeModalOpen || rigging.isObsModalOpen || rigging.isShortcutModalOpen;
@@ -782,6 +820,12 @@ export class FaceTracker {
 							rigging.setLiveValue('ParamBodyAngleX', globalSmoother.decayTowards('ParamBodyAngleX', 0, decay));
 							rigging.setLiveValue('ParamBodyAngleY', globalSmoother.decayTowards('ParamBodyAngleY', 0, decay));
 							rigging.setLiveValue('ParamBodyAngleZ', globalSmoother.decayTowards('ParamBodyAngleZ', 0, decay));
+							rigging.setLiveValue('ParamArmLA', globalSmoother.decayTowards('ParamArmLA', 0, decay));
+							rigging.setLiveValue('ParamArmRA', globalSmoother.decayTowards('ParamArmRA', 0, decay));
+							rigging.setLiveValue('ParamArmSpreadL', globalSmoother.decayTowards('ParamArmSpreadL', 0, decay));
+							rigging.setLiveValue('ParamArmSpreadR', globalSmoother.decayTowards('ParamArmSpreadR', 0, decay));
+							rigging.setLiveValue('ParamHandAngleL', globalSmoother.decayTowards('ParamHandAngleL', 0, decay));
+							rigging.setLiveValue('ParamHandAngleR', globalSmoother.decayTowards('ParamHandAngleR', 0, decay));
 						}
 					}
 

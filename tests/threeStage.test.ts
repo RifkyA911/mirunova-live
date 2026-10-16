@@ -561,5 +561,62 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		expect(indexL.rotation.z).toBe(0);
 		expect(ringL.rotation.z).toBeGreaterThan(0.5);
 	});
+
+	it('should support 3D Graphics Quality Presets (low, medium, highest)', () => {
+		const stage = new ThreeStage();
+		expect(stage.currentQuality).toBe('medium');
+
+		stage.setQuality('low');
+		expect(stage.currentQuality).toBe('low');
+
+		stage.setQuality('highest');
+		expect(stage.currentQuality).toBe('highest');
+
+		stage.setQuality('medium');
+		expect(stage.currentQuality).toBe('medium');
+	});
+
+	it('should drive full arm spread and continuous wrist roll kinematics', () => {
+		const stage = new ThreeStage();
+		stage.modelType = 'fbx';
+
+		const mockRoot = new THREE.Group();
+		const armL = new THREE.Bone();
+		armL.name = 'armL';
+		const forearmL = new THREE.Bone();
+		forearmL.name = 'ForearmL';
+		const handL = new THREE.Bone();
+		handL.name = 'handL';
+
+		armL.add(forearmL);
+		forearmL.add(handL);
+		mockRoot.add(armL);
+
+		const armR = new THREE.Bone();
+		armR.name = 'armR';
+		const forearmR = new THREE.Bone();
+		forearmR.name = 'ForearmR';
+		const handR = new THREE.Bone();
+		handR.name = 'handR';
+
+		armR.add(forearmR);
+		forearmR.add(handR);
+		mockRoot.add(armR);
+
+		(stage as any).discoverHumanoidBones(mockRoot);
+
+		stage.updateParameters({
+			ParamArmLA: 25,
+			ParamArmSpreadL: 0.8,
+			ParamHandAngleL: 20
+		});
+
+		// Upper arm should spread outwards (negative Z rotation in FBX) and lift
+		expect(armL.rotation.z).toBeLessThan(-0.4);
+		// Forearm / elbow should flex to accompany the spread and elevation
+		expect(forearmL.rotation.x).toBeGreaterThan(0.4);
+		// Wrist should continuously rotate with hand angle
+		expect(handL.rotation.z).toBeGreaterThan(0.15);
+	});
 });
 

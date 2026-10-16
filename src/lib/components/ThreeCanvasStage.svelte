@@ -47,6 +47,8 @@
 			}
 			threeStage.handGestureL = rigging.handLGesture;
 			threeStage.handGestureR = rigging.handRGesture;
+			threeStage.isHandLDetected = rigging.isHandLDetected;
+			threeStage.isHandRDetected = rigging.isHandRDetected;
 			threeStage.updateParameters(activeParamsBuffer);
 			animFrameId = requestAnimationFrame(loop);
 		};
@@ -96,6 +98,14 @@
 		threeStage.poseLoopSpeed = rigging.poseLoopSpeed;
 	});
 
+	// Sync 3D Graphics Quality Preset with threeStage
+	$effect(() => {
+		const quality = rigging.renderQuality3D;
+		if (quality) {
+			threeStage.setQuality(quality);
+		}
+	});
+
 	let lastScreenshotSignal = 0;
 	$effect(() => {
 		const signal = rigging.screenshotSignal;
@@ -125,7 +135,9 @@
 	}
 
 	async function loadActive3DModel() {
-		rigging.isLoadingModel = true;
+		const bannerTimer = setTimeout(() => {
+			rigging.isLoadingModel = true;
+		}, 180);
 		const id = rigging.selected3DModelId;
 
 		try {
@@ -185,6 +197,7 @@
 			console.error('Failed to load 3D model:', err);
 			rigging.showToast(i18n.t('model_process_error'));
 		} finally {
+			clearTimeout(bannerTimer);
 			rigging.isLoadingModel = false;
 		}
 	}
