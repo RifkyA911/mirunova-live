@@ -203,6 +203,12 @@ export class ThreeStage {
 	private forearmRNode: THREE.Object3D | null = null;
 	private handLNode: THREE.Object3D | null = null;
 	private handRNode: THREE.Object3D | null = null;
+	private upperLegLNode: THREE.Object3D | null = null;
+	private upperLegRNode: THREE.Object3D | null = null;
+	private lowerLegLNode: THREE.Object3D | null = null;
+	private lowerLegRNode: THREE.Object3D | null = null;
+	public poseLoopMode: string = 'idle-breath';
+	public poseLoopSpeed: number = 1.0;
 	private hairBones: THREE.Object3D[] = [];
 	private skirtBones: THREE.Object3D[] = [];
 	private initialRotations: Map<THREE.Object3D, THREE.Euler> = new Map();
@@ -2116,6 +2122,10 @@ export class ThreeStage {
 		this.forearmRNode = findBone(['J_Bip_R_LowerArm', 'ForearmR', 'mixamorig:RightForeArm', 'rightforearm']);
 		this.handLNode = findBone(['J_Bip_L_Hand', 'handL', 'mixamorig:LeftHand', 'lefthand']);
 		this.handRNode = findBone(['J_Bip_R_Hand', 'handR', 'mixamorig:RightHand', 'righthand']);
+		this.upperLegLNode = findBone(['J_Bip_L_UpperLeg', 'mixamorig:LeftUpLeg', 'upper_leg.l', 'thigh.l', 'thigh_l', 'leg_l']);
+		this.upperLegRNode = findBone(['J_Bip_R_UpperLeg', 'mixamorig:RightUpLeg', 'upper_leg.r', 'thigh.r', 'thigh_r', 'leg_r']);
+		this.lowerLegLNode = findBone(['J_Bip_L_LowerLeg', 'mixamorig:LeftLeg', 'lower_leg.l', 'calf.l', 'shin.l', 'knee_l']);
+		this.lowerLegRNode = findBone(['J_Bip_R_LowerLeg', 'mixamorig:RightLeg', 'lower_leg.r', 'calf.r', 'shin.r', 'knee_r']);
 
 		this.hairBones = [];
 		this.skirtBones = [];
@@ -2450,7 +2460,6 @@ export class ThreeStage {
 			this.modelBasePosition.z + this.modelOffsetZ
 		);
 
-		this.initialRotations.clear();
 		group.traverse((child) => {
 			if ((child as any).isMesh) {
 				const mesh = child as THREE.SkinnedMesh;
@@ -2459,15 +2468,8 @@ export class ThreeStage {
 					this.morphDict = mesh.morphTargetDictionary;
 				}
 			}
-			if ((child as any).isBone) {
-				const name = child.name.toLowerCase();
-				if (name.includes('head') && !this.headNode) this.headNode = child;
-				if (name.includes('neck') && !this.neckNode) this.neckNode = child;
-				if (name.includes('hips') && !this.hipsNode) this.hipsNode = child;
-				this.initialRotations.set(child, child.rotation.clone());
-				this.initialPositions.set(child, child.position.clone());
-			}
 		});
+		this.discoverHumanoidBones(group);
 
 		if (token !== this.activeLoadToken) {
 			this.hideLoadingSkeleton();
@@ -2495,7 +2497,8 @@ export class ThreeStage {
 		const isHighFiveL = (params['ParamArmLB'] ?? 0) > 0.5 || armLA > 25;
 		const isHighFiveR = (params['ParamArmRB'] ?? 0) > 0.5 || armRA > 25;
 
-		if (this.activeFullBodyPose === 'wave') {
+		const isWavingArm = this.activeFullBodyPose === 'wave' || this.poseLoopMode === 'wave';
+		if (isWavingArm) {
 			// Melambaikan tangan kanan
 			this.armRNode.rotation.z = initArmR.z + 0.25;
 			this.armRNode.rotation.x = initArmR.x - 0.7;
@@ -2866,25 +2869,64 @@ export class ThreeStage {
 
 			// 4. Full Body Sway & Breathing Physics
 			const time = performance.now();
-			const breathOffset = Math.sin(time * 0.002) * 0.02;
+			const loopSpeed = this.poseLoopSpeed || 1.0;
+			const isLoopSway = this.poseLoopMode === 'gentle-sway';
+			const isLoopNod = this.poseLoopMode === 'head-nod';
+			const loopSwayOffset = isLoopSway ? Math.sin(time * 0.0018 * loopSpeed) * 0.08 : 0;
+			const loopNodOffset = isLoopNod ? Math.sin(time * 0.004 * loopSpeed) * 0.1 : 0;
+			const breathOffset = Math.sin(time * 0.002 * loopSpeed) * 0.02;
 			const isBow = this.activeFullBodyPose === 'bow';
 			const isSit = this.activeFullBodyPose === 'sit';
+
+			if (this.headNode && initHead && isLoopNod) {
+				this.headNode.rotation.x += loopNodOffset;
+			}
 
 			if (this.spineNode && initSpine) {
 				this.spineNode.rotation.y = initSpine.y + yaw * 0.15;
 				this.spineNode.rotation.x = initSpine.x + breathOffset + (isBow ? 0.42 : 0);
-				this.spineNode.rotation.z = initSpine.z - roll * 0.1;
+				this.spineNode.rotation.z = initSpine.z - roll * 0.1 + loopSwayOffset;
 			}
 			if (this.torsoNode && initTorso) {
 				this.torsoNode.rotation.y = initTorso.y + yaw * 0.1;
 				this.torsoNode.rotation.x = initTorso.x + breathOffset * 1.2 + (isBow ? 0.35 : 0);
+				this.torsoNode.rotation.z = initTorso.z + loopSwayOffset * 0.5;
 			}
 			if (this.hipsNode && initHips) {
 				const initHipsPos = this.initialPositions.get(this.hipsNode);
 				if (initHipsPos) {
-					this.hipsNode.position.y = initHipsPos.y + (isSit ? -0.22 : Math.sin(time * 0.002) * 0.004);
+					this.hipsNode.position.y = initHipsPos.y + (isSit ? -0.32 : Math.sin(time * 0.002 * loopSpeed) * 0.004);
 				}
-				this.hipsNode.rotation.y = initHips.y + Math.sin(time * 0.001) * 0.015;
+				this.hipsNode.rotation.y = initHips.y + Math.sin(time * 0.001 * loopSpeed) * 0.015;
+				this.hipsNode.rotation.z = initHips.z + loopSwayOffset * 0.7;
+			}
+
+			// Leg Bending when Sitting (Sit Pose)
+			if (this.upperLegLNode && this.upperLegRNode) {
+				const initLegL = this.initialRotations.get(this.upperLegLNode);
+				const initLegR = this.initialRotations.get(this.upperLegRNode);
+				if (initLegL && initLegR) {
+					if (isSit) {
+						this.upperLegLNode.rotation.x = initLegL.x - 1.45;
+						this.upperLegRNode.rotation.x = initLegR.x - 1.45;
+					} else {
+						this.upperLegLNode.rotation.copy(initLegL);
+						this.upperLegRNode.rotation.copy(initLegR);
+					}
+				}
+			}
+			if (this.lowerLegLNode && this.lowerLegRNode) {
+				const initKneeL = this.initialRotations.get(this.lowerLegLNode);
+				const initKneeR = this.initialRotations.get(this.lowerLegRNode);
+				if (initKneeL && initKneeR) {
+					if (isSit) {
+						this.lowerLegLNode.rotation.x = initKneeL.x + 1.45;
+						this.lowerLegRNode.rotation.x = initKneeR.x + 1.45;
+					} else {
+						this.lowerLegLNode.rotation.copy(initKneeL);
+						this.lowerLegRNode.rotation.copy(initKneeR);
+					}
+				}
 			}
 
 			// 5. Humanoid Arms (Gestures & Idle)
@@ -2945,13 +2987,14 @@ export class ThreeStage {
 		const animTime = performance.now();
 
 		if (this.pawLNode && this.pawRNode) {
+			const isWavingCat = this.activeFullBodyPose === 'wave' || this.poseLoopMode === 'wave';
 			if (this.activeFullBodyPose === 'cat-paw') {
 				// Cute animated pawing in front of chest
 				this.pawLNode.position.set(-0.32, -0.05 + Math.sin(animTime * 0.006) * 0.04, 0.55);
 				this.pawRNode.position.set(0.32, -0.05 - Math.sin(animTime * 0.006) * 0.04, 0.55);
 				this.pawLNode.rotation.set(-0.4, 0, 0.3);
 				this.pawRNode.rotation.set(-0.4, 0, -0.3);
-			} else if (this.activeFullBodyPose === 'wave') {
+			} else if (isWavingCat) {
 				this.pawLNode.position.set(-0.36, -0.3, 0.4);
 				this.pawLNode.rotation.set(0, 0, 0);
 				this.pawRNode.position.set(0.32, 0.15, 0.5);
@@ -2966,6 +3009,41 @@ export class ThreeStage {
 				this.pawRNode.position.set(0.16, -0.05, 0.5);
 				this.pawLNode.rotation.set(-0.3, 0, 0.4);
 				this.pawRNode.rotation.set(-0.3, 0, -0.4);
+			} else if (this.activeFullBodyPose === 'shy') {
+				this.pawLNode.position.set(-0.12, -0.05, 0.52);
+				this.pawRNode.position.set(0.12, -0.05, 0.52);
+				this.pawLNode.rotation.set(-0.2, 0, 0.2);
+				this.pawRNode.rotation.set(-0.2, 0, -0.2);
+			} else if (this.activeFullBodyPose === 'tsundere') {
+				this.pawLNode.position.set(-0.45, -0.22, 0.35);
+				this.pawRNode.position.set(0.45, -0.22, 0.35);
+				this.pawLNode.rotation.set(-0.1, 0, -0.4);
+				this.pawRNode.rotation.set(-0.1, 0, 0.4);
+			} else if (this.activeFullBodyPose === 'thinking') {
+				this.pawRNode.position.set(0.2, 0.08, 0.52);
+				this.pawRNode.rotation.set(-0.5, 0, -0.3);
+				this.pawLNode.position.set(-0.15, -0.25, 0.45);
+				this.pawLNode.rotation.set(0, 0, 0.2);
+			} else if (this.activeFullBodyPose === 'idol') {
+				this.pawRNode.position.set(0.35, 0.25, 0.45);
+				this.pawRNode.rotation.set(-0.4, 0, 0.4);
+				this.pawLNode.position.set(-0.35, -0.15, 0.45);
+				this.pawLNode.rotation.set(0.2, 0, -0.3);
+			} else if (this.activeFullBodyPose === 'bow') {
+				this.pawLNode.position.set(-0.16, -0.4, 0.5);
+				this.pawRNode.position.set(0.16, -0.4, 0.5);
+				this.pawLNode.rotation.set(0.3, 0, 0);
+				this.pawRNode.rotation.set(0.3, 0, 0);
+			} else if (this.activeFullBodyPose === 'cross-arms') {
+				this.pawLNode.position.set(-0.08, -0.15, 0.5);
+				this.pawRNode.position.set(0.08, -0.15, 0.5);
+				this.pawLNode.rotation.set(-0.2, 0, 0.5);
+				this.pawRNode.rotation.set(-0.2, 0, -0.5);
+			} else if (this.activeFullBodyPose === 'stand') {
+				this.pawLNode.position.set(-0.36, -0.42, 0.38);
+				this.pawRNode.position.set(0.36, -0.42, 0.38);
+				this.pawLNode.rotation.set(0, 0, 0);
+				this.pawRNode.rotation.set(0, 0, 0);
 			} else {
 				const liftL = armLA / 30;
 				this.pawLNode.position.y = -0.3 + liftL * 0.45;

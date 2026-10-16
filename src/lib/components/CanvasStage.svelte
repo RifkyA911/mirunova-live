@@ -556,6 +556,123 @@
 						} catch {}
 					};
 
+					// 1. Calculate Pose Loop Offsets
+					let loopBreath = 0;
+					let loopBodyZ = 0;
+					let loopHeadY = 0;
+					let loopArmRA = 0;
+
+					if (rigging.poseLoopMode !== 'none') {
+						const speed = rigging.poseLoopSpeed;
+						loopBreath = (Math.sin(now * 0.003 * speed) + 1) / 2;
+						if (rigging.poseLoopMode === 'gentle-sway') {
+							loopBodyZ = Math.sin(now * 0.0018 * speed) * 5.0;
+						} else if (rigging.poseLoopMode === 'head-nod') {
+							loopHeadY = Math.sin(now * 0.004 * speed) * 6.0;
+						} else if (rigging.poseLoopMode === 'wave') {
+							loopArmRA = 20 + Math.sin(now * 0.007 * speed) * 6.0;
+							loopBodyZ = Math.sin(now * 0.0025 * speed) * 3.0;
+						}
+					}
+
+					// 2. Calculate Full-Body Pose Offsets
+					let poseAngleX = 0;
+					let poseAngleY = 0;
+					let poseAngleZ = 0;
+					let poseBodyX = 0;
+					let poseBodyY = 0;
+					let poseBodyZ = 0;
+					let poseArmLA = 0;
+					let poseArmRA = 0;
+					let poseHandL = 0;
+					let poseHandR = 0;
+					let poseCheek = 0;
+					let poseEyeSmile = 0;
+					let poseEyeOpen = 0;
+					let poseBrowLAngle = 0;
+					let poseBrowRAngle = 0;
+
+					const activePose = rigging.activeFullBodyPose;
+					if (activePose === 'cat-paw') {
+						poseArmLA = 18;
+						poseArmRA = 18;
+						poseHandL = -0.5;
+						poseHandR = 0.5;
+						poseAngleZ = 4;
+						poseCheek = 0.4;
+						poseEyeSmile = 0.5;
+					} else if (activePose === 'wave') {
+						poseArmRA = 24 + Math.sin(now * 0.007) * 5;
+						poseHandR = Math.sin(now * 0.009) * 0.7;
+						poseAngleZ = -4;
+						poseBodyZ = -3;
+						poseEyeSmile = 0.4;
+					} else if (activePose === 'peace') {
+						poseArmRA = 22;
+						poseHandR = 0.35;
+						poseAngleZ = 6;
+						poseEyeSmile = 0.6;
+						poseCheek = 0.35;
+					} else if (activePose === 'heart') {
+						poseArmLA = 16;
+						poseArmRA = 16;
+						poseBodyX = 4;
+						poseAngleZ = 2;
+						poseCheek = 0.6;
+						poseEyeSmile = 0.5;
+					} else if (activePose === 'shy') {
+						poseAngleX = -3;
+						poseAngleY = -8;
+						poseAngleZ = -5;
+						poseBodyX = -4;
+						poseBodyY = -5;
+						poseCheek = 0.8;
+						poseBrowLAngle = 0.4;
+						poseBrowRAngle = -0.4;
+						poseArmLA = 12;
+						poseArmRA = 12;
+					} else if (activePose === 'tsundere') {
+						poseAngleX = 10;
+						poseAngleY = 6;
+						poseAngleZ = -6;
+						poseBodyX = 8;
+						poseBodyZ = -5;
+						poseCheek = 0.5;
+						poseArmLA = 8;
+						poseArmRA = 8;
+					} else if (activePose === 'thinking') {
+						poseAngleX = -5;
+						poseAngleY = 8;
+						poseAngleZ = 7;
+						poseArmRA = 16;
+						poseArmLA = 5;
+						poseEyeSmile = 0.2;
+					} else if (activePose === 'idol') {
+						poseAngleZ = -8;
+						poseAngleY = 3;
+						poseBodyZ = 6;
+						poseArmRA = 22;
+						poseArmLA = 6;
+						poseEyeSmile = 0.8;
+						poseCheek = 0.5;
+					} else if (activePose === 'bow') {
+						poseAngleY = -22;
+						poseBodyY = -18;
+						poseEyeOpen = -1;
+						poseArmLA = 0;
+						poseArmRA = 0;
+					} else if (activePose === 'cross-arms') {
+						poseAngleY = 4;
+						poseBodyY = 3;
+						poseArmLA = 14;
+						poseArmRA = 14;
+					} else if (activePose === 'sit') {
+						poseBodyY = -6;
+						poseAngleY = -2;
+						poseArmLA = 2;
+						poseArmRA = 2;
+					}
+
 					for (const param of rigging.parameters) {
 						// In live mode, only set tracked parameters or active expression overrides to preserve model built-in animations/expressions
 						if (rigging.riggingMode === 'live' && !TRACKING_ID_SET.has(param.id) && (!expPreset || !(param.id in expPreset))) {
@@ -569,16 +686,17 @@
 							val = expPreset[param.id];
 						}
 
-						// Apply Pose Looping if active
-						if (rigging.poseLoopMode !== 'none') {
-							const speed = rigging.poseLoopSpeed;
-							if (param.id === 'ParamBreath') {
-								val = (Math.sin(now * 0.003 * speed) + 1) / 2;
-							} else if (param.id === 'ParamBodyAngleZ' && rigging.poseLoopMode === 'gentle-sway') {
-								val += Math.sin(now * 0.0018 * speed) * 3.5;
-							} else if (param.id === 'ParamAngleY' && rigging.poseLoopMode === 'head-nod') {
-								val += Math.sin(now * 0.004 * speed) * 4.5;
-							}
+						// Combine with pose and loop offsets
+						if (param.id === 'ParamAngleX' || param.id === 'PARAM_ANGLE_X') {
+							val += poseAngleX;
+						} else if (param.id === 'ParamAngleY' || param.id === 'PARAM_ANGLE_Y') {
+							val += loopHeadY + poseAngleY;
+						} else if (param.id === 'ParamAngleZ' || param.id === 'PARAM_ANGLE_Z') {
+							val += poseAngleZ;
+						} else if (param.id === 'ParamEyeLOpen' || param.id === 'PARAM_EYE_L_OPEN' || param.id === 'ParamEyeROpen' || param.id === 'PARAM_EYE_R_OPEN') {
+							if (poseEyeOpen !== 0) val = Math.max(0, val + poseEyeOpen);
+						} else if (param.id === 'ParamEyeLSmile' || param.id === 'PARAM_EYE_L_SMILE' || param.id === 'ParamEyeRSmile' || param.id === 'PARAM_EYE_R_SMILE') {
+							if (poseEyeSmile > 0) val = Math.max(val, poseEyeSmile);
 						}
 
 						setParam(param.id, val);
@@ -587,8 +705,8 @@
 					// High-Responsiveness Eyebrows & Linked Model Parameters (Vivian, Mihari, Hiyori, etc.)
 					const browLY = expPreset?.ParamBrowLY ?? rigging.getActiveValue('ParamBrowLY');
 					const browRY = expPreset?.ParamBrowRY ?? rigging.getActiveValue('ParamBrowRY');
-					const browLAngle = expPreset?.ParamBrowLAngle ?? rigging.getActiveValue('ParamBrowLAngle');
-					const browRAngle = expPreset?.ParamBrowRAngle ?? rigging.getActiveValue('ParamBrowRAngle');
+					const browLAngle = (expPreset?.ParamBrowLAngle ?? rigging.getActiveValue('ParamBrowLAngle')) + poseBrowLAngle;
+					const browRAngle = (expPreset?.ParamBrowRAngle ?? rigging.getActiveValue('ParamBrowRAngle')) + poseBrowRAngle;
 					const browLForm = expPreset?.ParamBrowLForm ?? rigging.getActiveValue('ParamBrowLForm');
 					const browRForm = expPreset?.ParamBrowRForm ?? rigging.getActiveValue('ParamBrowRForm');
 
@@ -614,9 +732,9 @@
 					// Full-Body Torso Kinematics & Sway (Live2D & Cubism 2/3/4)
 					const isBodyEnabled = rigging.enableBodyTracking;
 					const bodyFactor = isBodyEnabled ? rigging.bodyTrackingIntensity : 0;
-					const bodyX = (rigging.getActiveValue('ParamBodyAngleX') || 0) * bodyFactor;
-					const bodyY = (rigging.getActiveValue('ParamBodyAngleY') || 0) * bodyFactor;
-					const bodyZ = (rigging.getActiveValue('ParamBodyAngleZ') || 0) * bodyFactor;
+					const bodyX = (rigging.getActiveValue('ParamBodyAngleX') || 0) * bodyFactor + poseBodyX;
+					const bodyY = (rigging.getActiveValue('ParamBodyAngleY') || 0) * bodyFactor + poseBodyY;
+					const bodyZ = (rigging.getActiveValue('ParamBodyAngleZ') || 0) * bodyFactor + loopBodyZ + poseBodyZ;
 
 					setParam('ParamBodyAngleX', bodyX);
 					setParam('PARAM_BODY_ANGLE_X', bodyX);
@@ -626,12 +744,12 @@
 					setParam('PARAM_BODY_ANGLE_Z', bodyZ);
 
 					// Arms & Hands Gesture Tracking (Haru & models with arm parameters)
-					const armLA = rigging.getActiveValue('ParamArmLA');
-					const armRA = rigging.getActiveValue('ParamArmRA');
-					const armLB = rigging.getActiveValue('ParamArmLB');
-					const armRB = rigging.getActiveValue('ParamArmRB');
-					const handAngleL = rigging.getActiveValue('ParamHandAngleL');
-					const handAngleR = rigging.getActiveValue('ParamHandAngleR');
+					const armLA = (rigging.getActiveValue('ParamArmLA') || 0) + poseArmLA;
+					const armRA = Math.max(rigging.getActiveValue('ParamArmRA') || 0, loopArmRA) + poseArmRA;
+					const armLB = rigging.getActiveValue('ParamArmLB') || 0;
+					const armRB = rigging.getActiveValue('ParamArmRB') || 0;
+					const handAngleL = (rigging.getActiveValue('ParamHandAngleL') || 0) + poseHandL;
+					const handAngleR = (rigging.getActiveValue('ParamHandAngleR') || 0) + poseHandR;
 
 					setParam('ParamArmLA', armLA);
 					setParam('ParamArmRA', armRA);
@@ -642,12 +760,15 @@
 					setParam('ParamHandAngleL', handAngleL);
 					setParam('ParamHandAngleR', handAngleR);
 
+					// Cheek Blush
+					const cheekVal = Math.min(1.0, (rigging.getActiveValue('ParamCheek') || 0) + poseCheek);
+					setParam('ParamCheek', cheekVal);
+					setParam('PARAM_CHEEK', cheekVal);
+
 					// Breathing rhythm
 					if (rigging.poseLoopMode !== 'none') {
-						const speed = rigging.poseLoopSpeed;
-						const breath = (Math.sin(now * 0.003 * speed) + 1) / 2;
-						setParam('ParamBreath', breath);
-						setParam('PARAM_BREATH', breath);
+						setParam('ParamBreath', loopBreath);
+						setParam('PARAM_BREATH', loopBreath);
 					} else if (isBodyEnabled) {
 						const naturalBreath = (Math.sin(now * 0.0025) + 1) * 0.35;
 						setParam('ParamBreath', naturalBreath);

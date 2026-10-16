@@ -80,6 +80,20 @@
 		threeStage.setStageEnvironment(env);
 	});
 
+	// Sync activeFullBodyPose with 3D models
+	$effect(() => {
+		const pose = rigging.activeFullBodyPose;
+		if (pose) {
+			threeStage.setFullBodyPose(pose);
+		}
+	});
+
+	// Sync poseLoopMode and speed with 3D stage
+	$effect(() => {
+		threeStage.poseLoopMode = rigging.poseLoopMode;
+		threeStage.poseLoopSpeed = rigging.poseLoopSpeed;
+	});
+
 	let lastScreenshotSignal = 0;
 	$effect(() => {
 		const signal = rigging.screenshotSignal;

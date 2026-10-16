@@ -1671,7 +1671,7 @@
 									{/if}
 
 									<!-- 3D Full Body Poses Section (if 3D mode) -->
-									{#if rigging.avatarEngine === '3d'}
+
 										<div class="pt-2 border-t {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
 											<div class="flex items-center justify-between px-1 mb-1.5 text-[10px] font-bold text-amber-400">
 												<span>{i18n.t('poses_3d_body_title')}</span>
@@ -1683,13 +1683,15 @@
 														type="button"
 														onclick={() => {
 															playSfx('click');
-															threeStage.setFullBodyPose(fbPose.id);
 															rigging.activeFullBodyPose = fbPose.id;
-															rigging.showToast(`Pose 3D: ${fbPose.label}`);
+															if (rigging.avatarEngine === '3d') {
+																threeStage.setFullBodyPose(fbPose.id);
+															}
+															rigging.showToast(`Pose: ${fbPose.label}`);
 															isExpressionMenuOpen = false;
 														}}
 														class="p-2 rounded-xl border text-center transition-all cursor-pointer active:scale-95 {
-															threeStage.activeFullBodyPose === fbPose.id
+															rigging.activeFullBodyPose === fbPose.id
 																? 'bg-amber-500/25 border-amber-500 text-amber-300 font-bold ring-1 ring-amber-500/50'
 																: isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100' : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
 														}"
@@ -1700,7 +1702,7 @@
 												{/each}
 											</div>
 										</div>
-									{/if}
+
 								</div>
 							{:else if expressionActiveTab === 'motions'}
 								<!-- TAB 3: TRIGGER MOTIONS -->

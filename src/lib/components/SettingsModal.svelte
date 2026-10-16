@@ -857,12 +857,12 @@
 			</div>
 
 			<!-- Modal Body (Expansive 2-Column Responsive View) -->
-			<div class="flex-1 overflow-y-auto p-6 space-y-6">
+			<div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
 				<!-- TAB 1: HARDWARE & PERF -->
 				{#if activeTab === 'perf'}
-					<div class="space-y-6 w-full animate-in fade-in duration-150">
+					<div class="space-y-4 sm:space-y-6 w-full animate-in fade-in duration-150">
 						<!-- Live Telemetry Card (Single Column Flow) -->
-						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme
 								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
 								: 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
@@ -950,7 +950,7 @@
 						</div>
 
 						<!-- GPU Architecture & Optimization Guide (Card 2) -->
-						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme
 								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
 								: 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
@@ -1013,9 +1013,9 @@
 
 				<!-- TAB 2: TRACKING & CAMERA -->
 				{:else if activeTab === 'tracking'}
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-in fade-in duration-150">
 						<!-- Camera Hardware & Inversion Settings (Participant-Aware: Host / Guest 1 / Guest 2) -->
-						<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme
 								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
 								: 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
@@ -1450,7 +1450,7 @@
 						<!-- Fine Sensitivity, Smoothing, Full-Body Kinematics & Framing Settings -->
 						<div class="space-y-4">
 							<!-- CARD 1: Tracking Quality & Presets -->
-							<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+							<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 								isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
 							}">
 								<h3 class="text-sm font-bold flex items-center justify-between {isLightTheme ? 'text-zinc-900' : 'text-zinc-200'}">
@@ -1589,7 +1589,7 @@
 							</div>
 
 							<!-- CARD 2: Full-Body Kinematics & Torso Sway (Live2D & 3D) -->
-							<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+							<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 								isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
 							}">
 								<div class="flex items-center justify-between">
@@ -1661,6 +1661,7 @@
 											<option value="idle-breath">💨 Bernapas Alami (Idle Breath)</option>
 											<option value="gentle-sway">🌊 Goyangan Tubuh Lembut (Gentle Sway)</option>
 											<option value="head-nod">✨ Mengangguk Halus (Head Nod)</option>
+											<option value="wave">👋 Melambaikan Tangan (Wave)</option>
 											<option value="none">🛑 Diam / Tanpa Animasi Tambahan</option>
 										</select>
 									</div>
@@ -1668,7 +1669,7 @@
 							</div>
 
 							<!-- CARD 3: Avatar Framing Presets (Live2D & 3D) -->
-							<div class="p-5 rounded-2xl border space-y-4 shadow-sm {
+							<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 								isLightTheme ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-zinc-900/50 border-zinc-800/90 text-zinc-100'
 							}">
 								<div class="flex items-center justify-between">
@@ -1743,9 +1744,9 @@
 
 				<!-- TAB 3: VOICE & AUDIO -->
 				{:else if activeTab === 'voice'}
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-in fade-in duration-150">
 						<!-- Dedicated Prominent Card: Text-To-Speech (TTS) Studio & Voice Synthesis -->
-						<div class="col-span-1 md:col-span-2 p-5 rounded-2xl border space-y-4 {
+						<div class="col-span-1 md:col-span-2 p-4 sm:p-5 rounded-2xl border space-y-4 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/90 shadow-xl'
 						}">
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
@@ -1950,7 +1951,7 @@
 						</div>
 
 						<!-- Real Web Audio API Microphone Engine -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
+						<div class="p-4 sm:p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
 							<div class="flex items-center justify-between">
 								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
 									<Mic class="w-4 h-4 text-emerald-400" />
@@ -2197,7 +2198,7 @@
 						</div>
 
 						<!-- Web Audio DSP Voice Models (Categorized Grid) -->
-						<div class="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
+						<div class="p-4 sm:p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/90 space-y-4">
 							<div class="flex items-center justify-between">
 								<h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
 									<Sparkles class="w-4 h-4 text-pink-400" />
@@ -2311,9 +2312,9 @@
 
 				<!-- TAB 4: THEME SELECTOR & PALETTE STUDIO -->
 				{:else if activeTab === 'theme'}
-					<div class="space-y-5 animate-in fade-in duration-150">
+					<div class="space-y-4 sm:space-y-6 animate-in fade-in duration-150">
 						<!-- Theme Header & Category Filter Bar -->
-						<div class="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md {
+						<div class="p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 						}">
 							<div class="flex items-center gap-3">
@@ -2490,7 +2491,7 @@
 
 						<!-- CUSTOM THEME STUDIO -->
 						{:else}
-							<div class="p-5 rounded-2xl border space-y-5 animate-in fade-in duration-150 {
+							<div class="p-4 sm:p-5 rounded-2xl border space-y-4 sm:space-y-5 animate-in fade-in duration-150 {
 								isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 							}">
 								<!-- One-Click Presets -->
@@ -2728,9 +2729,9 @@
 
 				<!-- TAB 5: STAGE & EFFECTS (PANGGUNG & KANVAS) -->
 				{:else if activeTab === 'stage'}
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-150">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-in fade-in duration-150">
 						<!-- Dedicated Card: 3D Stage Environments (Lantai Grid, Studio Room, Open Field, Void) -->
-						<div class="col-span-1 md:col-span-2 p-5 rounded-2xl border space-y-4 {
+						<div class="col-span-1 md:col-span-2 p-4 sm:p-5 rounded-2xl border space-y-4 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800/90 shadow-xl'
 						}">
 							<div class="flex items-center justify-between border-b pb-3 {isLightTheme ? 'border-zinc-200' : 'border-zinc-800/80'}">
@@ -2998,7 +2999,7 @@
 						</div>
 
 						<!-- Card: 3D Stage Area Waypoints & Movement (Teleport & Pan) -->
-						<div class="p-5 rounded-2xl border space-y-4 {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
 						}">
 							<div class="flex items-center justify-between">
@@ -3145,7 +3146,7 @@
 						</div>
 
 						<!-- Card 1: Latar Belakang & Efek Layar -->
-						<div class="p-5 rounded-2xl border space-y-4 {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
 						}">
 							<div class="flex items-center gap-2.5">
@@ -3308,7 +3309,7 @@
 						</div>
 
 						<!-- Card 2: Framing, Sound Effects & Bahasa -->
-						<div class="p-5 rounded-2xl border space-y-4 {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/50 border-zinc-800/90'
 						}">
 							<div class="flex items-center gap-2.5">
@@ -3527,8 +3528,8 @@
 
 				<!-- TAB 5: STORAGE & BACKUP -->
 				{:else if activeTab === 'storage'}
-					<div class="space-y-6 w-full animate-in fade-in duration-150">
-						<div class="p-6 rounded-2xl border space-y-6 shadow-sm {
+					<div class="space-y-4 sm:space-y-6 w-full animate-in fade-in duration-150">
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 sm:space-y-6 shadow-sm {
 							isLightTheme
 								? 'bg-zinc-50 border-zinc-200 text-zinc-900'
 								: 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
@@ -3597,9 +3598,9 @@
 
 				<!-- TAB 6: ABOUT STUDIO & SPECIFICATIONS -->
 				{:else if activeTab === 'about'}
-					<div class="space-y-6 w-full animate-in fade-in duration-150">
+					<div class="space-y-4 sm:space-y-6 w-full animate-in fade-in duration-150">
 						<!-- Studio Hero Banner -->
-						<div class="p-6 rounded-2xl border space-y-4 shadow-sm {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-4 shadow-sm {
 							isLightTheme
 								? 'bg-gradient-to-br from-white via-sky-50/50 to-pink-50/30 border-zinc-200 text-zinc-900'
 								: 'bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border-cyan-500/30 text-zinc-100 shadow-xl'
@@ -3637,7 +3638,7 @@
 
 						<!-- Core Pillars (Privacy & Commercial Freedom) -->
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-							<div class="p-5 rounded-2xl border space-y-2.5 {
+							<div class="p-4 sm:p-5 rounded-2xl border space-y-2.5 {
 								isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 							}">
 								<div class="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -3649,7 +3650,7 @@
 								</p>
 							</div>
 
-							<div class="p-5 rounded-2xl border space-y-2.5 {
+							<div class="p-4 sm:p-5 rounded-2xl border space-y-2.5 {
 								isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 							}">
 								<div class="flex items-center gap-2 text-xs font-bold text-cyan-600 dark:text-cyan-400">
@@ -3663,7 +3664,7 @@
 						</div>
 
 						<!-- Live Streaming Keyboard Shortcuts Cheat Sheet -->
-						<div class="p-5 rounded-2xl border space-y-3.5 {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-3.5 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 						}">
 							<div class="flex items-center gap-2">
@@ -3710,7 +3711,7 @@
 						</div>
 
 						<!-- Core Tech Engine Specs -->
-						<div class="p-5 rounded-2xl border space-y-2.5 {
+						<div class="p-4 sm:p-5 rounded-2xl border space-y-2.5 {
 							isLightTheme ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-900/60 border-zinc-800'
 						}">
 							<span class="text-xs font-bold block {isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}">
