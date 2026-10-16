@@ -45,6 +45,8 @@
 				const id = rigging.parameters[i].id;
 				activeParamsBuffer[id] = rigging.getActiveValue(id);
 			}
+			threeStage.handGestureL = rigging.handLGesture;
+			threeStage.handGestureR = rigging.handRGesture;
 			threeStage.updateParameters(activeParamsBuffer);
 			animFrameId = requestAnimationFrame(loop);
 		};

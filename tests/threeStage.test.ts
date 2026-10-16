@@ -440,5 +440,126 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		const postHideCount = stage.scene.children.filter((c) => c.name === 'loadingSkeleton').length;
 		expect(postHideCount).toBe(0);
 	});
+
+	it('should ensure GLB humanoid models receive humanoid tracking without eyeball socket displacement', () => {
+		const stage = new ThreeStage();
+		stage.modelType = 'glb';
+
+		// Create mock humanoid rig with eye and jaw bones
+		const mockRoot = new THREE.Group();
+		const eyeL = new THREE.Bone();
+		eyeL.name = 'J_Adj_L_FaceEye';
+		eyeL.position.set(-0.05, 1.45, 0.1);
+		const eyeR = new THREE.Bone();
+		eyeR.name = 'J_Adj_R_FaceEye';
+		eyeR.position.set(0.05, 1.45, 0.1);
+		const head = new THREE.Bone();
+		head.name = 'J_Bip_C_Head';
+		head.add(eyeL);
+		head.add(eyeR);
+		mockRoot.add(head);
+
+		(stage as any).discoverHumanoidBones(mockRoot);
+
+		// Record initial eye positions
+		const initPosLX = eyeL.position.x;
+		const initPosY = eyeL.position.y;
+
+		// Run updateParameters
+		stage.updateParameters({
+			ParamEyeBallX: 0.8,
+			ParamEyeBallY: -0.5,
+			ParamEyeLOpen: 0.2
+		});
+
+		// Humanoid eye tracking MUST rotate eye bones, NEVER tear eyeball positions out of sockets
+		expect(eyeL.position.x).toBe(initPosLX);
+		expect(eyeL.position.y).toBe(initPosY);
+		expect(eyeL.rotation.y).toBeCloseTo(0.8 * 0.2, 3);
+	});
+
+	it('should position FBX humanoid arms downward in relaxed idle without forward zombie projection', () => {
+		const stage = new ThreeStage();
+		stage.modelType = 'fbx';
+
+		const mockRoot = new THREE.Group();
+		const armL = new THREE.Bone();
+		armL.name = 'armL';
+		const armR = new THREE.Bone();
+		armR.name = 'armR';
+		const handL = new THREE.Bone();
+		handL.name = 'handL';
+		const handR = new THREE.Bone();
+		handR.name = 'handR';
+		mockRoot.add(armL);
+		mockRoot.add(armR);
+		mockRoot.add(handL);
+		mockRoot.add(handR);
+
+		(stage as any).discoverHumanoidBones(mockRoot);
+
+		// Idle frame with zero arm lift
+		stage.updateParameters({
+			ParamArmLA: 0,
+			ParamArmRA: 0
+		});
+
+		// Arms must be lowered along X (-0.45), NOT jutted forward along Z (-1.18)
+		expect(armL.rotation.x).toBeCloseTo(-0.45, 1);
+		expect(armL.rotation.z).toBeCloseTo(0, 1);
+		expect(armR.rotation.x).toBeCloseTo(-0.45, 1);
+		expect(armR.rotation.z).toBeCloseTo(0, 1);
+	});
+
+	it('should respond to hand gestures and animate finger curls and wrist rotations', () => {
+		const stage = new ThreeStage();
+		stage.modelType = 'fbx';
+
+		const mockRoot = new THREE.Group();
+		const armL = new THREE.Bone();
+		armL.name = 'armL';
+		const armR = new THREE.Bone();
+		armR.name = 'armR';
+		const handL = new THREE.Bone();
+		handL.name = 'handL';
+		const handR = new THREE.Bone();
+		handR.name = 'handR';
+
+		const indexL = new THREE.Bone();
+		indexL.name = 'index_fingerL';
+		const thumbL = new THREE.Bone();
+		thumbL.name = 'thumb_fingerL';
+		const ringL = new THREE.Bone();
+		ringL.name = 'ring_fingerL';
+
+		mockRoot.add(armL);
+		mockRoot.add(armR);
+		mockRoot.add(handL);
+		mockRoot.add(handR);
+		mockRoot.add(indexL);
+		mockRoot.add(thumbL);
+		mockRoot.add(ringL);
+
+		(stage as any).discoverHumanoidBones(mockRoot);
+
+		// Fist gesture on left hand
+		stage.handGestureL = 'fist';
+		stage.updateParameters({
+			ParamArmLA: 20,
+			ParamHandAngleL: 15
+		});
+
+		// Fingers should be curled closed for fist
+		expect(indexL.rotation.z).toBeGreaterThan(0.5);
+		expect(ringL.rotation.z).toBeGreaterThan(0.5);
+
+		// Peace gesture: index extended (low curl), ring curled
+		stage.handGestureL = 'peace';
+		stage.updateParameters({
+			ParamArmLA: 20
+		});
+		expect(indexL.rotation.z).toBe(0);
+		expect(ringL.rotation.z).toBeGreaterThan(0.5);
+	});
 });
 

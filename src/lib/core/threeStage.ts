@@ -203,6 +203,10 @@ export class ThreeStage {
 	private forearmRNode: THREE.Object3D | null = null;
 	private handLNode: THREE.Object3D | null = null;
 	private handRNode: THREE.Object3D | null = null;
+	public handGestureL: string = 'none';
+	public handGestureR: string = 'none';
+	private fingerBonesL = { thumb: [] as THREE.Object3D[], index: [] as THREE.Object3D[], middle: [] as THREE.Object3D[], others: [] as THREE.Object3D[] };
+	private fingerBonesR = { thumb: [] as THREE.Object3D[], index: [] as THREE.Object3D[], middle: [] as THREE.Object3D[], others: [] as THREE.Object3D[] };
 	private upperLegLNode: THREE.Object3D | null = null;
 	private upperLegRNode: THREE.Object3D | null = null;
 	private lowerLegLNode: THREE.Object3D | null = null;
@@ -335,7 +339,7 @@ export class ThreeStage {
 
 	setFraming(mode: FramingMode3D) {
 		this.currentFraming = mode;
-		if (this.modelType === 'fbx') {
+		if (this.modelType === 'fbx' || this.modelType === 'glb') {
 			if (mode === 'full') {
 				// Full Body: shows full avatar from feet to head
 				this.cameraLookTarget.set(0, 0.9, 0);
@@ -2129,6 +2133,8 @@ export class ThreeStage {
 
 		this.hairBones = [];
 		this.skirtBones = [];
+		this.fingerBonesL = { thumb: [], index: [], middle: [], others: [] };
+		this.fingerBonesR = { thumb: [], index: [], middle: [], others: [] };
 		this.initialRotations.clear();
 		this.initialPositions.clear();
 
@@ -2137,6 +2143,20 @@ export class ThreeStage {
 				const name = c.name.toLowerCase();
 				if (name.includes('hair') || name.includes('pigtail') || name.includes('ahoge')) this.hairBones.push(c);
 				if (name.includes('skirt') || name.includes('cape') || name.includes('bowie') || name.includes('ribbon')) this.skirtBones.push(c);
+
+				// Discover fingers (excluding skirts and non-finger accessories)
+				if (!name.includes('skirt')) {
+					const isLeft = name.includes('_l_') || name.includes('fingerl') || name.includes('left') || (name.endsWith('l') && !name.endsWith('all') && !name.endsWith('roll'));
+					const isRight = name.includes('_r_') || name.includes('fingerr') || name.includes('right') || (name.endsWith('r') && !name.endsWith('bar'));
+					const target = isLeft ? this.fingerBonesL : isRight ? this.fingerBonesR : null;
+					if (target) {
+						if (name.includes('thumb')) target.thumb.push(c);
+						else if (name.includes('index')) target.index.push(c);
+						else if (name.includes('middle')) target.middle.push(c);
+						else if (name.includes('ring') || name.includes('little') || name.includes('pinky')) target.others.push(c);
+					}
+				}
+
 				this.initialRotations.set(c, c.rotation.clone());
 				this.initialPositions.set(c, c.position.clone());
 			}
@@ -2510,10 +2530,20 @@ export class ThreeStage {
 				this.handRNode.rotation.z = initHandR.z + Math.sin(time * 0.008) * 0.45;
 			}
 			// Left arm relaxed down at side
-			this.armLNode.rotation.z = initArmL.z - 1.18 + Math.sin(time * 0.002) * 0.02;
-			this.armLNode.rotation.x = initArmL.x + 0.08;
+			if (this.modelType === 'fbx') {
+				this.armLNode.rotation.x = initArmL.x - 0.45;
+				this.armLNode.rotation.y = initArmL.y;
+				this.armLNode.rotation.z = initArmL.z;
+			} else {
+				this.armLNode.rotation.z = initArmL.z + 1.18;
+				this.armLNode.rotation.x = initArmL.x;
+				this.armLNode.rotation.y = initArmL.y;
+			}
 			if (this.forearmLNode && initForeL) {
-				this.forearmLNode.rotation.y = initForeL.y + 0.25;
+				this.forearmLNode.rotation.copy(initForeL);
+			}
+			if (this.handLNode && initHandL) {
+				this.handLNode.rotation.copy(initHandL);
 			}
 		} else if (this.activeFullBodyPose === 'peace') {
 			// Pose V / Peace sign
@@ -2527,11 +2557,22 @@ export class ThreeStage {
 				this.handRNode.rotation.y = initHandR.y + 0.5;
 			}
 			// Left arm relaxed down at side
-			this.armLNode.rotation.z = initArmL.z - 1.18 + Math.sin(time * 0.002) * 0.02;
-			this.armLNode.rotation.x = initArmL.x + 0.08;
-			if (this.forearmLNode && initForeL) {
-				this.forearmLNode.rotation.y = initForeL.y + 0.25;
+			if (this.modelType === 'fbx') {
+				this.armLNode.rotation.x = initArmL.x - 0.45;
+				this.armLNode.rotation.y = initArmL.y;
+				this.armLNode.rotation.z = initArmL.z;
+			} else {
+				this.armLNode.rotation.z = initArmL.z + 1.18;
+				this.armLNode.rotation.x = initArmL.x;
+				this.armLNode.rotation.y = initArmL.y;
 			}
+			if (this.forearmLNode && initForeL) {
+				this.forearmLNode.rotation.copy(initForeL);
+			}
+			if (this.handLNode && initHandL) {
+				this.handLNode.rotation.copy(initHandL);
+			}
+			this.updateFingerGestures('none', 'peace', false, false);
 		} else if (this.activeFullBodyPose === 'heart') {
 			// Pose Hati / Heart shape
 			this.armLNode.rotation.z = initArmL.z - 0.7;
@@ -2542,12 +2583,17 @@ export class ThreeStage {
 			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.z = initForeR.z + 0.8;
 		} else if (this.activeFullBodyPose === 'stand') {
 			// Pose tegak formal santai: kedua tangan turun lurus ke bawah di samping paha
-			this.armLNode.rotation.z = initArmL.z - 1.22;
-			this.armRNode.rotation.z = initArmR.z + 1.22;
-			this.armLNode.rotation.x = initArmL.x + 0.05;
-			this.armRNode.rotation.x = initArmR.x + 0.05;
-			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.y = initForeL.y + 0.15;
-			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.y = initForeR.y - 0.15;
+			if (this.modelType === 'fbx') {
+				this.armLNode.rotation.set(initArmL.x - 0.45, initArmL.y, initArmL.z);
+				this.armRNode.rotation.set(initArmR.x - 0.45, initArmR.y, initArmR.z);
+			} else {
+				this.armLNode.rotation.set(initArmL.x, initArmL.y, initArmL.z + 1.18);
+				this.armRNode.rotation.set(initArmR.x, initArmR.y, initArmR.z - 1.18);
+			}
+			if (this.forearmLNode && initForeL) this.forearmLNode.rotation.copy(initForeL);
+			if (this.forearmRNode && initForeR) this.forearmRNode.rotation.copy(initForeR);
+			if (this.handLNode && initHandL) this.handLNode.rotation.copy(initHandL);
+			if (this.handRNode && initHandR) this.handRNode.rotation.copy(initHandR);
 		} else if (this.activeFullBodyPose === 'cat-paw') {
 			// Pose Nya / Cakar Kucing: kedua tangan terangkat ke depan pipi/dada melengkung gemas
 			this.armLNode.rotation.z = initArmL.z - 0.75;
@@ -2668,67 +2714,174 @@ export class ThreeStage {
 			}
 		} else {
 			// IDLE & WEBCAM REAL-TIME HAND TRACKING:
-			// Relaxed natural A-pose default: arms down by the body (NO T-POSE!)
-			// initArmL is horizontal (T-pose). Lowering it by ~1.18 rad (~68 deg) brings it to a cute VTuber idle posture!
-			const relaxAngle = 1.18;
 			const breathSway = Math.sin(time * 0.002) * 0.025;
+			const handAngleL = params['ParamHandAngleL'] ?? 0;
+			const handAngleR = params['ParamHandAngleR'] ?? 0;
 
 			// LEFT ARM:
-			// If user raises left hand (ParamArmLA > 3 or High-Five):
 			const liftRatioL = Math.max(0, Math.min(1.0, armLA / 28));
-			if (liftRatioL > 0.08 || isHighFiveL) {
-				const effLift = isHighFiveL ? Math.max(liftRatioL, 0.95) : liftRatioL;
-				// Smoothly lift from relaxed (-1.18) to raised (+0.25)
-				this.armLNode.rotation.z = initArmL.z - relaxAngle + effLift * 1.45;
-				this.armLNode.rotation.x = initArmL.x - effLift * 0.65;
-				if (this.forearmLNode && initForeL) {
-					this.forearmLNode.rotation.z = initForeL.z - effLift * 0.85;
-					this.forearmLNode.rotation.y = initForeL.y + 0.25 + effLift * 0.35;
+			const effLiftL = isHighFiveL ? Math.max(liftRatioL, 0.95) : liftRatioL;
+
+			// RIGHT ARM:
+			const liftRatioR = Math.max(0, Math.min(1.0, armRA / 28));
+			const effLiftR = isHighFiveR ? Math.max(liftRatioR, 0.95) : liftRatioR;
+
+			if (this.modelType === 'fbx') {
+				// FBX Mixamo / Neuro-sama:
+				// In Mixamo rig with shoulder rotation:
+				// rotation.x lowers (-0.45 = naturally relaxed hanging down by hips/thighs) / lifts (+1.5 = raised high-five)
+				if (effLiftL > 0.08 || isHighFiveL) {
+					this.armLNode.rotation.x = initArmL.x - 0.45 + effLiftL * 1.5;
+					this.armLNode.rotation.y = initArmL.y;
+					this.armLNode.rotation.z = initArmL.z - effLiftL * 0.35;
+					if (this.forearmLNode && initForeL) {
+						this.forearmLNode.rotation.x = initForeL.x + effLiftL * 0.6;
+						this.forearmLNode.rotation.y = initForeL.y;
+						this.forearmLNode.rotation.z = initForeL.z;
+					}
+				} else {
+					// Natural cute relaxed posture: arms hanging straight down naturally at sides/thighs without aiming forward
+					this.armLNode.rotation.x = initArmL.x - 0.45 + breathSway;
+					this.armLNode.rotation.y = initArmL.y;
+					this.armLNode.rotation.z = initArmL.z;
+					if (this.forearmLNode && initForeL) {
+						this.forearmLNode.rotation.copy(initForeL);
+					}
 				}
-				if (this.handLNode && initHandL && isHighFiveL) {
-					this.handLNode.rotation.z = initHandL.z + Math.sin(time * 0.007) * 0.25;
+
+				if (effLiftR > 0.08 || isHighFiveR) {
+					this.armRNode.rotation.x = initArmR.x - 0.45 + effLiftR * 1.5;
+					this.armRNode.rotation.y = initArmR.y;
+					this.armRNode.rotation.z = initArmR.z + effLiftR * 0.35;
+					if (this.forearmRNode && initForeR) {
+						this.forearmRNode.rotation.x = initForeR.x - effLiftR * 0.6;
+						this.forearmRNode.rotation.y = initForeR.y;
+						this.forearmRNode.rotation.z = initForeR.z;
+					}
+				} else {
+					// Natural cute relaxed posture: arms hanging straight down naturally at sides/thighs without aiming forward
+					this.armRNode.rotation.x = initArmR.x - 0.45 + breathSway;
+					this.armRNode.rotation.y = initArmR.y;
+					this.armRNode.rotation.z = initArmR.z;
+					if (this.forearmRNode && initForeR) {
+						this.forearmRNode.rotation.copy(initForeR);
+					}
 				}
 			} else {
-				// Natural cute idle posture: arms down at sides with gentle breathing
-				this.armLNode.rotation.z = initArmL.z - relaxAngle + breathSway;
-				this.armLNode.rotation.x = initArmL.x + 0.08 + breathSway * 0.5;
-				if (this.forearmLNode && initForeL) {
-					this.forearmLNode.rotation.y = initForeL.y + 0.22;
-					this.forearmLNode.rotation.z = initForeL.z - 0.12;
+				// GLB / VRM Humanoid:
+				// rotation.z lowers (+1.18 L, -1.18 R) / lifts (-1.5 L, +1.5 R)
+				if (effLiftL > 0.08 || isHighFiveL) {
+					this.armLNode.rotation.z = initArmL.z + 1.18 - effLiftL * 1.5;
+					this.armLNode.rotation.x = initArmL.x - effLiftL * 0.35;
+					this.armLNode.rotation.y = initArmL.y;
+					if (this.forearmLNode && initForeL) {
+						this.forearmLNode.rotation.z = initForeL.z + effLiftL * 0.6;
+						this.forearmLNode.rotation.y = initForeL.y;
+						this.forearmLNode.rotation.x = initForeL.x;
+					}
+				} else {
+					this.armLNode.rotation.z = initArmL.z + 1.18 - breathSway;
+					this.armLNode.rotation.x = initArmL.x;
+					this.armLNode.rotation.y = initArmL.y;
+					if (this.forearmLNode && initForeL) {
+						this.forearmLNode.rotation.copy(initForeL);
+					}
 				}
-				if (this.handLNode && initHandL) {
+
+				if (effLiftR > 0.08 || isHighFiveR) {
+					this.armRNode.rotation.z = initArmR.z - 1.18 + effLiftR * 1.5;
+					this.armRNode.rotation.x = initArmR.x - effLiftR * 0.35;
+					this.armRNode.rotation.y = initArmR.y;
+					if (this.forearmRNode && initForeR) {
+						this.forearmRNode.rotation.z = initForeR.z - effLiftR * 0.6;
+						this.forearmRNode.rotation.y = initForeR.y;
+						this.forearmRNode.rotation.x = initForeR.x;
+					}
+				} else {
+					this.armRNode.rotation.z = initArmR.z - 1.18 + breathSway;
+					this.armRNode.rotation.x = initArmR.x;
+					this.armRNode.rotation.y = initArmR.y;
+					if (this.forearmRNode && initForeR) {
+						this.forearmRNode.rotation.copy(initForeR);
+					}
+				}
+			}
+
+			// HAND / WRIST ROTATION & WAVING:
+			if (this.handLNode && initHandL) {
+				if (effLiftL > 0.08 || isHighFiveL) {
+					const waveWiggle = (isHighFiveL || this.handGestureL === 'wave') ? Math.sin(time * 0.007) * 0.35 : 0;
+					const handTrackingAngle = (handAngleL * Math.PI / 180) * 0.5;
+					this.handLNode.rotation.z = initHandL.z + waveWiggle + handTrackingAngle;
+					this.handLNode.rotation.y = initHandL.y + (isHighFiveL ? 0.3 : 0);
+				} else {
 					this.handLNode.rotation.copy(initHandL);
 				}
 			}
 
-			// RIGHT ARM:
-			// If user raises right hand (ParamArmRA > 3 or High-Five):
-			const liftRatioR = Math.max(0, Math.min(1.0, armRA / 28));
-			if (liftRatioR > 0.08 || isHighFiveR) {
-				const effLift = isHighFiveR ? Math.max(liftRatioR, 0.95) : liftRatioR;
-				// Smoothly lift from relaxed (+1.18) to raised (-0.25)
-				this.armRNode.rotation.z = initArmR.z + relaxAngle - effLift * 1.45;
-				this.armRNode.rotation.x = initArmR.x - effLift * 0.65;
-				if (this.forearmRNode && initForeR) {
-					this.forearmRNode.rotation.z = initForeR.z + effLift * 0.85;
-					this.forearmRNode.rotation.y = initForeR.y - 0.25 - effLift * 0.35;
-				}
-				if (this.handRNode && initHandR && isHighFiveR) {
-					this.handRNode.rotation.z = initHandR.z - Math.sin(time * 0.007) * 0.25;
-				}
-			} else {
-				// Natural cute idle posture: arms down at sides with gentle breathing
-				this.armRNode.rotation.z = initArmR.z + relaxAngle - breathSway;
-				this.armRNode.rotation.x = initArmR.x + 0.08 + breathSway * 0.5;
-				if (this.forearmRNode && initForeR) {
-					this.forearmRNode.rotation.y = initForeR.y - 0.22;
-					this.forearmRNode.rotation.z = initForeR.z + 0.12;
-				}
-				if (this.handRNode && initHandR) {
+			if (this.handRNode && initHandR) {
+				if (effLiftR > 0.08 || isHighFiveR) {
+					const waveWiggle = (isHighFiveR || this.handGestureR === 'wave') ? Math.sin(time * 0.007) * 0.35 : 0;
+					const handTrackingAngle = (handAngleR * Math.PI / 180) * 0.5;
+					this.handRNode.rotation.z = initHandR.z - waveWiggle + handTrackingAngle;
+					this.handRNode.rotation.y = initHandR.y - (isHighFiveR ? 0.3 : 0);
+				} else {
 					this.handRNode.rotation.copy(initHandR);
 				}
 			}
+
+			// FINGER GESTURE ANIMATION (Fist, Peace, High Five / Open):
+			this.updateFingerGestures(this.handGestureL, this.handGestureR, isHighFiveL, isHighFiveR);
 		}
+	}
+
+	private updateFingerGestures(gestureL: string, gestureR: string, isHighFiveL: boolean, isHighFiveR: boolean) {
+		const applyFingers = (
+			fingers: { thumb: THREE.Object3D[]; index: THREE.Object3D[]; middle: THREE.Object3D[]; others: THREE.Object3D[] },
+			gesture: string,
+			isHighFive: boolean,
+			isRight: boolean
+		) => {
+			const sign = isRight ? -1 : 1;
+			const isFist = gesture === 'fist';
+			const isPeace = gesture === 'peace';
+			const isOpen = gesture === 'open' || gesture === 'high_five' || isHighFive;
+
+			const curlAmount = isFist ? 0.75 : 0;
+			const peaceCurl = isPeace ? 0.8 : curlAmount;
+
+			for (const b of fingers.index) {
+				const init = this.initialRotations.get(b);
+				if (init) {
+					const curl = isPeace || isOpen ? 0 : curlAmount;
+					b.rotation.z = init.z + curl * sign;
+				}
+			}
+			for (const b of fingers.middle) {
+				const init = this.initialRotations.get(b);
+				if (init) {
+					const curl = isPeace || isOpen ? 0 : curlAmount;
+					b.rotation.z = init.z + curl * sign;
+				}
+			}
+			for (const b of fingers.others) {
+				const init = this.initialRotations.get(b);
+				if (init) {
+					const curl = isOpen ? 0 : peaceCurl;
+					b.rotation.z = init.z + curl * sign;
+				}
+			}
+			for (const b of fingers.thumb) {
+				const init = this.initialRotations.get(b);
+				if (init) {
+					const curl = isOpen ? 0 : (isFist || isPeace ? 0.45 : 0);
+					b.rotation.z = init.z + curl * sign;
+				}
+			}
+		};
+
+		applyFingers(this.fingerBonesL, gestureL, isHighFiveL, false);
+		applyFingers(this.fingerBonesR, gestureR, isHighFiveR, true);
 	}
 
 	// 5. Real-Time Vision Tracking Update Loop
@@ -2771,7 +2924,7 @@ export class ThreeStage {
 			}
 		}
 
-		if (this.modelType === 'fbx') {
+		if (this.modelType === 'fbx' || this.modelType === 'glb') {
 			const initHead = this.headNode ? this.initialRotations.get(this.headNode) : null;
 			const initNeck = this.neckNode ? this.initialRotations.get(this.neckNode) : null;
 			const initHips = this.hipsNode ? this.initialRotations.get(this.hipsNode) : null;
@@ -2950,119 +3103,121 @@ export class ThreeStage {
 		}
 
 		// Procedural Cat Mode
-		if (this.headNode) {
-			this.headNode.rotation.y = yaw;
-			this.headNode.rotation.x = -pitch;
-			this.headNode.rotation.z = -roll;
-		}
-
-		if (this.earLNode) {
-			this.earLNode.rotation.z = 0.35 + yaw * 0.2;
-		}
-		if (this.earRNode) {
-			this.earRNode.rotation.z = -0.35 + yaw * 0.2;
-		}
-
-		if (this.eyeLNode) {
-			this.eyeLNode.scale.y = Math.max(0.08, eyeBlinkL);
-			this.eyeLNode.position.x = -0.2 + eyeBallX * 0.04;
-			this.eyeLNode.position.y = 0.05 + eyeBallY * 0.03;
-		}
-		if (this.eyeRNode) {
-			this.eyeRNode.scale.y = Math.max(0.08, eyeBlinkR);
-			this.eyeRNode.position.x = 0.2 + eyeBallX * 0.04;
-			this.eyeRNode.position.y = 0.05 + eyeBallY * 0.03;
-		}
-
-		if (this.mouthNode) {
-			this.mouthNode.scale.y = Math.max(0.2, 1 + mouthOpen * 3.5);
-			this.mouthNode.scale.x = Math.max(0.5, 1 + Math.abs(mouthForm) * 0.35);
-			this.mouthNode.position.x = mouthX * 0.05;
-			this.mouthNode.position.y = -0.14 - mouthOpen * 0.06;
-			this.mouthNode.rotation.z = mouthForm < -0.15 ? 0 : Math.PI;
-		}
-
-		const isHighFiveL = armLA > 24 || (params['ParamArmLB'] ?? 0) > 0.5;
-		const isHighFiveR = armRA > 24 || (params['ParamArmRB'] ?? 0) > 0.5;
-		const animTime = performance.now();
-
-		if (this.pawLNode && this.pawRNode) {
-			const isWavingCat = this.activeFullBodyPose === 'wave' || this.poseLoopMode === 'wave';
-			if (this.activeFullBodyPose === 'cat-paw') {
-				// Cute animated pawing in front of chest
-				this.pawLNode.position.set(-0.32, -0.05 + Math.sin(animTime * 0.006) * 0.04, 0.55);
-				this.pawRNode.position.set(0.32, -0.05 - Math.sin(animTime * 0.006) * 0.04, 0.55);
-				this.pawLNode.rotation.set(-0.4, 0, 0.3);
-				this.pawRNode.rotation.set(-0.4, 0, -0.3);
-			} else if (isWavingCat) {
-				this.pawLNode.position.set(-0.36, -0.3, 0.4);
-				this.pawLNode.rotation.set(0, 0, 0);
-				this.pawRNode.position.set(0.32, 0.15, 0.5);
-				this.pawRNode.rotation.set(-0.5, 0, Math.sin(animTime * 0.008) * 0.45);
-			} else if (this.activeFullBodyPose === 'sit') {
-				this.pawLNode.position.set(-0.34, -0.45, 0.42);
-				this.pawRNode.position.set(0.34, -0.45, 0.42);
-				this.pawLNode.rotation.set(0, 0, 0);
-				this.pawRNode.rotation.set(0, 0, 0);
-			} else if (this.activeFullBodyPose === 'peace' || this.activeFullBodyPose === 'heart') {
-				this.pawLNode.position.set(-0.16, -0.05, 0.5);
-				this.pawRNode.position.set(0.16, -0.05, 0.5);
-				this.pawLNode.rotation.set(-0.3, 0, 0.4);
-				this.pawRNode.rotation.set(-0.3, 0, -0.4);
-			} else if (this.activeFullBodyPose === 'shy') {
-				this.pawLNode.position.set(-0.12, -0.05, 0.52);
-				this.pawRNode.position.set(0.12, -0.05, 0.52);
-				this.pawLNode.rotation.set(-0.2, 0, 0.2);
-				this.pawRNode.rotation.set(-0.2, 0, -0.2);
-			} else if (this.activeFullBodyPose === 'tsundere') {
-				this.pawLNode.position.set(-0.45, -0.22, 0.35);
-				this.pawRNode.position.set(0.45, -0.22, 0.35);
-				this.pawLNode.rotation.set(-0.1, 0, -0.4);
-				this.pawRNode.rotation.set(-0.1, 0, 0.4);
-			} else if (this.activeFullBodyPose === 'thinking') {
-				this.pawRNode.position.set(0.2, 0.08, 0.52);
-				this.pawRNode.rotation.set(-0.5, 0, -0.3);
-				this.pawLNode.position.set(-0.15, -0.25, 0.45);
-				this.pawLNode.rotation.set(0, 0, 0.2);
-			} else if (this.activeFullBodyPose === 'idol') {
-				this.pawRNode.position.set(0.35, 0.25, 0.45);
-				this.pawRNode.rotation.set(-0.4, 0, 0.4);
-				this.pawLNode.position.set(-0.35, -0.15, 0.45);
-				this.pawLNode.rotation.set(0.2, 0, -0.3);
-			} else if (this.activeFullBodyPose === 'bow') {
-				this.pawLNode.position.set(-0.16, -0.4, 0.5);
-				this.pawRNode.position.set(0.16, -0.4, 0.5);
-				this.pawLNode.rotation.set(0.3, 0, 0);
-				this.pawRNode.rotation.set(0.3, 0, 0);
-			} else if (this.activeFullBodyPose === 'cross-arms') {
-				this.pawLNode.position.set(-0.08, -0.15, 0.5);
-				this.pawRNode.position.set(0.08, -0.15, 0.5);
-				this.pawLNode.rotation.set(-0.2, 0, 0.5);
-				this.pawRNode.rotation.set(-0.2, 0, -0.5);
-			} else if (this.activeFullBodyPose === 'stand') {
-				this.pawLNode.position.set(-0.36, -0.42, 0.38);
-				this.pawRNode.position.set(0.36, -0.42, 0.38);
-				this.pawLNode.rotation.set(0, 0, 0);
-				this.pawRNode.rotation.set(0, 0, 0);
-			} else {
-				const liftL = armLA / 30;
-				this.pawLNode.position.y = -0.3 + liftL * 0.45;
-				this.pawLNode.position.z = 0.4 + (isHighFiveL ? 0.35 : liftL * 0.15);
-				this.pawLNode.rotation.z = liftL * 0.4;
-				this.pawLNode.rotation.x = isHighFiveL ? -1.1 : -liftL * 0.5;
-
-				const liftR = armRA / 30;
-				this.pawRNode.position.y = -0.3 + liftR * 0.45;
-				this.pawRNode.position.z = 0.4 + (isHighFiveR ? 0.35 : liftR * 0.15);
-				this.pawRNode.rotation.z = -liftR * 0.4;
-				this.pawRNode.rotation.x = isHighFiveR ? -1.1 : -liftR * 0.5;
+		if (this.modelType === 'procedural') {
+			if (this.headNode) {
+				this.headNode.rotation.y = yaw;
+				this.headNode.rotation.x = -pitch;
+				this.headNode.rotation.z = -roll;
 			}
-		}
 
-		if (this.tailNode) {
-			const time = performance.now();
-			this.tailNode.rotation.z = Math.sin(time * 0.003) * 0.35;
-			this.tailNode.rotation.y = Math.cos(time * 0.002) * 0.25;
+			if (this.earLNode) {
+				this.earLNode.rotation.z = 0.35 + yaw * 0.2;
+			}
+			if (this.earRNode) {
+				this.earRNode.rotation.z = -0.35 + yaw * 0.2;
+			}
+
+			if (this.eyeLNode) {
+				this.eyeLNode.scale.y = Math.max(0.08, eyeBlinkL);
+				this.eyeLNode.position.x = -0.2 + eyeBallX * 0.04;
+				this.eyeLNode.position.y = 0.05 + eyeBallY * 0.03;
+			}
+			if (this.eyeRNode) {
+				this.eyeRNode.scale.y = Math.max(0.08, eyeBlinkR);
+				this.eyeRNode.position.x = 0.2 + eyeBallX * 0.04;
+				this.eyeRNode.position.y = 0.05 + eyeBallY * 0.03;
+			}
+
+			if (this.mouthNode) {
+				this.mouthNode.scale.y = Math.max(0.2, 1 + mouthOpen * 3.5);
+				this.mouthNode.scale.x = Math.max(0.5, 1 + Math.abs(mouthForm) * 0.35);
+				this.mouthNode.position.x = mouthX * 0.05;
+				this.mouthNode.position.y = -0.14 - mouthOpen * 0.06;
+				this.mouthNode.rotation.z = mouthForm < -0.15 ? 0 : Math.PI;
+			}
+
+			const isHighFiveL = armLA > 24 || (params['ParamArmLB'] ?? 0) > 0.5;
+			const isHighFiveR = armRA > 24 || (params['ParamArmRB'] ?? 0) > 0.5;
+			const animTime = performance.now();
+
+			if (this.pawLNode && this.pawRNode) {
+				const isWavingCat = this.activeFullBodyPose === 'wave' || this.poseLoopMode === 'wave';
+				if (this.activeFullBodyPose === 'cat-paw') {
+					// Cute animated pawing in front of chest
+					this.pawLNode.position.set(-0.32, -0.05 + Math.sin(animTime * 0.006) * 0.04, 0.55);
+					this.pawRNode.position.set(0.32, -0.05 - Math.sin(animTime * 0.006) * 0.04, 0.55);
+					this.pawLNode.rotation.set(-0.4, 0, 0.3);
+					this.pawRNode.rotation.set(-0.4, 0, -0.3);
+				} else if (isWavingCat) {
+					this.pawLNode.position.set(-0.36, -0.3, 0.4);
+					this.pawLNode.rotation.set(0, 0, 0);
+					this.pawRNode.position.set(0.32, 0.15, 0.5);
+					this.pawRNode.rotation.set(-0.5, 0, Math.sin(animTime * 0.008) * 0.45);
+				} else if (this.activeFullBodyPose === 'sit') {
+					this.pawLNode.position.set(-0.34, -0.45, 0.42);
+					this.pawRNode.position.set(0.34, -0.45, 0.42);
+					this.pawLNode.rotation.set(0, 0, 0);
+					this.pawRNode.rotation.set(0, 0, 0);
+				} else if (this.activeFullBodyPose === 'peace' || this.activeFullBodyPose === 'heart') {
+					this.pawLNode.position.set(-0.16, -0.05, 0.5);
+					this.pawRNode.position.set(0.16, -0.05, 0.5);
+					this.pawLNode.rotation.set(-0.3, 0, 0.4);
+					this.pawRNode.rotation.set(-0.3, 0, -0.4);
+				} else if (this.activeFullBodyPose === 'shy') {
+					this.pawLNode.position.set(-0.12, -0.05, 0.52);
+					this.pawRNode.position.set(0.12, -0.05, 0.52);
+					this.pawLNode.rotation.set(-0.2, 0, 0.2);
+					this.pawRNode.rotation.set(-0.2, 0, -0.2);
+				} else if (this.activeFullBodyPose === 'tsundere') {
+					this.pawLNode.position.set(-0.45, -0.22, 0.35);
+					this.pawRNode.position.set(0.45, -0.22, 0.35);
+					this.pawLNode.rotation.set(-0.1, 0, -0.4);
+					this.pawRNode.rotation.set(-0.1, 0, 0.4);
+				} else if (this.activeFullBodyPose === 'thinking') {
+					this.pawRNode.position.set(0.2, 0.08, 0.52);
+					this.pawRNode.rotation.set(-0.5, 0, -0.3);
+					this.pawLNode.position.set(-0.15, -0.25, 0.45);
+					this.pawLNode.rotation.set(0, 0, 0.2);
+				} else if (this.activeFullBodyPose === 'idol') {
+					this.pawRNode.position.set(0.35, 0.25, 0.45);
+					this.pawRNode.rotation.set(-0.4, 0, 0.4);
+					this.pawLNode.position.set(-0.35, -0.15, 0.45);
+					this.pawLNode.rotation.set(0.2, 0, -0.3);
+				} else if (this.activeFullBodyPose === 'bow') {
+					this.pawLNode.position.set(-0.16, -0.4, 0.5);
+					this.pawRNode.position.set(0.16, -0.4, 0.5);
+					this.pawLNode.rotation.set(0.3, 0, 0);
+					this.pawRNode.rotation.set(0.3, 0, 0);
+				} else if (this.activeFullBodyPose === 'cross-arms') {
+					this.pawLNode.position.set(-0.08, -0.15, 0.5);
+					this.pawRNode.position.set(0.08, -0.15, 0.5);
+					this.pawLNode.rotation.set(-0.2, 0, 0.5);
+					this.pawRNode.rotation.set(-0.2, 0, -0.5);
+				} else if (this.activeFullBodyPose === 'stand') {
+					this.pawLNode.position.set(-0.36, -0.42, 0.38);
+					this.pawRNode.position.set(0.36, -0.42, 0.38);
+					this.pawLNode.rotation.set(0, 0, 0);
+					this.pawRNode.rotation.set(0, 0, 0);
+				} else {
+					const liftL = armLA / 30;
+					this.pawLNode.position.y = -0.3 + liftL * 0.45;
+					this.pawLNode.position.z = 0.4 + (isHighFiveL ? 0.35 : liftL * 0.15);
+					this.pawLNode.rotation.z = liftL * 0.4;
+					this.pawLNode.rotation.x = isHighFiveL ? -1.1 : -liftL * 0.5;
+
+					const liftR = armRA / 30;
+					this.pawRNode.position.y = -0.3 + liftR * 0.45;
+					this.pawRNode.position.z = 0.4 + (isHighFiveR ? 0.35 : liftR * 0.15);
+					this.pawRNode.rotation.z = -liftR * 0.4;
+					this.pawRNode.rotation.x = isHighFiveR ? -1.1 : -liftR * 0.5;
+				}
+			}
+
+			if (this.tailNode) {
+				const time = performance.now();
+				this.tailNode.rotation.z = Math.sin(time * 0.003) * 0.35;
+				this.tailNode.rotation.y = Math.cos(time * 0.002) * 0.25;
+			}
 		}
 	}
 
@@ -3114,6 +3269,8 @@ export class ThreeStage {
 		this.morphDict = {};
 		this.hairBones = [];
 		this.skirtBones = [];
+		this.fingerBonesL = { thumb: [], index: [], middle: [], others: [] };
+		this.fingerBonesR = { thumb: [], index: [], middle: [], others: [] };
 		this.initialRotations.clear();
 		this.initialPositions.clear();
 		this.gltfBones.clear();
