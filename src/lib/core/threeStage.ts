@@ -302,8 +302,10 @@ export class ThreeStage {
 	private modelBasePosition: THREE.Vector3 = new THREE.Vector3();
 
 	// Morph Targets / BlendShapes for Expressions & Lip-Sync
-	private morphMesh: THREE.SkinnedMesh | null = null;
+	private morphMesh: THREE.SkinnedMesh | THREE.Mesh | null = null;
+	private morphMeshes: (THREE.SkinnedMesh | THREE.Mesh)[] = [];
 	private morphDict: Record<string, number> = {};
+	private jawNode: THREE.Object3D | null = null;
 
 	// Interactive States: Expression & Full Body Pose
 	public activeExpression: string = '';
@@ -701,50 +703,60 @@ export class ThreeStage {
 
 	setExpression(name: string) {
 		this.activeExpression = name;
-		if (this.morphMesh && this.morphMesh.morphTargetInfluences) {
-			const infl = this.morphMesh.morphTargetInfluences;
-			for (let i = 0; i < infl.length; i++) infl[i] = 0;
+		if (this.morphMeshes.length > 0) {
+			const setVal = (keys: string[], val: number) => {
+				let idx: number | undefined;
+				for (const k of keys) {
+					if (this.morphDict[k] !== undefined) {
+						idx = this.morphDict[k];
+						break;
+					}
+				}
+				if (idx === undefined) return;
+				for (const m of this.morphMeshes) {
+					if (m.morphTargetInfluences && idx < m.morphTargetInfluences.length) {
+						m.morphTargetInfluences[idx] = val;
+					}
+				}
+			};
+
+			// Reset all influences across all morph meshes
+			for (const m of this.morphMeshes) {
+				if (m.morphTargetInfluences) {
+					for (let i = 0; i < m.morphTargetInfluences.length; i++) m.morphTargetInfluences[i] = 0;
+				}
+			}
 
 			if (!name || name === 'normal' || name === 'reset') return;
 
-			let key = name;
-			if (name === 'smile') key = 'vrc.ee';
+			if (name === 'smile') setVal(['vrc.ee', 'Joy', 'Fun', 'joy', 'fun', 'smile', 'fcl_mth_joy'], 1.0);
 			else if (name === 'laugh') {
-				if (this.morphDict['vrc.ee'] !== undefined) infl[this.morphDict['vrc.ee']] = 1.0;
-				if (this.morphDict['vrc.aa'] !== undefined) infl[this.morphDict['vrc.aa']] = 0.8;
-				return;
-			} else if (name === 'wink') key = 'vrc.blink';
-			else if (name === 'surprised' || name === 'surprise') key = 'vrc.oh';
-			else if (name === 'open' || name === 'tongue') key = 'vrc.aa';
+				setVal(['vrc.ee', 'Joy', 'Fun', 'joy', 'fun', 'smile'], 1.0);
+				setVal(['vrc.aa', 'A', 'a', 'mouthopen', 'jawopen'], 0.8);
+			} else if (name === 'wink') setVal(['vrc.blink', 'Blink', 'blink', 'fcl_eye_close'], 1.0);
+			else if (name === 'surprised' || name === 'surprise') setVal(['vrc.oh', 'O', 'o', 'Surprised', 'surprised'], 1.0);
+			else if (name === 'open' || name === 'tongue') setVal(['vrc.aa', 'A', 'a', 'mouthopen', 'jawopen'], 1.0);
 			else if (name === 'love') {
-				if (this.morphDict['stars'] !== undefined) infl[this.morphDict['stars']] = 1.0;
-				if (this.morphDict['blush'] !== undefined) infl[this.morphDict['blush']] = 1.0;
-				if (this.morphDict['vrc.ee'] !== undefined) infl[this.morphDict['vrc.ee']] = 0.6;
-				return;
+				setVal(['stars', 'Extra'], 1.0);
+				setVal(['blush', 'Extra'], 1.0);
+				setVal(['vrc.ee', 'Joy', 'Fun', 'smile'], 0.6);
 			} else if (name === 'pout') {
-				if (this.morphDict['vrc.ou'] !== undefined) infl[this.morphDict['vrc.ou']] = 1.0;
-				if (this.morphDict['blush'] !== undefined) infl[this.morphDict['blush']] = 0.5;
-				return;
-			} else if (name === 'angry') key = 'vrc.ou';
+				setVal(['vrc.ou', 'U', 'u', 'Angry', 'pout'], 1.0);
+				setVal(['blush', 'Extra'], 0.5);
+			} else if (name === 'angry') setVal(['vrc.ou', 'Angry', 'angry', 'U', 'u'], 1.0);
 			else if (name === 'smug') {
-				if (this.morphDict['vrc.ee'] !== undefined) infl[this.morphDict['vrc.ee']] = 0.75;
-				if (this.morphDict['vrc.ou'] !== undefined) infl[this.morphDict['vrc.ou']] = 0.35;
-				return;
+				setVal(['vrc.ee', 'Joy', 'Fun', 'smile'], 0.75);
+				setVal(['vrc.ou', 'U', 'u'], 0.35);
 			} else if (name === 'dazed') {
-				if (this.morphDict['stars'] !== undefined) infl[this.morphDict['stars']] = 0.6;
-				if (this.morphDict['vrc.blink'] !== undefined) infl[this.morphDict['vrc.blink']] = 0.4;
-				return;
+				setVal(['stars', 'Extra'], 0.6);
+				setVal(['vrc.blink', 'Blink'], 0.4);
 			} else if (name === 'sleepy') {
-				if (this.morphDict['vrc.blink'] !== undefined) infl[this.morphDict['vrc.blink']] = 0.85;
-				return;
+				setVal(['vrc.blink', 'Blink'], 0.85);
 			} else if (name === 'cry') {
-				if (this.morphDict['vrc.ou'] !== undefined) infl[this.morphDict['vrc.ou']] = 0.7;
-				if (this.morphDict['vrc.oh'] !== undefined) infl[this.morphDict['vrc.oh']] = 0.35;
-				return;
-			}
-
-			if (key && this.morphDict[key] !== undefined) {
-				infl[this.morphDict[key]] = 1.0;
+				setVal(['vrc.ou', 'Sorrow', 'cry'], 0.7);
+				setVal(['vrc.oh', 'O'], 0.35);
+			} else {
+				setVal([name, name.toLowerCase()], 1.0);
 			}
 		}
 	}
@@ -2122,49 +2134,104 @@ export class ThreeStage {
 	}
 
 	private setupVRMMorphTargets(gltf: any) {
-		const vrmExt = gltf.parser?.json?.extensions?.VRM;
-		const bsg = vrmExt?.blendShapeMaster?.blendShapeGroups;
-
-		const morphMeshes: THREE.SkinnedMesh[] = [];
+		this.morphMeshes = [];
 		gltf.scene.traverse((c: any) => {
 			if (c.isMesh && c.morphTargetInfluences && c.morphTargetInfluences.length > 0) {
-				morphMeshes.push(c as THREE.SkinnedMesh);
+				this.morphMeshes.push(c as (THREE.SkinnedMesh | THREE.Mesh));
 			}
 		});
 
-		if (morphMeshes.length === 0) return;
-		this.morphMesh = morphMeshes[0];
-		if (!this.morphMesh.morphTargetDictionary) {
-			this.morphMesh.morphTargetDictionary = {};
-		}
+		if (this.morphMeshes.length === 0) return;
+		this.morphMesh = this.morphMeshes[0];
+		this.morphDict = {};
+
+		const vrmExt = gltf.parser?.json?.extensions?.VRM;
+		const bsg = vrmExt?.blendShapeMaster?.blendShapeGroups;
 
 		if (Array.isArray(bsg)) {
 			for (const group of bsg) {
 				const groupName = group.name;
 				for (const bind of group.binds || []) {
-					const targetMesh = morphMeshes[bind.mesh] || this.morphMesh;
-					if (targetMesh && targetMesh.morphTargetDictionary) {
-						targetMesh.morphTargetDictionary[groupName] = bind.index;
-						targetMesh.morphTargetDictionary[groupName.toLowerCase()] = bind.index;
-						if (groupName === 'Blink') targetMesh.morphTargetDictionary['vrc.blink'] = bind.index;
-						if (groupName === 'A') targetMesh.morphTargetDictionary['vrc.aa'] = bind.index;
-						if (groupName === 'E' || groupName === 'I' || groupName === 'Joy' || groupName === 'Fun') {
-							targetMesh.morphTargetDictionary['vrc.ee'] = bind.index;
-							targetMesh.morphTargetDictionary['smile'] = bind.index;
-						}
-						if (groupName === 'O') targetMesh.morphTargetDictionary['vrc.oh'] = bind.index;
-						if (groupName === 'U') targetMesh.morphTargetDictionary['vrc.ou'] = bind.index;
-						if (groupName === 'Angry') targetMesh.morphTargetDictionary['angry'] = bind.index;
-						if (groupName === 'Surprised') targetMesh.morphTargetDictionary['surprised'] = bind.index;
-						if (groupName === 'Extra') {
-							targetMesh.morphTargetDictionary['stars'] = bind.index;
-							targetMesh.morphTargetDictionary['blush'] = bind.index;
-						}
+					const idx = bind.index;
+					this.morphDict[groupName] = idx;
+					this.morphDict[groupName.toLowerCase()] = idx;
+
+					if (groupName === 'A') {
+						this.morphDict['vrc.aa'] = idx;
+						this.morphDict['a'] = idx;
+						this.morphDict['mouthopen'] = idx;
+						this.morphDict['jawopen'] = idx;
+					}
+					if (groupName === 'Blink') {
+						this.morphDict['vrc.blink'] = idx;
+						this.morphDict['blink'] = idx;
+					}
+					if (groupName === 'Blink_L') this.morphDict['blink_l'] = idx;
+					if (groupName === 'Blink_R') this.morphDict['blink_r'] = idx;
+					if (groupName === 'Joy' || groupName === 'Fun' || groupName === 'E' || groupName === 'I') {
+						this.morphDict['vrc.ee'] = idx;
+						this.morphDict['smile'] = idx;
+					}
+					if (groupName === 'O') {
+						this.morphDict['vrc.oh'] = idx;
+						this.morphDict['o'] = idx;
+					}
+					if (groupName === 'U') {
+						this.morphDict['vrc.ou'] = idx;
+						this.morphDict['u'] = idx;
+					}
+					if (groupName === 'Angry') this.morphDict['angry'] = idx;
+					if (groupName === 'Surprised') this.morphDict['surprised'] = idx;
+					if (groupName === 'Extra') {
+						this.morphDict['stars'] = idx;
+						this.morphDict['blush'] = idx;
 					}
 				}
 			}
 		}
-		this.morphDict = this.morphMesh.morphTargetDictionary;
+
+		// Also discover native morph target dictionary entries across all meshes (supports standard GLTF / GLB / VRoid / MMD)
+		for (const mesh of this.morphMeshes) {
+			if (mesh.morphTargetDictionary) {
+				for (const [name, index] of Object.entries(mesh.morphTargetDictionary)) {
+					const lower = name.toLowerCase();
+					this.morphDict[name] = index;
+					this.morphDict[lower] = index;
+
+					// Mouth Open / A
+					if (lower === 'a' || lower === 'vrc.aa' || lower.includes('mouth_a') || lower.includes('mth_a') || lower.includes('mouthopen') || lower.includes('jawopen') || lower.includes('viseme_aa') || lower.includes('viseme_a') || lower === 'あ' || lower === 'あ口' || lower === '口開') {
+						this.morphDict['vrc.aa'] = index;
+						this.morphDict['A'] = index;
+					}
+					// Blink
+					if (lower === 'blink' || lower === 'vrc.blink' || lower.includes('eye_close') || lower.includes('fcl_eye_close') || lower.includes('eyeblink') || lower === 'まばたき') {
+						this.morphDict['vrc.blink'] = index;
+						this.morphDict['Blink'] = index;
+					}
+					// Smile / Joy
+					if (lower.includes('joy') || lower.includes('fun') || lower.includes('smile') || lower === 'vrc.ee' || lower.includes('mth_fun') || lower.includes('mth_joy') || lower === '笑い') {
+						this.morphDict['vrc.ee'] = index;
+						this.morphDict['smile'] = index;
+					}
+					// O / Surprised
+					if (lower === 'o' || lower === 'vrc.oh' || lower.includes('mouth_o') || lower.includes('mth_o') || lower.includes('surprised') || lower.includes('surprise')) {
+						this.morphDict['vrc.oh'] = index;
+						this.morphDict['O'] = index;
+					}
+					// U / Pout
+					if (lower === 'u' || lower === 'vrc.ou' || lower.includes('pout')) {
+						this.morphDict['vrc.ou'] = index;
+						this.morphDict['U'] = index;
+					}
+				}
+			}
+		}
+
+		// Sync mapped dictionary to all morph meshes
+		for (const mesh of this.morphMeshes) {
+			if (!mesh.morphTargetDictionary) mesh.morphTargetDictionary = {};
+			Object.assign(mesh.morphTargetDictionary, this.morphDict);
+		}
 	}
 
 	private discoverHumanoidBones(group: THREE.Object3D) {
@@ -2188,6 +2255,7 @@ export class ThreeStage {
 		};
 
 		this.headNode = findBone(['J_Bip_C_Head', 'head', 'mixamorig:Head', 'bip01_head']);
+		this.jawNode = findBone(['J_Bip_C_Jaw', 'jaw', 'mixamorig:Jaw', 'bip01_jaw', 'head_jaw', 'chin']);
 		this.neckNode = findBone(['J_Bip_C_Neck', 'neck', 'mixamorig:Neck', 'bip01_neck']);
 		this.eyeRNode = findBone(['J_Adj_R_FaceEye', 'EyeR', 'mixamorig:RightEye', 'eye_r', 'righteye']);
 		this.eyeLNode = findBone(['J_Adj_L_FaceEye', 'EyeL', 'mixamorig:LeftEye', 'eye_l', 'lefteye']);
@@ -2395,27 +2463,31 @@ export class ThreeStage {
 
 		const toonGradient = this.getOrCreateToonGradient();
 
+		this.morphMeshes = [];
 		group.traverse((child) => {
 			if ((child as any).isMesh) {
 				const mesh = child as THREE.SkinnedMesh;
 				mesh.castShadow = false;
 				mesh.receiveShadow = false; // Prevent harsh polygonal self-shadow artifacts across anime face
 
-				if (mesh.morphTargetDictionary) {
-					this.morphMesh = mesh;
-					this.morphDict = mesh.morphTargetDictionary;
-					if (typeof window !== 'undefined') {
-						import('#lib/stores/riggingStore.svelte').then(({ rigging }) => {
-							rigging.availableExpressions = [
-								{ id: 'stars', name: 'stars', label: '⭐ Starry Eyes (Neuro-sama)' },
-								{ id: 'blush', name: 'blush', label: '😳 Blush Pipi Merah' },
-								{ id: 'vrc.blink', name: 'wink', label: '😉 Kedip Mata (Wink)' },
-								{ id: 'vrc.ee', name: 'smile', label: '😁 Senyum Lebar (EE)' },
-								{ id: 'vrc.aa', name: 'open', label: '🗣️ Mulut Terbuka Bicara (AA)' },
-								{ id: 'vrc.oh', name: 'surprised', label: '😮 Kaget / Terkejut (OH)' },
-								{ id: 'vrc.ou', name: 'pout', label: '😗 Cemberut / Pout (OU)' }
-							];
-						}).catch(() => {});
+				if (mesh.morphTargetInfluences && mesh.morphTargetInfluences.length > 0) {
+					this.morphMeshes.push(mesh);
+					if (mesh.morphTargetDictionary) {
+						this.morphMesh = mesh;
+						this.morphDict = { ...this.morphDict, ...mesh.morphTargetDictionary };
+						if (typeof window !== 'undefined') {
+							import('#lib/stores/riggingStore.svelte').then(({ rigging }) => {
+								rigging.availableExpressions = [
+									{ id: 'stars', name: 'stars', label: '⭐ Starry Eyes (Neuro-sama)' },
+									{ id: 'blush', name: 'blush', label: '😳 Blush Pipi Merah' },
+									{ id: 'vrc.blink', name: 'wink', label: '😉 Kedip Mata (Wink)' },
+									{ id: 'vrc.ee', name: 'smile', label: '😁 Senyum Lebar (EE)' },
+									{ id: 'vrc.aa', name: 'open', label: '🗣️ Mulut Terbuka Bicara (AA)' },
+									{ id: 'vrc.oh', name: 'surprised', label: '😮 Kaget / Terkejut (OH)' },
+									{ id: 'vrc.ou', name: 'pout', label: '😗 Cemberut / Pout (OU)' }
+								];
+							}).catch(() => {});
+						}
 					}
 				}
 
@@ -2623,12 +2695,16 @@ export class ThreeStage {
 			this.modelBasePosition.z + this.modelOffsetZ
 		);
 
+		this.morphMeshes = [];
 		group.traverse((child) => {
 			if ((child as any).isMesh) {
 				const mesh = child as THREE.SkinnedMesh;
-				if (mesh.morphTargetDictionary) {
-					this.morphMesh = mesh;
-					this.morphDict = mesh.morphTargetDictionary;
+				if (mesh.morphTargetInfluences && mesh.morphTargetInfluences.length > 0) {
+					this.morphMeshes.push(mesh);
+					if (mesh.morphTargetDictionary) {
+						this.morphMesh = mesh;
+						this.morphDict = { ...this.morphDict, ...mesh.morphTargetDictionary };
+					}
 				}
 			}
 		});
@@ -3118,10 +3194,7 @@ export class ThreeStage {
 			}
 
 			// 3. Morph Targets (Expressions & Lip-Sync)
-			if (this.morphMesh && this.morphMesh.morphTargetInfluences) {
-				const dict = this.morphDict;
-				const infl = this.morphMesh.morphTargetInfluences;
-
+			if (this.morphMeshes.length > 0) {
 				const isSmile = this.activeExpression === 'smile' || this.activeExpression === 'vrc.ee' || this.activeExpression === 'laugh' || this.activeExpression === 'love' || this.activeExpression === 'smug';
 				const isWink = this.activeExpression === 'wink' || this.activeExpression === 'vrc.blink' || this.activeExpression === 'sleepy' || this.activeExpression === 'dazed';
 				const isMouthOpen = this.activeExpression === 'vrc.aa' || this.activeExpression === 'open' || this.activeExpression === 'laugh' || this.activeExpression === 'tongue';
@@ -3130,56 +3203,61 @@ export class ThreeStage {
 				const isStars = this.activeExpression === 'stars' || this.activeExpression === 'love' || this.activeExpression === 'dazed';
 				const isBlush = this.activeExpression === 'blush' || this.activeExpression === 'love' || this.activeExpression === 'pout';
 
+				const applyMorph = (keys: string[], val: number) => {
+					let idx: number | undefined;
+					for (const k of keys) {
+						if (this.morphDict[k] !== undefined) {
+							idx = this.morphDict[k];
+							break;
+						}
+					}
+					if (idx === undefined) return;
+					for (const m of this.morphMeshes) {
+						if (m.morphTargetInfluences && idx < m.morphTargetInfluences.length) {
+							m.morphTargetInfluences[idx] = val;
+						}
+					}
+				};
+
 				// Eye Blink
-				const blinkIdx = dict['vrc.blink'] ?? dict['Blink'] ?? dict['blink'];
-				if (blinkIdx !== undefined) {
-					const avgBlink = Math.min(eyeBlinkL, eyeBlinkR);
-					const blinkVal = Math.max(0, Math.min(1.0, (1.0 - avgBlink) * 1.25));
-					infl[blinkIdx] = isWink ? 1.0 : blinkVal;
-				}
+				const avgBlink = Math.min(eyeBlinkL, eyeBlinkR);
+				const blinkVal = isWink ? 1.0 : Math.max(0, Math.min(1.0, (1.0 - avgBlink) * 1.25));
+				applyMorph(['vrc.blink', 'Blink', 'blink', 'fcl_eye_close', 'eye_close', 'eyeblink'], blinkVal);
 
-				// Lip sync mouth open
-				const aaIdx = dict['vrc.aa'] ?? dict['A'] ?? dict['a'];
-				const ohIdx = dict['vrc.oh'] ?? dict['O'] ?? dict['o'];
-				if (aaIdx !== undefined) {
-					infl[aaIdx] = isMouthOpen ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
-				}
-				if (ohIdx !== undefined) {
-					infl[ohIdx] = isSurprised
-						? 1.0
-						: (mouthOpen > 0.4 && Math.abs(mouthForm) < 0.2 ? mouthOpen * 0.8 : 0);
-				}
+				// Lip sync mouth open (A / AA / MouthOpen / JawOpen)
+				const aaVal = isMouthOpen ? 1.0 : Math.max(0, Math.min(1.0, mouthOpen * 1.5));
+				applyMorph(['vrc.aa', 'A', 'a', 'MTH_A', 'fcl_mth_a', 'mouth_a', 'mouthopen', 'jawopen', 'viseme_aa', 'aa'], aaVal);
 
-				// Smile
-				const eeIdx = dict['vrc.ee'] ?? dict['Joy'] ?? dict['Fun'] ?? dict['joy'] ?? dict['fun'] ?? dict['E'] ?? dict['I'];
-				if (eeIdx !== undefined) {
-					const smileVal = mouthForm > 0.1 ? mouthForm : 0;
-					infl[eeIdx] = isSmile ? 1.0 : Math.max(0, Math.min(1.0, smileVal));
-				}
+				// Mouth O / Surprised
+				const ohVal = isSurprised
+					? 1.0
+					: (mouthOpen > 0.4 && Math.abs(mouthForm) < 0.2 ? mouthOpen * 0.8 : 0);
+				applyMorph(['vrc.oh', 'O', 'o', 'MTH_O', 'fcl_mth_o', 'mouth_o', 'viseme_oh', 'Surprised', 'surprised'], ohVal);
 
-				// Star eyes (Neuro-sama signature!)
-				const starsIdx = dict['stars'];
-				if (starsIdx !== undefined) {
-					infl[starsIdx] = isStars ? 1.0 : 0;
-				}
+				// Smile (EE / Joy / Fun)
+				const smileVal = isSmile ? 1.0 : (mouthForm > 0.1 ? Math.max(0, Math.min(1.0, mouthForm)) : 0);
+				applyMorph(['vrc.ee', 'Joy', 'Fun', 'joy', 'fun', 'E', 'I', 'smile', 'fcl_mth_joy', 'mth_smile'], smileVal);
+
+				// Star eyes (Neuro-sama signature & VRM Extra)
+				applyMorph(['stars', 'Extra'], isStars ? 1.0 : 0);
 
 				// Blush
-				const blushIdx = dict['blush'];
-				if (blushIdx !== undefined) {
-					const autoBlush = mouthForm > 0.5 ? 0.4 : 0;
-					infl[blushIdx] = isBlush ? 1.0 : autoBlush;
-				}
+				const autoBlush = mouthForm > 0.5 ? 0.4 : 0;
+				applyMorph(['blush', 'Extra'], isBlush ? 1.0 : autoBlush);
 
 				// Pout / OU
-				const ouIdx = dict['vrc.ou'];
-				if (ouIdx !== undefined) {
-					infl[ouIdx] = isPout ? 1.0 : 0;
-				}
+				applyMorph(['vrc.ou', 'U', 'u', 'Angry', 'pout'], isPout ? 1.0 : 0);
 
 				// Generic fallback for any arbitrary model morph target
-				if (this.activeExpression && dict[this.activeExpression] !== undefined) {
-					infl[dict[this.activeExpression]] = 1.0;
+				if (this.activeExpression && this.morphDict[this.activeExpression] !== undefined) {
+					applyMorph([this.activeExpression, this.activeExpression.toLowerCase()], 1.0);
 				}
+			}
+
+			// Jaw bone fallback if model has rigged jaw bone (e.g. Mixamo/MMD humanoid models)
+			if (this.jawNode) {
+				const initJaw = this.initialRotations.get(this.jawNode) || { x: 0, y: 0, z: 0 };
+				this.jawNode.rotation.x = initJaw.x + Math.max(0, mouthOpen * 0.4);
 			}
 
 			// 4. Full Body Sway & Breathing Physics
@@ -3428,7 +3506,9 @@ export class ThreeStage {
 		this.handLNode = null;
 		this.handRNode = null;
 		this.morphMesh = null;
+		this.morphMeshes = [];
 		this.morphDict = {};
+		this.jawNode = null;
 		this.hairBones = [];
 		this.skirtBones = [];
 		this.fingerBonesL = { thumb: [], index: [], middle: [], others: [] };

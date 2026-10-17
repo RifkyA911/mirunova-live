@@ -204,7 +204,7 @@ export class RiggingStore {
 	selectedLayerElementId = $state<string | null>('host'); // 'host' | 'collab' | accessory id
 
 	// Interactive Canvas Cursor / Tool Mode ('pan' | 'select-layer' | 'hand-tracking')
-	cursorToolMode = $state<'pan' | 'select-layer' | 'hand-tracking'>('pan');
+	cursorToolMode = $state<'pan' | 'camera-angle' | 'select-layer' | 'hand-tracking'>('pan');
 
 	// Floating / Windowed Rigging Panel Geometry (Draggable & Resizable)
 	riggingWindowX = $state<number>(0);
@@ -945,11 +945,12 @@ export class RiggingStore {
 		this.persist();
 	}
 
-	setCursorToolMode(mode: 'pan' | 'select-layer' | 'hand-tracking') {
+	setCursorToolMode(mode: 'pan' | 'camera-angle' | 'select-layer' | 'hand-tracking') {
 		this.cursorToolMode = mode;
 		this.enableHandTracking = mode === 'hand-tracking';
 		const modeLabels: Record<string, string> = {
 			'pan': 'Mode Pan: Geser & Zoom Avatar di Panggung',
+			'camera-angle': 'Mode Sudut Kamera: Putar & Sesuaikan Sudut Pandang Kamera 3D & 2D',
 			'select-layer': 'Mode Layer Move: Klik & Drag Elemen/Props Bebas di Panggung',
 			'hand-tracking': 'Mode Hand Tracking: Deteksi Gerakan Tangan MediaPipe'
 		};

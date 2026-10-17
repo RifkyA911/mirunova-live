@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { Activity, X } from 'lucide-svelte';
+	import { Activity, X, Orbit } from 'lucide-svelte';
 	import { rigging } from '#lib/stores/riggingStore.svelte';
 	import { threeStage, type StageAreaWaypoint } from '#lib/core/threeStage';
 	import { i18n, type I18nKey } from '#lib/i18n/index.svelte';
@@ -288,11 +288,15 @@
 		prevPointerX = e.clientX;
 		prevPointerY = e.clientY;
 
-		if (rigging.cursorToolMode === 'pan' || dragButton === 2 || e.shiftKey) {
+		if (rigging.cursorToolMode === 'camera-angle') {
+			// Rotate body & tilt pitch (Camera angle / orbit)
+			const sensitivity = 0.005;
+			threeStage.rotateOrbit(deltaX * sensitivity, -deltaY * sensitivity, true);
+		} else if (rigging.cursorToolMode === 'pan' || dragButton === 2 || e.shiftKey) {
 			// Pan / Translate 3D model position
 			threeStage.moveModel(deltaX * 0.005, -deltaY * 0.005);
 		} else {
-			// Rotate body & tilt pitch
+			// Default fallback
 			const sensitivity = 0.005;
 			threeStage.rotateOrbit(deltaX * sensitivity, -deltaY * sensitivity, true);
 		}
@@ -372,11 +376,21 @@
 			const deltaY = e.touches[0].clientY - touchPrevSingle.y;
 			touchPrevSingle = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 
-			if (rigging.cursorToolMode === 'pan') {
+			if (rigging.cursorToolMode === 'camera-angle') {
+				threeStage.rotateOrbit(deltaX * 0.005, -deltaY * 0.005, true);
+			} else if (rigging.cursorToolMode === 'pan') {
 				threeStage.moveModel(deltaX * 0.005, -deltaY * 0.005);
 			} else {
 				threeStage.rotateOrbit(deltaX * 0.005, -deltaY * 0.005, true);
 			}
+		}
+	}
+
+	function handleDoubleClick() {
+		if (rigging.isGuiLocked || isHostLayerLocked) return;
+		if (rigging.cursorToolMode === 'camera-angle') {
+			threeStage.resetOrbit();
+			rigging.showToast(`🎯 ${i18n.t('stage_face_front')}`);
 		}
 	}
 
@@ -423,10 +437,30 @@
 	ontouchend={handleTouchEnd}
 	ontouchcancel={handleTouchEnd}
 	onwheel={handleWheel}
+	ondblclick={handleDoubleClick}
 	oncontextmenu={(e) => e.preventDefault()}
 	style="opacity: {hostLayerOpacity}; display: {isHostLayerVisible && hostLayerOpacity > 0 ? 'block' : 'none'}; pointer-events: {isHostLayerLocked ? 'none' : 'auto'};"
 	class="absolute inset-0 w-full h-full overflow-hidden select-none touch-none {isDragging ? 'cursor-grabbing' : 'cursor-grab'} z-0"
 ></div>
+
+<!-- Floating Camera Angle Banner (Visible in 3D Mode when camera-angle tool is active) -->
+{#if rigging.cursorToolMode === 'camera-angle' && isHostLayerVisible && !isHostLayerLocked && !rigging.isGuiLocked}
+	<div class="fixed top-20 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full backdrop-blur-xl bg-indigo-950/85 border border-indigo-500/50 text-indigo-200 font-mono text-xs shadow-2xl flex items-center gap-2 pointer-events-auto z-30 animate-in fade-in slide-in-from-top-2 duration-200">
+		<span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+		<Orbit class="w-3.5 h-3.5 text-indigo-400" />
+		<span>{i18n.t('cursor_camera_angle_banner')}</span>
+		<button
+			type="button"
+			onclick={() => {
+				rigging.setCursorToolMode('pan');
+			}}
+			class="ml-1 p-0.5 rounded-full hover:bg-indigo-800/50 text-indigo-400 hover:text-white transition-colors cursor-pointer"
+			title={i18n.t('close_btn')}
+		>
+			<X class="w-3.5 h-3.5" />
+		</button>
+	</div>
+{/if}
 
 <!-- Floating On-Screen 3D Transform & Navigation HUD (Visible in 3D Mode) -->
 {#if !rigging.isGuiLocked && isHostLayerVisible && !isHostLayerLocked && rigging.is3DPositionHudVisible}

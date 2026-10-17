@@ -199,5 +199,21 @@ describe('Photoshop Layer Manager, Accessories & Collab System', () => {
 		rigging.deleteLayer('layer-background');
 		expect(rigging.backgroundStyle).toBe('transparent');
 	});
+
+	it('should support cursorToolMode switching including camera-angle orbit', () => {
+		expect(rigging.cursorToolMode).toBe('pan');
+
+		rigging.setCursorToolMode('camera-angle');
+		expect(rigging.cursorToolMode).toBe('camera-angle');
+
+		rigging.setCursorToolMode('select-layer');
+		expect(rigging.cursorToolMode).toBe('select-layer');
+
+		rigging.setCursorToolMode('hand-tracking');
+		expect(rigging.cursorToolMode).toBe('hand-tracking');
+
+		rigging.setCursorToolMode('pan');
+		expect(rigging.cursorToolMode).toBe('pan');
+	});
 });
 

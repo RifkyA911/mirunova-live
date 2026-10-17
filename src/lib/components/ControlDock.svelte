@@ -18,6 +18,7 @@
 		Tv,
 		Hand,
 		Move,
+		Orbit,
 		MousePointer,
 		Settings,
 		Aperture,
@@ -507,17 +508,21 @@
 					}
 				}}
 				class="relative p-2 sm:p-2.5 min-w-[40px] min-h-[40px] rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center {
-					rigging.cursorToolMode === 'select-layer'
-						? 'text-amber-400 bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/20'
-						: rigging.cursorToolMode === 'hand-tracking'
-							? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
-							: isCursorToolMenuOpen
-								? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-								: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
+					rigging.cursorToolMode === 'camera-angle'
+						? 'text-indigo-400 bg-indigo-500/20 border border-indigo-500/40 shadow-sm shadow-indigo-500/20'
+						: rigging.cursorToolMode === 'select-layer'
+							? 'text-amber-400 bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/20'
+							: rigging.cursorToolMode === 'hand-tracking'
+								? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
+								: isCursorToolMenuOpen
+									? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+									: 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800/60'
 				}"
 				aria-label={i18n.t('cursor_mode_title')}
 			>
-				{#if rigging.cursorToolMode === 'select-layer'}
+				{#if rigging.cursorToolMode === 'camera-angle'}
+					<Orbit class="w-5 h-5 text-indigo-400" />
+				{:else if rigging.cursorToolMode === 'select-layer'}
 					<MousePointer class="w-5 h-5 text-amber-400" />
 				{:else if rigging.cursorToolMode === 'hand-tracking'}
 					<Hand class="w-5 h-5 text-emerald-400" />
@@ -526,7 +531,13 @@
 				{/if}
 
 				{#if rigging.cursorToolMode !== 'pan'}
-					<span class="absolute top-1 right-1 w-2 h-2 rounded-full {rigging.cursorToolMode === 'select-layer' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse"></span>
+					<span class="absolute top-1 right-1 w-2 h-2 rounded-full {
+						rigging.cursorToolMode === 'camera-angle'
+							? 'bg-indigo-400'
+							: rigging.cursorToolMode === 'select-layer'
+								? 'bg-amber-400'
+								: 'bg-emerald-400'
+					} animate-pulse"></span>
 				{/if}
 			</button>
 
@@ -534,11 +545,13 @@
 				class="pointer-events-none absolute -top-10 px-2.5 py-1 bg-zinc-900/95 border border-zinc-700/80 rounded-lg text-[11px] font-medium text-zinc-200 whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-150 scale-95 group-hover:scale-100 z-[70] hidden sm:block"
 			>
 				{i18n.t('cursor_mode_title')}: {
-					rigging.cursorToolMode === 'select-layer'
-						? i18n.t('cursor_mode_select_layer')
-						: rigging.cursorToolMode === 'hand-tracking'
-							? i18n.t('cursor_mode_hand_tracking')
-							: i18n.t('cursor_mode_pan')
+					rigging.cursorToolMode === 'camera-angle'
+						? i18n.t('cursor_mode_camera_angle')
+						: rigging.cursorToolMode === 'select-layer'
+							? i18n.t('cursor_mode_select_layer')
+							: rigging.cursorToolMode === 'hand-tracking'
+								? i18n.t('cursor_mode_hand_tracking')
+								: i18n.t('cursor_mode_pan')
 				}
 			</div>
 
@@ -1120,7 +1133,40 @@
 						{/if}
 					</button>
 
-					<!-- Option 2: Select & Move Layer / Props -->
+					<!-- Option 2: Camera Angle & Orbit (3D & 2D) -->
+					<button
+						type="button"
+						onclick={() => {
+							playSfx('click');
+							rigging.setCursorToolMode('camera-angle');
+							rigging.enableHandTracking = false;
+							isCursorToolMenuOpen = false;
+						}}
+						class="w-full p-2 rounded-xl text-left text-xs transition-all flex items-center justify-between cursor-pointer {
+							rigging.cursorToolMode === 'camera-angle'
+								? isLightTheme
+									? 'bg-indigo-50 border border-indigo-400 text-indigo-900 font-bold'
+									: 'bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-bold'
+								: isLightTheme
+									? 'hover:bg-zinc-100 text-zinc-700'
+									: 'hover:bg-zinc-900 text-zinc-300'
+						}"
+					>
+						<div class="flex items-center gap-2">
+							<div class="p-1.5 rounded-lg {rigging.cursorToolMode === 'camera-angle' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800 text-zinc-400'}">
+								<Orbit class="w-3.5 h-3.5" />
+							</div>
+							<div>
+								<div class="font-bold text-xs">{i18n.t('cursor_mode_camera_angle')}</div>
+								<div class="text-[10px] text-zinc-400">{i18n.t('cursor_mode_camera_angle_desc')}</div>
+							</div>
+						</div>
+						{#if rigging.cursorToolMode === 'camera-angle'}
+							<span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+						{/if}
+					</button>
+
+					<!-- Option 3: Select & Move Layer / Props -->
 					<button
 						type="button"
 						onclick={() => {

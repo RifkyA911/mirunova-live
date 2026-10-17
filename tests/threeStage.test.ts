@@ -618,5 +618,56 @@ describe('ThreeStage 3D Cat Procedural Rigging', () => {
 		// Wrist should continuously rotate with hand angle
 		expect(handL.rotation.z).toBeGreaterThan(0.15);
 	});
+
+	it('should support orbit rotation and resetOrbit in 3D camera angle mode', () => {
+		const stage = new ThreeStage();
+		expect(stage.orbitTheta).toBe(0);
+
+		stage.rotateOrbit(0.5, 0.2, true);
+		expect(stage.orbitTheta).toBeCloseTo(0.5);
+
+		stage.resetOrbit();
+		expect(stage.orbitTheta).toBe(0);
+	});
+
+	it('should synchronize mouth morph tracking across all sub-meshes and jaw bone', () => {
+		const stage = new ThreeStage();
+		stage.modelType = 'glb';
+
+		// Create two mock meshes with morph targets (Mesh 1: face skin, Mesh 2: mouth cavity)
+		const geom1 = new THREE.BufferGeometry();
+		const geom2 = new THREE.BufferGeometry();
+		const mat = new THREE.MeshBasicMaterial();
+		const mesh1 = new THREE.Mesh(geom1, mat);
+		const mesh2 = new THREE.Mesh(geom2, mat);
+
+		mesh1.morphTargetInfluences = [0, 0];
+		mesh2.morphTargetInfluences = [0, 0];
+
+		const jawBone = new THREE.Bone();
+		jawBone.name = 'J_Bip_C_Jaw';
+
+		// Inject mock meshes, morphDict, and jawNode
+		(stage as any).morphMeshes = [mesh1, mesh2];
+		(stage as any).morphDict = {
+			'a': 0,
+			'mouthopen': 0,
+			'vrc.aa': 0,
+			'blink': 1
+		};
+		(stage as any).jawNode = jawBone;
+
+		// Feed mouth open tracking parameter (0.5 * 1.5 = 0.75)
+		stage.updateParameters({
+			ParamMouthOpenY: 0.5
+		});
+
+		// Both meshes must receive the updated mouth morphTargetInfluence
+		expect(mesh1.morphTargetInfluences[0]).toBeCloseTo(0.75);
+		expect(mesh2.morphTargetInfluences[0]).toBeCloseTo(0.75);
+
+		// Jaw bone must rotate downward as anatomical fallback
+		expect(jawBone.rotation.x).toBeGreaterThanOrEqual(0.2);
+	});
 });
 

@@ -3,7 +3,7 @@
 	import { rigging, DEFAULT_PARAMETERS } from '#lib/stores/riggingStore.svelte';
 	import { i18n } from '#lib/i18n/index.svelte';
 	import type { Live2DParameterDef, AvatarFramingMode } from '#lib/types/tracking';
-	import { Check, X, Move } from 'lucide-svelte';
+	import { Check, X, Move, Orbit } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { playSfx } from '#lib/core/sfx';
 
@@ -17,10 +17,11 @@
 	let collabModel2: any = null;
 	let currentCollab2Url = '';
 	let isCollab2Loading = false;
-	let isDragging = false;
+	let isDragging = $state(false);
 	let dragStart = { x: 0, y: 0 };
 	let modelPosition = $state<{ x: number; y: number }>({ x: 0, y: 0 });
 	let modelScale = $state<number>(0.25);
+	let modelRotation = $state<number>(0);
 
 	let liveFps = $state<number>(60);
 	let liveFrameMs = $state<number>(16.6);
@@ -429,6 +430,10 @@
 			const modelH = currentModel.height || 1000;
 			modelScale = Math.min(rendererWidth / modelW, rendererHeight / modelH) * 0.75;
 			currentModel.scale.set(modelScale);
+			modelRotation = 0;
+			currentModel.rotation = 0;
+			if (collabModel) collabModel.rotation = 0;
+			if (collabModel2) collabModel2.rotation = 0;
 			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 50 };
 			currentModel.position.set(modelPosition.x, modelPosition.y);
 			rigging.zoomLevel = 1.0;
@@ -502,6 +507,8 @@
 			model.scale.set(scale);
 
 			model.anchor.set(0.5, 0.5);
+			modelRotation = 0;
+			model.rotation = 0;
 			modelPosition = { x: rendererWidth / 2, y: rendererHeight / 2 + 50 };
 			model.position.set(modelPosition.x, modelPosition.y);
 
@@ -1398,6 +1405,12 @@
 				}
 				if (!accLayer?.visible) return;
 			}
+		} else if (rigging.cursorToolMode === 'camera-angle') {
+			if (hostLayer?.locked) {
+				rigging.showToast('🔒 ' + i18n.t('toast_layer_host_locked'));
+				return;
+			}
+			if (!hostLayer?.visible) return;
 		} else {
 			// Mode 'pan': panning host model
 			if (hostLayer?.locked) {
@@ -1427,7 +1440,20 @@
 		const collab2Layer = rigging.stageLayers.find((l) => l.type === 'model-collab-2' || l.id === 'layer-collab-2');
 		const accLayer = rigging.stageLayers.find((l) => l.type === 'accessories');
 
-		if (rigging.cursorToolMode === 'select-layer') {
+		if (rigging.cursorToolMode === 'camera-angle') {
+			if (!currentModel || hostLayer?.locked || !hostLayer?.visible) return;
+			// 2D Camera Angle / Orbit:
+			// Rotate model tilt and steer head/body angle parameters when webcam is off
+			modelRotation += (dx * 0.006);
+			currentModel.rotation = modelRotation;
+			if (!rigging.isCameraActive) {
+				const curX = rigging.getManualValue('ParamAngleX') || 0;
+				const curY = rigging.getManualValue('ParamAngleY') || 0;
+				rigging.setManualValue('ParamAngleX', Math.max(-30, Math.min(30, curX + dx * 0.35)));
+				rigging.setManualValue('ParamAngleY', Math.max(-30, Math.min(30, curY - dy * 0.35)));
+			}
+			return;
+		} else if (rigging.cursorToolMode === 'select-layer') {
 			const targetId = rigging.selectedLayerElementId;
 			if (targetId === 'collab' && collabModel) {
 				if (collabLayer?.locked || !collabLayer?.visible) return;
@@ -1510,6 +1536,21 @@
 			lastPointerX = touch.clientX;
 			lastPointerY = touch.clientY;
 
+			if (rigging.cursorToolMode === 'camera-angle') {
+				const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
+				if (currentModel && !hostLayer?.locked && hostLayer?.visible) {
+					modelRotation += (dx * 0.006);
+					currentModel.rotation = modelRotation;
+					if (!rigging.isCameraActive) {
+						const curX = rigging.getManualValue('ParamAngleX') || 0;
+						const curY = rigging.getManualValue('ParamAngleY') || 0;
+						rigging.setManualValue('ParamAngleX', Math.max(-30, Math.min(30, curX + dx * 0.35)));
+						rigging.setManualValue('ParamAngleY', Math.max(-30, Math.min(30, curY - dy * 0.35)));
+					}
+				}
+				return;
+			}
+
 			// Pan host model or selected layer
 			const hostLayer = rigging.stageLayers.find((l) => l.type === 'model-host');
 			if (currentModel && !hostLayer?.locked && hostLayer?.visible) {
@@ -1589,6 +1630,19 @@
 		}
 		if (!hostLayer?.visible) return;
 		if (!currentModel || !app) return;
+
+		if (rigging.cursorToolMode === 'camera-angle') {
+			modelRotation = 0;
+			currentModel.rotation = 0;
+			if (!rigging.isCameraActive) {
+				rigging.setManualValue('ParamAngleX', 0);
+				rigging.setManualValue('ParamAngleY', 0);
+				rigging.setManualValue('ParamAngleZ', 0);
+			}
+			rigging.showToast(`🎯 ${i18n.t('stage_face_front')}`);
+			return;
+		}
+
 		const rendererWidth = app.renderer.width / (window.devicePixelRatio || 1);
 		const rendererHeight = app.renderer.height / (window.devicePixelRatio || 1);
 		modelScale = Math.min(rendererWidth / currentModel.width, rendererHeight / currentModel.height) * 0.7;
@@ -1650,9 +1704,11 @@
 	class="absolute inset-0 w-full h-full overflow-hidden select-none touch-none z-0 {
 		rigging.cursorToolMode === 'select-layer'
 			? 'cursor-move'
-			: rigging.cursorToolMode === 'hand-tracking'
-				? 'cursor-crosshair'
-				: 'cursor-grab active:cursor-grabbing'
+			: rigging.cursorToolMode === 'camera-angle'
+				? (isDragging ? 'cursor-grabbing' : 'cursor-grab')
+				: rigging.cursorToolMode === 'hand-tracking'
+					? 'cursor-crosshair'
+					: (isDragging ? 'cursor-grabbing' : 'cursor-grab')
 	}"
 	onmousedown={handleMouseDown}
 	onmousemove={handleMouseMove}
@@ -1684,21 +1740,28 @@
 				{@const headShiftX = (headAngleX * 1.5) * scaleRatio}
 				{@const headShiftY = -(headAngleY * 1.5) * scaleRatio}
 				{@const bodyShiftX = (bodyAngleX * 1.2) * scaleRatio}
-				{@const posX = attach === 'screen'
-					? (modelPosition.x + acc.offsetX)
+				{@const rawOffsetX = attach === 'screen'
+					? acc.offsetX
 					: attach === 'body'
-						? (modelPosition.x + (acc.offsetX * scaleRatio) + bodyShiftX)
-						: (modelPosition.x + (acc.offsetX * scaleRatio) + headShiftX)}
-				{@const posY = attach === 'screen'
-					? (modelPosition.y + acc.offsetY)
+						? ((acc.offsetX * scaleRatio) + bodyShiftX)
+						: ((acc.offsetX * scaleRatio) + headShiftX)}
+				{@const rawOffsetY = attach === 'screen'
+					? acc.offsetY
 					: attach === 'body'
-						? (modelPosition.y + (acc.offsetY * scaleRatio))
-						: (modelPosition.y + (acc.offsetY * scaleRatio) + headShiftY)}
+						? (acc.offsetY * scaleRatio)
+						: ((acc.offsetY * scaleRatio) + headShiftY)}
+				{@const cosRot = Math.cos(modelRotation)}
+				{@const sinRot = Math.sin(modelRotation)}
+				{@const finalOffsetX = attach === 'screen' ? rawOffsetX : (rawOffsetX * cosRot - rawOffsetY * sinRot)}
+				{@const finalOffsetY = attach === 'screen' ? rawOffsetY : (rawOffsetX * sinRot + rawOffsetY * cosRot)}
+				{@const posX = modelPosition.x + finalOffsetX}
+				{@const posY = modelPosition.y + finalOffsetY}
+				{@const rotDeg = (modelRotation * 180) / Math.PI}
 				{@const rot = attach === 'screen'
 					? (acc.rotation || 0)
 					: attach === 'body'
-						? ((acc.rotation || 0) + (bodyAngleZ * 0.7))
-						: ((acc.rotation || 0) + (headAngleZ * 0.9))}
+						? ((acc.rotation || 0) + (bodyAngleZ * 0.7) + rotDeg)
+						: ((acc.rotation || 0) + (headAngleZ * 0.9) + rotDeg)}
 				{@const finalScale = attach === 'screen'
 					? (acc.scale || 1.0)
 					: ((acc.scale || 1.0) * scaleRatio)}
@@ -1911,6 +1974,25 @@
 				title={i18n.t('layer_pan_return_title')}
 			>
 				{i18n.t('done')}
+			</button>
+		</div>
+	{/if}
+
+	<!-- Floating Camera Angle Banner (Visible in 2D Mode when camera-angle tool is active) -->
+	{#if rigging.cursorToolMode === 'camera-angle' && !rigging.isGuiLocked}
+		<div class="fixed top-20 left-1/2 -translate-x-1/2 px-3.5 py-1.5 rounded-full backdrop-blur-xl bg-indigo-950/85 border border-indigo-500/50 text-indigo-200 font-mono text-xs shadow-2xl flex items-center gap-2 pointer-events-auto z-30 animate-in fade-in slide-in-from-top-2 duration-200">
+			<span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+			<Orbit class="w-3.5 h-3.5 text-indigo-400" />
+			<span>{i18n.t('cursor_camera_angle_banner')}</span>
+			<button
+				type="button"
+				onclick={() => {
+					rigging.setCursorToolMode('pan');
+				}}
+				class="ml-1 p-0.5 rounded-full hover:bg-indigo-800/50 text-indigo-400 hover:text-white transition-colors cursor-pointer"
+				title={i18n.t('close_btn')}
+			>
+				<X class="w-3.5 h-3.5" />
 			</button>
 		</div>
 	{/if}

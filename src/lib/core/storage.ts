@@ -68,7 +68,7 @@ export interface SavedUserConfig {
 	layerManagerViewMode?: 'windowed' | 'sticky';
 	layerWindowX?: number;
 	layerWindowY?: number;
-	cursorToolMode?: 'pan' | 'select-layer' | 'hand-tracking';
+	cursorToolMode?: 'pan' | 'camera-angle' | 'select-layer' | 'hand-tracking';
 	stageLayers?: Array<{ id: string; visible: boolean; opacity: number; locked: boolean }>;
 	is3DPositionHudVisible?: boolean;
 	renderQuality3D?: 'low' | 'medium' | 'highest';
